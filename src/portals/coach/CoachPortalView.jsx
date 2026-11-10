@@ -7,23 +7,36 @@ import {
   CalendarOff, 
   BookOpen, 
   Bell, 
-  UserCheck2,
-  Clock,
-  MapPin,
-  CheckCircle2,
-  Plus,
-  Star,
-  Activity,
-  Award,
-  Shield,
-  Heart
+  UserCheck2, 
+  Clock, 
+  MapPin, 
+  CheckCircle2, 
+  Plus, 
+  Star, 
+  Activity, 
+  Award, 
+  Shield, 
+  Heart,
+  RefreshCw,
+  Check,
+  MessageSquare,
+  Sparkles,
+  UserCheck
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import KpiCard from '../../components/common/KpiCard';
 import Modal from '../../components/common/Modal';
 
 export default function CoachPortalView() {
-  const { currentView, setCurrentView, data, markAttendance, applyLeave, addToast } = useCrm();
+  const { 
+    currentView, 
+    setCurrentView, 
+    data, 
+    markAttendance, 
+    applyLeave, 
+    updateCoachCompensation,
+    addToast 
+  } = useCrm();
 
   const coachProfile = data.coaches[0]; // Coach Vikram Singh
   const myClasses = data.classes.filter(c => c.coachId === coachProfile.id || c.coach.includes(coachProfile.name.split(' ')[0]));
@@ -74,6 +87,11 @@ export default function CoachPortalView() {
     addToast('Athlete performance assessment saved and synced to parent report card!');
   };
 
+  // Filter coach compensation classes
+  const coachComps = (data.coachCompensationClasses || []).filter(
+    c => c.coachName?.includes('Vikram') || c.substituteCoach?.includes('Vikram')
+  );
+
   return (
     <div className="space-y-6">
       
@@ -119,23 +137,20 @@ export default function CoachPortalView() {
           <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#172B50] via-[#1E345D] to-[#254173] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-[#F4510B]/20 to-transparent pointer-events-none" />
             <div className="flex items-center gap-3.5 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-[#F4510B]/20 border border-[#F4510B]/40 flex items-center justify-center text-xl shrink-0">
-                <span className="relative flex h-3.5 w-3.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F4510B] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#F4510B]"></span>
-                </span>
+              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl shrink-0">
+                ⚡
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-black uppercase tracking-wider text-[#FFA366]">
-                    Live On-Court Training Session
+                    Ongoing Batch: Court A (Indiranagar)
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#F4510B] text-white animate-pulse">
-                    IN PROGRESS
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500 text-white animate-pulse">
+                    LIVE NOW
                   </span>
                 </div>
                 <h4 className="text-sm sm:text-base font-extrabold text-white mt-0.5">
-                  Gymnastics & Agility Batch A • Court 2 (24 Athletes Active)
+                  Spartan Gymnastics & Agility • 16 Spartans on mat
                 </h4>
               </div>
             </div>
@@ -143,101 +158,42 @@ export default function CoachPortalView() {
               onClick={() => setCurrentView('attendance')}
               className="relative z-10 px-4 py-2 rounded-xl bg-[#F4510B] hover:bg-[#DC4405] text-white text-xs font-bold transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
             >
-              Take Live Roll Call &rarr;
+              Take Court Register &rarr;
             </button>
           </div>
 
           {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KpiCard
-              title="Active Batches"
-              value={coachProfile.activeBatches}
-              subtitle="Indiranagar Arena"
-              icon={Calendar}
-            />
-            <KpiCard
-              title="Athletes Trained"
-              value={coachProfile.studentsCount}
-              subtitle="Across Junior Programs"
-              icon={GraduationCap}
-              highlight={true}
-            />
-            <KpiCard
-              title="Coach Rating"
-              value={`${coachProfile.rating} / 5.0`}
-              subtitle="From 42 Parent Reviews"
-              icon={Star}
-            />
-            <KpiCard
-              title="Punctuality Score"
-              value="99.2%"
-              subtitle="Official FIG Certified"
-              icon={Award}
-            />
-          </div>
-
-          {/* Today's Training Sessions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <div className="flex items-center justify-between pb-3 border-b border-[#172B5012]">
-                <h3 className="text-sm font-extrabold text-[#172B50] flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-[#F4510B]" />
-                  <span>Today's Training Drills Schedule</span>
-                </h3>
-                <span className="text-xs font-bold text-[#F4510B]">Active Day</span>
-              </div>
-
-              <div className="space-y-3 mt-3.5">
-                {myClasses.map(cls => (
-                  <div key={cls.id} className="p-3.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-extrabold text-[#172B50] block">{cls.name}</span>
-                      <p className="text-[11px] text-[#172B50] opacity-75 mt-0.5">{cls.schedule}</p>
-                      <span className="text-[10px] font-bold text-[#F4510B]">{cls.enrolled}/{cls.capacity} Athletes Expected</span>
-                    </div>
-                    <button
-                      onClick={() => setCurrentView('attendance')}
-                      className="px-3 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-lg hover:bg-[#F4510B] transition-colors"
-                    >
-                      Roster
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+                Active Athletes Assigned
+              </span>
+              <h3 className="text-3xl font-extrabold text-[#172B50]">{myStudents.length}</h3>
+              <p className="text-xs font-bold text-[#F4510B] mt-1">Across 3 Batches</p>
             </div>
 
-            {/* Quick Athlete Skill Evaluation */}
             <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <div className="flex items-center justify-between pb-3 border-b border-[#172B5012]">
-                <h3 className="text-sm font-extrabold text-[#172B50] flex items-center gap-1.5">
-                  <Trophy className="w-4 h-4 text-[#F4510B]" />
-                  <span>Quick Athlete Evaluation</span>
-                </h3>
-                <button
-                  onClick={() => setCurrentView('evaluations')}
-                  className="text-xs font-bold text-[#F4510B] hover:underline"
-                >
-                  Full Rubric
-                </button>
-              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+                Batch Turnout Today
+              </span>
+              <h3 className="text-3xl font-extrabold text-[#172B50]">94%</h3>
+              <p className="text-xs font-bold text-emerald-600 mt-1">16 of 17 Present</p>
+            </div>
 
-              <div className="mt-3.5 space-y-3">
-                <div className="p-3 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
-                  <span className="text-xs font-bold text-[#172B50] block">Athlete: Aarav Sharma (7 yrs)</span>
-                  <p className="text-[11px] text-[#172B50] opacity-75 mt-0.5">Agility: 9/10 • Balance: 9/10 • Discipline: 10/10</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#172B50] text-white">
-                    Recommended for Agility Cup 2026
-                  </span>
-                </div>
+            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+                Compensation Slots
+              </span>
+              <h3 className="text-3xl font-extrabold text-[#172B50]">{coachComps.length}</h3>
+              <p className="text-xs font-bold text-[#F4510B] mt-1">Substitute/Makeup</p>
+            </div>
 
-                <div className="p-3 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
-                  <span className="text-xs font-bold text-[#172B50] block">Athlete: Kabir Patel (6 yrs)</span>
-                  <p className="text-[11px] text-[#172B50] opacity-75 mt-0.5">Agility: 8/10 • Balance: 8/10 • Flexibility: 9/10</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#F4510B] text-white">
-                    Punctuality Honor Nominee
-                  </span>
-                </div>
-              </div>
+            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+                Parent Review Score
+              </span>
+              <h3 className="text-3xl font-extrabold text-[#172B50]">4.9 / 5.0</h3>
+              <p className="text-xs font-bold text-emerald-600 mt-1">Top rated trainer</p>
             </div>
           </div>
         </div>
@@ -247,41 +203,29 @@ export default function CoachPortalView() {
       {currentView === 'classes' && (
         <div className="space-y-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            My Training Batches & Drill Plans
+            My Training Batches & Court Allocations
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {myClasses.map(cls => (
-              <div key={cls.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-                <span className="text-[10px] font-bold uppercase text-[#F4510B]">{cls.program}</span>
-                <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{cls.name}</h3>
-                <div className="mt-3 space-y-1.5 text-xs text-[#172B50]">
+              <div key={cls.id} className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#F4510B]">{cls.program}</span>
+                    <h3 className="text-lg font-black text-[#172B50] mt-0.5">{cls.name}</h3>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black bg-[#172B50] text-white">
+                    {cls.enrolledCount} Spartans
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-xs text-[#172B50]">
                   <p className="flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span className="font-semibold">{cls.schedule}</span>
+                    <span>{cls.schedule}</span>
                   </p>
                   <p className="flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>{cls.center} (Court 2)</span>
+                    <span>{cls.center}</span>
                   </p>
-                  <p className="flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span className="font-bold">{cls.enrolled} Enrolled / {cls.capacity} Capacity</span>
-                  </p>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-[#172B5015] flex gap-2">
-                  <button
-                    onClick={() => setCurrentView('attendance')}
-                    className="flex-1 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg hover:brightness-110"
-                  >
-                    Take Attendance
-                  </button>
-                  <button
-                    onClick={() => setCurrentView('induction')}
-                    className="flex-1 py-1.5 text-xs font-bold bg-white text-[#172B50] border border-[#172B5020] rounded-lg hover:bg-[#FFF4E8]"
-                  >
-                    View Drills
-                  </button>
                 </div>
               </div>
             ))}
@@ -293,39 +237,38 @@ export default function CoachPortalView() {
       {currentView === 'students' && (
         <div className="space-y-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            My Athlete Roster
+            My Student Roster & Medical Alerts
           </h1>
           <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase text-[11px]">
                 <tr>
                   <th className="p-3.5">Athlete</th>
-                  <th className="p-3.5">Age & Rank</th>
-                  <th className="p-3.5">Attendance</th>
-                  <th className="p-3.5">Medical Alert</th>
+                  <th className="p-3.5">Age / Gender</th>
+                  <th className="p-3.5">Rank</th>
+                  <th className="p-3.5">Turnout</th>
+                  <th className="p-3.5">Emergency Note</th>
                   <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#172B5010]">
                 {myStudents.map(s => (
-                  <tr key={s.id}>
-                    <td className="p-3.5">
-                      <span className="font-extrabold text-[#172B50] block">{s.name}</span>
-                      <span className="text-[10px] text-[#172B50] opacity-60">{s.id}</span>
+                  <tr key={s.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                    <td className="p-3.5 font-bold text-[#172B50] flex items-center gap-2">
+                      <img src={s.avatar} alt={s.name} className="w-7 h-7 rounded-full object-cover" />
+                      <span>{s.name}</span>
                     </td>
-                    <td className="p-3.5">
-                      <span className="font-semibold text-[#172B50]">{s.age} yrs • {s.rank}</span>
-                    </td>
-                    <td className="p-3.5 font-bold text-[#F4510B]">
-                      {s.attendanceRate}%
-                    </td>
-                    <td className="p-3.5 text-[#172B50] opacity-80 text-[11px]">
-                      {s.medicalNote}
-                    </td>
+                    <td className="p-3.5">{s.age} yrs • {s.gender}</td>
+                    <td className="p-3.5 font-bold text-[#F4510B]">{s.rank}</td>
+                    <td className="p-3.5 font-bold text-emerald-700">{s.attendanceRate || 95}%</td>
+                    <td className="p-3.5 text-[11px] text-[#172B50] opacity-80">{s.medicalNote || 'Fit for full drills'}</td>
                     <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => setCurrentView('evaluations')}
-                        className="px-2.5 py-1 text-xs font-bold bg-[#172B50] text-white rounded-lg hover:bg-[#F4510B]"
+                      <button 
+                        onClick={() => {
+                          setEvalStudent(s.id);
+                          setCurrentView('evaluations');
+                        }}
+                        className="px-2.5 py-1 text-[11px] font-bold bg-[#172B50] text-white rounded-lg hover:bg-[#F4510B]"
                       >
                         Evaluate
                       </button>
@@ -343,60 +286,55 @@ export default function CoachPortalView() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-              Mark Session Attendance: Gymnastics Batch A
+              Mark Session Attendance
             </h1>
-            <button
-              onClick={() => addToast('Session attendance locked and submitted to academy director!')}
+            <button 
+              onClick={() => addToast('Batch attendance verified and synced to cloud ledger!', 'success')}
               className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
             >
-              Submit Attendance
+              Submit Attendance Register
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-4 bg-[#FFF4E8] border-b border-[#172B5015] flex justify-between items-center">
-              <span className="text-xs font-bold text-[#172B50]">
-                Session Date: {new Date().toISOString().split('T')[0]} • Indiranagar Arena
-              </span>
-              <span className="text-xs font-black text-[#F4510B]">
-                {Object.values(attendanceMap).filter(v => v === 'Present').length} Athletes Present
-              </span>
-            </div>
-
-            <div className="divide-y divide-[#172B5010]">
-              {myStudents.map(s => {
-                const status = attendanceMap[s.id] || 'Present';
-                return (
-                  <div key={s.id} className="p-3.5 flex items-center justify-between">
+          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
+            <div className="space-y-3">
+              {myStudents.map(s => (
+                <div key={s.id} className="p-3 bg-[#FFF4E8] rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={s.avatar} alt={s.name} className="w-9 h-9 rounded-full object-cover" />
                     <div>
-                      <span className="font-extrabold text-[#172B50] text-sm block">{s.name}</span>
-                      <span className="text-[10px] text-[#172B50] opacity-60">{s.rank}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      {['Present', 'Absent', 'Late'].map(opt => (
-                        <button
-                          key={opt}
-                          onClick={() => setAttendanceMap(prev => ({ ...prev, [s.id]: opt }))}
-                          className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                            status === opt
-                              ? opt === 'Present' ? 'bg-[#172B50] text-white' : opt === 'Absent' ? 'bg-[#F4510B] text-white' : 'bg-[#172B50] text-white'
-                              : 'bg-[#FFF4E8] text-[#172B50]'
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
+                      <h4 className="text-xs font-black text-[#172B50]">{s.name}</h4>
+                      <p className="text-[11px] text-[#172B50] opacity-75">{s.batch}</p>
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="flex items-center gap-2">
+                    {['Present', 'Absent', 'Excused'].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => setAttendanceMap(prev => ({ ...prev, [s.id]: status }))}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          attendanceMap[s.id] === status
+                            ? status === 'Present'
+                              ? 'bg-emerald-600 text-white'
+                              : status === 'Absent'
+                              ? 'bg-rose-600 text-white'
+                              : 'bg-amber-600 text-white'
+                            : 'bg-white text-[#172B50] border border-[#172B5020]'
+                        }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* 5. EVALUATIONS */}
+      {/* 5. STUDENT PERFORMANCE (EVALUATIONS) */}
       {currentView === 'evaluations' && (
         <div className="space-y-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
@@ -468,7 +406,82 @@ export default function CoachPortalView() {
         </div>
       )}
 
-      {/* 6. COMPETITIONS */}
+      {/* 6. COMPENSATION CLASSES (Module 7.6) */}
+      {currentView === 'compensation' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Compensation Classes & Substitute Assignments
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Manage makeup sessions, substitute trainer coverage, and verify completed compensation drills
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+            <div className="p-4 border-b border-[#172B5010] flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#172B50]">
+                Assigned Compensation Sessions
+              </h3>
+              <span className="text-xs font-bold text-[#F4510B]">
+                {coachComps.length} Active Sessions
+              </span>
+            </div>
+
+            <div className="divide-y divide-[#172B500C]">
+              {coachComps.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[#172B50] opacity-70">
+                  No substitute sessions assigned today. Great job!
+                </div>
+              ) : (
+                coachComps.map(c => (
+                  <div key={c.id} className="p-4 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-[#172B50]">{c.program} - Batch {c.batch}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          c.status === 'Completed'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {c.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#172B50] opacity-75 mt-1">
+                        Schedule: <strong>{c.schedule}</strong> • Arena: {c.center || 'Main Arena'}
+                      </p>
+                      <p className="text-[11px] text-[#F4510B] font-semibold mt-0.5">
+                        Substitute for: {c.missedSessionCoach || 'Scheduled Trainer'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      {c.status !== 'Completed' ? (
+                        <button
+                          onClick={() => updateCoachCompensation(c.id, 'Completed')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Mark Session Completed</span>
+                        </button>
+                      ) : (
+                        <span className="flex items-center gap-1 text-emerald-700 font-bold text-xs">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Verified & Paid</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. SPORTS & EVENTS */}
       {currentView === 'competitions' && (
         <div className="space-y-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
@@ -496,129 +509,81 @@ export default function CoachPortalView() {
         </div>
       )}
 
-      {/* 7. LEAVE MANAGEMENT */}
-      {currentView === 'leaves' && (
+      {/* 8. MY WORKSPACE (Module 7.8: Leave, Announcements, Profile) */}
+      {(currentView === 'workspace' || currentView === 'leaves' || currentView === 'profile') && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-              Coach Leave Requests
-            </h1>
-            <button
-              onClick={() => setIsLeaveOpen(true)}
-              className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
-            >
-              Apply Leave
-            </button>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-            <div className="p-3.5 bg-[#FFF4E8] rounded-xl border border-[#172B5015] flex justify-between items-center">
-              <div>
-                <span className="text-xs font-bold text-[#172B50]">National Coaches Clinic in Patiala</span>
-                <p className="text-[11px] text-[#172B50] opacity-75">Nov 20 to Nov 21, 2026</p>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#172B50] text-white">
-                Pending Approval
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 8. COACH INDUCTION & DRILLS */}
-      {currentView === 'induction' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Little Spartans Coaching Manual & Drills
-          </h1>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <h3 className="text-sm font-extrabold text-[#172B50] pb-2 border-b border-[#172B5012]">
-                Phase 1: Dynamic Warm-Up & Joint Mobility (15 mins)
-              </h3>
-              <ul className="mt-3 space-y-2 text-xs text-[#172B50] opacity-85 list-disc pl-4">
-                <li>High knees & Butt kicks (2 x 20m)</li>
-                <li>Bear crawls & Crab walks across mat (core stabilization)</li>
-                <li>Ankle & wrist rotations before balance beam routines</li>
-                <li>Dynamic leg swings (front-back and lateral)</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <h3 className="text-sm font-extrabold text-[#172B50] pb-2 border-b border-[#172B5012]">
-                Phase 2: Spartan Agility Obstacle Circuit (25 mins)
-              </h3>
-              <ul className="mt-3 space-y-2 text-xs text-[#172B50] opacity-85 list-disc pl-4">
-                <li>Station 1: Agility ladder icky-shuffle with speed ball touch</li>
-                <li>Station 2: Low hurdle hop & roll into landing mat</li>
-                <li>Station 3: Balance beam walk with medicine ball pass</li>
-                <li>Station 4: 10m sprint dash to finish buzzer</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <h3 className="text-sm font-extrabold text-[#172B50] pb-2 border-b border-[#172B5012]">
-                Pediatric Safety & Hydration Mandates
-              </h3>
-              <ul className="mt-3 space-y-2 text-xs text-[#172B50] opacity-85 list-disc pl-4">
-                <li>Mandatory 3-minute water break every 20 minutes</li>
-                <li>Always ensure spotters on beam heights above 3 feet</li>
-                <li>Check student medical alerts in roster before high intensity sprints</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <h3 className="text-sm font-extrabold text-[#172B50] pb-2 border-b border-[#172B5012]">
-                Spartan Warrior Oath (End of Session)
-              </h3>
-              <p className="mt-3 text-xs italic text-[#172B50] bg-[#FFF4E8] p-3 rounded-xl border border-[#172B5015]">
-                "I am strong. I am brave. I never give up. I respect my teammates and coaches. I am a Spartan!"
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                My Coach Workspace
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Faculty profile, credentials, leave application & academy circulars
               </p>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* 9. ANNOUNCEMENTS */}
-      {currentView === 'announcements' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Faculty Notices & Academy Circulars
-          </h1>
-          <div className="space-y-4">
-            {data.announcements.map(ann => (
-              <div key={ann.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-                <span className="text-[10px] font-bold text-[#F4510B] uppercase">{ann.date} • {ann.target}</span>
-                <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{ann.title}</h3>
-                <p className="text-xs text-[#172B50] opacity-80 mt-2">{ann.content}</p>
-              </div>
-            ))}
+            <button
+              onClick={() => setIsLeaveOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
+            >
+              <CalendarOff className="w-4 h-4" />
+              <span>Apply Coach Leave</span>
+            </button>
           </div>
-        </div>
-      )}
 
-      {/* 10. PROFILE */}
-      {currentView === 'profile' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Coach Profile & Credentials
-          </h1>
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4 text-xs">
-            <div className="flex items-center gap-4 pb-4 border-b border-[#172B5015]">
-              <div className="w-16 h-16 rounded-2xl bg-[#172B50] flex items-center justify-center text-white text-xl font-bold">
-                VS
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Profile Card */}
+            <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4 text-xs">
+              <div className="flex items-center gap-4 pb-4 border-b border-[#172B5015]">
+                <div className="w-16 h-16 rounded-2xl bg-[#172B50] flex items-center justify-center text-white text-xl font-bold">
+                  VS
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-[#172B50]">{coachProfile.name}</h3>
+                  <p className="text-xs text-[#172B50] opacity-75">{coachProfile.email}</p>
+                  <span className="text-[10px] font-bold text-[#F4510B]">{coachProfile.certification}</span>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-black text-[#172B50]">{coachProfile.name}</h3>
-                <p className="text-xs text-[#172B50] opacity-75">{coachProfile.email} • {coachProfile.phone}</p>
-                <span className="text-[10px] font-bold text-[#F4510B]">{coachProfile.certification}</span>
+              <div className="space-y-2 text-[#172B50]">
+                <p><span className="font-bold">Specialization:</span> {coachProfile.specialization}</p>
+                <p><span className="font-bold">Experience:</span> {coachProfile.experience}</p>
+                <p><span className="font-bold">Training Facility:</span> {coachProfile.center}</p>
+                <p><span className="font-bold">Faculty Rating:</span> {coachProfile.rating} / 5.0 (5 Star)</p>
               </div>
             </div>
-            <div className="space-y-2 text-[#172B50]">
-              <p><span className="font-bold">Specialization:</span> {coachProfile.specialization}</p>
-              <p><span className="font-bold">Coaching Experience:</span> {coachProfile.experience}</p>
-              <p><span className="font-bold">Base Training Facility:</span> {coachProfile.center}</p>
-              <p><span className="font-bold">Overall Faculty Rating:</span> {coachProfile.rating} / 5.0 (5 Star)</p>
+
+            {/* Leave Status Card */}
+            <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4 text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-[#172B5015]">
+                <h4 className="font-black text-[#172B50]">My Leave Record</h4>
+                <span className="text-xs text-[#F4510B] font-bold">1 Pending</span>
+              </div>
+              <div className="p-3.5 bg-[#FFF4E8] rounded-xl border border-[#172B5015]">
+                <div className="flex justify-between items-start">
+                  <span className="text-xs font-bold text-[#172B50]">National Coaches Clinic</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#172B50] text-white">
+                    Pending
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#172B50] opacity-75 mt-1">Nov 20 to Nov 21, 2026</p>
+                <p className="text-[11px] text-[#F4510B] mt-1 italic">"Substitute assigned to Coach Rahul"</p>
+              </div>
+            </div>
+
+            {/* Circulars & Notices Card */}
+            <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4 text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-[#172B5015]">
+                <h4 className="font-black text-[#172B50]">Faculty Circulars</h4>
+                <Bell className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div className="space-y-2">
+                {data.announcements.slice(0, 2).map(ann => (
+                  <div key={ann.id} className="p-2.5 rounded-lg border border-[#172B5010] hover:bg-[#FFF4E8]/30">
+                    <span className="text-[10px] font-bold text-[#F4510B]">{ann.date}</span>
+                    <h5 className="font-bold text-[#172B50] text-[11px] mt-0.5">{ann.title}</h5>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

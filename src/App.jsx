@@ -6,21 +6,16 @@ import ToastContainer from './components/common/ToastContainer';
 import LoginModal from './components/common/LoginModal';
 import SpartzenLoginPage from './components/auth/SpartzenLoginPage';
 
-// Admin Portal Modules
+// Admin Portal 9 Master Modules
 import AdminDashboard from './portals/admin/AdminDashboard';
 import EnquiryManagement from './portals/admin/EnquiryManagement';
-import StudentManagement from './portals/admin/StudentManagement';
-import ParentManagement from './portals/admin/ParentManagement';
-import CoachManagement from './portals/admin/CoachManagement';
-import ProgramsClasses from './portals/admin/ProgramsClasses';
-import PaymentsBilling from './portals/admin/PaymentsBilling';
-import AttendanceManagement from './portals/admin/AttendanceManagement';
-import CompetitionsModule from './portals/admin/CompetitionsModule';
-import LeaveManagement from './portals/admin/LeaveManagement';
-import FeedbackModule from './portals/admin/FeedbackModule';
-import CertificatesModule from './portals/admin/CertificatesModule';
-import ReportsAnalytics from './portals/admin/ReportsAnalytics';
-import AcademySettings from './portals/admin/AcademySettings';
+import PeopleManagementModule from './portals/admin/PeopleManagementModule';
+import ProgramsClassesModule from './portals/admin/ProgramsClassesModule';
+import AttendanceCompensationModule from './portals/admin/AttendanceCompensationModule';
+import FeesPaymentsModule from './portals/admin/FeesPaymentsModule';
+import SportsEventsModule from './portals/admin/SportsEventsModule';
+import CommunicationModule from './portals/admin/CommunicationModule';
+import ReportsSettingsModule from './portals/admin/ReportsSettingsModule';
 
 // Other Portals
 import ParentPortalView from './portals/parent/ParentPortalView';
@@ -41,37 +36,67 @@ export default function App() {
     );
   }
 
-  // Render view for Admin Portal
+  // Render view for Admin Portal (Strictly 9 Master Modules + backwards-compatible routing)
   const renderAdminView = () => {
     switch (currentView) {
+      // 1. Dashboard
       case 'dashboard':
         return <AdminDashboard />;
+
+      // 2. Enquiries
       case 'enquiries':
         return <EnquiryManagement />;
+
+      // 3. People Management (Students, Parents, Coaches, Account Management)
+      case 'people':
       case 'students':
-        return <StudentManagement />;
       case 'parents':
-        return <ParentManagement />;
       case 'coaches':
-        return <CoachManagement />;
+      case 'accounts':
+        return <PeopleManagementModule />;
+
+      // 4. Programs & Classes (Sports Programs, Batches, Class Schedules, Coach Assignments)
+      case 'programs':
       case 'classes':
-        return <ProgramsClasses />;
-      case 'payments':
-        return <PaymentsBilling />;
+      case 'batches':
+      case 'schedules':
+        return <ProgramsClassesModule />;
+
+      // 5. Attendance & Compensation (Student Attendance, Coach Attendance, Compensation Classes)
+      case 'attendance_compensation':
       case 'attendance':
-        return <AttendanceManagement />;
-      case 'competitions':
-        return <CompetitionsModule />;
+      case 'compensation':
       case 'leaves':
-        return <LeaveManagement />;
-      case 'feedback':
-        return <FeedbackModule />;
+        return <AttendanceCompensationModule />;
+
+      // 6. Fees & Payments (Fee Structures, Student Assignments, Invoices, Payments, Pending Fees)
+      case 'fees_payments':
+      case 'payments':
+      case 'fees':
+      case 'invoices':
+        return <FeesPaymentsModule />;
+
+      // 7. Sports & Events (Competitions, Registrations, Results, Certificates)
+      case 'sports_events':
+      case 'competitions':
       case 'certificates':
-        return <CertificatesModule />;
+        return <SportsEventsModule />;
+
+      // 8. Communication (Announcements, Feedback, Parent Communication, Support Requests)
+      case 'communication':
+      case 'feedback':
+      case 'announcements':
+        return <CommunicationModule />;
+
+      // 9. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
+      case 'reports_settings':
       case 'reports':
-        return <ReportsAnalytics />;
       case 'settings':
-        return <AcademySettings />;
+      case 'export':
+      case 'backup':
+      case 'permissions':
+        return <ReportsSettingsModule />;
+
       default:
         return <AdminDashboard />;
     }

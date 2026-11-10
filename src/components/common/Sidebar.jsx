@@ -34,114 +34,128 @@ import {
   PieChart,
   ChevronRight,
   Pin,
-  PinOff
+  PinOff,
+  Database,
+  Download,
+  Settings,
+  HardDrive
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
-// Comprehensive submenu configuration for all 13 Academy Management items
+// Comprehensive submenu configuration matching the Master Specification
 const submenuConfig = {
+  // 1. Dashboard
   dashboard: {
-    title: 'Dashboard Overview',
+    title: 'Command Center',
     items: [
-      { id: 'dashboard', label: 'Command Center', desc: 'Real-time KPIs & operational metrics', icon: Zap },
-      { id: 'dashboard', label: 'Live Sessions', desc: 'Current ongoing batches & courts', icon: Clock },
-      { id: 'dashboard', label: 'Growth & Turnout', desc: 'Revenue growth & attendance charts', icon: TrendingUp },
+      { parentId: 'dashboard', subTab: '', label: 'Live Operations', desc: 'Real-time KPIs & operational metrics', icon: Zap },
+      { parentId: 'dashboard', subTab: '', label: 'Ongoing Batches', desc: 'Current court sessions & attendance %', icon: Clock },
+      { parentId: 'dashboard', subTab: '', label: 'Revenue Velocity', desc: 'Monthly tuition growth & new admissions', icon: TrendingUp },
     ]
   },
+
+  // 2. Enquiries
   enquiries: {
     title: 'Enquiry Management',
     items: [
-      { id: 'enquiries', label: 'Active Pipeline', desc: 'Track prospective spartans & status', icon: Users },
-      { id: 'enquiries', label: 'Trial Sessions', desc: 'Booked demo trials & appointments', icon: CalendarCheck },
-      { id: 'enquiries', label: 'Capture New Lead', desc: 'Walk-in or telephone enquiry registration', icon: PlusCircle },
+      { parentId: 'enquiries', subTab: 'all', label: 'Active Pipeline', desc: 'Track prospective spartans & conversion', icon: Users },
+      { parentId: 'enquiries', subTab: 'trials', label: 'Trial Sessions', desc: 'Booked demo trials & appointments', icon: CalendarCheck },
+      { parentId: 'enquiries', subTab: 'new', label: 'Capture New Lead', desc: 'Walk-in or telephone enquiry registration', icon: PlusCircle },
     ]
   },
-  students: {
-    title: 'Student Management',
+
+  // 3. People Management (Students, Parents, Coaches, Account Management)
+  people: {
+    title: 'People Management',
     items: [
-      { id: 'students', label: 'Student Directory', desc: 'Full active roster, contacts & medical', icon: Users },
-      { id: 'students', label: 'Enroll Spartan', desc: 'Quick onboarding & batch assignment', icon: UserPlus },
-      { id: 'students', label: 'Rank & Milestones', desc: 'Skill levels & belt progression', icon: Award },
+      { parentId: 'people', subTab: 'students', label: 'Students Roster', desc: 'Full active roster, contacts & medical records', icon: GraduationCap },
+      { parentId: 'people', subTab: 'parents', label: 'Parents Directory', desc: 'Guardian records & linked children', icon: Users },
+      { parentId: 'people', subTab: 'coaches', label: 'Coaching Roster', desc: 'Head coaches & discipline specialists', icon: UserCheck },
+      { parentId: 'people', subTab: 'accounts', label: 'Admin-Only Accounts', desc: 'Create credentials & temp passwords (No public signup)', icon: ShieldCheck },
     ]
   },
-  parents: {
-    title: 'Parent Management',
+
+  // 4. Programs & Classes (Sports Programs, Batches, Class Schedules, Coach Assignments)
+  programs: {
+    title: 'Programs & Classes',
     items: [
-      { id: 'parents', label: 'Parent Directory', desc: 'Guardian records & primary emergency', icon: Users },
-      { id: 'parents', label: 'Broadcasts & SMS', desc: 'Academy circulars & announcements', icon: MessageSquare },
-      { id: 'parents', label: 'Parent Feedback', desc: 'Satisfaction ratings & review log', icon: Star },
+      { parentId: 'programs', subTab: 'programs', label: 'Sports Programs', desc: 'Gymnastics, Athletics, Martial Arts syllabi', icon: Calendar },
+      { parentId: 'programs', subTab: 'batches', label: 'Training Batches', desc: 'Slot capacities & waiting lists', icon: Users },
+      { parentId: 'programs', subTab: 'schedules', label: 'Class Schedules', desc: 'Weekly timetable & court allocations', icon: Clock },
+      { parentId: 'programs', subTab: 'coaches', label: 'Coach Assignments', desc: 'Lead trainers & arena assignments', icon: UserCheck },
     ]
   },
-  coaches: {
-    title: 'Coach Management',
+
+  // 5. Attendance & Compensation (Student Attendance, Coach Attendance, Compensation Classes)
+  attendance_compensation: {
+    title: 'Attendance & Compensation',
     items: [
-      { id: 'coaches', label: 'Staff Roster', desc: 'Head coaches & discipline specialists', icon: UserCheck },
-      { id: 'coaches', label: 'Batch Allocation', desc: 'Arena schedule & trainer assignments', icon: Calendar },
-      { id: 'coaches', label: 'Certifications', desc: 'FIG credentials & safety badges', icon: Award },
+      { parentId: 'attendance_compensation', subTab: 'student_att', label: 'Student Attendance', desc: 'Daily check-in register & absence alerts', icon: CalendarCheck },
+      { parentId: 'attendance_compensation', subTab: 'coach_att', label: 'Coach Attendance', desc: 'Staff check-ins & arena punch-ins', icon: UserCheck },
+      { parentId: 'attendance_compensation', subTab: 'student_comp', label: 'Student Compensation', desc: 'Book replacement slots for missed classes', icon: RefreshCw },
+      { parentId: 'attendance_compensation', subTab: 'coach_comp', label: 'Coach Compensation', desc: 'Substitute coverage & payout logs', icon: Clock },
+      { parentId: 'attendance_compensation', subTab: 'audit', label: 'Compensation History', desc: 'Audit log of past approvals & credits', icon: History },
+    ]
+  },
+
+  // 6. Fees & Payments (Fee Structures, Student Fee Assignments, Invoices, Payments, Pending Fees)
+  fees_payments: {
+    title: 'Fees & Payments',
+    items: [
+      { parentId: 'fees_payments', subTab: 'structures', label: 'Fee Structures', desc: 'Monthly, quarterly, admission & kit fees', icon: CreditCard },
+      { parentId: 'fees_payments', subTab: 'assignments', label: 'Student Assignments', desc: 'Assigned plans, sibling & custom discounts', icon: Users },
+      { parentId: 'fees_payments', subTab: 'invoices', label: 'Invoices & Receipts', desc: 'Official Little Spartans receipts', icon: FileText },
+      { parentId: 'fees_payments', subTab: 'pending', label: 'Pending Dues Recovery', desc: 'Outstanding balances & payment reminders', icon: AlertCircle },
+    ]
+  },
+
+  // 7. Sports & Events (Competitions, Registrations, Results, Certificates)
+  sports_events: {
+    title: 'Sports & Events',
+    items: [
+      { parentId: 'sports_events', subTab: 'competitions', label: 'Championships & Cups', desc: 'State tournaments & inter-branch cups', icon: Trophy },
+      { parentId: 'sports_events', subTab: 'registrations', label: 'Squad Registrations', desc: 'Participant rosters & weight categories', icon: Users },
+      { parentId: 'sports_events', subTab: 'results', label: 'Podium & Results', desc: 'Medal tallies & leaderboard rankings', icon: Medal },
+      { parentId: 'sports_events', subTab: 'certificates', label: 'Official Certificates', desc: 'Issue verifiable branded diplomas', icon: Award },
+    ]
+  },
+
+  // 8. Communication (Announcements, Feedback, Parent Communication, Support Requests)
+  communication: {
+    title: 'Academy Communication',
+    items: [
+      { parentId: 'communication', subTab: 'announcements', label: 'Announcements & Circulars', desc: 'Broadcast academy notices & alerts', icon: MessageSquare },
+      { parentId: 'communication', subTab: 'feedback', label: 'Feedback & Reviews', desc: 'Parent satisfaction & coach notes', icon: Star },
+      { parentId: 'communication', subTab: 'parent_comm', label: 'Parent Direct Chat', desc: 'Direct guardian messaging channel', icon: Users },
+      { parentId: 'communication', subTab: 'support', label: 'Support & Tickets', desc: 'Operational assistance desk', icon: CheckCircle2 },
+    ]
+  },
+
+  // 9. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
+  reports_settings: {
+    title: 'Reports & Settings',
+    items: [
+      { parentId: 'reports_settings', subTab: 'analytics', label: 'Academy Analytics', desc: 'Retention rates, revenues & funnel KPIs', icon: BarChart2 },
+      { parentId: 'reports_settings', subTab: 'export', label: 'Raw Data Export', desc: 'Download CSV, Excel or PDF datasets', icon: Download },
+      { parentId: 'reports_settings', subTab: 'backup', label: 'Backup & Recovery', desc: 'Daily automated snapshots & manual backup', icon: HardDrive },
+      { parentId: 'reports_settings', subTab: 'permissions', label: 'Permissions (RBAC)', desc: 'Role clearance matrix & security governance', icon: ShieldCheck },
+      { parentId: 'reports_settings', subTab: 'settings', label: 'Academy Settings', desc: 'Little Spartans branding & center config', icon: Settings },
+    ]
+  },
+
+  // Parent Portal Submenus
+  children: {
+    title: 'My Children',
+    items: [
+      { parentId: 'children', subTab: '', label: 'Child Profiles', desc: 'View details, health & emergency contacts', icon: GraduationCap },
+      { parentId: 'progress', subTab: '', label: 'Skill Progression', desc: 'Belt milestones & physical assessments', icon: Award },
     ]
   },
   classes: {
-    title: 'Programs & Classes',
+    title: 'Classes & Batches',
     items: [
-      { id: 'classes', label: 'All Disciplines', desc: 'Gymnastics, Martial Arts & Athletics', icon: Calendar },
-      { id: 'classes', label: 'Weekly Timetable', desc: 'Time slots & court allocations', icon: Clock },
-      { id: 'classes', label: 'Batch Availability', desc: 'Slot capacities & waiting lists', icon: Users },
-    ]
-  },
-  payments: {
-    title: 'Payments & Billing',
-    items: [
-      { id: 'payments', label: 'Transactions Ledger', desc: 'Paid invoices & fee receipts', icon: CreditCard },
-      { id: 'payments', label: 'Pending Dues', desc: 'Outstanding fee recovery & alerts', icon: AlertCircle },
-      { id: 'payments', label: 'Record Fee', desc: 'Log cash, UPI or card payment', icon: PlusCircle },
-    ]
-  },
-  attendance: {
-    title: 'Attendance Tracking',
-    items: [
-      { id: 'attendance', label: 'Daily Register', desc: 'Real-time check-in & check-out', icon: CheckSquare },
-      { id: 'attendance', label: 'Batch History', desc: 'Past attendance sheets & attendance %', icon: CalendarCheck },
-      { id: 'attendance', label: 'Absence Alerts', desc: 'Automated guardian notifications', icon: AlertCircle },
-    ]
-  },
-  competitions: {
-    title: 'Competitions & Cups',
-    items: [
-      { id: 'competitions', label: 'Tournament Calendar', desc: 'State cups, inter-branch championships', icon: Trophy },
-      { id: 'competitions', label: 'Squad Selection', desc: 'Team rosters & competition lineups', icon: Users },
-      { id: 'competitions', label: 'Medal Tally', desc: 'Academy trophies & podium finishes', icon: Medal },
-    ]
-  },
-  leaves: {
-    title: 'Leave Management',
-    items: [
-      { id: 'leaves', label: 'Student Leaves', desc: 'Absence slips & doctor requests', icon: CalendarX },
-      { id: 'leaves', label: 'Coach Leaves', desc: 'Staff leave & substitute cover', icon: UserX },
-      { id: 'leaves', label: 'Leave History', desc: 'Past approvals & attendance credit', icon: History },
-    ]
-  },
-  feedback: {
-    title: 'Feedback & Reviews',
-    items: [
-      { id: 'feedback', label: 'Parent Reviews', desc: 'Class satisfaction & coach ratings', icon: Star },
-      { id: 'feedback', label: 'Coach Notes', desc: 'Student drill assessments & remarks', icon: MessageSquare },
-      { id: 'feedback', label: 'Resolution Desk', desc: 'Queries, requests & complaints log', icon: CheckCircle2 },
-    ]
-  },
-  certificates: {
-    title: 'Certificates & Awards',
-    items: [
-      { id: 'certificates', label: 'Issue Certificates', desc: 'Grade advancement & achievement awards', icon: Award },
-      { id: 'certificates', label: 'Brand Templates', desc: 'Official Spartan certificate designs', icon: FileText },
-      { id: 'certificates', label: 'Verified Badges', desc: 'Digital QR credentials & passports', icon: ShieldCheck },
-    ]
-  },
-  reports: {
-    title: 'Reports & Analytics',
-    items: [
-      { id: 'reports', label: 'Financial Analytics', desc: 'Revenue breakdown & collection rate', icon: BarChart2 },
-      { id: 'reports', label: 'Retention & Growth', desc: 'Enrollment funnels & dropout rates', icon: TrendingUp },
-      { id: 'reports', label: 'Slot Utilization', desc: 'Batch occupancy & coach efficiency', icon: PieChart },
+      { parentId: 'classes', subTab: '', label: 'Weekly Timetable', desc: 'Schedule, arena courts & lead coaches', icon: Calendar },
+      { parentId: 'attendance_compensation', subTab: '', label: 'Makeup Sessions', desc: 'Book compensation classes for absences', icon: RefreshCw },
     ]
   }
 };
@@ -150,7 +164,10 @@ export default function Sidebar() {
   const { 
     currentPortal, 
     currentView, 
-    setCurrentView, 
+    setCurrentView,
+    activeSubTab,
+    setActiveSubTab,
+    navigateTo,
     sidebarOpen, 
     setSidebarOpen, 
     logout, 
@@ -182,45 +199,44 @@ export default function Sidebar() {
     };
   }, []);
 
-  // Exact 12 navigation items matching reference under ACADEMY MANAGEMENT
+  // =========================================================================
+  // 1. ADMIN NAVIGATION: STRICTLY 9 ITEMS (Master Development Prompt Section 3)
+  // =========================================================================
   const adminNavItems = [
-    { id: 'enquiries', label: 'Enquiry Management', icon: Users },
-    { id: 'students', label: 'Student Management', icon: GraduationCap },
-    { id: 'parents', label: 'Parent Management', icon: Users },
-    { id: 'coaches', label: 'Coach Management', icon: User },
-    { id: 'classes', label: 'Programs & Classes', icon: Calendar },
-    { id: 'payments', label: 'Payments & Billing', icon: CreditCard },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'competitions', label: 'Competitions', icon: Trophy },
-    { id: 'leaves', label: 'Leave Management', icon: CalendarX },
-    { id: 'feedback', label: 'Feedback & Reviews', icon: MessageSquare },
-    { id: 'certificates', label: 'Certificates', icon: Award },
-    { id: 'reports', label: 'Reports & Analytics', icon: BarChart2 },
+    { id: 'enquiries', label: 'Enquiries', icon: Users },
+    { id: 'people', label: 'People Management', icon: GraduationCap },
+    { id: 'programs', label: 'Programs & Classes', icon: Calendar },
+    { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: CalendarCheck },
+    { id: 'fees_payments', label: 'Fees & Payments', icon: CreditCard },
+    { id: 'sports_events', label: 'Sports & Events', icon: Trophy },
+    { id: 'communication', label: 'Communication', icon: MessageSquare },
+    { id: 'reports_settings', label: 'Reports & Settings', icon: BarChart2 },
   ];
 
-  // Parent portal navigation items in same dark aesthetic
+  // =========================================================================
+  // 2. COACH NAVIGATION: STRICTLY 8 ITEMS (Master Development Prompt Section 3)
+  // =========================================================================
+  const coachNavItems = [
+    { id: 'classes', label: 'My Classes', icon: Calendar },
+    { id: 'students', label: 'My Students', icon: GraduationCap },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'evaluations', label: 'Student Performance', icon: Award },
+    { id: 'compensation', label: 'Compensation Classes', icon: RefreshCw },
+    { id: 'competitions', label: 'Sports & Events', icon: Trophy },
+    { id: 'workspace', label: 'My Workspace', icon: UserCheck },
+  ];
+
+  // =========================================================================
+  // 3. PARENT NAVIGATION: STRICTLY 8 ITEMS (Master Development Prompt Section 3)
+  // =========================================================================
   const parentNavItems = [
     { id: 'children', label: 'My Children', icon: GraduationCap },
     { id: 'classes', label: 'Classes & Schedule', icon: Calendar },
-    { id: 'attendance', label: 'Attendance Record', icon: CalendarCheck },
-    { id: 'payments', label: 'Payments & Receipts', icon: CreditCard },
-    { id: 'competitions', label: 'Competitions & Cups', icon: Trophy },
-    { id: 'leaves', label: 'Apply Leave', icon: CalendarX },
-    { id: 'certificates', label: 'Certificates & Badges', icon: Award },
-    { id: 'communication', label: 'Announcements', icon: MessageSquare },
-    { id: 'feedback', label: 'Give Feedback', icon: MessageSquare },
-  ];
-
-  // Coach portal navigation items in same dark aesthetic
-  const coachNavItems = [
-    { id: 'classes', label: 'My Batches & Drills', icon: Calendar },
-    { id: 'students', label: 'My Student Roster', icon: GraduationCap },
-    { id: 'attendance', label: 'Mark Attendance', icon: CalendarCheck },
-    { id: 'evaluations', label: 'Skill Evaluations', icon: Trophy },
-    { id: 'competitions', label: 'Tournaments & Squads', icon: Award },
-    { id: 'leaves', label: 'Apply Coach Leave', icon: CalendarX },
-    { id: 'induction', label: 'Spartan Drills Guide', icon: Calendar },
-    { id: 'announcements', label: 'Academy Circulars', icon: MessageSquare },
+    { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: CalendarCheck },
+    { id: 'fees_payments', label: 'Fees & Payments', icon: CreditCard },
+    { id: 'progress', label: 'Progress & Achievements', icon: Award },
+    { id: 'competitions', label: 'Sports & Events', icon: Trophy },
+    { id: 'communication', label: 'Communication', icon: MessageSquare },
   ];
 
   // Section title & items depending on active portal
@@ -231,13 +247,13 @@ export default function Sidebar() {
   let profileRole = 'Admin / Super Admin';
 
   if (currentPortal === 'parent') {
-    sectionTitle = 'PARENT WORKSPACE';
+    sectionTitle = 'PARENT PORTAL';
     navItems = parentNavItems;
     profileInitials = 'RS';
     profileName = 'Dr. Rohan Sharma';
     profileRole = 'Parent Account';
   } else if (currentPortal === 'coach') {
-    sectionTitle = 'COACH WORKSPACE';
+    sectionTitle = 'COACH PORTAL';
     navItems = coachNavItems;
     profileInitials = 'VS';
     profileName = 'Coach Vikram Singh';
@@ -274,7 +290,7 @@ export default function Sidebar() {
     setIsHovered(true);
 
     const rect = event.currentTarget.getBoundingClientRect();
-    const estimatedHeight = 240;
+    const estimatedHeight = 260;
     const top = Math.max(12, Math.min(rect.top - 6, window.innerHeight - estimatedHeight - 16));
     
     // Position floating panel cleanly adjacent to the current sidebar edge
@@ -311,11 +327,16 @@ export default function Sidebar() {
     }, 220);
   };
 
-  // Submenu click handler
-  const handleSubmenuClick = (viewId, label) => {
-    setCurrentView(viewId);
+  // Submenu click handler (supports both parent view & target sub-tab)
+  const handleSubmenuClick = (parentId, subTab, label) => {
+    if (navigateTo) {
+      navigateTo(parentId, subTab);
+    } else {
+      setCurrentView(parentId);
+      if (subTab && setActiveSubTab) setActiveSubTab(subTab);
+      setSidebarOpen(false);
+    }
     setHoveredItem(null);
-    setSidebarOpen(false);
     if (addToast) {
       addToast(`Opened ${label}`);
     }
@@ -402,7 +423,7 @@ export default function Sidebar() {
 
         {/* Scrollable Navigation Area with independent vertical scroll */}
         <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-1">
-          {/* Item 1: Dashboard */}
+          {/* Item 1: Dashboard (Always First Item) */}
           <button
             type="button"
             onClick={() => {
@@ -454,7 +475,7 @@ export default function Sidebar() {
             )}
           </div>
 
-          {/* Navigation Items (The 12 items matching reference) */}
+          {/* Navigation Items (The remaining items: strictly max 8 items here + Dashboard = max 9 total) */}
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -572,7 +593,7 @@ export default function Sidebar() {
       {/* ============================================================ */}
       {currentSubmenu && (
         <div 
-          className="fixed z-50 min-w-[280px] max-w-[320px] bg-[#0E131F]/95 backdrop-blur-xl border border-white/12 rounded-2xl shadow-2xl p-2.5 animate-submenu pointer-events-auto hidden lg:block"
+          className="fixed z-50 min-w-[280px] max-w-[340px] bg-[#0E131F]/95 backdrop-blur-xl border border-white/12 rounded-2xl shadow-2xl p-2.5 animate-submenu pointer-events-auto hidden lg:block"
           style={{ 
             top: `${submenuPos.top}px`, 
             left: `${submenuPos.left}px` 
@@ -592,7 +613,7 @@ export default function Sidebar() {
               </span>
             </div>
             <span className="text-[10px] text-white/50 font-semibold tracking-wider uppercase">
-              Module
+              Submenu
             </span>
           </div>
 
@@ -604,7 +625,7 @@ export default function Sidebar() {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => handleSubmenuClick(sub.id, sub.label)}
+                  onClick={() => handleSubmenuClick(sub.parentId, sub.subTab, sub.label)}
                   className="w-full text-left p-2.5 rounded-xl transition-all duration-200 group flex items-start gap-3 hover:bg-[#F4510B] text-white cursor-pointer"
                 >
                   <div className="p-1.5 rounded-lg bg-white/10 group-hover:bg-white/20 text-white shrink-0 transition-colors mt-0.5">

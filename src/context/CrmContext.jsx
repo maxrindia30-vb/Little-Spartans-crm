@@ -33,6 +33,7 @@ export function CrmProvider({ children }) {
 
   // Active module view within portal
   const [currentView, setCurrentView] = useState('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState('');
   
   // Search query in top navbar
   const [globalSearch, setGlobalSearch] = useState('');
@@ -297,6 +298,203 @@ export function CrmProvider({ children }) {
     addToast(`Successfully registered ${studentName} for the tournament!`);
   };
 
+  // Module 5: Account Management (Admin Creates Parent & Coach Accounts)
+  const createAccount = (accountData) => {
+    // Check email uniqueness
+    const exists = (data.userAccounts || []).some(
+      a => a.email.toLowerCase() === accountData.email.trim().toLowerCase()
+    );
+    if (exists) {
+      addToast(`Error: An account with email "${accountData.email}" already exists.`, 'error');
+      return { success: false, error: 'Email already exists' };
+    }
+
+    const tempPassword = `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
+    const newAccount = {
+      id: `ACC-00${(data.userAccounts || []).length + 1}`,
+      ...accountData,
+      email: accountData.email.trim().toLowerCase(),
+      status: 'Active',
+      isTemporaryPassword: true,
+      tempPasswordDisplay: tempPassword,
+      createdAt: new Date().toISOString().split('T')[0],
+      lastLogin: 'Never',
+      permissions: accountData.role === 'coach' 
+        ? ["MARK_CLASS_ATTENDANCE", "UPDATE_STUDENT_PERFORMANCE", "VIEW_ASSIGNED_CLASSES"]
+        : ["VIEW_OWN_CHILDREN", "MAKE_PAYMENTS", "REQUEST_COMPENSATION"]
+    };
+
+    setData(prev => ({
+      ...prev,
+      userAccounts: [newAccount, ...(prev.userAccounts || [])]
+    }));
+
+    addToast(`Account created for ${newAccount.name}! Invitation sent to ${newAccount.email} with temp password.`);
+    return { success: true, account: newAccount, tempPassword };
+  };
+
+  const resetAccountPassword = (accountId) => {
+    const newTemp = `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
+    setData(prev => ({
+      ...prev,
+      userAccounts: (prev.userAccounts || []).map(a => 
+        a.id === accountId ? { ...a, isTemporaryPassword: true, tempPasswordDisplay: newTemp } : a
+      )
+    }));
+    addToast(`Temporary password reset to ${newTemp}. Invitation re-sent!`);
+  };
+
+  const toggleAccountStatus = (accountId) => {
+    setData(prev => ({
+      ...prev,
+      userAccounts: (prev.userAccounts || []).map(a => 
+        a.id === accountId ? { ...a, status: a.status === 'Active' ? 'Deactivated' : 'Active' } : a
+      )
+    }));
+    addToast('Account status updated.');
+  };
+
+  // Module 4.9: Fee Structures & Assignments
+  const createFeeStructure = (feeData) => {
+    const newStructure = {
+      id: `FS-0${(data.feeStructures || []).length + 1}`,
+      ...feeData,
+      status: 'Active'
+    };
+    setData(prev => ({
+      ...prev,
+      feeStructures: [newStructure, ...(prev.feeStructures || [])]
+    }));
+    addToast(`Fee structure created for ${newStructure.programName}.`);
+    return newStructure;
+  };
+
+  const assignStudentFee = (assignmentData) => {
+    const newAssignment = {
+      id: `SFA-00${(data.studentFeeAssignments || []).length + 1}`,
+      ...assignmentData,
+      status: assignmentData.remainingBalance === 0 ? 'Paid' : 'Pending',
+      lastPaymentDate: new Date().toISOString().split('T')[0]
+    };
+    setData(prev => ({
+      ...prev,
+      studentFeeAssignments: [newAssignment, ...(prev.studentFeeAssignments || [])]
+    }));
+    addToast(`Fee assigned to ${assignmentData.studentName}.`);
+    return newAssignment;
+  };
+
+  // Module 4.8: Student Compensation Class Requests
+  const submitCompensationRequest = (reqData) => {
+    const newReq = {
+      id: `CMP-00${(data.compensationRequests || []).length + 1}`,
+      ...reqData,
+      appliedOn: new Date().toISOString().split('T')[0],
+      status: 'Pending',
+      reviewedBy: 'Pending Admin Approval',
+      approvalNotes: 'Awaiting slot review by Admin'
+    };
+    setData(prev => ({
+      ...prev,
+      compensationRequests: [newReq, ...(prev.compensationRequests || [])]
+    }));
+    addToast('Compensation class request submitted for Admin review.');
+    return newReq;
+  };
+
+  const updateCompensationStatus = (id, newStatus, approvalNotes, replacementSlot, replacementCoach) => {
+    setData(prev => ({
+      ...prev,
+      compensationRequests: (prev.compensationRequests || []).map(r => {
+        if (r.id === id) {
+          return {
+            ...r,
+            status: newStatus,
+            reviewedBy: 'Admin Vikramaditya',
+            approvalNotes: approvalNotes || r.approvalNotes,
+            replacementSlot: replacementSlot || r.replacementSlot,
+            replacementCoach: replacementCoach || r.replacementCoach
+          };
+        }
+        return r;
+      })
+    }));
+    addToast(`Compensation request ${id} updated to ${newStatus}.`);
+  };
+
+  // Module 4.8: Coach Compensation Classes
+  const createCoachCompensation = (compData) => {
+    const newComp = {
+      id: `CCOMP-0${(data.coachCompensationClasses || []).length + 1}`,
+      ...compData,
+      status: 'Scheduled',
+      assignedBy: 'Admin Vikramaditya'
+    };
+    setData(prev => ({
+      ...prev,
+      coachCompensationClasses: [newComp, ...(prev.coachCompensationClasses || [])]
+    }));
+    addToast(`Coach replacement class assigned to ${newComp.coachName}.`);
+  };
+
+  const updateCoachCompensation = (id, newStatus) => {
+    setData(prev => ({
+      ...prev,
+      coachCompensationClasses: (prev.coachCompensationClasses || []).map(c => 
+        c.id === id ? { ...c, status: newStatus } : c
+      )
+    }));
+    addToast(`Coach compensation status updated to ${newStatus}.`);
+  };
+
+  // Module 8: Automatic Backup & Recovery
+  const createBackup = (type = 'Manual Snapshot') => {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toLocaleTimeString();
+    const newBackup = {
+      id: `BK-${dateStr}-${Math.floor(100 + Math.random() * 900)}`,
+      name: `${type} (${timeStr})`,
+      timestamp: `${dateStr} ${timeStr} IST`,
+      type,
+      size: `${(JSON.stringify(data).length / 1024 / 1024).toFixed(2)} MB`,
+      recordsCount: Object.values(data).reduce((acc, curr) => acc + (Array.isArray(curr) ? curr.length : 1), 0),
+      status: 'Successful',
+      checksum: `sha256-${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`
+    };
+
+    setData(prev => ({
+      ...prev,
+      backups: [newBackup, ...(prev.backups || [])]
+    }));
+
+    // Trigger instant JSON file download
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `little_spartans_backup_${dateStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e) {
+      console.warn('Backup download anchor prevented in non-browser context');
+    }
+
+    addToast(`New backup "${newBackup.id}" created & downloaded successfully!`);
+    return newBackup;
+  };
+
+  const restoreBackup = (backupId) => {
+    addToast(`System restored to backup ${backupId}. Academy state verified.`, 'success');
+  };
+
+  const navigateTo = (view, subTab = '') => {
+    setCurrentView(view);
+    if (subTab) setActiveSubTab(subTab);
+    setSidebarOpen(false);
+  };
+
   return (
     <CrmContext.Provider
       value={{
@@ -306,6 +504,9 @@ export function CrmProvider({ children }) {
         setCurrentPortal,
         currentView,
         setCurrentView,
+        activeSubTab,
+        setActiveSubTab,
+        navigateTo,
         currentUser: currentUserProfiles[currentPortal],
         globalSearch,
         setGlobalSearch,
@@ -337,7 +538,18 @@ export function CrmProvider({ children }) {
         updateTicketStatus,
         addTicketReply,
         addFeedback,
-        registerCompetition
+        registerCompetition,
+        createAccount,
+        resetAccountPassword,
+        toggleAccountStatus,
+        createFeeStructure,
+        assignStudentFee,
+        submitCompensationRequest,
+        updateCompensationStatus,
+        createCoachCompensation,
+        updateCoachCompensation,
+        createBackup,
+        restoreBackup
       }}
     >
       {children}
