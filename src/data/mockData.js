@@ -1244,5 +1244,198 @@ export const initialAcademyData = {
       status: "Successful",
       checksum: "sha256-b3310aa841289cf001"
     }
+  ],
+
+  // Location-Based Class Scheduling: Academy Centers & Available Venues/Courts
+  locations: [
+    {
+      id: "LOC-1",
+      name: "Indiranagar Arena",
+      city: "Bengaluru",
+      address: "100 Feet Rd, HAL 2nd Stage, Indiranagar",
+      courts: [
+        "Gymnastics Floor A",
+        "Obstacle Course 1",
+        "Synthetic Sprint Track",
+        "Warm-up Studio"
+      ]
+    },
+    {
+      id: "LOC-2",
+      name: "Koramangala Hub",
+      city: "Bengaluru",
+      address: "80 Feet Rd, 4th Block, Koramangala",
+      courts: [
+        "Main Football Turf Ground",
+        "Cricket Practice Nets Ground",
+        "Futsal Arena",
+        "Fitness Studio"
+      ]
+    },
+    {
+      id: "LOC-3",
+      name: "Whitefield Sports Complex",
+      city: "Bengaluru",
+      address: "ITPL Main Rd, Whitefield",
+      courts: [
+        "Indoor Basketball Court",
+        "Badminton Arena 1",
+        "Badminton Arena 2",
+        "Multi-Sport Ground"
+      ]
+    },
+    {
+      id: "LOC-4",
+      name: "HSR Elite Center",
+      city: "Bengaluru",
+      address: "27th Main Rd, Sector 1, HSR Layout",
+      courts: [
+        "Dojo Mat A (Karate)",
+        "Speed & Agility Zone",
+        "Open Athletic Turf",
+        "Movement Lab"
+      ]
+    },
+    {
+      id: "LOC-5",
+      name: "Jayanagar Academy",
+      city: "Bengaluru",
+      address: "11th Main, 4th Block, Jayanagar",
+      courts: [
+        "Court 1 - Multi-Purpose",
+        "Court 2 - Turf Pitch",
+        "Mini-Gymnastics Pit"
+      ]
+    }
+  ],
+
+  // Synchronized Class Schedules (Shared across Admin & Coach Portals)
+  classSchedules: [
+    {
+      id: "SCH-1001",
+      location: "Indiranagar Arena",
+      program: "Spartan Gymnastics & Agility",
+      programId: "PROG-1",
+      batch: "Gymnastics Batch A - Juniors",
+      batchId: "CLS-101",
+      coachId: "COACH-1",
+      coachName: "Coach Vikram Singh",
+      date: "2026-11-15",
+      startTime: "16:30",
+      endTime: "17:45",
+      venue: "Gymnastics Floor A",
+      capacity: 18,
+      enrolledCount: 15,
+      enrolledStudents: ["Aarav Sharma", "Ananya Sharma", "Vihaan Patel", "Rohan Verma", "Kavya Nair", "Ayaan Mukherji"],
+      notes: "Focus on balance beam stance and high knee obstacle course drill. Ensure hydration at 20m mark.",
+      status: "Scheduled",
+      createdAt: "2026-11-10T10:00:00Z",
+      publishedBy: "Admin Vikramaditya"
+    },
+    {
+      id: "SCH-1002",
+      location: "Koramangala Hub",
+      program: "Junior Football Champions",
+      programId: "PROG-2",
+      batch: "Football Tigers - Cubs",
+      batchId: "CLS-102",
+      coachId: "COACH-2",
+      coachName: "Coach Rahul Dev",
+      date: "2026-11-15",
+      startTime: "17:00",
+      endTime: "18:30",
+      venue: "Main Football Turf Ground",
+      capacity: 20,
+      enrolledCount: 19,
+      enrolledStudents: ["Kabir Mehta", "Ishaan Roy", "Devansh Rao", "Reyansh Gupta"],
+      notes: "Small-sided 4v4 passing drill followed by penalty shootouts.",
+      status: "Scheduled",
+      createdAt: "2026-11-10T11:00:00Z",
+      publishedBy: "Admin Vikramaditya"
+    },
+    {
+      id: "SCH-1003",
+      location: "Indiranagar Arena",
+      program: "Spartan Athletics & Sprinting",
+      programId: "PROG-3",
+      batch: "Athletics Speed & Agility",
+      batchId: "CLS-103",
+      coachId: "COACH-3",
+      coachName: "Coach Ananya Sharma",
+      date: "2026-11-16",
+      startTime: "06:00",
+      endTime: "07:15",
+      venue: "Synthetic Sprint Track",
+      capacity: 15,
+      enrolledCount: 12,
+      enrolledStudents: ["Vihaan Patel", "Tanvi Joshi", "Aditi Rao"],
+      notes: "Early morning speed interval training and start-box explosion drills.",
+      status: "Scheduled",
+      createdAt: "2026-11-10T12:00:00Z",
+      publishedBy: "Admin Vikramaditya"
+    },
+    {
+      id: "SCH-1004",
+      location: "Indiranagar Arena",
+      program: "Spartan Gymnastics & Agility",
+      programId: "PROG-1",
+      batch: "Gymnastics Batch A - Juniors",
+      batchId: "CLS-101",
+      coachId: "COACH-1",
+      coachName: "Coach Vikram Singh",
+      date: "2026-11-17",
+      startTime: "16:30",
+      endTime: "17:45",
+      venue: "Gymnastics Floor A",
+      capacity: 18,
+      enrolledCount: 15,
+      enrolledStudents: ["Aarav Sharma", "Ananya Sharma", "Vihaan Patel"],
+      notes: "Routine choreography preparation for Winter State Cup showcase.",
+      status: "Updated",
+      createdAt: "2026-11-10T14:00:00Z",
+      publishedBy: "Admin Vikramaditya"
+    },
+    {
+      id: "SCH-1005",
+      location: "Koramangala Hub",
+      program: "Junior Football Champions",
+      programId: "PROG-2",
+      batch: "Football Tigers - Cubs",
+      batchId: "CLS-102",
+      coachId: "COACH-2",
+      coachName: "Coach Rahul Dev",
+      date: "2026-11-14",
+      startTime: "17:00",
+      endTime: "18:30",
+      venue: "Main Football Turf Ground",
+      capacity: 20,
+      enrolledCount: 19,
+      enrolledStudents: ["Kabir Mehta", "Ishaan Roy"],
+      notes: "Session completed with 100% turnout.",
+      status: "Completed",
+      createdAt: "2026-11-09T09:00:00Z",
+      publishedBy: "Admin Vikramaditya"
+    },
+    {
+      id: "SCH-1006",
+      location: "Whitefield Sports Complex",
+      program: "Basketball Rising Stars",
+      programId: "PROG-4",
+      batch: "Basketball Hoops Squad",
+      batchId: "CLS-104",
+      coachId: "COACH-4",
+      coachName: "Coach David Fernandez",
+      date: "2026-11-13",
+      startTime: "16:00",
+      endTime: "17:30",
+      venue: "Indoor Basketball Court",
+      capacity: 16,
+      enrolledCount: 14,
+      enrolledStudents: ["Rohan Verma", "Ayaan Mukherji"],
+      notes: "Cancelled due to floor refinishing maintenance.",
+      status: "Cancelled",
+      createdAt: "2026-11-08T10:00:00Z",
+      publishedBy: "Admin Vikramaditya"
+    }
   ]
 };

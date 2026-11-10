@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { initialAcademyData } from '../data/mockData';
+import { checkScheduleConflict } from '../services/scheduleService';
 
 const CrmContext = createContext();
 
@@ -12,7 +13,14 @@ export function CrmProvider({ children }) {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        // Ensure new arrays exist even if old localStorage was saved
+        return {
+          ...initialAcademyData,
+          ...parsed,
+          locations: parsed.locations && parsed.locations.length > 0 ? parsed.locations : initialAcademyData.locations,
+          classSchedules: parsed.classSchedules && parsed.classSchedules.length > 0 ? parsed.classSchedules : initialAcademyData.classSchedules,
+        };
       }
     } catch (e) {
       console.error('Error loading stored CRM data', e);
@@ -489,6 +497,115 @@ export function CrmProvider({ children }) {
     addToast(`System restored to backup ${backupId}. Academy state verified.`, 'success');
   };
 
+  // Location-Based Class Scheduling: Synchronized across Admin & Coach Portals
+  const createClassSchedule = (candidate) => {
+    const conflict = checkScheduleConflict(candidate, data.classSchedules || []);
+    if (conflict.hasConflict) {
+      addToast(conflict.message, 'error');
+      return { success: false, message: conflict.message };
+    }
+
+    const id = `SCH-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newSchedule = {
+      id,
+      location: candidate.location,
+      program: candidate.program,
+      programId: candidate.programId || '',
+      batch: candidate.batch,
+      batchId: candidate.batchId || '',
+      coachId: candidate.coachId,
+      coachName: candidate.coachName,
+      date: candidate.date,
+      startTime: candidate.startTime,
+      endTime: candidate.endTime,
+      venue: candidate.venue,
+      capacity: parseInt(candidate.capacity, 10) || 20,
+      enrolledCount: candidate.enrolledCount || 0,
+      enrolledStudents: candidate.enrolledStudents && candidate.enrolledStudents.length > 0 
+        ? candidate.enrolledStudents 
+        : ["Aarav Sharma", "Ananya Sharma", "Vihaan Patel"],
+      notes: candidate.notes || '',
+      status: 'Scheduled',
+      createdAt: new Date().toISOString(),
+      publishedBy: 'Admin Vikramaditya'
+    };
+
+    setData(prev => ({
+      ...prev,
+      classSchedules: [newSchedule, ...(prev.classSchedules || [])]
+    }));
+
+    addToast(`Schedule "${newSchedule.batch}" published! Automatically synced to ${newSchedule.coachName}'s Coach Portal.`, 'success');
+    return { success: true, schedule: newSchedule };
+  };
+
+  const updateClassSchedule = (id, updates) => {
+    const existing = (data.classSchedules || []).find(s => s.id === id);
+    if (!existing) {
+      addToast('Schedule not found', 'error');
+      return { success: false };
+    }
+
+    const candidate = { ...existing, ...updates };
+    const conflict = checkScheduleConflict(candidate, data.classSchedules || [], id);
+    if (conflict.hasConflict) {
+      addToast(conflict.message, 'error');
+      return { success: false, message: conflict.message };
+    }
+
+    setData(prev => ({
+      ...prev,
+      classSchedules: (prev.classSchedules || []).map(s => 
+        s.id === id 
+          ? { 
+              ...s, 
+              ...updates, 
+              status: updates.status || (s.status === 'Completed' ? 'Completed' : 'Updated'),
+              updatedAt: new Date().toISOString() 
+            } 
+          : s
+      )
+    }));
+
+    addToast(`Schedule ${id} updated! Coach Portal synchronized.`, 'info');
+    return { success: true };
+  };
+
+  const cancelClassSchedule = (id, reason = '') => {
+    setData(prev => ({
+      ...prev,
+      classSchedules: (prev.classSchedules || []).map(s => 
+        s.id === id 
+          ? { 
+              ...s, 
+              status: 'Cancelled', 
+              cancellationReason: reason, 
+              cancelledAt: new Date().toISOString() 
+            } 
+          : s
+      )
+    }));
+    addToast(`Schedule ${id} marked as Cancelled. Coach Portal updated.`, 'warning');
+    return { success: true };
+  };
+
+  const completeClassSchedule = (id) => {
+    setData(prev => ({
+      ...prev,
+      classSchedules: (prev.classSchedules || []).map(s => 
+        s.id === id 
+          ? { ...s, status: 'Completed', completedAt: new Date().toISOString() } 
+          : s
+      )
+    }));
+    addToast(`Class session ${id} marked as Completed.`, 'success');
+    return { success: true };
+  };
+
+  const checkScheduleConflictLive = (candidate, excludeId = null) => {
+    return checkScheduleConflict(candidate, data.classSchedules || [], excludeId);
+  };
+
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
     if (subTab) setActiveSubTab(subTab);
@@ -549,7 +666,13 @@ export function CrmProvider({ children }) {
         createCoachCompensation,
         updateCoachCompensation,
         createBackup,
-        restoreBackup
+        restoreBackup,
+        // Location-Based Class Scheduling Actions
+        createClassSchedule,
+        updateClassSchedule,
+        cancelClassSchedule,
+        completeClassSchedule,
+        checkScheduleConflictLive
       }}
     >
       {children}

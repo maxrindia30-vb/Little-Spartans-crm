@@ -21,7 +21,13 @@ import {
   Check,
   MessageSquare,
   Sparkles,
-  UserCheck
+  UserCheck,
+  CalendarDays,
+  Filter,
+  AlertCircle,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import KpiCard from '../../components/common/KpiCard';
@@ -35,12 +41,26 @@ export default function CoachPortalView() {
     markAttendance, 
     applyLeave, 
     updateCoachCompensation,
+    completeClassSchedule,
     addToast 
   } = useCrm();
 
   const coachProfile = data.coaches[0]; // Coach Vikram Singh
   const myClasses = data.classes.filter(c => c.coachId === coachProfile.id || c.coach.includes(coachProfile.name.split(' ')[0]));
   const myStudents = data.students.filter(s => s.coachName.includes('Vikram') || s.program.includes('Gymnastics'));
+
+  // Automatic Coach Portal Synchronization:
+  // Strict role-based filter: Coach ONLY sees schedules assigned to them!
+  const mySchedules = (data.classSchedules || []).filter(s => 
+    s.coachId === coachProfile.id || 
+    (s.coachName && s.coachName.toLowerCase().includes(coachProfile.name.toLowerCase().split(' ')[0]))
+  );
+
+  // Sub-view toggle in "My Classes": 'schedules' | 'batches'
+  const [classesSubView, setClassesSubView] = useState('schedules');
+  const [scheduleStatusFilter, setScheduleStatusFilter] = useState('all');
+  const [scheduleLocationFilter, setScheduleLocationFilter] = useState('all');
+  const [expandedStudentsScheduleId, setExpandedStudentsScheduleId] = useState(null);
 
   // Attendance state
   const [attendanceMap, setAttendanceMap] = useState({
@@ -92,6 +112,16 @@ export default function CoachPortalView() {
     c => c.coachName?.includes('Vikram') || c.substituteCoach?.includes('Vikram')
   );
 
+  // Filtered coach schedules
+  const filteredMySchedules = mySchedules.filter(s => {
+    if (scheduleStatusFilter !== 'all' && s.status !== scheduleStatusFilter) return false;
+    if (scheduleLocationFilter !== 'all' && s.location !== scheduleLocationFilter) return false;
+    return true;
+  });
+
+  // Upcoming live schedule
+  const nextScheduledClass = mySchedules.find(s => s.status === 'Scheduled' || s.status === 'Updated') || mySchedules[0];
+
   return (
     <div className="space-y-6">
       
@@ -116,11 +146,11 @@ export default function CoachPortalView() {
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentView('attendance')}
+                onClick={() => setCurrentView('classes')}
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-md hover:bg-[#DC4405] hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
-                <ClipboardCheck className="w-4 h-4 text-white" />
-                <span>Mark Attendance</span>
+                <CalendarDays className="w-4 h-4 text-white" />
+                <span>My Schedules ({mySchedules.length})</span>
               </button>
 
               <button
@@ -133,51 +163,59 @@ export default function CoachPortalView() {
             </div>
           </div>
 
-          {/* Live On-Court Training Session Banner */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#172B50] via-[#1E345D] to-[#254173] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-[#F4510B]/20 to-transparent pointer-events-none" />
-            <div className="flex items-center gap-3.5 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl shrink-0">
-                ⚡
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#FFA366]">
-                    Ongoing Batch: Court A (Indiranagar)
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500 text-white animate-pulse">
-                    LIVE NOW
-                  </span>
+          {/* Live Synchronized Scheduled Class Banner */}
+          {nextScheduledClass ? (
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#172B50] via-[#1E345D] to-[#254173] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-[#F4510B]/20 to-transparent pointer-events-none" />
+              <div className="flex items-center gap-3.5 relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl shrink-0">
+                  📍
                 </div>
-                <h4 className="text-sm sm:text-base font-extrabold text-white mt-0.5">
-                  Spartan Gymnastics & Agility • 16 Spartans on mat
-                </h4>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-[#FFA366]">
+                      Next Session: {nextScheduledClass.location} • {nextScheduledClass.venue}
+                    </span>
+                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                      nextScheduledClass.status === 'Updated' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
+                    } animate-pulse`}>
+                      {nextScheduledClass.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <h4 className="text-sm sm:text-base font-extrabold text-white mt-0.5">
+                    {nextScheduledClass.batch} • {nextScheduledClass.date} ({nextScheduledClass.startTime} – {nextScheduledClass.endTime})
+                  </h4>
+                </div>
               </div>
+              <button 
+                onClick={() => setCurrentView('classes')}
+                className="relative z-10 px-4 py-2 rounded-xl bg-[#F4510B] hover:bg-[#DC4405] text-white text-xs font-bold transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
+              >
+                View Full Schedule &rarr;
+              </button>
             </div>
-            <button 
-              onClick={() => setCurrentView('attendance')}
-              className="relative z-10 px-4 py-2 rounded-xl bg-[#F4510B] hover:bg-[#DC4405] text-white text-xs font-bold transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
-            >
-              Take Court Register &rarr;
-            </button>
-          </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-white border border-[#172B5015] text-xs text-[#172B50]">
+              No active classes scheduled yet today. Check back as Admin publishes new sessions.
+            </div>
+          )}
 
           {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
-                Active Athletes Assigned
+                Published Schedules
               </span>
-              <h3 className="text-3xl font-extrabold text-[#172B50]">{myStudents.length}</h3>
-              <p className="text-xs font-bold text-[#F4510B] mt-1">Across 3 Batches</p>
+              <h3 className="text-3xl font-extrabold text-[#172B50]">{mySchedules.length}</h3>
+              <p className="text-xs font-bold text-[#F4510B] mt-1">Synced from Admin</p>
             </div>
 
             <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
-                Batch Turnout Today
+                Active Athletes Assigned
               </span>
-              <h3 className="text-3xl font-extrabold text-[#172B50]">94%</h3>
-              <p className="text-xs font-bold text-emerald-600 mt-1">16 of 17 Present</p>
+              <h3 className="text-3xl font-extrabold text-[#172B50]">{myStudents.length}</h3>
+              <p className="text-xs font-bold text-emerald-600 mt-1">Across 3 Batches</p>
             </div>
 
             <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
@@ -185,51 +223,306 @@ export default function CoachPortalView() {
                 Compensation Slots
               </span>
               <h3 className="text-3xl font-extrabold text-[#172B50]">{coachComps.length}</h3>
-              <p className="text-xs font-bold text-[#F4510B] mt-1">Substitute/Makeup</p>
+              <p className="text-xs font-bold text-[#F4510B] mt-1">Substitute / Makeup</p>
             </div>
 
             <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
-                Parent Review Score
+                Faculty Rating
               </span>
               <h3 className="text-3xl font-extrabold text-[#172B50]">4.9 / 5.0</h3>
-              <p className="text-xs font-bold text-emerald-600 mt-1">Top rated trainer</p>
+              <p className="text-xs font-bold text-emerald-600 mt-1">Top rated coach</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. MY CLASSES */}
+      {/* 2. MY CLASSES: AUTOMATICALLY SYNCHRONIZED FROM ADMIN PORTAL */}
       {currentView === 'classes' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            My Training Batches & Court Allocations
-          </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {myClasses.map(cls => (
-              <div key={cls.id} className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase text-[#F4510B]">{cls.program}</span>
-                    <h3 className="text-lg font-black text-[#172B50] mt-0.5">{cls.name}</h3>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-black bg-[#172B50] text-white">
-                    {cls.enrolledCount} Spartans
-                  </span>
-                </div>
-                <div className="space-y-1.5 text-xs text-[#172B50]">
-                  <p className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>{cls.schedule}</span>
-                  </p>
-                  <p className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>{cls.center}</span>
-                  </p>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#172B5015]">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Auto-Synchronized with Admin Command Center
+                </span>
               </div>
-            ))}
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight mt-1">
+                My Class Schedules & Court Allocations
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Real-time schedules published by Admin for Coach {coachProfile.name}. Any updates or cancellations reflect instantly.
+              </p>
+            </div>
+
+            {/* Toggle View: Schedules vs Standing Batches */}
+            <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-[#172B5015] self-start sm:self-auto shadow-xs">
+              <button
+                onClick={() => setClassesSubView('schedules')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  classesSubView === 'schedules'
+                    ? 'bg-[#F4510B] text-white shadow-xs'
+                    : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>Location Schedules ({mySchedules.length})</span>
+              </button>
+
+              <button
+                onClick={() => setClassesSubView('batches')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  classesSubView === 'batches'
+                    ? 'bg-[#172B50] text-white shadow-xs'
+                    : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Standing Batches ({myClasses.length})</span>
+              </button>
+            </div>
           </div>
+
+          {/* VIEW A: SYNCHRONIZED LOCATION SCHEDULES */}
+          {classesSubView === 'schedules' && (
+            <div className="space-y-4">
+              
+              {/* Filter Bar for Coach */}
+              <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-bold text-[#172B50] flex items-center gap-1 mr-1">
+                    <Filter className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span>Filter:</span>
+                  </span>
+
+                  {/* Status Filter */}
+                  <select
+                    value={scheduleStatusFilter}
+                    onChange={(e) => setScheduleStatusFilter(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-lg bg-[#FFF4E8]/60 border border-[#172B5020] font-bold text-[#172B50]"
+                  >
+                    <option value="all">All Statuses ({mySchedules.length})</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Updated">Updated</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+
+                  {/* Location Filter */}
+                  <select
+                    value={scheduleLocationFilter}
+                    onChange={(e) => setScheduleLocationFilter(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-lg bg-[#FFF4E8]/60 border border-[#172B5020] font-bold text-[#172B50]"
+                  >
+                    <option value="all">All Locations</option>
+                    {(data.locations || []).map(loc => (
+                      <option key={loc.id} value={loc.name}>{loc.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <span className="text-[#172B50] opacity-70">
+                  Showing <strong>{filteredMySchedules.length}</strong> schedules assigned to you
+                </span>
+              </div>
+
+              {/* Schedules Card Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {filteredMySchedules.length === 0 ? (
+                  <div className="col-span-full bg-white rounded-2xl p-8 text-center border border-[#172B501A] shadow-card space-y-2">
+                    <CalendarDays className="w-10 h-10 text-gray-300 mx-auto" />
+                    <h3 className="text-sm font-bold text-[#172B50]">No Matching Schedules</h3>
+                    <p className="text-xs text-[#172B50]/70">
+                      You have no classes matching this filter. Newly published sessions from Admin will automatically appear here.
+                    </p>
+                  </div>
+                ) : (
+                  filteredMySchedules.map(sch => {
+                    const isCancelled = sch.status === 'Cancelled';
+                    const isCompleted = sch.status === 'Completed';
+                    const isExpanded = expandedStudentsScheduleId === sch.id;
+
+                    return (
+                      <div 
+                        key={sch.id}
+                        className={`bg-white rounded-2xl p-5 border shadow-card flex flex-col justify-between transition-all ${
+                          isCancelled 
+                            ? 'border-rose-200 bg-rose-50/20' 
+                            : isCompleted 
+                            ? 'border-emerald-200' 
+                            : 'border-[#172B501A]'
+                        }`}
+                      >
+                        <div>
+                          {/* Top Badges */}
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#172B50] text-white">
+                              {sch.program}
+                            </span>
+
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                              sch.status === 'Scheduled'
+                                ? 'bg-blue-100 text-blue-800'
+                                : sch.status === 'Updated'
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : sch.status === 'Completed'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-rose-100 text-rose-800 line-through'
+                            }`}>
+                              {sch.status}
+                            </span>
+                          </div>
+
+                          {/* Batch Name */}
+                          <h3 className={`text-base font-extrabold text-[#172B50] mt-2 ${
+                            isCancelled ? 'line-through text-gray-500' : ''
+                          }`}>
+                            {sch.batch}
+                          </h3>
+
+                          {/* Location & Court / Venue */}
+                          <div className="mt-3 p-3 bg-[#FFF4E8]/60 rounded-xl border border-[#172B5010] space-y-1 text-xs">
+                            <div className="flex items-center gap-1.5 font-bold text-[#172B50]">
+                              <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                              <span>{sch.location}</span>
+                            </div>
+                            <div className="text-[11px] font-semibold text-[#F4510B] pl-5">
+                              Allocated Court: {sch.venue}
+                            </div>
+                          </div>
+
+                          {/* Date and Time */}
+                          <div className="mt-3 space-y-1.5 text-xs text-[#172B50]">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                              <span className="font-semibold">{sch.date}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                              <span className="font-bold text-[#172B50]">{sch.startTime} – {sch.endTime}</span>
+                            </div>
+                          </div>
+
+                          {/* Assigned Students Count & Toggle */}
+                          <div className="mt-3 pt-2.5 border-t border-[#172B5010]">
+                            <div className="flex items-center justify-between text-xs font-semibold text-[#172B50]">
+                              <span>Assigned Athletes: {sch.enrolledStudents?.length || sch.enrolledCount || 0} / {sch.capacity}</span>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedStudentsScheduleId(isExpanded ? null : sch.id)}
+                                className="text-[11px] font-bold text-[#F4510B] hover:underline flex items-center gap-0.5 cursor-pointer"
+                              >
+                                <span>{isExpanded ? 'Hide Roster' : 'View Roster'}</span>
+                                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              </button>
+                            </div>
+
+                            {/* Expanded Students Roster */}
+                            {isExpanded && (
+                              <div className="mt-2 p-2.5 bg-[#FFF4E8]/40 rounded-xl border border-[#172B5010] text-[11px] space-y-1 animate-in fade-in">
+                                <span className="font-bold text-[#172B50] block mb-1">Enrolled Kids:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(sch.enrolledStudents || ["Aarav Sharma", "Ananya Sharma", "Vihaan Patel"]).map((kid, idx) => (
+                                    <span key={idx} className="px-2 py-0.5 rounded-md bg-white border border-[#172B5015] text-[#172B50] font-medium">
+                                      {kid}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Admin Notes / Instructions */}
+                          {sch.notes && (
+                            <p className="mt-3 text-[11px] text-[#172B50]/80 bg-[#FFF4E8]/30 p-2.5 rounded-lg italic">
+                              <strong>Admin Note:</strong> "{sch.notes}"
+                            </p>
+                          )}
+
+                          {/* Cancellation Note if cancelled */}
+                          {isCancelled && sch.cancellationReason && (
+                            <p className="mt-2 text-[11px] text-rose-700 bg-rose-50 p-2 rounded-lg font-bold">
+                              Cancellation Reason: {sch.cancellationReason}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Action Bar for Coach */}
+                        <div className="mt-4 pt-3 border-t border-[#172B5010] flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono text-gray-400">{sch.id}</span>
+
+                          <div className="flex items-center gap-2">
+                            {!isCancelled && !isCompleted && (
+                              <button
+                                type="button"
+                                onClick={() => completeClassSchedule(sch.id)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>Mark Completed</span>
+                              </button>
+                            )}
+
+                            {!isCancelled && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCurrentView('attendance');
+                                  addToast(`Opening attendance register for ${sch.batch}`);
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#172B50] text-white text-xs font-bold rounded-lg hover:bg-[#F4510B] transition-colors cursor-pointer"
+                              >
+                                <ClipboardCheck className="w-3.5 h-3.5" />
+                                <span>Attendance</span>
+                              </button>
+                            )}
+
+                            {isCompleted && (
+                              <span className="flex items-center gap-1 text-emerald-700 text-xs font-bold">
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>Class Completed</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* VIEW B: GENERAL STANDING BATCHES */}
+          {classesSubView === 'batches' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {myClasses.map(cls => (
+                <div key={cls.id} className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[#F4510B]">{cls.program}</span>
+                      <h3 className="text-lg font-black text-[#172B50] mt-0.5">{cls.name}</h3>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-black bg-[#172B50] text-white">
+                      {cls.enrolledCount || cls.enrolled} Spartans
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 text-xs text-[#172B50]">
+                    <p className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
+                      <span>{cls.schedule}</span>
+                    </p>
+                    <p className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                      <span>{cls.center}</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
         </div>
       )}
 
