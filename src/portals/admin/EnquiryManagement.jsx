@@ -428,6 +428,17 @@ export default function EnquiryManagement() {
             </div>
           </div>
 
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Email ID</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="parent@example.com"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-[#172B50] block mb-1">Program Choice</label>

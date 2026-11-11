@@ -1,13 +1,17 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, title, subtitle, children, maxWidth = "max-w-xl" }) {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#172B5070] backdrop-blur-xs animate-in fade-in duration-200">
+  const modalContent = (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#172B5070] backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
+    >
       <div 
-        className={`w-full ${maxWidth} bg-white rounded-2xl shadow-dropdown border border-[#172B501A] overflow-hidden flex flex-col max-h-[90vh]`}
+        className={`w-full ${maxWidth} my-auto bg-white rounded-2xl shadow-dropdown border border-[#172B501A] overflow-hidden flex flex-col max-h-[90vh]`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -17,6 +21,7 @@ export default function Modal({ isOpen, onClose, title, subtitle, children, maxW
             {subtitle && <p className="text-xs text-[#172B50] opacity-75 mt-0.5">{subtitle}</p>}
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-1.5 rounded-xl text-[#172B50] hover:bg-white hover:text-[#F4510B] transition-colors"
           >
@@ -31,4 +36,10 @@ export default function Modal({ isOpen, onClose, title, subtitle, children, maxW
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+
+  return modalContent;
 }

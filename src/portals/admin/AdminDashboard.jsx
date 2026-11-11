@@ -20,9 +20,11 @@ import { useCrm } from '../../context/CrmContext';
 import KpiCard from '../../components/common/KpiCard';
 import { RevenueTrendChart, AttendanceDonutChart, ProgramDistributionChart } from '../../components/common/Charts';
 import Modal from '../../components/common/Modal';
+import { getCommonLocations } from '../../services/locationService';
 
 export default function AdminDashboard() {
   const { data, setCurrentView, addStudent, addEnquiry, addPayment, addToast } = useCrm();
+  const commonLocations = getCommonLocations(data);
 
   const [modalType, setModalType] = useState(null); // 'student' | 'enquiry' | 'payment'
 
@@ -36,6 +38,8 @@ export default function AdminDashboard() {
   const [enqChild, setEnqChild] = useState('');
   const [enqParent, setEnqParent] = useState('');
   const [enqPhone, setEnqPhone] = useState('');
+  const [enqEmail, setEnqEmail] = useState('');
+  const [enqLocation, setEnqLocation] = useState(commonLocations[0]?.name || 'KK NAGAR');
   const [enqProgram, setEnqProgram] = useState(data.programs[0]?.name || '');
 
   const [payStudent, setPayStudent] = useState(data.students[0]?.name || '');
@@ -84,9 +88,9 @@ export default function AdminDashboard() {
       childAge: 6,
       parentName: enqParent,
       phone: enqPhone || '+91 98765 00000',
-      email: `${enqParent.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
+      email: enqEmail.trim() || `${enqParent.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
       interestedProgram: enqProgram,
-      center: data.academy.centers[0] || 'KK NAGAR',
+      center: enqLocation || commonLocations[0]?.name || 'KK NAGAR',
       notes: 'Parent submitted quick walk-in lead at academy reception desk.',
       stage: 'New'
     });
@@ -94,6 +98,7 @@ export default function AdminDashboard() {
     setEnqChild('');
     setEnqParent('');
     setEnqPhone('');
+    setEnqEmail('');
   };
 
   const handleQuickPayment = (e) => {
@@ -472,6 +477,31 @@ export default function AdminDashboard() {
                 placeholder="+91 98..."
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Email ID</label>
+              <input
+                type="email"
+                value={enqEmail}
+                onChange={(e) => setEnqEmail(e.target.value)}
+                placeholder="parent@example.com"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Location *</label>
+              <select
+                value={enqLocation}
+                onChange={(e) => setEnqLocation(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              >
+                {commonLocations.map(loc => (
+                  <option key={loc.id} value={loc.name}>{loc.name}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="text-xs font-bold text-[#172B50] block mb-1">Interested Program</label>
