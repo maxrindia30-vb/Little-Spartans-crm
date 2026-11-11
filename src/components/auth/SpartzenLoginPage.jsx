@@ -62,19 +62,6 @@ export default function SpartzenLoginPage() {
     setForgotInput('');
   };
 
-  const handleQuickPortalLogin = (role) => {
-    let email = 'admin@littlespartans.com';
-    if (role === 'parent') email = 'parent@littlespartans.com';
-    if (role === 'coach') email = 'coach@littlespartans.com';
-
-    setEmailOrPhone(email);
-    setPassword('Spartan2026!');
-    setErrorMsg('');
-    setCurrentPortal(role);
-    login(role);
-    addToast(`Welcome to ZenConnect! Signed in to ${role.toUpperCase()} Portal.`);
-  };
-
   return (
     <div className="w-full min-h-screen bg-white text-[#172B50] font-sans flex items-center justify-center p-4 sm:p-6 lg:p-10 select-none relative overflow-x-hidden">
       
@@ -258,44 +245,6 @@ export default function SpartzenLoginPage() {
                 </button>
 
               </form>
-
-              {/* Quick 1-Click Portal Access: Admin, Parent, Coach */}
-              <div className="mt-3.5 pt-3 border-t border-[#172B5014]">
-                <div className="flex items-center justify-between mb-2 px-0.5">
-                  <span className="text-[11px] font-bold text-[#172B50] opacity-75 uppercase tracking-wider font-sans">
-                    Quick Portal Access
-                  </span>
-                  <span className="text-[10.5px] font-semibold text-[#F4510B] font-sans">
-                    1-Click Launch
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPortalLogin('admin')}
-                    className="py-1.5 px-2 bg-[#FFF4E8] hover:bg-[#F4510B] text-[#172B50] hover:text-white rounded-xl text-[12px] font-bold transition-all border border-[#F4510B26] text-center shadow-xs cursor-pointer active:scale-95 font-sans"
-                    title="Launch Admin Portal (Full Academy Management)"
-                  >
-                    Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPortalLogin('parent')}
-                    className="py-1.5 px-2 bg-[#FFF4E8] hover:bg-[#F4510B] text-[#172B50] hover:text-white rounded-xl text-[12px] font-bold transition-all border border-[#F4510B26] text-center shadow-xs cursor-pointer active:scale-95 font-sans"
-                    title="Launch Parent Portal (Children, Classes & Fees)"
-                  >
-                    Parent
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickPortalLogin('coach')}
-                    className="py-1.5 px-2 bg-[#FFF4E8] hover:bg-[#F4510B] text-[#172B50] hover:text-white rounded-xl text-[12px] font-bold transition-all border border-[#F4510B26] text-center shadow-xs cursor-pointer active:scale-95 font-sans"
-                    title="Launch Coach Portal (Rosters, Drills & Attendance)"
-                  >
-                    Coach
-                  </button>
-                </div>
-              </div>
 
               {/* Divider Line */}
               <div className="w-full h-px bg-[#E2E8F0] mt-3.5 mb-3" />

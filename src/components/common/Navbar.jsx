@@ -3,40 +3,26 @@ import {
   Search, 
   Bell, 
   ChevronDown, 
-  User, 
   Menu, 
   X, 
   LogOut, 
-  RefreshCw,
-  Building,
-  CheckCircle2,
   Sparkles
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
-export default function Navbar({ onOpenLogin }) {
+export default function Navbar() {
   const { 
-    currentPortal, 
-    setCurrentPortal, 
     currentUser, 
     globalSearch, 
     setGlobalSearch, 
     sidebarOpen, 
     setSidebarOpen,
     data,
-    resetAllData,
     logout
   } = useCrm();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-
-  const portals = [
-    { id: 'admin', label: 'Admin Portal', desc: 'Full Academy Management & Oversight' },
-    { id: 'parent', label: 'Parent Portal', desc: 'Children, Classes, Fees & Badges' },
-    { id: 'coach', label: 'Coach Portal', desc: 'Rosters, Drills, Attendance & Evals' },
-    { id: 'support', label: 'Customer Support Portal', desc: 'Enquiries, CRM Tickets & Follow-ups' },
-  ];
 
   return (
     <header className="sticky top-0 z-30 w-full bg-[#FFF4E8] border-b border-[#172B501A] px-4 sm:px-6 py-3 shrink-0 transition-colors duration-200">
@@ -158,75 +144,24 @@ export default function Navbar({ onOpenLogin }) {
 
             {profileOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-dropdown border border-[#172B501A] p-2.5 z-50">
-                <div className="px-3 py-2 border-b border-[#172B5015] mb-1 bg-[#FFF4E8] rounded-lg">
+                <div className="px-3 py-2.5 bg-[#FFF4E8] rounded-lg">
                   <p className="text-xs font-bold text-[#172B50]">{currentUser.name}</p>
-                  <p className="text-[11px] text-[#172B50] opacity-75 truncate">{currentUser.email}</p>
-                  <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#172B50] text-white">
-                    {currentUser.portalTitle}
-                  </div>
+                  <p className="text-[11px] font-medium text-[#172B50] opacity-80 truncate mt-0.5">
+                    {currentUser.email}
+                  </p>
                 </div>
 
-                <div className="py-1">
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-50">
-                    Switch Active Portal
-                  </div>
-                  {portals.map(p => (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setCurrentPortal(p.id);
-                        setProfileOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between ${
-                        currentPortal === p.id 
-                          ? 'bg-[#F4510B] text-white font-bold' 
-                          : 'text-[#172B50] hover:bg-[#FFF4E8]'
-                      }`}
-                    >
-                      <div>
-                        <span>{p.label}</span>
-                        <span className={`block text-[10px] ${currentPortal === p.id ? 'text-white opacity-90' : 'text-[#172B50] opacity-60'}`}>
-                          {p.desc.substring(0, 24)}...
-                        </span>
-                      </div>
-                      {currentPortal === p.id && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="pt-2 border-t border-[#172B5015] mt-1 space-y-1">
-                  {onOpenLogin && (
-                    <button
-                      onClick={() => {
-                        onOpenLogin();
-                        setProfileOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-1.5 text-xs text-[#172B50] font-bold hover:bg-[#FFF4E8] rounded-lg flex items-center gap-2"
-                    >
-                      <User className="w-3.5 h-3.5 text-[#F4510B]" />
-                      <span>Role Login Screens</span>
-                    </button>
-                  )}
+                <div className="pt-2 mt-2 border-t border-[#172B5015]">
                   <button
-                    onClick={() => {
-                      resetAllData();
-                      setProfileOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-[#172B50] font-medium hover:bg-[#FFF4E8] rounded-lg flex items-center gap-2"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5 text-[#172B50]" />
-                    <span>Reset Academy Mock Data</span>
-                  </button>
-
-                  <button
+                    type="button"
                     onClick={() => {
                       logout();
                       setProfileOpen(false);
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-[#F4510B] font-bold hover:bg-[#FFF4E8] rounded-lg flex items-center gap-2 pt-1 border-t border-[#172B5010]"
+                    className="w-full text-left px-3 py-2 text-xs text-[#F4510B] font-bold hover:bg-[#FFF4E8] rounded-lg flex items-center gap-2 cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>Sign Out (ZenConnect Portal)</span>
+                    <span>Sign Out</span>
                   </button>
                 </div>
               </div>
