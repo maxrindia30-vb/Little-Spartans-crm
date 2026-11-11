@@ -9,16 +9,27 @@ import {
   UserCheck, 
   Clock, 
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  Info
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import { getCommonLocations, filterEnquiries } from '../../services/locationService';
 
 export default function EnquiryManagement() {
   const { data, addEnquiry, updateEnquiryStage, addStudent } = useCrm();
 
+  const commonLocations = getCommonLocations(data);
+
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedStage, setSelectedStage] = useState('All');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form states
@@ -28,19 +39,43 @@ export default function EnquiryManagement() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [interestedProgram, setInterestedProgram] = useState(data.programs[0]?.name || '');
-  const [center, setCenter] = useState(data.academy.centers[0] || 'Indiranagar Arena');
+  const [center, setCenter] = useState(commonLocations[0]?.name || 'Indiranagar Arena');
   const [notes, setNotes] = useState('');
 
   const stages = ['All', 'New', 'Contacted', 'Trial Scheduled', 'Trial Completed', 'Enrolled'];
 
-  const filteredEnquiries = data.enquiries.filter(enq => {
-    const matchesSearch = 
-      enq.childName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enq.parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enq.phone.includes(searchTerm);
-    const matchesStage = selectedStage === 'All' || enq.stage === selectedStage;
-    return matchesSearch && matchesStage;
+  const locationScopedEnquiries = filterEnquiries(data.enquiries || [], {
+    location: selectedLocation,
+    date: selectedDate,
   });
+
+  const filteredEnquiries = filterEnquiries(data.enquiries || [], {
+    location: selectedLocation,
+    stage: selectedStage,
+    date: selectedDate,
+    search: searchTerm,
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredEnquiries.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedEnquiries = filteredEnquiries.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const handleLocationChange = (locName) => {
+    setSelectedLocation(locName);
+    setCurrentPage(1);
+    if (locName !== 'All') {
+      setCenter(locName);
+    }
+  };
+
+  const handleOpenModal = () => {
+    if (selectedLocation !== 'All') {
+      setCenter(selectedLocation);
+    } else {
+      setCenter(commonLocations[0]?.name || 'Indiranagar Arena');
+    }
+    setIsModalOpen(true);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -101,7 +136,7 @@ export default function EnquiryManagement() {
         </div>
 
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenModal}
           className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-white" />
@@ -110,32 +145,99 @@ export default function EnquiryManagement() {
       </div>
 
       {/* Filter and Search Bar: Pure White (#FFFFFF) */}
-      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-col md:flex-row items-center justify-between gap-3">
-        {/* Search */}
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by child, parent or phone..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
-          />
+      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-3">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
+            {/* Location Filter Dropdown (Shared Common Locations) */}
+            <div className="relative min-w-[210px]">
+              <MapPin className="w-4 h-4 text-[#F4510B] absolute left-3 top-2.5 pointer-events-none" />
+              <select
+                aria-label="Filter enquiries by academy location"
+                value={selectedLocation}
+                onChange={(e) => handleLocationChange(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5025] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B] cursor-pointer"
+              >
+                <option value="All">All Locations ({(data.enquiries || []).length})</option>
+                {commonLocations.map(loc => (
+                  <option key={loc.id} value={loc.name}>
+                    {loc.name} ({(data.enquiries || []).filter(e => e.center === loc.name).length})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search by child, parent or phone..."
+                className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+              />
+            </div>
+
+            {/* Date Filter */}
+            <div className="flex items-center gap-1.5">
+              <div className="relative">
+                <Calendar className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute left-3 top-2.5 pointer-events-none" />
+                <input
+                  type="date"
+                  aria-label="Filter enquiries by created or trial date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-8 pr-2.5 py-2 text-xs font-semibold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+                />
+              </div>
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDate('');
+                    setCurrentPage(1);
+                  }}
+                  className="px-2.5 py-2 text-[11px] font-bold text-[#F4510B] bg-[#FFF4E8] border border-[#F4510B30] rounded-xl hover:bg-white transition-all"
+                >
+                  Clear Date
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] font-semibold text-[#172B50] opacity-75">
+            <span>
+              Showing <strong className="text-[#172B50]">{filteredEnquiries.length}</strong>{' '}
+              {selectedLocation === 'All' ? 'across all locations' : `at ${selectedLocation}`}
+            </span>
+          </div>
         </div>
 
         {/* Stage Filter Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {stages.map(st => (
             <button
               key={st}
-              onClick={() => setSelectedStage(st)}
+              onClick={() => {
+                setSelectedStage(st);
+                setCurrentPage(1);
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                 selectedStage === st
                   ? 'bg-[#172B50] text-white shadow-sm'
                   : 'bg-[#FFF4E8] text-[#172B50] hover:bg-white border border-[#172B5015]'
               }`}
             >
-              {st} {st !== 'All' && `(${data.enquiries.filter(e => e.stage === st).length})`}
+              {st}{' '}
+              {st !== 'All'
+                ? `(${locationScopedEnquiries.filter(e => e.stage === st).length})`
+                : `(${locationScopedEnquiries.length})`}
             </button>
           ))}
         </div>
@@ -156,14 +258,14 @@ export default function EnquiryManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#172B5010]">
-              {filteredEnquiries.length === 0 ? (
+              {paginatedEnquiries.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="py-8 text-center text-[#172B50] opacity-60">
-                    No enquiries match the selected filter.
+                    No enquiries match the selected location, stage, date, or search filter.
                   </td>
                 </tr>
               ) : (
-                filteredEnquiries.map(enq => (
+                paginatedEnquiries.map(enq => (
                   <tr key={enq.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
                     <td className="py-3 px-4">
                       <span className="font-extrabold text-[#172B50] block">{enq.id}</span>
@@ -228,6 +330,43 @@ export default function EnquiryManagement() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer */}
+        <div className="px-4 py-3 bg-[#FFF4E8]/60 border-t border-[#172B5015] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#172B50]">
+          <span className="font-semibold opacity-75">
+            Page {safePage} of {totalPages} • {filteredEnquiries.length} enquiry record{filteredEnquiries.length === 1 ? '' : 's'}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              className="px-2.5 py-1.5 rounded-lg border border-[#172B5020] bg-white font-bold text-[#172B50] disabled:opacity-40 hover:bg-[#FFF4E8] inline-flex items-center gap-1"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Prev</span>
+            </button>
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              className="px-2.5 py-1.5 rounded-lg border border-[#172B5020] bg-white font-bold text-[#172B50] disabled:opacity-40 hover:bg-[#FFF4E8] inline-flex items-center gap-1"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Local Data & Backend Integration Note */}
+      <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-[11px] text-[#172B50]">
+        <Info className="w-4 h-4 text-[#F4510B] shrink-0 mt-0.5" />
+        <span>
+          Filtering uses shared academy location data in local browser state. Backend persistence requires{' '}
+          <code className="font-bold">GET /api/v1/locations</code> and{' '}
+          <code className="font-bold">GET /api/v1/enquiries?location=&amp;stage=&amp;date=&amp;search=&amp;page=</code>.
+        </span>
       </div>
 
       {/* Add Lead Modal */}
@@ -309,8 +448,8 @@ export default function EnquiryManagement() {
                 onChange={(e) => setCenter(e.target.value)}
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
-                {data.academy.centers.map(c => (
-                  <option key={c} value={c}>{c}</option>
+                {commonLocations.map(loc => (
+                  <option key={loc.id} value={loc.name}>{loc.name}</option>
                 ))}
               </select>
             </div>

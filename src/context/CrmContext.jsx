@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { initialAcademyData } from '../data/mockData';
 import { checkScheduleConflict } from '../services/scheduleService';
+import { upsertBatchAttendanceRecords } from '../services/attendanceService';
 
 const CrmContext = createContext();
 
@@ -18,8 +19,14 @@ export function CrmProvider({ children }) {
         return {
           ...initialAcademyData,
           ...parsed,
+          academy: {
+            ...initialAcademyData.academy,
+            ...(parsed.academy || {}),
+            centers: initialAcademyData.academy.centers,
+          },
           locations: parsed.locations && parsed.locations.length > 0 ? parsed.locations : initialAcademyData.locations,
           classSchedules: parsed.classSchedules && parsed.classSchedules.length > 0 ? parsed.classSchedules : initialAcademyData.classSchedules,
+          attendanceRecords: parsed.attendanceRecords && parsed.attendanceRecords.length > 0 ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
         };
       }
     } catch (e) {
@@ -132,12 +139,26 @@ export function CrmProvider({ children }) {
 
   // CRUD Actions
   const addStudent = (studentData) => {
+    const matchedClass =
+      (data.classes || []).find(
+        c =>
+          (!studentData.center || c.center === studentData.center) &&
+          (!studentData.program || c.program === studentData.program)
+      ) ||
+      (data.classes || []).find(c => !studentData.center || c.center === studentData.center);
+
     const newStudent = {
       ...studentData,
       id: `STU-00${data.students.length + 1}`,
       joinDate: new Date().toISOString().split('T')[0],
       attendanceRate: 100,
       feeStatus: studentData.feeStatus || 'Paid',
+      enrolledClasses:
+        studentData.enrolledClasses && studentData.enrolledClasses.length > 0
+          ? studentData.enrolledClasses
+          : matchedClass
+          ? [matchedClass.id]
+          : [],
       badges: ['New Spartan recruit'],
       avatar: studentData.avatar || 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=150&auto=format&fit=crop&q=80'
     };
@@ -204,9 +225,51 @@ export function CrmProvider({ children }) {
     addToast(`Payment of ₹${paymentData.amount.toLocaleString()} received! Receipt generated.`);
   };
 
-  const markAttendance = (classId, studentId, status) => {
-    // Updates student attendance rate & logs
-    addToast(`Attendance marked as "${status}" for student.`);
+  const saveBatchAttendance = ({ entries, date, location, batchId }) => {
+    const coachProfile = currentPortal === 'coach' ? data.coaches[0] : null;
+    const markedBy = currentPortal === 'coach'
+      ? (coachProfile?.name || 'Coach')
+      : 'Commander Vikramaditya (Admin)';
+
+    const result = upsertBatchAttendanceRecords(data.attendanceRecords || [], {
+      entries,
+      date,
+      location,
+      batchId,
+      students: data.students || [],
+      classes: data.classes || [],
+      classSchedules: data.classSchedules || [],
+      role: currentPortal,
+      coachProfile,
+      markedBy,
+    });
+
+    if (!result.success) {
+      addToast(result.error || 'Unable to save attendance records.', 'error');
+      return result;
+    }
+
+    setData(prev => ({
+      ...prev,
+      attendanceRecords: result.records,
+    }));
+
+    addToast(
+      `Saved ${result.savedCount} attendance record${result.savedCount === 1 ? '' : 's'} for ${date} in browser storage (backend API not connected).`,
+      'success'
+    );
+    return result;
+  };
+
+  const markAttendance = (classId, studentId, status, date = new Date().toISOString().split('T')[0], location = '') => {
+    const student = (data.students || []).find(s => s.id === studentId);
+    const batch = (data.classes || []).find(c => c.id === classId);
+    return saveBatchAttendance({
+      entries: [{ studentId, batchId: classId, status }],
+      date,
+      location: location || batch?.center || student?.center || '',
+      batchId: classId,
+    });
   };
 
   const applyLeave = (leaveData) => {
@@ -667,6 +730,7 @@ export function CrmProvider({ children }) {
         updateCoachCompensation,
         createBackup,
         restoreBackup,
+        saveBatchAttendance,
         // Location-Based Class Scheduling Actions
         createClassSchedule,
         updateClassSchedule,

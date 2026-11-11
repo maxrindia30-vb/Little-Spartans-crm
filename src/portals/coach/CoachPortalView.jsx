@@ -27,9 +27,19 @@ import {
   AlertCircle,
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Save,
+  Info,
+  Users,
+  X
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
+import {
+  ATTENDANCE_STATUSES,
+  getCoachAssignedBatches,
+  filterStudentsForAttendance,
+  getSavedAttendanceRecord,
+} from '../../services/attendanceService';
 import KpiCard from '../../components/common/KpiCard';
 import Modal from '../../components/common/Modal';
 
@@ -38,7 +48,7 @@ export default function CoachPortalView() {
     currentView, 
     setCurrentView, 
     data, 
-    markAttendance, 
+    saveBatchAttendance,
     applyLeave, 
     updateCoachCompensation,
     completeClassSchedule,
@@ -62,12 +72,118 @@ export default function CoachPortalView() {
   const [scheduleLocationFilter, setScheduleLocationFilter] = useState('all');
   const [expandedStudentsScheduleId, setExpandedStudentsScheduleId] = useState(null);
 
-  // Attendance state
-  const [attendanceMap, setAttendanceMap] = useState({
-    'STU-001': 'Present',
-    'STU-003': 'Present',
-    'STU-007': 'Present',
+  // Coach Location-Wise Attendance state (scoped strictly to coach's assigned locations & batches)
+  const coachAssignedBatches = getCoachAssignedBatches({
+    coachProfile,
+    classes: data.classes || [],
+    classSchedules: data.classSchedules || [],
   });
+  const coachAssignedLocations = Array.from(
+    new Set(coachAssignedBatches.map(b => b.center).filter(Boolean))
+  );
+
+  const [coachAttLocation, setCoachAttLocation] = useState(coachAssignedLocations[0] || '');
+  const [coachAttBatchId, setCoachAttBatchId] = useState(coachAssignedBatches[0]?.id || '');
+  const [coachAttDate, setCoachAttDate] = useState('2026-11-11');
+  const [coachAttDrafts, setCoachAttDrafts] = useState({});
+
+  const effectiveCoachLocation =
+    coachAttLocation && coachAssignedLocations.includes(coachAttLocation)
+      ? coachAttLocation
+      : (coachAssignedLocations[0] || '');
+
+  const coachLocationBatches = coachAssignedBatches.filter(
+    b => b.center === effectiveCoachLocation
+  );
+
+  const effectiveCoachBatch =
+    coachLocationBatches.find(b => b.id === coachAttBatchId) ||
+    coachLocationBatches[0] ||
+    null;
+
+  const coachAttStudents = effectiveCoachBatch
+    ? filterStudentsForAttendance(data.students || [], data.classes || [], {
+        location: effectiveCoachLocation,
+        batchId: effectiveCoachBatch.id,
+      })
+    : [];
+
+  const coachAttRows = coachAttStudents.map(student => {
+    const batchId = effectiveCoachBatch?.id || 'UNASSIGNED';
+    const draftKey = `${student.id}::${batchId}::${coachAttDate}::${effectiveCoachLocation}`;
+    const savedRecord = getSavedAttendanceRecord(data.attendanceRecords || [], {
+      studentId: student.id,
+      batchId,
+      date: coachAttDate,
+      location: effectiveCoachLocation,
+    });
+    const savedStatus = savedRecord?.status || ATTENDANCE_STATUSES.NOT_MARKED;
+    const currentStatus = coachAttDrafts[draftKey] || savedStatus;
+    const isDirty = Boolean(coachAttDrafts[draftKey] && coachAttDrafts[draftKey] !== savedStatus);
+
+    return {
+      student,
+      batchId,
+      draftKey,
+      savedStatus,
+      currentStatus,
+      isDirty,
+      savedRecord,
+    };
+  });
+
+  const coachAttTotal = coachAttRows.length;
+  const coachAttPresent = coachAttRows.filter(r => r.currentStatus === ATTENDANCE_STATUSES.PRESENT).length;
+  const coachAttAbsent = coachAttRows.filter(r => r.currentStatus === ATTENDANCE_STATUSES.ABSENT).length;
+  const coachAttNotMarked = coachAttRows.filter(r => r.currentStatus === ATTENDANCE_STATUSES.NOT_MARKED).length;
+  const coachAttDirtyCount = coachAttRows.filter(r => r.isDirty).length;
+
+  const handleCoachLocationChange = (nextLoc) => {
+    setCoachAttLocation(nextLoc);
+    const nextBatches = coachAssignedBatches.filter(b => b.center === nextLoc);
+    setCoachAttBatchId(nextBatches[0]?.id || '');
+  };
+
+  const handleSaveCoachAttendance = () => {
+    if (!effectiveCoachBatch || !effectiveCoachLocation) {
+      addToast('No assigned location or batch is selected.', 'error');
+      return;
+    }
+
+    const entries = coachAttRows
+      .filter(
+        r =>
+          r.currentStatus === ATTENDANCE_STATUSES.PRESENT ||
+          r.currentStatus === ATTENDANCE_STATUSES.ABSENT
+      )
+      .map(r => ({
+        studentId: r.student.id,
+        batchId: effectiveCoachBatch.id,
+        status: r.currentStatus,
+      }));
+
+    if (entries.length === 0) {
+      addToast('Mark at least one athlete Present or Absent before saving.', 'error');
+      return;
+    }
+
+    const res = saveBatchAttendance({
+      entries,
+      date: coachAttDate,
+      location: effectiveCoachLocation,
+      batchId: effectiveCoachBatch.id,
+    });
+
+    if (res?.success) {
+      setCoachAttDrafts(prev => {
+        const next = { ...prev };
+        coachAttRows.forEach(r => {
+          delete next[r.draftKey];
+        });
+        return next;
+      });
+    }
+  };
 
   // Evaluation states
   const [evalStudent, setEvalStudent] = useState(myStudents[0]?.id || 'STU-001');
@@ -574,55 +690,211 @@ export default function CoachPortalView() {
         </div>
       )}
 
-      {/* 4. ATTENDANCE */}
+      {/* 4. ATTENDANCE (LOCATION & ASSIGNED BATCH SCOPED) */}
       {currentView === 'attendance' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-              Mark Session Attendance
-            </h1>
-            <button 
-              onClick={() => addToast('Batch attendance verified and synced to cloud ledger!', 'success')}
-              className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Mark Session Attendance
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Showing only locations, classes &amp; athletes assigned to <strong>{coachProfile.name}</strong>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveCoachAttendance}
+              disabled={!effectiveCoachBatch || coachAttRows.length === 0}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 self-start sm:self-auto"
             >
-              Submit Attendance Register
+              <Save className="w-4 h-4" />
+              <span>
+                Save Attendance{coachAttDirtyCount > 0 ? ` (${coachAttDirtyCount})` : ''}
+              </span>
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
-            <div className="space-y-3">
-              {myStudents.map(s => (
-                <div key={s.id} className="p-3 bg-[#FFF4E8] rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img src={s.avatar} alt={s.name} className="w-9 h-9 rounded-full object-cover" />
-                    <div>
-                      <h4 className="text-xs font-black text-[#172B50]">{s.name}</h4>
-                      <p className="text-[11px] text-[#172B50] opacity-75">{s.batch}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {['Present', 'Absent', 'Excused'].map(status => (
-                      <button
-                        key={status}
-                        onClick={() => setAttendanceMap(prev => ({ ...prev, [s.id]: status }))}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          attendanceMap[s.id] === status
-                            ? status === 'Present'
-                              ? 'bg-emerald-600 text-white'
-                              : status === 'Absent'
-                              ? 'bg-rose-600 text-white'
-                              : 'bg-amber-600 text-white'
-                            : 'bg-white text-[#172B50] border border-[#172B5020]'
-                        }`}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                  </div>
+          {/* Coach Assigned Selectors & Summary Bar */}
+          <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-70 block mb-1">
+                  Assigned Location
+                </label>
+                <div className="relative">
+                  <MapPin className="w-3.5 h-3.5 text-[#F4510B] absolute left-2.5 top-2.5 pointer-events-none" />
+                  <select
+                    aria-label="Select assigned academy location"
+                    value={effectiveCoachLocation}
+                    onChange={(e) => handleCoachLocationChange(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none focus:ring-2 focus:ring-[#F4510B]"
+                  >
+                    {coachAssignedLocations.length === 0 ? (
+                      <option value="">No Assigned Locations</option>
+                    ) : (
+                      coachAssignedLocations.map(loc => (
+                        <option key={loc} value={loc}>{loc}</option>
+                      ))
+                    )}
+                  </select>
                 </div>
-              ))}
+              </div>
+
+              <div>
+                <label className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-70 block mb-1">
+                  Assigned Class / Batch
+                </label>
+                <select
+                  aria-label="Select assigned class or batch"
+                  value={effectiveCoachBatch?.id || ''}
+                  onChange={(e) => setCoachAttBatchId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none focus:ring-2 focus:ring-[#F4510B]"
+                >
+                  {coachLocationBatches.length === 0 ? (
+                    <option value="">No Assigned Batches at Location</option>
+                  ) : (
+                    coachLocationBatches.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.program})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-70 block mb-1">
+                  Attendance Date
+                </label>
+                <div className="relative">
+                  <Calendar className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute left-2.5 top-2.5 pointer-events-none" />
+                  <input
+                    type="date"
+                    aria-label="Coach attendance date"
+                    value={coachAttDate}
+                    onChange={(e) => setCoachAttDate(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none focus:ring-2 focus:ring-[#F4510B]"
+                  />
+                </div>
+              </div>
             </div>
+
+            {/* Coach Attendance Summary */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-[#172B5010]">
+              <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#172B50]">Total Students</span>
+                <span className="text-sm font-black text-[#172B50]">{coachAttTotal}</span>
+              </div>
+              <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#172B50]">Present</span>
+                <span className="text-sm font-black text-emerald-700">{coachAttPresent}</span>
+              </div>
+              <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#172B50]">Absent</span>
+                <span className="text-sm font-black text-[#F4510B]">{coachAttAbsent}</span>
+              </div>
+              <div className="px-3.5 py-2 rounded-xl bg-[#172B50] text-white flex items-center justify-between">
+                <span className="text-[11px] font-bold">Not Marked</span>
+                <span className="text-sm font-black text-[#FFF4E8]">{coachAttNotMarked}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Student List for Assigned Batch + Location */}
+          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
+            {effectiveCoachBatch && (
+              <div className="pb-3 mb-3 border-b border-[#172B5015] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-extrabold text-[#172B50]">
+                    {effectiveCoachBatch.name} • {effectiveCoachLocation}
+                  </h3>
+                  <p className="text-[11px] text-[#172B50] opacity-75">
+                    {effectiveCoachBatch.program} • {effectiveCoachBatch.schedule} • Date: <strong>{coachAttDate}</strong>
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-[#F4510B]">
+                  {coachAttTotal > 0 ? Math.round((coachAttPresent / coachAttTotal) * 100) : 0}% Present
+                </span>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {coachAttRows.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[#172B50] opacity-65 space-y-1.5">
+                  <Users className="w-7 h-7 mx-auto opacity-40" />
+                  <p>No students enrolled in this assigned class at {effectiveCoachLocation || 'this location'}.</p>
+                </div>
+              ) : (
+                coachAttRows.map(row => {
+                  const { student, draftKey, currentStatus, isDirty } = row;
+                  return (
+                    <div
+                      key={student.id}
+                      className="p-3.5 bg-[#FFF4E8] rounded-xl border border-[#172B5015] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src={student.avatar} alt={student.name} className="w-9 h-9 rounded-full object-cover ring-1 ring-[#172B5020]" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-black text-[#172B50]">{student.name}</h4>
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                                currentStatus === ATTENDANCE_STATUSES.PRESENT
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : currentStatus === ATTENDANCE_STATUSES.ABSENT
+                                  ? 'bg-[#F4510B]/15 text-[#F4510B]'
+                                  : 'bg-white text-[#172B50] opacity-75 border border-[#172B5020]'
+                              }`}
+                            >
+                              {currentStatus === ATTENDANCE_STATUSES.PRESENT && <Check className="w-2.5 h-2.5" />}
+                              {currentStatus === ATTENDANCE_STATUSES.ABSENT && <X className="w-2.5 h-2.5" />}
+                              {currentStatus === ATTENDANCE_STATUSES.NOT_MARKED && <Clock className="w-2.5 h-2.5" />}
+                              <span>{currentStatus}</span>
+                              {isDirty && <span className="opacity-75">(Unsaved)</span>}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#172B50] opacity-75">
+                            {student.id} • {student.center} • {student.program}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto">
+                        {[ATTENDANCE_STATUSES.PRESENT, ATTENDANCE_STATUSES.ABSENT].map(status => (
+                          <button
+                            key={status}
+                            type="button"
+                            onClick={() =>
+                              setCoachAttDrafts(prev => ({
+                                ...prev,
+                                [draftKey]: status,
+                              }))
+                            }
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              currentStatus === status
+                                ? status === ATTENDANCE_STATUSES.PRESENT
+                                  ? 'bg-[#172B50] text-white shadow-sm'
+                                  : 'bg-[#F4510B] text-white shadow-sm'
+                                : 'bg-white text-[#172B50] border border-[#172B5020] hover:bg-white/80'
+                            }`}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-[11px] text-[#172B50]">
+            <Info className="w-4 h-4 text-[#F4510B] shrink-0 mt-0.5" />
+            <span>
+              Saving updates the shared attendance register in browser <code className="font-bold">localStorage</code> so Admin Portal reflects it immediately. Production sync requires <code className="font-bold">PUT /api/v1/attendance/batch</code> with Coach RBAC verification.
+            </span>
           </div>
         </div>
       )}

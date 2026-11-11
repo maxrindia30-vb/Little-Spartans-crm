@@ -8,7 +8,7 @@ export const initialAcademyData = {
     phone: "+91 98765 43210",
     email: "contact@littlespartans.co.in",
     website: "https://www.littlespartans.co.in",
-    centers: ["Indiranagar Arena", "Koramangala Hub", "Whitefield Sports Complex", "HSR Elite Center"],
+    centers: ["Indiranagar Arena", "Koramangala Hub", "Whitefield Sports Complex", "HSR Elite Center", "Jayanagar Academy"],
     academicYear: "2026-2027"
   },
 
@@ -1436,6 +1436,139 @@ export const initialAcademyData = {
       status: "Cancelled",
       createdAt: "2026-11-08T10:00:00Z",
       publishedBy: "Admin Vikramaditya"
+    }
+  ],
+
+  // Location-Based Student Attendance Records (Single Source of Truth for Admin & Coach Portals)
+  // Uniqueness key: (studentId, batchId, date)
+  attendanceRecords: [
+    {
+      id: "ATT-2026-11-11-CLS-101-STU-001",
+      studentId: "STU-001",
+      studentName: "Aarav Sharma",
+      location: "Indiranagar Arena",
+      program: "Spartan Gymnastics & Agility",
+      batchId: "CLS-101",
+      batchName: "Gymnastics Batch A - Juniors",
+      coachId: "COACH-1",
+      coachName: "Coach Vikram Singh",
+      date: "2026-11-11",
+      status: "Present",
+      markedBy: "Coach Vikram Singh",
+      markedByRole: "coach",
+      updatedAt: "2026-11-11T09:15:00Z"
+    },
+    {
+      id: "ATT-2026-11-11-CLS-101-STU-003",
+      studentId: "STU-003",
+      studentName: "Kabir Patel",
+      location: "Indiranagar Arena",
+      program: "Spartan Gymnastics & Agility",
+      batchId: "CLS-101",
+      batchName: "Gymnastics Batch A - Juniors",
+      coachId: "COACH-1",
+      coachName: "Coach Vikram Singh",
+      date: "2026-11-11",
+      status: "Present",
+      markedBy: "Coach Vikram Singh",
+      markedByRole: "coach",
+      updatedAt: "2026-11-11T09:15:00Z"
+    },
+    {
+      id: "ATT-2026-11-11-CLS-102-STU-002",
+      studentId: "STU-002",
+      studentName: "Riya Verma",
+      location: "Koramangala Hub",
+      program: "Junior Football Champions",
+      batchId: "CLS-102",
+      batchName: "Football Tigers - Cubs",
+      coachId: "COACH-2",
+      coachName: "Coach Rahul Dev",
+      date: "2026-11-11",
+      status: "Absent",
+      markedBy: "Coach Rahul Dev",
+      markedByRole: "coach",
+      updatedAt: "2026-11-11T09:30:00Z"
+    },
+    {
+      id: "ATT-2026-11-11-CLS-103-STU-004",
+      studentId: "STU-004",
+      studentName: "Ananya Nair",
+      location: "Indiranagar Arena",
+      program: "Spartan Athletics & Sprinting",
+      batchId: "CLS-103",
+      batchName: "Athletics Speed & Agility",
+      coachId: "COACH-3",
+      coachName: "Coach Ananya Sharma",
+      date: "2026-11-11",
+      status: "Present",
+      markedBy: "Coach Ananya Sharma",
+      markedByRole: "coach",
+      updatedAt: "2026-11-11T07:05:00Z"
+    },
+    {
+      id: "ATT-2026-11-11-CLS-105-STU-006",
+      studentId: "STU-006",
+      studentName: "Diya Sengupta",
+      location: "HSR Elite Center",
+      program: "Spartan Martial Arts & Karate",
+      batchId: "CLS-105",
+      batchName: "Martial Arts White-Yellow Belts",
+      coachId: "COACH-5",
+      coachName: "Sensei Rajesh Kumar",
+      date: "2026-11-11",
+      status: "Present",
+      markedBy: "Sensei Rajesh Kumar",
+      markedByRole: "coach",
+      updatedAt: "2026-11-11T08:40:00Z"
+    },
+    {
+      id: "ATT-2026-11-10-CLS-101-STU-001",
+      studentId: "STU-001",
+      studentName: "Aarav Sharma",
+      location: "Indiranagar Arena",
+      program: "Spartan Gymnastics & Agility",
+      batchId: "CLS-101",
+      batchName: "Gymnastics Batch A - Juniors",
+      coachId: "COACH-1",
+      coachName: "Coach Vikram Singh",
+      date: "2026-11-10",
+      status: "Present",
+      markedBy: "Coach Vikram Singh",
+      markedByRole: "coach",
+      updatedAt: "2026-11-10T17:10:00Z"
+    },
+    {
+      id: "ATT-2026-11-10-CLS-101-STU-003",
+      studentId: "STU-003",
+      studentName: "Kabir Patel",
+      location: "Indiranagar Arena",
+      program: "Spartan Gymnastics & Agility",
+      batchId: "CLS-101",
+      batchName: "Gymnastics Batch A - Juniors",
+      coachId: "COACH-1",
+      coachName: "Coach Vikram Singh",
+      date: "2026-11-10",
+      status: "Absent",
+      markedBy: "Coach Vikram Singh",
+      markedByRole: "coach",
+      updatedAt: "2026-11-10T17:10:00Z"
+    },
+    {
+      id: "ATT-2026-11-10-CLS-101-STU-007",
+      studentId: "STU-007",
+      studentName: "Reyansh Reddy",
+      location: "Indiranagar Arena",
+      program: "Spartan Gymnastics & Agility",
+      batchId: "CLS-101",
+      batchName: "Gymnastics Batch A - Juniors",
+      coachId: "COACH-1",
+      coachName: "Coach Vikram Singh",
+      date: "2026-11-10",
+      status: "Present",
+      markedBy: "Coach Vikram Singh",
+      markedByRole: "coach",
+      updatedAt: "2026-11-10T17:10:00Z"
     }
   ]
 };
