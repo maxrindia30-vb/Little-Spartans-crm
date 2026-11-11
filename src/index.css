@@ -192,3 +192,9 @@ body {
 .animate-submenu {
   animation: submenuSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Soft glass translucency on dashboard cards so the branded ZenConnect background watermark subtly shows through */
+main .bg-white.shadow-card {
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+}

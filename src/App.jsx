@@ -115,11 +115,23 @@ export default function App() {
       {/* ============================================================ */}
       <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden relative">
         
+        {/* Subtle Branded Background Watermark (img2) */}
+        <div 
+          aria-hidden="true"
+          className="absolute inset-0 top-16 pointer-events-none select-none flex items-center justify-center z-0 overflow-hidden"
+        >
+          <img 
+            src="/assets/zenconnect-bg-watermark.png" 
+            alt="" 
+            className="w-[320px] sm:w-[480px] lg:w-[600px] max-w-[85%] h-auto object-contain opacity-[0.12] mix-blend-multiply"
+          />
+        </div>
+
         {/* Right Top Navbar: starts immediately after left sidebar */}
         <Navbar onOpenLogin={() => setIsLoginModalOpen(true)} />
 
         {/* Right Main Dashboard Content: independently scrollable */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative z-10">
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
             
             {/* Active Portal Content */}
