@@ -59,7 +59,7 @@ export function isTimeOverlapping(start1, end1, start2, end2) {
  * @returns {Object} { hasConflict: boolean, type?: 'coach'|'venue', message?: string, conflictingSchedule?: Object }
  */
 export function checkScheduleConflict(candidate, existingSchedules = [], excludeId = null) {
-  const { location, coachId, coachName, date, startTime, endTime, venue } = candidate;
+  const { location, coachId, coachName, additionalCoaches = [], date, startTime, endTime, venue } = candidate;
 
   if (!date || !startTime || !endTime) {
     return { hasConflict: false };
@@ -72,15 +72,25 @@ export function checkScheduleConflict(candidate, existingSchedules = [], exclude
     s.date === date
   );
 
+  const candidateCoachIds = new Set(
+    [coachId, ...(additionalCoaches || []).map(c => c.coachId)].filter(Boolean)
+  );
+
   for (const existing of activeSchedules) {
     // Check if time slots overlap
     if (isTimeOverlapping(startTime, endTime, existing.startTime, existing.endTime)) {
-      // 1. Check Coach Conflict (across any location)
-      if (coachId && (existing.coachId === coachId || existing.coachName === coachName)) {
+      const existingCoachIds = new Set(
+        [existing.coachId, ...(existing.additionalCoaches || []).map(c => c.coachId)].filter(Boolean)
+      );
+      const hasSharedCoachId = [...candidateCoachIds].some(id => existingCoachIds.has(id));
+      const hasSamePrimaryName = coachName && existing.coachName && existing.coachName === coachName;
+
+      // 1. Check Coach Conflict (across any location, for primary or additional coaches)
+      if (hasSharedCoachId || hasSamePrimaryName) {
         return {
           hasConflict: true,
           type: 'coach',
-          message: `Coach Conflict: ${coachName || 'Assigned Coach'} already has a scheduled class "${existing.batch || existing.program}" at ${existing.location} (${existing.startTime} - ${existing.endTime}) on this date.`,
+          message: `Coach Conflict: ${coachName || 'Assigned Coach'} is already scheduled for "${existing.batch || existing.program}" at ${existing.location} (${existing.startTime} - ${existing.endTime}) on this date.`,
           conflictingSchedule: existing
         };
       }

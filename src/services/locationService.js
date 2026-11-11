@@ -16,17 +16,21 @@
 
 /**
  * Returns the canonical list of academy location objects from global CRM state.
+ * Pass `{ includeInactive: true }` to include deactivated locations for Admin management.
  */
-export function getCommonLocations(data) {
+export function getCommonLocations(data, { includeInactive = false } = {}) {
   if (data?.locations && data.locations.length > 0) {
-    return data.locations;
+    return includeInactive
+      ? data.locations
+      : data.locations.filter((loc) => loc.status !== 'Inactive');
   }
   const fallbackNames = data?.academy?.centers || [];
   return fallbackNames.map((name, idx) => ({
     id: `LOC-${idx + 1}`,
     name,
     city: 'Chennai',
-    courts: []
+    courts: [],
+    status: 'Active',
   }));
 }
 

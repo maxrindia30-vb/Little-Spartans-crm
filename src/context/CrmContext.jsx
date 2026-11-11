@@ -703,24 +703,47 @@ export function CrmProvider({ children }) {
     }
 
     const id = `SCH-${Math.floor(1000 + Math.random() * 9000)}`;
+    const matchedBatch = (data.classes || []).find(
+      (cls) =>
+        (candidate.batchId && cls.id === candidate.batchId) ||
+        (cls.name === candidate.batch && cls.center === candidate.location)
+    );
+    const dynamicStudents =
+      candidate.enrolledStudents && candidate.enrolledStudents.length > 0
+        ? candidate.enrolledStudents
+        : (data.students || [])
+            .filter(
+              (s) =>
+                s.center === candidate.location &&
+                (matchedBatch?.enrolledStudentIds?.includes(s.id) ||
+                  s.enrolledClasses?.includes(candidate.batch))
+            )
+            .map((s) => s.name);
+
+    const derivedWeekday =
+      candidate.weekday ||
+      (candidate.date
+        ? new Date(`${candidate.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' })
+        : '');
+
     const newSchedule = {
       id,
       location: candidate.location,
       program: candidate.program,
       programId: candidate.programId || '',
       batch: candidate.batch,
-      batchId: candidate.batchId || '',
+      batchId: candidate.batchId || matchedBatch?.id || '',
       coachId: candidate.coachId,
       coachName: candidate.coachName,
+      additionalCoaches: candidate.additionalCoaches || matchedBatch?.additionalCoaches || [],
+      weekday: derivedWeekday,
       date: candidate.date,
       startTime: candidate.startTime,
       endTime: candidate.endTime,
       venue: candidate.venue,
-      capacity: parseInt(candidate.capacity, 10) || 20,
-      enrolledCount: candidate.enrolledCount || 0,
-      enrolledStudents: candidate.enrolledStudents && candidate.enrolledStudents.length > 0 
-        ? candidate.enrolledStudents 
-        : ["Aarav Sharma", "Ananya Sharma", "Vihaan Patel"],
+      capacity: parseInt(candidate.capacity, 10) || matchedBatch?.capacity || 20,
+      enrolledCount: candidate.enrolledCount ?? dynamicStudents.length,
+      enrolledStudents: dynamicStudents,
       notes: candidate.notes || '',
       status: 'Scheduled',
       createdAt: new Date().toISOString(),
@@ -803,6 +826,511 @@ export function CrmProvider({ children }) {
     return checkScheduleConflict(candidate, data.classSchedules || [], excludeId);
   };
 
+  // --- Module 1: Academy Locations & Sports Programs Management ---
+  const addLocation = (locPayload) => {
+    const normalizedName = (locPayload.name || '').trim().toUpperCase();
+    if (!normalizedName) {
+      addToast('Location name is required.', 'error');
+      return { success: false };
+    }
+    const duplicate = (data.locations || []).some(
+      (loc) => loc.name.trim().toUpperCase() === normalizedName
+    );
+    if (duplicate) {
+      addToast(`Location "${normalizedName}" already exists.`, 'error');
+      return { success: false };
+    }
+
+    const courtsList = Array.isArray(locPayload.courts)
+      ? locPayload.courts.map((c) => c.trim()).filter(Boolean)
+      : String(locPayload.courts || '')
+          .split(',')
+          .map((c) => c.trim())
+          .filter(Boolean);
+
+    const newLocation = {
+      id: `LOC-${Math.floor(100 + Math.random() * 900)}`,
+      name: normalizedName,
+      city: (locPayload.city || 'Chennai').trim(),
+      address: (locPayload.address || `${normalizedName}, Chennai`).trim(),
+      courts: courtsList.length > 0 ? courtsList : ['Main Training Arena'],
+      status: locPayload.status || 'Active',
+    };
+
+    setData((prev) => {
+      const updatedLocations = [...(prev.locations || []), newLocation];
+      const activeCenters = updatedLocations
+        .filter((l) => l.status !== 'Inactive')
+        .map((l) => l.name);
+      return {
+        ...prev,
+        locations: updatedLocations,
+        academy: { ...prev.academy, centers: activeCenters },
+      };
+    });
+
+    addToast(`Academy location "${normalizedName}" added.`, 'success');
+    return { success: true, location: newLocation };
+  };
+
+  const updateLocation = (id, updates) => {
+    const existing = (data.locations || []).find((l) => l.id === id);
+    if (!existing) {
+      addToast('Location not found.', 'error');
+      return { success: false };
+    }
+    const nextName = (updates.name || existing.name).trim().toUpperCase();
+    const duplicate = (data.locations || []).some(
+      (loc) => loc.id !== id && loc.name.trim().toUpperCase() === nextName
+    );
+    if (duplicate) {
+      addToast(`Location "${nextName}" already exists.`, 'error');
+      return { success: false };
+    }
+
+    const courtsList = Array.isArray(updates.courts)
+      ? updates.courts.map((c) => c.trim()).filter(Boolean)
+      : updates.courts !== undefined
+      ? String(updates.courts)
+          .split(',')
+          .map((c) => c.trim())
+          .filter(Boolean)
+      : existing.courts;
+
+    const oldName = existing.name;
+    setData((prev) => {
+      const updatedLocations = (prev.locations || []).map((loc) =>
+        loc.id === id
+          ? {
+              ...loc,
+              ...updates,
+              name: nextName,
+              courts: courtsList.length > 0 ? courtsList : loc.courts,
+            }
+          : loc
+      );
+      const activeCenters = updatedLocations
+        .filter((l) => l.status !== 'Inactive')
+        .map((l) => l.name);
+
+      // Keep downstream references consistent if renamed
+      const renameMap = (val) => (val === oldName ? nextName : val);
+      return {
+        ...prev,
+        locations: updatedLocations,
+        academy: { ...prev.academy, centers: activeCenters },
+        programs: (prev.programs || []).map((p) => ({
+          ...p,
+          locations: Array.isArray(p.locations) ? p.locations.map(renameMap) : p.locations,
+        })),
+        classes: (prev.classes || []).map((c) => ({ ...c, center: renameMap(c.center) })),
+        classSchedules: (prev.classSchedules || []).map((s) => ({
+          ...s,
+          location: renameMap(s.location),
+        })),
+        students: (prev.students || []).map((st) => ({ ...st, center: renameMap(st.center) })),
+        coaches: (prev.coaches || []).map((ch) => ({ ...ch, center: renameMap(ch.center) })),
+      };
+    });
+
+    addToast(`Location "${nextName}" updated.`, 'info');
+    return { success: true };
+  };
+
+  const toggleLocationStatus = (id) => {
+    const existing = (data.locations || []).find((l) => l.id === id);
+    if (!existing) return { success: false };
+    const nextStatus = existing.status === 'Inactive' ? 'Active' : 'Inactive';
+    setData((prev) => {
+      const updatedLocations = (prev.locations || []).map((loc) =>
+        loc.id === id ? { ...loc, status: nextStatus } : loc
+      );
+      const activeCenters = updatedLocations
+        .filter((l) => l.status !== 'Inactive')
+        .map((l) => l.name);
+      return {
+        ...prev,
+        locations: updatedLocations,
+        academy: { ...prev.academy, centers: activeCenters },
+      };
+    });
+    addToast(`Location "${existing.name}" marked as ${nextStatus}.`, nextStatus === 'Active' ? 'success' : 'warning');
+    return { success: true, status: nextStatus };
+  };
+
+  const addProgram = (programPayload) => {
+    const name = (programPayload.name || '').trim();
+    if (!name) {
+      addToast('Program name is required.', 'error');
+      return { success: false };
+    }
+    const duplicate = (data.programs || []).some(
+      (p) => p.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (duplicate) {
+      addToast(`Program "${name}" already exists.`, 'error');
+      return { success: false };
+    }
+
+    const newProgram = {
+      id: `PRG-${Math.floor(100 + Math.random() * 900)}`,
+      name,
+      description: (programPayload.description || '').trim(),
+      ageGroup: (programPayload.ageGroup || 'All Ages').trim(),
+      duration: (programPayload.duration || '60 mins / session').trim(),
+      feeMonthly: Number(programPayload.feeMonthly) || 0,
+      eligibility: (programPayload.eligibility || 'Open enrollment').trim(),
+      locations: Array.isArray(programPayload.locations) ? programPayload.locations : [],
+      icon: programPayload.icon || '🏆',
+      studentsCount: 0,
+      status: programPayload.status || 'Active',
+    };
+
+    setData((prev) => ({
+      ...prev,
+      programs: [newProgram, ...(prev.programs || [])],
+    }));
+
+    addToast(`Sports Program "${name}" created.`, 'success');
+    return { success: true, program: newProgram };
+  };
+
+  const updateProgram = (id, updates) => {
+    const existing = (data.programs || []).find((p) => p.id === id);
+    if (!existing) {
+      addToast('Program not found.', 'error');
+      return { success: false };
+    }
+    const nextName = (updates.name || existing.name).trim();
+    const duplicate = (data.programs || []).some(
+      (p) => p.id !== id && p.name.trim().toLowerCase() === nextName.toLowerCase()
+    );
+    if (duplicate) {
+      addToast(`Program "${nextName}" already exists.`, 'error');
+      return { success: false };
+    }
+
+    const oldName = existing.name;
+    setData((prev) => ({
+      ...prev,
+      programs: (prev.programs || []).map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              ...updates,
+              name: nextName,
+              feeMonthly:
+                updates.feeMonthly !== undefined ? Number(updates.feeMonthly) || 0 : p.feeMonthly,
+            }
+          : p
+      ),
+      classes: (prev.classes || []).map((c) =>
+        c.program === oldName ? { ...c, program: nextName } : c
+      ),
+      classSchedules: (prev.classSchedules || []).map((s) =>
+        s.program === oldName ? { ...s, program: nextName } : s
+      ),
+    }));
+
+    addToast(`Sports Program "${nextName}" updated.`, 'info');
+    return { success: true };
+  };
+
+  const toggleProgramStatus = (id) => {
+    const existing = (data.programs || []).find((p) => p.id === id);
+    if (!existing) return { success: false };
+    const nextStatus = existing.status === 'Inactive' ? 'Active' : 'Inactive';
+    setData((prev) => ({
+      ...prev,
+      programs: (prev.programs || []).map((p) =>
+        p.id === id ? { ...p, status: nextStatus } : p
+      ),
+    }));
+    addToast(`Program "${existing.name}" marked as ${nextStatus}.`, nextStatus === 'Active' ? 'success' : 'warning');
+    return { success: true, status: nextStatus };
+  };
+
+  // --- Module 2: Training Batches (Location -> Program -> Batch -> Students/Waitlist) ---
+  const createBatch = (batchPayload) => {
+    const name = (batchPayload.name || '').trim();
+    const center = (batchPayload.center || '').trim();
+    const program = (batchPayload.program || '').trim();
+    if (!name || !center || !program) {
+      addToast('Location, Sports Program, and Batch Name are required.', 'error');
+      return { success: false };
+    }
+
+    const duplicate = (data.classes || []).some(
+      (c) =>
+        c.center === center &&
+        c.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (duplicate) {
+      addToast(`Batch "${name}" already exists at ${center}.`, 'error');
+      return { success: false };
+    }
+
+    const primaryCoach = (data.coaches || []).find((c) => c.id === batchPayload.coachId);
+    const capacity = Math.max(1, parseInt(batchPayload.capacity, 10) || 15);
+    const enrolledIds = Array.isArray(batchPayload.enrolledStudentIds)
+      ? batchPayload.enrolledStudentIds
+      : [];
+
+    const newBatch = {
+      id: `CLS-${Math.floor(100 + Math.random() * 900)}`,
+      name,
+      program,
+      center,
+      ageGroup: (batchPayload.ageGroup || 'All Ages').trim(),
+      level: batchPayload.level || 'Beginner',
+      coachId: primaryCoach?.id || batchPayload.coachId || '',
+      coach: primaryCoach?.name || batchPayload.coach || 'Unassigned',
+      additionalCoaches: batchPayload.additionalCoaches || [],
+      schedule: (batchPayload.schedule || 'Flexible Weekly Slots').trim(),
+      capacity,
+      enrolledStudentIds: enrolledIds,
+      waitlistStudentIds: Array.isArray(batchPayload.waitlistStudentIds)
+        ? batchPayload.waitlistStudentIds
+        : [],
+      enrolled: enrolledIds.length,
+      status: batchPayload.status || 'Active',
+    };
+
+    setData((prev) => ({
+      ...prev,
+      classes: [newBatch, ...(prev.classes || [])],
+      students: (prev.students || []).map((st) => {
+        if (!enrolledIds.includes(st.id)) return st;
+        const nextEnrolled = Array.from(new Set([...(st.enrolledClasses || []), newBatch.name]));
+        return {
+          ...st,
+          enrolledClasses: nextEnrolled,
+          program: st.program || newBatch.program,
+          coachName: primaryCoach?.name || st.coachName,
+        };
+      }),
+    }));
+
+    addToast(`Training Batch "${name}" created under ${program} (${center}).`, 'success');
+    return { success: true, batch: newBatch };
+  };
+
+  const updateBatch = (id, updates) => {
+    const existing = (data.classes || []).find((c) => c.id === id);
+    if (!existing) {
+      addToast('Training batch not found.', 'error');
+      return { success: false };
+    }
+    const nextName = (updates.name || existing.name).trim();
+    const nextCenter = updates.center || existing.center;
+    const duplicate = (data.classes || []).some(
+      (c) => c.id !== id && c.center === nextCenter && c.name.trim().toLowerCase() === nextName.toLowerCase()
+    );
+    if (duplicate) {
+      addToast(`Batch "${nextName}" already exists at ${nextCenter}.`, 'error');
+      return { success: false };
+    }
+
+    const oldName = existing.name;
+    const nextCapacity =
+      updates.capacity !== undefined ? Math.max(1, parseInt(updates.capacity, 10) || 15) : existing.capacity;
+
+    setData((prev) => ({
+      ...prev,
+      classes: (prev.classes || []).map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              ...updates,
+              name: nextName,
+              center: nextCenter,
+              capacity: nextCapacity,
+            }
+          : c
+      ),
+      classSchedules: (prev.classSchedules || []).map((s) =>
+        s.batchId === id || s.batch === oldName
+          ? {
+              ...s,
+              batch: nextName,
+              program: updates.program || s.program,
+              location: nextCenter,
+              capacity: nextCapacity,
+            }
+          : s
+      ),
+      students: (prev.students || []).map((st) => ({
+        ...st,
+        enrolledClasses: (st.enrolledClasses || []).map((clsName) =>
+          clsName === oldName ? nextName : clsName
+        ),
+      })),
+    }));
+
+    addToast(`Training Batch "${nextName}" updated.`, 'info');
+    return { success: true };
+  };
+
+  const toggleBatchStatus = (id, forcedStatus = null) => {
+    const existing = (data.classes || []).find((c) => c.id === id);
+    if (!existing) return { success: false };
+    const nextStatus = forcedStatus || (existing.status === 'Inactive' ? 'Active' : 'Inactive');
+    setData((prev) => ({
+      ...prev,
+      classes: (prev.classes || []).map((c) =>
+        c.id === id ? { ...c, status: nextStatus } : c
+      ),
+    }));
+    addToast(`Batch "${existing.name}" marked as ${nextStatus}.`, nextStatus === 'Active' ? 'success' : 'warning');
+    return { success: true, status: nextStatus };
+  };
+
+  const updateBatchEnrollment = (batchId, { enrolledStudentIds, waitlistStudentIds }) => {
+    const batch = (data.classes || []).find((c) => c.id === batchId);
+    if (!batch) {
+      addToast('Batch not found.', 'error');
+      return { success: false };
+    }
+
+    // Location isolation: only students belonging to this batch's location can be enrolled
+    const validLocationStudentIds = new Set(
+      (data.students || []).filter((s) => s.center === batch.center).map((s) => s.id)
+    );
+    const cleanEnrolled = (enrolledStudentIds || []).filter((sid) => validLocationStudentIds.has(sid));
+    const enrolledSet = new Set(cleanEnrolled);
+    const cleanWaitlist = (waitlistStudentIds || []).filter(
+      (sid) => validLocationStudentIds.has(sid) && !enrolledSet.has(sid)
+    );
+
+    const enrolledNames = (data.students || [])
+      .filter((s) => enrolledSet.has(s.id))
+      .map((s) => s.name);
+
+    setData((prev) => ({
+      ...prev,
+      classes: (prev.classes || []).map((c) =>
+        c.id === batchId
+          ? {
+              ...c,
+              enrolledStudentIds: cleanEnrolled,
+              waitlistStudentIds: cleanWaitlist,
+              enrolled: cleanEnrolled.length,
+            }
+          : c
+      ),
+      students: (prev.students || []).map((st) => {
+        const currentClasses = st.enrolledClasses || [];
+        const hasBatch = currentClasses.includes(batch.name);
+        if (enrolledSet.has(st.id) && !hasBatch) {
+          return {
+            ...st,
+            enrolledClasses: [...currentClasses, batch.name],
+            program: st.program || batch.program,
+            coachName: batch.coach && batch.coach !== 'Unassigned' ? batch.coach : st.coachName,
+          };
+        }
+        if (!enrolledSet.has(st.id) && hasBatch) {
+          return {
+            ...st,
+            enrolledClasses: currentClasses.filter((clsName) => clsName !== batch.name),
+          };
+        }
+        return st;
+      }),
+      classSchedules: (prev.classSchedules || []).map((s) =>
+        s.batchId === batchId || (s.batch === batch.name && s.location === batch.center)
+          ? {
+              ...s,
+              enrolledCount: cleanEnrolled.length,
+              enrolledStudents: enrolledNames,
+            }
+          : s
+      ),
+    }));
+
+    addToast(`Enrollment updated for "${batch.name}" (${cleanEnrolled.length} enrolled, ${cleanWaitlist.length} waitlisted).`, 'success');
+    return { success: true };
+  };
+
+  // --- Module 4: Coach Assignments (Primary & Additional Coaches synced to Schedules & Coach Portal) ---
+  const assignCoachesToBatch = ({ batchId, primaryCoachId, additionalCoachIds = [] }) => {
+    const batch = (data.classes || []).find((c) => c.id === batchId);
+    if (!batch) {
+      addToast('Training batch not found.', 'error');
+      return { success: false };
+    }
+
+    const primaryCoach = (data.coaches || []).find((c) => c.id === primaryCoachId) || null;
+    const additionalCoaches = (data.coaches || [])
+      .filter((c) => additionalCoachIds.includes(c.id) && c.id !== primaryCoachId)
+      .map((c) => ({ coachId: c.id, coachName: c.name }));
+
+    // Check active schedules of this batch for timing conflicts against the new primary coach
+    const batchSchedules = (data.classSchedules || []).filter(
+      (s) => s.status !== 'Cancelled' && (s.batchId === batchId || (s.batch === batch.name && s.location === batch.center))
+    );
+    if (primaryCoach) {
+      for (const sch of batchSchedules) {
+        const conflict = checkScheduleConflict(
+          {
+            ...sch,
+            coachId: primaryCoach.id,
+            coachName: primaryCoach.name,
+            additionalCoaches,
+          },
+          data.classSchedules || [],
+          sch.id
+        );
+        if (conflict.hasConflict && conflict.type === 'coach') {
+          addToast(conflict.message, 'error');
+          return { success: false, message: conflict.message };
+        }
+      }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      classes: (prev.classes || []).map((c) =>
+        c.id === batchId
+          ? {
+              ...c,
+              coachId: primaryCoach?.id || '',
+              coach: primaryCoach?.name || 'Unassigned',
+              additionalCoaches,
+            }
+          : c
+      ),
+      classSchedules: (prev.classSchedules || []).map((s) =>
+        s.status !== 'Cancelled' &&
+        (s.batchId === batchId || (s.batch === batch.name && s.location === batch.center))
+          ? {
+              ...s,
+              coachId: primaryCoach?.id || '',
+              coachName: primaryCoach?.name || 'Unassigned',
+              additionalCoaches,
+              status: s.status === 'Completed' ? 'Completed' : 'Updated',
+              updatedAt: new Date().toISOString(),
+            }
+          : s
+      ),
+      students: (prev.students || []).map((st) =>
+        st.center === batch.center &&
+        (batch.enrolledStudentIds?.includes(st.id) || st.enrolledClasses?.includes(batch.name))
+          ? {
+              ...st,
+              coachName: primaryCoach?.name || st.coachName,
+            }
+          : st
+      ),
+    }));
+
+    addToast(
+      `Coach assignment updated for "${batch.name}" & synced to Coach Portal.`,
+      'success'
+    );
+    return { success: true };
+  };
+
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
     if (subTab) setActiveSubTab(subTab);
@@ -871,7 +1399,19 @@ export function CrmProvider({ children }) {
         updateClassSchedule,
         cancelClassSchedule,
         completeClassSchedule,
-        checkScheduleConflictLive
+        checkScheduleConflictLive,
+        // Programs & Classes Separate Management Modules
+        addLocation,
+        updateLocation,
+        toggleLocationStatus,
+        addProgram,
+        updateProgram,
+        toggleProgramStatus,
+        createBatch,
+        updateBatch,
+        toggleBatchStatus,
+        updateBatchEnrollment,
+        assignCoachesToBatch
       }}
     >
       {children}

@@ -66,27 +66,25 @@ export default function CoachPortalView() {
     rating: '-',
   };
   const coachFirstName = (coachProfile.name || '').split(' ')[0].toLowerCase();
-  const myClasses = coachProfile.id
-    ? data.classes.filter(
-        c =>
-          c.coachId === coachProfile.id ||
-          (coachFirstName && c.coach?.toLowerCase().includes(coachFirstName))
-      )
-    : [];
+  const isCoachAssignedToItem = (item) =>
+    item.coachId === coachProfile.id ||
+    (item.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
+    (coachFirstName && (item.coach || item.coachName)?.toLowerCase().includes(coachFirstName));
+
+  const myClasses = coachProfile.id ? data.classes.filter(isCoachAssignedToItem) : [];
+  const myClassNames = new Set(myClasses.map((c) => c.name));
   const myStudents = coachProfile.id
     ? data.students.filter(
-        s => coachFirstName && s.coachName?.toLowerCase().includes(coachFirstName)
+        (s) =>
+          (coachFirstName && s.coachName?.toLowerCase().includes(coachFirstName)) ||
+          (s.enrolledClasses || []).some((clsName) => myClassNames.has(clsName))
       )
     : [];
 
   // Automatic Coach Portal Synchronization:
-  // Strict role-based filter: Coach ONLY sees schedules assigned to them!
+  // Strict role-based filter: Coach ONLY sees schedules assigned to them (primary or additional)!
   const mySchedules = coachProfile.id
-    ? (data.classSchedules || []).filter(
-        s =>
-          s.coachId === coachProfile.id ||
-          (coachFirstName && s.coachName && s.coachName.toLowerCase().includes(coachFirstName))
-      )
+    ? (data.classSchedules || []).filter(isCoachAssignedToItem)
     : [];
 
   // Sub-view toggle in "My Classes": 'schedules' | 'batches'

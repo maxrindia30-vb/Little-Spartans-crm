@@ -79,10 +79,10 @@ const submenuConfig = {
   programs: {
     title: 'Programs & Classes',
     items: [
-      { parentId: 'programs', subTab: 'programs', label: 'Sports Programs', desc: 'Gymnastics, Athletics, Martial Arts syllabi', icon: Calendar },
-      { parentId: 'programs', subTab: 'batches', label: 'Training Batches', desc: 'Slot capacities & waiting lists', icon: Users },
-      { parentId: 'programs', subTab: 'schedules', label: 'Class Schedules', desc: 'Weekly timetable & court allocations', icon: Clock },
-      { parentId: 'programs', subTab: 'coaches', label: 'Coach Assignments', desc: 'Lead trainers & arena assignments', icon: UserCheck },
+      { parentId: 'programs', subTab: 'sports_programs', label: 'Sports Programs', desc: 'Programs, age groups, duration & locations', icon: Calendar },
+      { parentId: 'programs', subTab: 'batches', label: 'Training Batches', desc: 'Capacities, enrolled athletes & waitlists', icon: Users },
+      { parentId: 'programs', subTab: 'schedules', label: 'Class Schedules', desc: 'Daily, weekly & calendar timetable', icon: Clock },
+      { parentId: 'programs', subTab: 'coach_assignments', label: 'Coach Assignments', desc: 'Lead & assistant trainer allocations', icon: UserCheck },
     ]
   },
 
@@ -485,8 +485,17 @@ export default function Sidebar() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  if (item.id === 'programs' && setActiveSubTab) {
+                    const validProgramTabs = ['sports_programs', 'batches', 'schedules', 'coach_assignments'];
+                    if (!validProgramTabs.includes(activeSubTab)) {
+                      setActiveSubTab('sports_programs');
+                    }
+                  }
                   setCurrentView(item.id);
+                  if (submenuConfig[item.id]) {
+                    handleItemMouseEnter(item.id, e);
+                  }
                   setSidebarOpen(false);
                 }}
                 onMouseEnter={(e) => handleItemMouseEnter(item.id, e)}

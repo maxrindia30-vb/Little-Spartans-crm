@@ -51,6 +51,7 @@ export function validateAttendancePermission({
     const coachFirstName = (coachProfile.name || '').split(' ')[0].toLowerCase();
     const assignedViaBatch =
       batch.coachId === coachProfile.id ||
+      (batch.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
       (batch.coach && coachFirstName && batch.coach.toLowerCase().includes(coachFirstName));
 
     const assignedViaSchedule = classSchedules.some(
@@ -58,6 +59,7 @@ export function validateAttendancePermission({
         sch.status !== 'Cancelled' &&
         (sch.batchId === batch.id || sch.batch === batch.name) &&
         (sch.coachId === coachProfile.id ||
+          (sch.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
           (sch.coachName && coachFirstName && sch.coachName.toLowerCase().includes(coachFirstName)))
     );
 
@@ -96,6 +98,7 @@ export function getCoachAssignedBatches({ coachProfile, classes = [], classSched
   classes.forEach((cls) => {
     if (
       cls.coachId === coachProfile.id ||
+      (cls.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
       (cls.coach && coachFirstName && cls.coach.toLowerCase().includes(coachFirstName))
     ) {
       matchingBatchIds.add(cls.id);
@@ -107,6 +110,7 @@ export function getCoachAssignedBatches({ coachProfile, classes = [], classSched
       sch.status !== 'Cancelled' &&
       sch.batchId &&
       (sch.coachId === coachProfile.id ||
+        (sch.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
         (sch.coachName && coachFirstName && sch.coachName.toLowerCase().includes(coachFirstName)))
     ) {
       matchingBatchIds.add(sch.batchId);
