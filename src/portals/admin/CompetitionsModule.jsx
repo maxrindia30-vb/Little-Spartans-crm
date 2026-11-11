@@ -13,7 +13,7 @@ export default function CompetitionsModule() {
   const [title, setTitle] = useState('');
   const [sport, setSport] = useState('Gymnastics & Obstacle Run');
   const [date, setDate] = useState('2026-12-10');
-  const [venue, setVenue] = useState('Little Spartans Arena, Indiranagar');
+  const [venue, setVenue] = useState('Little Spartans Arena, KK NAGAR');
   const [maxParticipants, setMaxParticipants] = useState('50');
   const [entryFee, setEntryFee] = useState('₹500');
 

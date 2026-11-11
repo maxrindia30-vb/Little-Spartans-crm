@@ -41,20 +41,22 @@ export default function ParentPortalView() {
     addToast 
   } = useCrm();
 
-  // Current logged in parent: Dr. Rohan Sharma
-  const parentProfile = data.parents[0];
-  const myChildren = data.students.filter(s => s.parentId === parentProfile.id);
+  // Current logged in parent profile
+  const parentProfile = data.parents[0] || { id: '', name: 'Parent Account', email: '' };
+  const myChildren = parentProfile.id
+    ? data.students.filter(s => s.parentId === parentProfile.id)
+    : [];
 
   // States for modals
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
-  const [leaveChild, setLeaveChild] = useState(myChildren[0]?.name || 'Aarav Sharma');
+  const [leaveChild, setLeaveChild] = useState(myChildren[0]?.name || '');
   const [leaveStart, setLeaveStart] = useState('2026-11-20');
   const [leaveEnd, setLeaveEnd] = useState('2026-11-22');
   const [leaveReason, setLeaveReason] = useState('');
 
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [payAmount, setPayAmount] = useState('4500');
-  const [selectedChildForPay, setSelectedChildForPay] = useState(myChildren[0]?.name || 'Aarav Sharma');
+  const [selectedChildForPay, setSelectedChildForPay] = useState(myChildren[0]?.name || '');
 
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [fbComment, setFbComment] = useState('');
@@ -62,7 +64,7 @@ export default function ParentPortalView() {
 
   // Compensation Request Modal
   const [isCompModalOpen, setIsCompModalOpen] = useState(false);
-  const [compChild, setCompChild] = useState(myChildren[0]?.name || 'Aarav Sharma');
+  const [compChild, setCompChild] = useState(myChildren[0]?.name || '');
   const [missedDate, setMissedDate] = useState('2026-11-12');
   const [compReason, setCompReason] = useState('Medical fever - Doctor visit');
   const [selectedSlot, setSelectedSlot] = useState('Saturday 10:00 AM - 11:30 AM (Batch B-Gym)');
@@ -87,6 +89,10 @@ export default function ParentPortalView() {
   const handlePayTuition = (e) => {
     e.preventDefault();
     const child = myChildren.find(c => c.name === selectedChildForPay) || myChildren[0] || data.students[0];
+    if (!child) {
+      addToast('No student profile is linked yet.', 'error');
+      return;
+    }
     addPayment({
       studentId: child.id,
       studentName: child.name,
@@ -104,12 +110,12 @@ export default function ParentPortalView() {
     if (!fbComment.trim()) return;
     addFeedback({
       parentName: parentProfile.name,
-      studentName: myChildren[0]?.name || 'Aarav Sharma',
-      coachName: 'Coach Vikram Singh',
+      studentName: myChildren[0]?.name || 'Student',
+      coachName: myChildren[0]?.coachName || 'Academy Coach',
       rating: parseInt(fbRating) || 5,
       category: 'Parent Review',
       comment: fbComment,
-      program: myChildren[0]?.program || 'Spartan Gymnastics & Agility'
+      program: myChildren[0]?.program || data.programs[0]?.name || ''
     });
     setIsFeedbackModalOpen(false);
     setFbComment('');
@@ -118,6 +124,10 @@ export default function ParentPortalView() {
   const handleSubmitCompensation = (e) => {
     e.preventDefault();
     const child = myChildren.find(c => c.name === compChild) || myChildren[0];
+    if (!child) {
+      addToast('No student profile is linked yet.', 'error');
+      return;
+    }
     submitCompensationRequest({
       studentId: child.id,
       studentName: child.name,
@@ -609,7 +619,7 @@ export default function ParentPortalView() {
                 <div className="mt-4 pt-3 border-t border-[#172B5015] flex justify-between items-center">
                   <span className="text-xs font-black text-[#172B50]">{comp.entryFee}</span>
                   <button
-                    onClick={() => registerCompetition(comp.id, myChildren[0]?.name || 'Aarav')}
+                    onClick={() => myChildren[0] && registerCompetition(comp.id, myChildren[0].name)}
                     className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg hover:brightness-110 cursor-pointer"
                   >
                     Register Child

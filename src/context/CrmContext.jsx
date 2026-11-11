@@ -5,7 +5,7 @@ import { upsertBatchAttendanceRecords } from '../services/attendanceService';
 
 const CrmContext = createContext();
 
-const LOCAL_STORAGE_KEY = 'little_spartans_crm_v2_data';
+const LOCAL_STORAGE_KEY = 'little_spartans_crm_v3_chennai';
 const CURRENT_ROLE_KEY = 'little_spartans_current_portal';
 
 export function CrmProvider({ children }) {
@@ -15,7 +15,7 @@ export function CrmProvider({ children }) {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Ensure new arrays exist even if old localStorage was saved
+        // Ensure canonical locations and required arrays exist
         return {
           ...initialAcademyData,
           ...parsed,
@@ -24,9 +24,9 @@ export function CrmProvider({ children }) {
             ...(parsed.academy || {}),
             centers: initialAcademyData.academy.centers,
           },
-          locations: parsed.locations && parsed.locations.length > 0 ? parsed.locations : initialAcademyData.locations,
-          classSchedules: parsed.classSchedules && parsed.classSchedules.length > 0 ? parsed.classSchedules : initialAcademyData.classSchedules,
-          attendanceRecords: parsed.attendanceRecords && parsed.attendanceRecords.length > 0 ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
+          locations: initialAcademyData.locations,
+          classSchedules: Array.isArray(parsed.classSchedules) ? parsed.classSchedules : initialAcademyData.classSchedules,
+          attendanceRecords: Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
         };
       }
     } catch (e) {

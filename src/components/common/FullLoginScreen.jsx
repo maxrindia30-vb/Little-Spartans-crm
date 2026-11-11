@@ -191,7 +191,7 @@ export default function FullLoginScreen() {
                   {currentConfig.badge}
                 </span>
                 <span className="text-xs font-mono font-bold text-[#172B50] opacity-60">
-                  Bengaluru Hub
+                  Chennai Hub
                 </span>
               </div>
 

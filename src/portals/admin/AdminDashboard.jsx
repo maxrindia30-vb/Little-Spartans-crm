@@ -22,7 +22,7 @@ import { RevenueTrendChart, AttendanceDonutChart, ProgramDistributionChart } fro
 import Modal from '../../components/common/Modal';
 
 export default function AdminDashboard() {
-  const { data, setCurrentView, addStudent, addEnquiry, addPayment } = useCrm();
+  const { data, setCurrentView, addStudent, addEnquiry, addPayment, addToast } = useCrm();
 
   const [modalType, setModalType] = useState(null); // 'student' | 'enquiry' | 'payment'
 
@@ -46,6 +46,9 @@ export default function AdminDashboard() {
   const totalParents = data.parents.length;
   const totalCoaches = data.coaches.length;
   const newEnquiries = data.enquiries.filter(e => e.stage === 'New' || e.stage === 'Trial Scheduled').length;
+  const paidRevenue = data.payments
+    .filter(p => p.status === 'Paid')
+    .reduce((sum, p) => sum + p.amount, 0);
   const pendingPayments = data.payments.filter(p => p.status === 'Pending').length;
   const pendingAmount = data.payments
     .filter(p => p.status === 'Pending')
@@ -62,8 +65,8 @@ export default function AdminDashboard() {
       parentPhone: newStudentPhone || '+91 98000 00000',
       parentEmail: `${newStudentParent.toLowerCase().replace(/\s+/g, '.')}@example.com`,
       program: newStudentProgram,
-      center: 'Indiranagar Arena',
-      coachName: 'Coach Vikram Singh',
+      center: data.academy.centers[0] || 'KK NAGAR',
+      coachName: data.coaches[0]?.name || 'Unassigned Coach',
       rank: 'Little Spartan Recruit',
       medicalNote: 'Routine fitness check passed'
     });
@@ -83,7 +86,7 @@ export default function AdminDashboard() {
       phone: enqPhone || '+91 98765 00000',
       email: `${enqParent.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
       interestedProgram: enqProgram,
-      center: 'Indiranagar Arena',
+      center: data.academy.centers[0] || 'KK NAGAR',
       notes: 'Parent submitted quick walk-in lead at academy reception desk.',
       stage: 'New'
     });
@@ -96,6 +99,10 @@ export default function AdminDashboard() {
   const handleQuickPayment = (e) => {
     e.preventDefault();
     const stu = data.students.find(s => s.name === payStudent) || data.students[0];
+    if (!stu) {
+      addToast('Enroll a student first before recording a payment.', 'error');
+      return;
+    }
     addPayment({
       studentId: stu.id,
       studentName: stu.name,
@@ -119,13 +126,13 @@ export default function AdminDashboard() {
               <span className="w-2 h-2 rounded-full bg-[#10B981] animate-ping" />
               <span>LIVE OPERATIONS</span>
             </span>
-            <span className="text-xs font-semibold text-[#172B50] opacity-60">Bengaluru Headquarters</span>
+            <span className="text-xs font-semibold text-[#172B50] opacity-60">Chennai Headquarters</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
             Academy Command Center
           </h1>
           <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-            Little Spartans Bengaluru • Real-time Operations & Student Performance
+            Little Spartans Chennai • Real-time Operations & Student Performance
           </p>
         </div>
 
@@ -162,10 +169,10 @@ export default function AdminDashboard() {
         <KpiCard
           title="Active Students"
           value={totalStudents}
-          subtitle="4 training facilities"
+          subtitle={`${data.locations?.length || 5} training facilities`}
           icon={GraduationCap}
-          trend={12.5}
-          trendLabel="vs last term"
+          trend={0}
+          trendLabel="manual onboarding"
         />
 
         <KpiCard
@@ -173,18 +180,18 @@ export default function AdminDashboard() {
           value={newEnquiries}
           subtitle="Trial pipeline active"
           icon={PhoneCall}
-          trend={24.0}
-          trendLabel="leads this week"
+          trend={0}
+          trendLabel="leads recorded"
           highlight={true}
         />
 
         <KpiCard
-          title="November Revenue"
-          value="₹4,85,000"
-          subtitle="96% fees collected"
+          title="Collected Revenue"
+          value={`₹${paidRevenue.toLocaleString()}`}
+          subtitle={`${data.payments.filter(p => p.status === 'Paid').length} paid invoices`}
           icon={CreditCard}
-          trend={18.2}
-          trendLabel="MoM collection"
+          trend={0}
+          trendLabel="live ledger"
         />
 
         <KpiCard

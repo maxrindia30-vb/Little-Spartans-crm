@@ -37,6 +37,10 @@ export default function PaymentsBilling() {
   const handleRecordPayment = (e) => {
     e.preventDefault();
     const stu = data.students.find(s => s.id === studentId) || data.students[0];
+    if (!stu) {
+      addToast('Enroll a student first before recording a payment.', 'error');
+      return;
+    }
 
     addPayment({
       studentId: stu.id,
@@ -292,7 +296,7 @@ export default function PaymentsBilling() {
             <div className="flex items-center justify-between pb-3 border-b border-[#172B5020]">
               <div>
                 <h4 className="text-base font-extrabold text-[#172B50]">LITTLE SPARTANS</h4>
-                <p className="text-[10px] text-[#172B50] opacity-75">Children's Sports Academy Bengaluru</p>
+                <p className="text-[10px] text-[#172B50] opacity-75">Children's Sports Academy Chennai</p>
                 <p className="text-[9px] text-[#172B50] opacity-60">GSTIN: 29AAAAA0000A1Z5</p>
               </div>
               <div className="text-right">

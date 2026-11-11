@@ -55,16 +55,39 @@ export default function CoachPortalView() {
     addToast 
   } = useCrm();
 
-  const coachProfile = data.coaches[0]; // Coach Vikram Singh
-  const myClasses = data.classes.filter(c => c.coachId === coachProfile.id || c.coach.includes(coachProfile.name.split(' ')[0]));
-  const myStudents = data.students.filter(s => s.coachName.includes('Vikram') || s.program.includes('Gymnastics'));
+  const coachProfile = data.coaches[0] || {
+    id: '',
+    name: 'Coach (Unassigned)',
+    specialization: 'Sports Training',
+    experience: '-',
+    certification: 'Academy Coach',
+    email: '',
+    center: data.academy.centers[0] || 'KK NAGAR',
+    rating: '-',
+  };
+  const coachFirstName = (coachProfile.name || '').split(' ')[0].toLowerCase();
+  const myClasses = coachProfile.id
+    ? data.classes.filter(
+        c =>
+          c.coachId === coachProfile.id ||
+          (coachFirstName && c.coach?.toLowerCase().includes(coachFirstName))
+      )
+    : [];
+  const myStudents = coachProfile.id
+    ? data.students.filter(
+        s => coachFirstName && s.coachName?.toLowerCase().includes(coachFirstName)
+      )
+    : [];
 
   // Automatic Coach Portal Synchronization:
   // Strict role-based filter: Coach ONLY sees schedules assigned to them!
-  const mySchedules = (data.classSchedules || []).filter(s => 
-    s.coachId === coachProfile.id || 
-    (s.coachName && s.coachName.toLowerCase().includes(coachProfile.name.toLowerCase().split(' ')[0]))
-  );
+  const mySchedules = coachProfile.id
+    ? (data.classSchedules || []).filter(
+        s =>
+          s.coachId === coachProfile.id ||
+          (coachFirstName && s.coachName && s.coachName.toLowerCase().includes(coachFirstName))
+      )
+    : [];
 
   // Sub-view toggle in "My Classes": 'schedules' | 'batches'
   const [classesSubView, setClassesSubView] = useState('schedules');
@@ -186,7 +209,7 @@ export default function CoachPortalView() {
   };
 
   // Evaluation states
-  const [evalStudent, setEvalStudent] = useState(myStudents[0]?.id || 'STU-001');
+  const [evalStudent, setEvalStudent] = useState(myStudents[0]?.id || '');
   const [evalScores, setEvalScores] = useState({
     agility: 9,
     speed: 8,

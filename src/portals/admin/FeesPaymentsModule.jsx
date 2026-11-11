@@ -71,6 +71,10 @@ export default function FeesPaymentsModule() {
     e.preventDefault();
     const stu = data.students.find(s => s.id === assignStuId) || data.students[0];
     const structure = (data.feeStructures || []).find(f => f.id === selectedStructureId) || data.feeStructures[0];
+    if (!stu || !structure) {
+      addToast('Ensure at least one student and fee structure exist before assigning fees.', 'error');
+      return;
+    }
     
     let base = structure.monthlyFee;
     if (planType === 'Quarterly') base = structure.quarterlyFee;

@@ -456,19 +456,21 @@ export default function SupportPortalView() {
             Parent Communication Logs
           </h1>
           <div className="space-y-3">
-            {[
-              { type: 'WhatsApp Automated Broadcast', date: 'Today, 10:00 AM', text: 'Reminder: Gymnastics Batch A session today at 4:30 PM Indiranagar Arena.' },
-              { type: 'SMS Payment Alert', date: 'Yesterday, 04:15 PM', text: 'Invoice LSA-2026-11-002 for Riya Verma is due. Please pay via parent portal.' },
-              { type: 'Email Circular', date: '08 Nov 2026', text: 'Annual Little Spartans Sports Day 2026 Announced! Registrations open next week.' }
-            ].map((log, i) => (
-              <div key={i} className="p-4 bg-white rounded-2xl border border-[#172B501A] shadow-card flex items-start justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-[#F4510B] uppercase">{log.type}</span>
-                  <p className="text-xs font-semibold text-[#172B50] mt-1">{log.text}</p>
-                </div>
-                <span className="text-[10px] text-[#172B50] opacity-60 font-semibold">{log.date}</span>
+            {data.announcements.length === 0 ? (
+              <div className="p-6 bg-white rounded-2xl border border-[#172B501A] shadow-card text-center text-xs text-[#172B50] opacity-65">
+                No communication logs recorded yet.
               </div>
-            ))}
+            ) : (
+              data.announcements.map((ann, i) => (
+                <div key={ann.id || i} className="p-4 bg-white rounded-2xl border border-[#172B501A] shadow-card flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-[#F4510B] uppercase">{ann.category || 'Broadcast'}</span>
+                    <p className="text-xs font-semibold text-[#172B50] mt-1">{ann.title || ann.content}</p>
+                  </div>
+                  <span className="text-[10px] text-[#172B50] opacity-60 font-semibold">{ann.date || ''}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

@@ -39,7 +39,7 @@ export default function EnquiryManagement() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [interestedProgram, setInterestedProgram] = useState(data.programs[0]?.name || '');
-  const [center, setCenter] = useState(commonLocations[0]?.name || 'Indiranagar Arena');
+  const [center, setCenter] = useState(commonLocations[0]?.name || 'KK NAGAR');
   const [notes, setNotes] = useState('');
 
   const stages = ['All', 'New', 'Contacted', 'Trial Scheduled', 'Trial Completed', 'Enrolled'];
@@ -72,7 +72,7 @@ export default function EnquiryManagement() {
     if (selectedLocation !== 'All') {
       setCenter(selectedLocation);
     } else {
-      setCenter(commonLocations[0]?.name || 'Indiranagar Arena');
+      setCenter(commonLocations[0]?.name || 'KK NAGAR');
     }
     setIsModalOpen(true);
   };
@@ -114,7 +114,7 @@ export default function EnquiryManagement() {
       parentEmail: enq.email,
       program: enq.interestedProgram,
       center: enq.center,
-      coachName: 'Coach Vikram Singh',
+      coachName: data.coaches[0]?.name || 'Unassigned Coach',
       rank: 'Little Spartan Recruit',
       medicalNote: enq.notes
     });

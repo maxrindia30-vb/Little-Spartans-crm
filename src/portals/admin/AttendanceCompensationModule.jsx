@@ -77,6 +77,10 @@ export default function AttendanceCompensationModule() {
   const handleCreateCoachCompSubmit = (e) => {
     e.preventDefault();
     const coach = data.coaches.find(c => c.id === compCoachId) || data.coaches[0];
+    if (!coach) {
+      addToast('Add a coach first before assigning coach compensation.', 'error');
+      return;
+    }
     createCoachCompensation({
       coachId: coach.id,
       coachName: coach.name,
@@ -461,10 +465,10 @@ export default function AttendanceCompensationModule() {
                 onChange={(e) => setSlotDate(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
               >
-                <option value="Saturday, Nov 14 (10:00 AM - 11:15 AM)">Saturday, Nov 14 (10:00 AM - 11:15 AM) - Indiranagar</option>
-                <option value="Sunday, Nov 15 (4:00 PM - 5:30 PM)">Sunday, Nov 15 (4:00 PM - 5:30 PM) - Koramangala</option>
-                <option value="Wednesday, Nov 18 (5:00 PM - 6:15 PM)">Wednesday, Nov 18 (5:00 PM - 6:15 PM) - Indiranagar</option>
-                <option value="Saturday, Nov 21 (11:30 AM - 12:45 PM)">Saturday, Nov 21 (11:30 AM - 12:45 PM) - HSR Elite</option>
+                <option value="Saturday, Nov 14 (10:00 AM - 11:15 AM)">Saturday, Nov 14 (10:00 AM - 11:15 AM) - KK NAGAR</option>
+                <option value="Sunday, Nov 15 (4:00 PM - 5:30 PM)">Sunday, Nov 15 (4:00 PM - 5:30 PM) - KILPAUK</option>
+                <option value="Wednesday, Nov 18 (5:00 PM - 6:15 PM)">Wednesday, Nov 18 (5:00 PM - 6:15 PM) - ANNA NAGAR</option>
+                <option value="Saturday, Nov 21 (11:30 AM - 12:45 PM)">Saturday, Nov 21 (11:30 AM - 12:45 PM) - MAHALINGAPURAM</option>
               </select>
             </div>
 

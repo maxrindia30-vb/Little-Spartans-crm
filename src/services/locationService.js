@@ -25,7 +25,7 @@ export function getCommonLocations(data) {
   return fallbackNames.map((name, idx) => ({
     id: `LOC-${idx + 1}`,
     name,
-    city: 'Bengaluru',
+    city: 'Chennai',
     courts: []
   }));
 }

@@ -29,7 +29,7 @@ export default function StudentManagement() {
   const [age, setAge] = useState('7');
   const [gender, setGender] = useState('Male');
   const [program, setProgram] = useState(data.programs[0]?.name || '');
-  const [center, setCenter] = useState(data.academy.centers[0] || 'Indiranagar Arena');
+  const [center, setCenter] = useState(data.academy.centers[0] || 'KK NAGAR');
   const [parentName, setParentName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [parentEmail, setParentEmail] = useState('');

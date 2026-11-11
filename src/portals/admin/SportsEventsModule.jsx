@@ -140,26 +140,21 @@ export default function SportsEventsModule() {
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
             <h2 className="text-base font-extrabold text-[#172B50] mb-4">Latest Tournament Honors & Medals</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50">
-                <span className="text-2xl block mb-1">🥇</span>
-                <span className="font-extrabold text-sm text-[#172B50] block">Ananya Nair</span>
-                <p className="text-xs text-[#172B50]/80 mt-1">1st Place - 100m Sprint Under-10</p>
-                <span className="text-[10px] font-bold text-amber-700 mt-2 block">State Athletics Championship</span>
+            {data.competitions.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#172B50] opacity-65">
+                No tournament results recorded yet. Create a competition and record results to view honors here.
               </div>
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-                <span className="text-2xl block mb-1">🥈</span>
-                <span className="font-extrabold text-sm text-[#172B50] block">Aarav Sharma</span>
-                <p className="text-xs text-[#172B50]/80 mt-1">Silver Medal - Agility Course Time Trial</p>
-                <span className="text-[10px] font-bold text-slate-700 mt-2 block">Bangalore Junior Cup</span>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {data.competitions.slice(0, 3).map(comp => (
+                  <div key={comp.id} className="p-4 rounded-xl border border-[#172B5015] bg-[#FFF4E8]/40">
+                    <span className="font-extrabold text-sm text-[#172B50] block">{comp.title}</span>
+                    <p className="text-xs text-[#172B50]/80 mt-1">{comp.sport} • {comp.venue}</p>
+                    <span className="text-[10px] font-bold text-[#F4510B] mt-2 block">{comp.status}</span>
+                  </div>
+                ))}
               </div>
-              <div className="p-4 rounded-xl border border-orange-200 bg-orange-50/50">
-                <span className="text-2xl block mb-1">🥉</span>
-                <span className="font-extrabold text-sm text-[#172B50] block">Dev Mehta</span>
-                <p className="text-xs text-[#172B50]/80 mt-1">Bronze Medal - 3-Point Shootout</p>
-                <span className="text-[10px] font-bold text-orange-700 mt-2 block">Whitefield Hoops League</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}

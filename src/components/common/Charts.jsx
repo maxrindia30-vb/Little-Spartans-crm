@@ -80,7 +80,7 @@ export function AttendanceDonutChart({ presentRate = 92 }) {
     <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between">
       <div className="pb-3 border-b border-[#172B5012]">
         <h4 className="text-sm font-extrabold text-[#172B50]">Today's Academy Attendance</h4>
-        <p className="text-xs text-[#172B50] opacity-70">Across all 4 training centers</p>
+        <p className="text-xs text-[#172B50] opacity-70">Across all 5 training centers</p>
       </div>
 
       <div className="my-4 flex items-center justify-center relative">

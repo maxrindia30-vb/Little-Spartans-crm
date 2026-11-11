@@ -58,16 +58,16 @@ export default function ProgramsClassesModule() {
   const [cancelReason, setCancelReason] = useState('');
 
   // Form State for Create/Edit
-  const defaultLocation = (data.locations && data.locations[0]?.name) || "Indiranagar Arena";
+  const defaultLocation = (data.locations && data.locations[0]?.name) || "KK NAGAR";
   const [formLocation, setFormLocation] = useState(defaultLocation);
   const [formProgram, setFormProgram] = useState(data.programs[0]?.name || "Spartan Gymnastics & Agility");
-  const [formBatch, setFormBatch] = useState(data.classes[0]?.name || "Gymnastics Batch A - Juniors");
-  const [formCoachId, setFormCoachId] = useState(data.coaches[0]?.id || "COACH-1");
+  const [formBatch, setFormBatch] = useState(data.classes[0]?.name || "");
+  const [formCoachId, setFormCoachId] = useState(data.coaches[0]?.id || "");
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
   const [formStartTime, setFormStartTime] = useState("16:30");
   const [formEndTime, setFormEndTime] = useState("17:45");
   const [formVenue, setFormVenue] = useState(
-    (data.locations && data.locations[0]?.courts[0]) || "Gymnastics Floor A"
+    (data.locations && data.locations[0]?.courts[0]) || "Main Turf Ground"
   );
   const [formCapacity, setFormCapacity] = useState(18);
   const [formNotes, setFormNotes] = useState("");
@@ -76,7 +76,7 @@ export default function ProgramsClassesModule() {
   // Get available courts/venues based on currently selected location
   const currentLocationObj = (data.locations || []).find(l => l.name === formLocation) || data.locations?.[0];
   const availableVenues = currentLocationObj ? currentLocationObj.courts : [
-    "Gymnastics Floor A", "Main Football Turf Ground", "Synthetic Sprint Track"
+    "Main Turf Ground", "Training Court A", "Practice Arena B", "Warm-up Studio"
   ];
 
   // Helper to get coach name from ID
@@ -109,13 +109,13 @@ export default function ProgramsClassesModule() {
   // Open Create Modal
   const handleOpenCreateModal = () => {
     setSelectedSchedule(null);
-    const firstLoc = (data.locations && data.locations[0]?.name) || "Indiranagar Arena";
+    const firstLoc = (data.locations && data.locations[0]?.name) || "KK NAGAR";
     setFormLocation(firstLoc);
     const locObj = (data.locations || []).find(l => l.name === firstLoc);
-    setFormVenue(locObj?.courts[0] || "Gymnastics Floor A");
+    setFormVenue(locObj?.courts[0] || "Main Turf Ground");
     setFormProgram(data.programs[0]?.name || "Spartan Gymnastics & Agility");
-    setFormBatch(data.classes[0]?.name || "Gymnastics Batch A - Juniors");
-    setFormCoachId(data.coaches[0]?.id || "COACH-1");
+    setFormBatch(data.classes[0]?.name || "");
+    setFormCoachId(data.coaches[0]?.id || "");
     setFormDate(new Date().toISOString().slice(0, 10));
     setFormStartTime("16:30");
     setFormEndTime("17:45");

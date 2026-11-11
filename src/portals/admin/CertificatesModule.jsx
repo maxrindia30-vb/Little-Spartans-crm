@@ -18,6 +18,10 @@ export default function CertificatesModule() {
   const handleIssue = (e) => {
     e.preventDefault();
     const stu = data.students.find(s => s.id === studentId) || data.students[0];
+    if (!stu) {
+      addToast('Enroll a student first before issuing a certificate.', 'error');
+      return;
+    }
 
     const newCert = {
       id: `CERT-${String(data.certificates.length + 1).padStart(3, '0')}`,
