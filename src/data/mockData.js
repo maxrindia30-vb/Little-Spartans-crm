@@ -200,5 +200,8 @@ export const initialAcademyData = {
   classSchedules: [],
 
   // Shared Location-Isolated Student Attendance Records (Admin & Coach Portals)
-  attendanceRecords: []
+  attendanceRecords: [],
+
+  // Cross-Portal Real-Time Alerts (Admin <-> Parent <-> Coach)
+  notifications: []
 };

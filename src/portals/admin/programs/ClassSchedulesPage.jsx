@@ -41,6 +41,7 @@ export default function ClassSchedulesPage() {
   const {
     data,
     createClassSchedule,
+    createRecurringClassSchedules,
     updateClassSchedule,
     cancelClassSchedule,
     completeClassSchedule,
@@ -64,6 +65,10 @@ export default function ClassSchedulesPage() {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
+    className: '',
+    scheduleMode: 'one-time',
+    recurringDays: ['Monday', 'Wednesday', 'Friday'],
+    recurringWeeks: '4',
     location: activeLocations[0]?.name || '',
     program: (data.programs || [])[0]?.name || '',
     batchId: '',
@@ -142,6 +147,10 @@ export default function ClassSchedulesPage() {
 
     setEditingSchedule(null);
     setScheduleForm({
+      className: firstBatch?.name || '',
+      scheduleMode: 'one-time',
+      recurringDays: [weekday || 'Monday'],
+      recurringWeeks: '4',
       location: defaultLoc,
       program: defaultProg,
       batchId: firstBatch?.id || '',
@@ -163,6 +172,10 @@ export default function ClassSchedulesPage() {
       sch.weekday || (sch.date ? WEEKDAYS[new Date(`${sch.date}T00:00:00`).getDay()] : 'Monday');
     setEditingSchedule(sch);
     setScheduleForm({
+      className: sch.className || sch.batch || '',
+      scheduleMode: 'one-time',
+      recurringDays: [derivedWeekday],
+      recurringWeeks: '4',
       location: sch.location || '',
       program: sch.program || '',
       batchId: sch.batchId || '',
@@ -189,10 +202,21 @@ export default function ClassSchedulesPage() {
       ...prev,
       batchId: batch.id,
       batch: batch.name,
+      className: prev.className || batch.name,
       coachId: batch.coachId || prev.coachId,
       coach2Id: batch.additionalCoaches?.[0]?.coachId || prev.coach2Id,
       capacity: String(batch.capacity || prev.capacity),
     }));
+  };
+
+  const toggleRecurringDay = (dayName) => {
+    setScheduleForm((prev) => {
+      const exists = prev.recurringDays.includes(dayName);
+      const nextDays = exists
+        ? prev.recurringDays.filter((d) => d !== dayName)
+        : [...prev.recurringDays, dayName];
+      return { ...prev, recurringDays: nextDays };
+    });
   };
 
   const handleSaveSchedule = (e) => {
@@ -205,11 +229,13 @@ export default function ClassSchedulesPage() {
       ? [{ coachId: selectedCoach2.id, coachName: selectedCoach2.name }]
       : selectedBatch?.additionalCoaches || [];
 
+    const batchLabel = selectedBatch?.name || scheduleForm.batch || `${scheduleForm.program} Session`;
     const payload = {
+      className: scheduleForm.className.trim() || batchLabel,
       location: scheduleForm.location,
       program: scheduleForm.program,
       batchId: scheduleForm.batchId,
-      batch: selectedBatch?.name || scheduleForm.batch || `${scheduleForm.program} Session`,
+      batch: batchLabel,
       coachId: selectedCoach?.id || '',
       coachName: selectedCoach?.name || 'Unassigned',
       additionalCoaches,
@@ -224,6 +250,13 @@ export default function ClassSchedulesPage() {
 
     if (editingSchedule) {
       const res = updateClassSchedule(editingSchedule.id, payload);
+      if (res.success) setIsScheduleModalOpen(false);
+    } else if (scheduleForm.scheduleMode === 'recurring') {
+      const res = createRecurringClassSchedules({
+        ...payload,
+        recurringDays: scheduleForm.recurringDays,
+        weeks: parseInt(scheduleForm.recurringWeeks, 10) || 4,
+      });
       if (res.success) setIsScheduleModalOpen(false);
     } else {
       const res = createClassSchedule(payload);
@@ -769,36 +802,123 @@ export default function ClassSchedulesPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Batches *</label>
-            {matchingBatchesForForm.length > 0 ? (
-              <select
-                value={scheduleForm.batchId}
-                onChange={(e) => handleBatchSelection(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-              >
-                <option value="">Select Batch</option>
-                {matchingBatchesForForm.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} (Cap {b.capacity})
-                  </option>
-                ))}
-              </select>
-            ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Class Title / Name</label>
               <input
                 type="text"
-                required
-                value={scheduleForm.batch}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, batch: e.target.value })}
-                placeholder="Enter batch name or create under Batches"
+                value={scheduleForm.className}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, className: e.target.value })}
+                placeholder="e.g. Little Strikers Morning Drills"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
-            )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Batches *</label>
+              {matchingBatchesForForm.length > 0 ? (
+                <select
+                  value={scheduleForm.batchId}
+                  onChange={(e) => handleBatchSelection(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                >
+                  <option value="">Select Batch</option>
+                  {matchingBatchesForForm.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} (Cap {b.capacity})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  required
+                  value={scheduleForm.batch}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, batch: e.target.value })}
+                  placeholder="Enter batch name or create under Batches"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                />
+              )}
+            </div>
           </div>
+
+          {!editingSchedule && (
+            <div className="p-3 rounded-xl bg-[#FFF4E8]/70 border border-[#172B5015] space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-extrabold text-[#172B50]">Schedule Mode</span>
+                <div className="inline-flex rounded-lg bg-white border border-[#172B501A] p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setScheduleForm((prev) => ({ ...prev, scheduleMode: 'one-time' }))}
+                    className={`px-3 py-1 text-[11px] font-bold rounded-md cursor-pointer ${
+                      scheduleForm.scheduleMode === 'one-time'
+                        ? 'bg-[#172B50] text-white'
+                        : 'text-[#172B50]'
+                    }`}
+                  >
+                    One-Time Class
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScheduleForm((prev) => ({ ...prev, scheduleMode: 'recurring' }))}
+                    className={`px-3 py-1 text-[11px] font-bold rounded-md cursor-pointer ${
+                      scheduleForm.scheduleMode === 'recurring'
+                        ? 'bg-[#F4510B] text-white'
+                        : 'text-[#172B50]'
+                    }`}
+                  >
+                    Weekly Recurring Timetable
+                  </button>
+                </div>
+              </div>
+
+              {scheduleForm.scheduleMode === 'recurring' && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold text-[#172B50]">Recurring Days *</span>
+                    <div className="flex items-center gap-1.5 text-[11px]">
+                      <span className="font-bold text-[#172B50]">Repeat For:</span>
+                      <select
+                        value={scheduleForm.recurringWeeks}
+                        onChange={(e) => setScheduleForm((prev) => ({ ...prev, recurringWeeks: e.target.value }))}
+                        className="px-2 py-1 rounded-lg bg-white border border-[#172B5020] font-bold text-[#172B50]"
+                      >
+                        <option value="2">2 Weeks</option>
+                        <option value="4">4 Weeks</option>
+                        <option value="8">8 Weeks</option>
+                        <option value="12">12 Weeks</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MON_FIRST_DAYS.map((dayName) => {
+                      const active = scheduleForm.recurringDays.includes(dayName);
+                      return (
+                        <button
+                          key={dayName}
+                          type="button"
+                          onClick={() => toggleRecurringDay(dayName)}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
+                            active
+                              ? 'bg-[#F4510B] text-white border-[#F4510B]'
+                              : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-[#FFF4E8]'
+                          }`}
+                        >
+                          {dayName.slice(0, 3)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Class Date *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                {scheduleForm.scheduleMode === 'recurring' && !editingSchedule ? 'Start Date *' : 'Class Date *'}
+              </label>
               <input
                 type="date"
                 required

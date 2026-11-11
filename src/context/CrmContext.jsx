@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { initialAcademyData } from '../data/mockData';
-import { checkScheduleConflict } from '../services/scheduleService';
+import {
+  checkScheduleConflict,
+  buildRecurringSchedules,
+} from '../services/scheduleService';
+import {
+  checkCompensationEligibility,
+  validateReplacementSlot,
+  formatReplacementSlotLabel,
+} from '../services/compensationService';
 import { upsertBatchAttendanceRecords } from '../services/attendanceService';
 import {
   executeEnquiryEnrollmentTransaction,
@@ -46,6 +54,7 @@ export function CrmProvider({ children }) {
           coaches: mergedCoaches,
           classSchedules: Array.isArray(parsed.classSchedules) ? parsed.classSchedules : initialAcademyData.classSchedules,
           attendanceRecords: Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
+          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : (initialAcademyData.notifications || []),
         };
       }
     } catch (e) {
@@ -689,42 +698,329 @@ export function CrmProvider({ children }) {
     return newAssignment;
   };
 
-  // Module 4.8: Student Compensation Class Requests
-  const submitCompensationRequest = (reqData) => {
-    const newReq = {
-      id: `CMP-00${(data.compensationRequests || []).length + 1}`,
-      ...reqData,
-      appliedOn: new Date().toISOString().split('T')[0],
-      status: 'Pending',
-      reviewedBy: 'Pending Admin Approval',
-      approvalNotes: 'Awaiting slot review by Admin'
-    };
+  // Cross-portal notification builder
+  const createNotificationRecord = ({
+    targetRole = 'all',
+    targetParentId = '',
+    targetCoachId = '',
+    targetLocation = '',
+    title,
+    message,
+    type = 'info',
+  }) => ({
+    id: `NTF-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
+    targetRole,
+    targetParentId,
+    targetCoachId,
+    targetLocation,
+    title,
+    message,
+    type,
+    read: false,
+    createdAt: new Date().toISOString(),
+  });
+
+  const markNotificationsRead = (role = 'all') => {
     setData(prev => ({
       ...prev,
-      compensationRequests: [newReq, ...(prev.compensationRequests || [])]
+      notifications: (prev.notifications || []).map(n =>
+        role === 'all' || n.targetRole === role || n.targetRole === 'all'
+          ? { ...n, read: true }
+          : n
+      )
     }));
-    addToast('Compensation class request submitted for Admin review.');
-    return newReq;
+  };
+
+  // Module 4.8: Student Compensation Class Requests (Unified Parent + Admin Workflow)
+  const submitCompensationRequest = (reqData) => {
+    const requestSource = reqData.requestSource || (currentPortal === 'admin' ? 'Admin' : 'Parent');
+    const student = (data.students || []).find(s => s.id === reqData.studentId)
+      || (data.students || []).find(s => s.name === reqData.studentName);
+    const parent = (data.parents || []).find(p => p.id === (reqData.parentId || student?.parentId))
+      || (data.parents || []).find(p => p.name === (reqData.parentName || student?.parentName));
+
+    const eligibilityResult = checkCompensationEligibility({
+      student: student || (reqData.studentId ? { id: reqData.studentId, name: reqData.studentName, status: 'Active', parentId: reqData.parentId } : null),
+      missedDate: reqData.missedDate,
+      missedClass: reqData.missedClass || reqData.batchName,
+      batchId: reqData.batchId,
+      existingRequests: data.compensationRequests || [],
+      parentId: reqData.parentId || parent?.id || '',
+      role: requestSource === 'Admin' ? 'admin' : 'parent',
+    });
+
+    if (!eligibilityResult.valid) {
+      addToast(eligibilityResult.reason, 'error');
+      return { success: false, message: eligibilityResult.reason };
+    }
+
+    const nowIso = new Date().toISOString();
+    const requestId = generateUniquePrefixedId('CMP', data.compensationRequests || [], 100);
+    const center = reqData.center || reqData.location || student?.center || parent?.center || '';
+    const reasonCategory = reqData.reasonCategory || 'Other';
+    const explanation = reqData.explanation || reqData.reason || '';
+    const formattedReason = reasonCategory && explanation && !explanation.startsWith(reasonCategory)
+      ? `${reasonCategory}: ${explanation}`
+      : (explanation || reasonCategory);
+
+    const initialStatus = requestSource === 'Admin' && reqData.initialStatus
+      ? reqData.initialStatus
+      : 'Pending';
+
+    const newReq = {
+      id: requestId,
+      studentId: student?.id || reqData.studentId || '',
+      studentName: student?.name || reqData.studentName || '',
+      parentId: parent?.id || reqData.parentId || student?.parentId || '',
+      parentName: parent?.name || reqData.parentName || student?.parentName || '',
+      parentEmail: parent?.email || reqData.parentEmail || student?.parentEmail || '',
+      parentPhone: parent?.phone || reqData.parentPhone || '',
+      center,
+      location: center,
+      program: reqData.program || student?.program || '',
+      batchId: reqData.batchId || '',
+      batchName: reqData.batchName || reqData.missedClass || '',
+      missedClass: reqData.missedClass || reqData.batchName || `${reqData.program || student?.program || 'Training'} Session`,
+      missedDate: reqData.missedDate,
+      reasonCategory,
+      explanation,
+      reason: formattedReason,
+      requestSource,
+      eligibility: reqData.eligibility || eligibilityResult.eligibilityLabel,
+      appliedOn: nowIso.split('T')[0],
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      status: initialStatus,
+      adminNotes: reqData.adminNotes || '',
+      approvalNotes: reqData.adminNotes || (requestSource === 'Admin' ? 'Created manually by Admin' : 'Awaiting Admin review'),
+      reviewedBy: requestSource === 'Admin' ? 'Admin Vikramaditya' : 'Pending Admin Approval',
+      replacementDate: '',
+      replacementStartTime: '',
+      replacementEndTime: '',
+      replacementLocation: '',
+      replacementProgram: '',
+      replacementBatchId: '',
+      replacementBatch: '',
+      replacementSlot: '',
+      replacementCoachId: '',
+      replacementCoach: '',
+      linkedScheduleId: '',
+    };
+
+    const alertNotif = requestSource === 'Parent'
+      ? createNotificationRecord({
+          targetRole: 'admin',
+          targetLocation: center,
+          title: 'New Compensation Request',
+          message: `${newReq.parentName || 'Parent'} requested a compensation class for ${newReq.studentName} (${newReq.missedDate} • ${center}).`,
+          type: 'warning',
+        })
+      : createNotificationRecord({
+          targetRole: 'parent',
+          targetParentId: newReq.parentId,
+          targetLocation: center,
+          title: 'Compensation Request Created by Admin',
+          message: `Admin logged a compensation request (${newReq.id}) for ${newReq.studentName} for missed session on ${newReq.missedDate}.`,
+          type: 'info',
+        });
+
+    setData(prev => ({
+      ...prev,
+      compensationRequests: [newReq, ...(prev.compensationRequests || [])],
+      notifications: [alertNotif, ...(prev.notifications || [])].slice(0, 80),
+    }));
+
+    addToast(
+      requestSource === 'Admin'
+        ? `Manual compensation request ${newReq.id} created for ${newReq.studentName}.`
+        : 'Compensation request submitted for Admin review.',
+      'success'
+    );
+    return { success: true, request: newReq };
+  };
+
+  const updateCompensationRequest = (id, updates = {}) => {
+    const existing = (data.compensationRequests || []).find(r => r.id === id);
+    if (!existing) {
+      addToast(`Compensation request ${id} not found.`, 'error');
+      return { success: false, message: 'Request not found.' };
+    }
+
+    // RBAC protection: Parents may never approve, reject, assign coaches, or schedule replacements
+    if (currentPortal === 'parent') {
+      addToast('Permission Denied: Only Academy Admin can approve, schedule, or modify requests.', 'error');
+      return { success: false, message: 'Unauthorized parent mutation.' };
+    }
+
+    const nextStatus = updates.status || existing.status;
+    const isScheduling = Boolean(updates.replacementDate && updates.replacementStartTime && updates.replacementEndTime);
+
+    let nextSchedules = [...(data.classSchedules || [])];
+    let linkedScheduleId = existing.linkedScheduleId || '';
+    let replacementSlot = updates.replacementSlot ?? existing.replacementSlot ?? '';
+    let replacementCoach = updates.replacementCoach ?? existing.replacementCoach ?? '';
+    let replacementCoachId = updates.replacementCoachId ?? existing.replacementCoachId ?? '';
+
+    if (isScheduling) {
+      const coachObj = (data.coaches || []).find(
+        c => c.id === updates.replacementCoachId || c.name === updates.replacementCoach
+      );
+      replacementCoachId = coachObj?.id || updates.replacementCoachId || '';
+      replacementCoach = coachObj?.name || updates.replacementCoach || '';
+      const replacementLocation = updates.replacementLocation || existing.center || existing.location;
+      const replacementProgram = updates.replacementProgram || existing.program;
+      const replacementBatch = updates.replacementBatch || updates.replacementBatchName || `${replacementProgram} (Compensation)`;
+
+      const slotValidation = validateReplacementSlot({
+        replacementDate: updates.replacementDate,
+        replacementStartTime: updates.replacementStartTime,
+        replacementEndTime: updates.replacementEndTime,
+        replacementLocation,
+        replacementCoachId,
+        replacementCoachName: replacementCoach,
+        classSchedules: nextSchedules,
+        excludeScheduleId: linkedScheduleId || null,
+      });
+
+      if (!slotValidation.valid) {
+        addToast(slotValidation.message, 'error');
+        return { success: false, message: slotValidation.message };
+      }
+
+      replacementSlot = formatReplacementSlotLabel({
+        replacementDate: updates.replacementDate,
+        replacementStartTime: updates.replacementStartTime,
+        replacementEndTime: updates.replacementEndTime,
+        replacementLocation,
+      });
+
+      const weekday = updates.replacementDate
+        ? new Date(`${updates.replacementDate}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' })
+        : '';
+
+      if (linkedScheduleId && nextSchedules.some(s => s.id === linkedScheduleId)) {
+        nextSchedules = nextSchedules.map(s =>
+          s.id === linkedScheduleId
+            ? {
+                ...s,
+                location: replacementLocation,
+                program: replacementProgram,
+                batch: replacementBatch,
+                batchId: updates.replacementBatchId || s.batchId || '',
+                coachId: replacementCoachId,
+                coachName: replacementCoach,
+                date: updates.replacementDate,
+                weekday,
+                startTime: updates.replacementStartTime,
+                endTime: updates.replacementEndTime,
+                status: 'Updated',
+                notes: updates.approvalNotes || updates.adminNotes || `Replacement session for ${existing.studentName}`,
+                updatedAt: new Date().toISOString(),
+              }
+            : s
+        );
+      } else {
+        linkedScheduleId = `SCH-CMP-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+        const replacementSchedule = {
+          id: linkedScheduleId,
+          location: replacementLocation,
+          program: replacementProgram,
+          batch: replacementBatch,
+          batchId: updates.replacementBatchId || '',
+          coachId: replacementCoachId,
+          coachName: replacementCoach,
+          additionalCoaches: [],
+          weekday,
+          date: updates.replacementDate,
+          startTime: updates.replacementStartTime,
+          endTime: updates.replacementEndTime,
+          venue: '',
+          capacity: 1,
+          enrolledCount: 1,
+          enrolledStudents: [existing.studentName],
+          enrolledStudentIds: existing.studentId ? [existing.studentId] : [],
+          targetStudentId: existing.studentId || '',
+          isCompensationReplacement: true,
+          compensationRequestId: id,
+          notes: updates.approvalNotes || updates.adminNotes || `Replacement class for missed session on ${existing.missedDate}`,
+          status: 'Scheduled',
+          createdAt: new Date().toISOString(),
+          publishedBy: 'Admin Vikramaditya',
+        };
+        nextSchedules = [replacementSchedule, ...nextSchedules];
+      }
+    } else if ((nextStatus === 'Cancelled' || nextStatus === 'Rejected' || nextStatus === 'Completed') && linkedScheduleId) {
+      nextSchedules = nextSchedules.map(s =>
+        s.id === linkedScheduleId
+          ? {
+              ...s,
+              status: nextStatus === 'Completed' ? 'Completed' : 'Cancelled',
+              cancellationReason: nextStatus !== 'Completed' ? (updates.approvalNotes || `Compensation ${nextStatus}`) : s.cancellationReason,
+              updatedAt: new Date().toISOString(),
+            }
+          : s
+      );
+    }
+
+    const updatedReq = {
+      ...existing,
+      ...updates,
+      status: isScheduling ? 'Scheduled' : nextStatus,
+      replacementSlot,
+      replacementCoach,
+      replacementCoachId,
+      linkedScheduleId,
+      reviewedBy: updates.reviewedBy || (currentPortal === 'coach' ? existing.reviewedBy : 'Admin Vikramaditya'),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const newNotifications = [];
+    if (updatedReq.parentId || updatedReq.parentName) {
+      newNotifications.push(
+        createNotificationRecord({
+          targetRole: 'parent',
+          targetParentId: updatedReq.parentId,
+          targetLocation: updatedReq.center,
+          title: `Compensation ${updatedReq.status}`,
+          message:
+            updatedReq.status === 'Scheduled'
+              ? `${updatedReq.studentName}'s replacement class is scheduled on ${updatedReq.replacementSlot} with Coach ${updatedReq.replacementCoach}.`
+              : `${updatedReq.studentName}'s compensation request (${id}) is now ${updatedReq.status}.`,
+          type: updatedReq.status === 'Rejected' || updatedReq.status === 'Cancelled' ? 'warning' : 'success',
+        })
+      );
+    }
+    if (isScheduling && replacementCoachId) {
+      newNotifications.push(
+        createNotificationRecord({
+          targetRole: 'coach',
+          targetCoachId: replacementCoachId,
+          targetLocation: updatedReq.replacementLocation || updatedReq.center,
+          title: 'Replacement Session Assigned',
+          message: `You are assigned a replacement compensation session for ${updatedReq.studentName} on ${updatedReq.replacementSlot}.`,
+          type: 'info',
+        })
+      );
+    }
+
+    setData(prev => ({
+      ...prev,
+      compensationRequests: (prev.compensationRequests || []).map(r => (r.id === id ? updatedReq : r)),
+      classSchedules: nextSchedules,
+      notifications: [...newNotifications, ...(prev.notifications || [])].slice(0, 80),
+    }));
+
+    addToast(`Compensation request ${id} updated to ${updatedReq.status}.`, 'success');
+    return { success: true, request: updatedReq };
   };
 
   const updateCompensationStatus = (id, newStatus, approvalNotes, replacementSlot, replacementCoach) => {
-    setData(prev => ({
-      ...prev,
-      compensationRequests: (prev.compensationRequests || []).map(r => {
-        if (r.id === id) {
-          return {
-            ...r,
-            status: newStatus,
-            reviewedBy: 'Admin Vikramaditya',
-            approvalNotes: approvalNotes || r.approvalNotes,
-            replacementSlot: replacementSlot || r.replacementSlot,
-            replacementCoach: replacementCoach || r.replacementCoach
-          };
-        }
-        return r;
-      })
-    }));
-    addToast(`Compensation request ${id} updated to ${newStatus}.`);
+    return updateCompensationRequest(id, {
+      status: newStatus,
+      approvalNotes,
+      ...(replacementSlot ? { replacementSlot } : {}),
+      ...(replacementCoach ? { replacementCoach } : {}),
+    });
   };
 
   // Module 4.8: Coach Compensation Classes
@@ -794,31 +1090,29 @@ export function CrmProvider({ children }) {
     addToast(`System restored to backup ${backupId}. Academy state verified.`, 'success');
   };
 
-  // Location-Based Class Scheduling: Synchronized across Admin & Coach Portals
-  const createClassSchedule = (candidate) => {
-    const conflict = checkScheduleConflict(candidate, data.classSchedules || []);
-    if (conflict.hasConflict) {
-      addToast(conflict.message, 'error');
-      return { success: false, message: conflict.message };
-    }
-
-    const id = `SCH-${Math.floor(1000 + Math.random() * 9000)}`;
-    const matchedBatch = (data.classes || []).find(
+  // Location-Based Class Scheduling: Synchronized across Admin, Coach & Parent Portals
+  const buildFullScheduleRecord = (candidate, existingClasses = [], existingStudents = [], suffix = '') => {
+    const id = `SCH-${Math.floor(1000 + Math.random() * 9000)}${suffix}`;
+    const matchedBatch = (existingClasses || []).find(
       (cls) =>
         (candidate.batchId && cls.id === candidate.batchId) ||
         (cls.name === candidate.batch && cls.center === candidate.location)
     );
+    const matchingStudentObjs = (existingStudents || []).filter(
+      (s) =>
+        s.center === candidate.location &&
+        (matchedBatch?.enrolledStudentIds?.includes(s.id) ||
+          s.enrolledClasses?.includes(candidate.batch) ||
+          s.batchName === candidate.batch)
+    );
     const dynamicStudents =
       candidate.enrolledStudents && candidate.enrolledStudents.length > 0
         ? candidate.enrolledStudents
-        : (data.students || [])
-            .filter(
-              (s) =>
-                s.center === candidate.location &&
-                (matchedBatch?.enrolledStudentIds?.includes(s.id) ||
-                  s.enrolledClasses?.includes(candidate.batch))
-            )
-            .map((s) => s.name);
+        : matchingStudentObjs.map((s) => s.name);
+    const dynamicStudentIds =
+      candidate.enrolledStudentIds && candidate.enrolledStudentIds.length > 0
+        ? candidate.enrolledStudentIds
+        : matchingStudentObjs.map((s) => s.id);
 
     const derivedWeekday =
       candidate.weekday ||
@@ -826,8 +1120,9 @@ export function CrmProvider({ children }) {
         ? new Date(`${candidate.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' })
         : '');
 
-    const newSchedule = {
+    return {
       id,
+      className: candidate.className || candidate.batch || `${candidate.program} Session`,
       location: candidate.location,
       program: candidate.program,
       programId: candidate.programId || '',
@@ -840,23 +1135,115 @@ export function CrmProvider({ children }) {
       date: candidate.date,
       startTime: candidate.startTime,
       endTime: candidate.endTime,
-      venue: candidate.venue,
+      venue: candidate.venue || '',
       capacity: parseInt(candidate.capacity, 10) || matchedBatch?.capacity || 20,
       enrolledCount: candidate.enrolledCount ?? dynamicStudents.length,
       enrolledStudents: dynamicStudents,
+      enrolledStudentIds: dynamicStudentIds,
+      recurringGroupId: candidate.recurringGroupId || '',
+      scheduleType: candidate.scheduleType || 'one-time',
       notes: candidate.notes || '',
       status: 'Scheduled',
       createdAt: new Date().toISOString(),
-      publishedBy: 'Admin Vikramaditya'
+      publishedBy: 'Admin Vikramaditya',
     };
+  };
+
+  const createClassSchedule = (candidate) => {
+    const conflict = checkScheduleConflict(candidate, data.classSchedules || []);
+    if (conflict.hasConflict) {
+      addToast(conflict.message, 'error');
+      return { success: false, message: conflict.message };
+    }
+
+    const newSchedule = buildFullScheduleRecord(candidate, data.classes, data.students);
+    const parentNotif = createNotificationRecord({
+      targetRole: 'parent',
+      targetLocation: newSchedule.location,
+      title: 'New Class Scheduled',
+      message: `${newSchedule.className} (${newSchedule.location}) scheduled on ${newSchedule.date} (${newSchedule.startTime} - ${newSchedule.endTime}).`,
+      type: 'info',
+    });
+    const coachNotif = newSchedule.coachId
+      ? createNotificationRecord({
+          targetRole: 'coach',
+          targetCoachId: newSchedule.coachId,
+          targetLocation: newSchedule.location,
+          title: 'New Class Assigned',
+          message: `You have been scheduled for ${newSchedule.className} at ${newSchedule.location} on ${newSchedule.date} (${newSchedule.startTime} - ${newSchedule.endTime}).`,
+          type: 'info',
+        })
+      : null;
 
     setData(prev => ({
       ...prev,
-      classSchedules: [newSchedule, ...(prev.classSchedules || [])]
+      classSchedules: [newSchedule, ...(prev.classSchedules || [])],
+      notifications: [parentNotif, ...(coachNotif ? [coachNotif] : []), ...(prev.notifications || [])].slice(0, 80),
     }));
 
-    addToast(`Schedule "${newSchedule.batch}" published! Automatically synced to ${newSchedule.coachName}'s Coach Portal.`, 'success');
+    addToast(`Schedule "${newSchedule.className}" published! Automatically synced to Coach & Parent Portals.`, 'success');
     return { success: true, schedule: newSchedule };
+  };
+
+  const createRecurringClassSchedules = (template) => {
+    const plan = buildRecurringSchedules(template, data.classSchedules || []);
+    if (plan.occurrencesCount === 0) {
+      addToast('No valid class dates matched your selected weekday pattern & range.', 'error');
+      return { success: false, message: 'No matching dates found.' };
+    }
+    if (plan.createdCandidates.length === 0) {
+      const msg = plan.skippedConflicts[0]?.message || 'All selected recurring slots already exist or conflict with coach schedules.';
+      addToast(msg, 'error');
+      return { success: false, message: msg };
+    }
+
+    const recurringGroupId = `REC-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+    const createdSchedules = plan.createdCandidates.map((cand, idx) =>
+      buildFullScheduleRecord(
+        { ...cand, recurringGroupId, scheduleType: 'recurring' },
+        data.classes,
+        data.students,
+        `-${idx + 1}`
+      )
+    );
+
+    const sample = createdSchedules[0];
+    const parentNotif = createNotificationRecord({
+      targetRole: 'parent',
+      targetLocation: sample.location,
+      title: 'Weekly Class Timetable Published',
+      message: `${createdSchedules.length} recurring sessions for ${sample.className} (${sample.location}) published starting ${sample.date}.`,
+      type: 'info',
+    });
+    const coachNotif = sample.coachId
+      ? createNotificationRecord({
+          targetRole: 'coach',
+          targetCoachId: sample.coachId,
+          targetLocation: sample.location,
+          title: 'Recurring Coaching Timetable Published',
+          message: `${createdSchedules.length} sessions assigned for ${sample.className} at ${sample.location}.`,
+          type: 'info',
+        })
+      : null;
+
+    setData(prev => ({
+      ...prev,
+      classSchedules: [...createdSchedules, ...(prev.classSchedules || [])],
+      notifications: [parentNotif, ...(coachNotif ? [coachNotif] : []), ...(prev.notifications || [])].slice(0, 80),
+    }));
+
+    const skippedCount = plan.skippedConflicts.length + plan.skippedDuplicates.length;
+    addToast(
+      `Published ${createdSchedules.length} recurring sessions${skippedCount > 0 ? ` (${skippedCount} skipped due to conflicts/duplicates)` : ''}! Synced to Coach & Parent Portals.`,
+      'success'
+    );
+    return {
+      success: true,
+      createdCount: createdSchedules.length,
+      skippedConflicts: plan.skippedConflicts,
+      skippedDuplicates: plan.skippedDuplicates,
+      schedules: createdSchedules,
+    };
   };
 
   const updateClassSchedule = (id, updates) => {
@@ -873,6 +1260,14 @@ export function CrmProvider({ children }) {
       return { success: false, message: conflict.message };
     }
 
+    const parentNotif = createNotificationRecord({
+      targetRole: 'parent',
+      targetLocation: candidate.location,
+      title: 'Class Schedule Updated',
+      message: `${candidate.className || candidate.batch} at ${candidate.location} on ${candidate.date} (${candidate.startTime} - ${candidate.endTime}) was updated.`,
+      type: 'info',
+    });
+
     setData(prev => ({
       ...prev,
       classSchedules: (prev.classSchedules || []).map(s => 
@@ -880,18 +1275,31 @@ export function CrmProvider({ children }) {
           ? { 
               ...s, 
               ...updates, 
+              className: updates.className || updates.batch || s.className || s.batch,
               status: updates.status || (s.status === 'Completed' ? 'Completed' : 'Updated'),
               updatedAt: new Date().toISOString() 
             } 
           : s
-      )
+      ),
+      notifications: [parentNotif, ...(prev.notifications || [])].slice(0, 80),
     }));
 
-    addToast(`Schedule ${id} updated! Coach Portal synchronized.`, 'info');
+    addToast(`Schedule ${id} updated! Coach & Parent Portals synchronized.`, 'info');
     return { success: true };
   };
 
   const cancelClassSchedule = (id, reason = '') => {
+    const existing = (data.classSchedules || []).find(s => s.id === id);
+    const parentNotif = existing
+      ? createNotificationRecord({
+          targetRole: 'parent',
+          targetLocation: existing.location,
+          title: 'Class Session Cancelled',
+          message: `${existing.className || existing.batch} (${existing.location}) on ${existing.date} has been cancelled${reason ? `: ${reason}` : '.'}`,
+          type: 'warning',
+        })
+      : null;
+
     setData(prev => ({
       ...prev,
       classSchedules: (prev.classSchedules || []).map(s => 
@@ -903,20 +1311,36 @@ export function CrmProvider({ children }) {
               cancelledAt: new Date().toISOString() 
             } 
           : s
-      )
+      ),
+      compensationRequests: existing?.compensationRequestId
+        ? (prev.compensationRequests || []).map(r =>
+            r.id === existing.compensationRequestId
+              ? { ...r, status: 'Cancelled', approvalNotes: reason || 'Replacement class cancelled by Admin', updatedAt: new Date().toISOString() }
+              : r
+          )
+        : prev.compensationRequests,
+      notifications: parentNotif ? [parentNotif, ...(prev.notifications || [])].slice(0, 80) : prev.notifications,
     }));
-    addToast(`Schedule ${id} marked as Cancelled. Coach Portal updated.`, 'warning');
+    addToast(`Schedule ${id} marked as Cancelled. Coach & Parent Portals updated.`, 'warning');
     return { success: true };
   };
 
   const completeClassSchedule = (id) => {
+    const existing = (data.classSchedules || []).find(s => s.id === id);
     setData(prev => ({
       ...prev,
       classSchedules: (prev.classSchedules || []).map(s => 
         s.id === id 
           ? { ...s, status: 'Completed', completedAt: new Date().toISOString() } 
           : s
-      )
+      ),
+      compensationRequests: existing?.compensationRequestId
+        ? (prev.compensationRequests || []).map(r =>
+            r.id === existing.compensationRequestId
+              ? { ...r, status: 'Completed', approvalNotes: 'Replacement session completed and verified.', updatedAt: new Date().toISOString() }
+              : r
+          )
+        : prev.compensationRequests,
     }));
     addToast(`Class session ${id} marked as Completed.`, 'success');
     return { success: true };
@@ -1501,6 +1925,7 @@ export function CrmProvider({ children }) {
         createFeeStructure,
         assignStudentFee,
         submitCompensationRequest,
+        updateCompensationRequest,
         updateCompensationStatus,
         createCoachCompensation,
         updateCoachCompensation,
@@ -1509,10 +1934,12 @@ export function CrmProvider({ children }) {
         saveBatchAttendance,
         // Location-Based Class Scheduling Actions
         createClassSchedule,
+        createRecurringClassSchedules,
         updateClassSchedule,
         cancelClassSchedule,
         completeClassSchedule,
         checkScheduleConflictLive,
+        markNotificationsRead,
         // Programs & Classes Separate Management Modules
         addLocation,
         updateLocation,

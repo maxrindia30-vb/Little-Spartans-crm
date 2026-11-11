@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   GraduationCap, 
   Calendar, 
+  CalendarDays,
   CreditCard, 
   ClipboardCheck, 
   Trophy, 
@@ -23,11 +24,39 @@ import {
   Sparkles,
   ShieldCheck,
   Check,
-  ArrowRight
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
+import {
+  getChildMatchedSchedules,
+  mergeScheduleAttendance,
+  MON_FIRST_WEEKDAYS,
+  formatYmd,
+} from '../../services/scheduleService';
+import { COMPENSATION_REASONS } from '../../services/compensationService';
 import KpiCard from '../../components/common/KpiCard';
 import Modal from '../../components/common/Modal';
+
+const COMP_STATUS_STYLES = {
+  Pending: 'bg-amber-100 text-amber-900',
+  'Under Review': 'bg-indigo-100 text-indigo-800',
+  Approved: 'bg-sky-100 text-sky-800',
+  Scheduled: 'bg-blue-100 text-blue-800',
+  Completed: 'bg-emerald-100 text-emerald-800',
+  Rejected: 'bg-rose-100 text-rose-800',
+  Cancelled: 'bg-slate-200 text-slate-700',
+  Expired: 'bg-orange-100 text-orange-800',
+};
+
+function getMondayOfWeek(ymd) {
+  const d = new Date(`${ymd}T00:00:00`);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
 
 export default function ParentPortalView() {
   const { 
@@ -63,12 +92,51 @@ export default function ParentPortalView() {
   const [fbComment, setFbComment] = useState('');
   const [fbRating, setFbRating] = useState('5');
 
-  // Compensation Request Modal
+  const todayYmd = formatYmd(new Date());
+
+  // Compensation Request Modal state
   const [isCompModalOpen, setIsCompModalOpen] = useState(false);
-  const [compChild, setCompChild] = useState(myChildren[0]?.name || '');
-  const [missedDate, setMissedDate] = useState('2026-11-12');
-  const [compReason, setCompReason] = useState('Medical fever - Doctor visit');
-  const [selectedSlot, setSelectedSlot] = useState('Saturday 10:00 AM - 11:30 AM (Batch B-Gym)');
+  const [compChildId, setCompChildId] = useState(myChildren[0]?.id || '');
+  const [compProgram, setCompProgram] = useState(myChildren[0]?.program || '');
+  const [compBatchId, setCompBatchId] = useState('');
+  const [missedDate, setMissedDate] = useState(todayYmd);
+  const [compMissedSession, setCompMissedSession] = useState('');
+  const [compReasonCategory, setCompReasonCategory] = useState(COMPENSATION_REASONS[0]);
+  const [compExplanation, setCompExplanation] = useState('');
+
+  // Parent Timetable & Schedule Sync state
+  const [selectedScheduleChildId, setSelectedScheduleChildId] = useState('all');
+  const [scheduleTab, setScheduleTab] = useState('weekly'); // 'weekly' | 'calendar' | 'upcoming' | 'completed' | 'cancelled'
+  const [scheduleFocusDate, setScheduleFocusDate] = useState(todayYmd);
+
+  const openParentCompModal = () => {
+    const firstChild = myChildren[0];
+    setCompChildId(firstChild?.id || '');
+    setCompProgram(firstChild?.program || '');
+    const childBatch = (data.classes || []).find(
+      c => c.center === firstChild?.center &&
+           ((c.enrolledStudentIds || []).includes(firstChild?.id) || c.name === firstChild?.batchName)
+    );
+    setCompBatchId(childBatch?.id || '');
+    setMissedDate(todayYmd);
+    setCompMissedSession(childBatch?.name || firstChild?.batchName || firstChild?.program || '');
+    setCompReasonCategory(COMPENSATION_REASONS[0]);
+    setCompExplanation('');
+    setIsCompModalOpen(true);
+  };
+
+  const handleCompChildChange = (nextChildId) => {
+    setCompChildId(nextChildId);
+    const child = myChildren.find(c => c.id === nextChildId);
+    if (!child) return;
+    setCompProgram(child.program || '');
+    const childBatch = (data.classes || []).find(
+      c => c.center === child.center &&
+           ((c.enrolledStudentIds || []).includes(child.id) || c.name === child.batchName)
+    );
+    setCompBatchId(childBatch?.id || '');
+    setCompMissedSession(childBatch?.name || child.batchName || child.program || '');
+  };
 
   const handleApplyChildLeave = (e) => {
     e.preventDefault();
@@ -124,29 +192,41 @@ export default function ParentPortalView() {
 
   const handleSubmitCompensation = (e) => {
     e.preventDefault();
-    const child = myChildren.find(c => c.name === compChild) || myChildren[0];
+    const child = myChildren.find(c => c.id === compChildId) || myChildren[0];
     if (!child) {
       addToast('No student profile is linked yet.', 'error');
       return;
     }
-    submitCompensationRequest({
+    const batchObj = (data.classes || []).find(c => c.id === compBatchId);
+    const res = submitCompensationRequest({
+      requestSource: 'Parent',
       studentId: child.id,
       studentName: child.name,
+      parentId: parentProfile.id,
       parentName: parentProfile.name,
-      missedDate: missedDate,
-      reason: compReason,
-      replacementSlot: selectedSlot,
-      status: 'Pending Admin Approval'
+      parentEmail: parentProfile.email,
+      center: child.center,
+      location: child.center,
+      program: compProgram || child.program,
+      batchId: batchObj?.id || compBatchId || '',
+      batchName: batchObj?.name || child.batchName || '',
+      missedClass: compMissedSession || batchObj?.name || `${compProgram || child.program} Session`,
+      missedDate,
+      reasonCategory: compReasonCategory,
+      explanation: compExplanation || compReasonCategory,
     });
-    setIsCompModalOpen(false);
-    setCompReason('');
+    if (res?.success) {
+      setIsCompModalOpen(false);
+      setCompExplanation('');
+    }
   };
 
-  // Filter parent's compensation requests, payments & attendance
+  // Filter parent's compensation requests, payments, attendance & location-isolated class schedules
   const myChildNames = new Set(myChildren.map(c => c.name));
   const myChildIds = new Set(myChildren.map(c => c.id));
   const parentCompRequests = (data.compensationRequests || []).filter(
     c =>
+      (parentProfile.id && c.parentId === parentProfile.id) ||
       (parentProfile.name && c.parentName === parentProfile.name) ||
       myChildNames.has(c.studentName) ||
       myChildIds.has(c.studentId)
@@ -154,18 +234,81 @@ export default function ParentPortalView() {
   const myPayments = (data.payments || []).filter(
     p => myChildIds.has(p.studentId) || myChildNames.has(p.studentName) || (parentProfile.name && p.parentName === parentProfile.name)
   );
-  const myAttendanceCount = (data.attendanceRecords || []).filter(
+  const myAttendanceRecords = (data.attendanceRecords || []).filter(
     r => myChildIds.has(r.studentId)
-  ).length;
-  const mySchedulesCount = (data.classSchedules || []).filter(
-    s =>
-      s.status !== 'Cancelled' &&
-      myChildren.some(
-        c =>
-          c.center === s.location &&
-          (c.program === s.program || (c.enrolledClasses || []).includes(s.batch) || c.batchName === s.batch)
-      )
-  ).length;
+  );
+  const myAttendanceCount = myAttendanceRecords.length;
+
+  // Synchronized Read-Only Schedule Feed (strictly isolated per child's location, program & batch)
+  const synchronizedChildSessions = useMemo(() => {
+    const entries = [];
+    myChildren.forEach(child => {
+      const matched = getChildMatchedSchedules(child, data.classSchedules || [], data.classes || []);
+      matched.forEach(sch => {
+        entries.push({
+          ...sch,
+          childId: child.id,
+          childName: child.name,
+          attendanceStatus: mergeScheduleAttendance(sch, child, data.attendanceRecords || []),
+        });
+      });
+    });
+    return entries.sort((a, b) => `${a.date || ''}T${a.startTime || ''}`.localeCompare(`${b.date || ''}T${b.startTime || ''}`));
+  }, [myChildren, data.classSchedules, data.classes, data.attendanceRecords]);
+
+  const mySchedulesCount = synchronizedChildSessions.filter(s => s.status !== 'Cancelled').length;
+  const upcomingChildSessions = synchronizedChildSessions.filter(
+    s => s.status !== 'Cancelled' && s.status !== 'Completed' && (!s.date || s.date >= todayYmd)
+  );
+  const nextUpcomingSession = upcomingChildSessions[0] || null;
+
+  const visibleChildSessions = useMemo(() => {
+    if (selectedScheduleChildId === 'all') return synchronizedChildSessions;
+    return synchronizedChildSessions.filter(s => s.childId === selectedScheduleChildId);
+  }, [synchronizedChildSessions, selectedScheduleChildId]);
+
+  const activeCompChild = myChildren.find(c => c.id === compChildId) || myChildren[0] || null;
+  const compChildBatches = useMemo(() => {
+    if (!activeCompChild) return [];
+    return (data.classes || []).filter(
+      c =>
+        c.center === activeCompChild.center &&
+        (!compProgram || c.program === compProgram)
+    );
+  }, [data.classes, activeCompChild, compProgram]);
+
+  const weekDates = useMemo(() => {
+    const monday = getMondayOfWeek(scheduleFocusDate);
+    return MON_FIRST_WEEKDAYS.map((dayName, idx) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + idx);
+      return { dayName, ymd: formatYmd(d), dateObj: d };
+    });
+  }, [scheduleFocusDate]);
+
+  const monthGrid = useMemo(() => {
+    const ref = new Date(`${scheduleFocusDate}T00:00:00`);
+    const year = ref.getFullYear();
+    const month = ref.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < startOffset; i += 1) cells.push(null);
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      cells.push(formatYmd(new Date(year, month, day)));
+    }
+    return {
+      label: firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      cells,
+    };
+  }, [scheduleFocusDate]);
+
+  const shiftFocusDate = (days) => {
+    const d = new Date(`${scheduleFocusDate}T00:00:00`);
+    d.setDate(d.getDate() + days);
+    setScheduleFocusDate(formatYmd(d));
+  };
 
   const parentDashboardModules = [
     {
@@ -222,73 +365,129 @@ export default function ParentPortalView() {
   return (
     <div className="space-y-6">
       
-      {/* 1. PARENT DASHBOARD */}
+      {/* 1. PARENT DASHBOARD (Upgraded Brand UI/UX) */}
       {currentView === 'dashboard' && (
         <div className="space-y-6 animate-slide-up">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider animate-pulse">
-                  Parent Access
-                </span>
-                <span className="text-xs font-semibold text-[#172B50] opacity-60">Term 2026-27</span>
+          {/* Hero Welcome Header */}
+          <div className="rounded-3xl bg-gradient-to-br from-[#172B50] via-[#1E3560] to-[#264275] p-6 sm:p-7 text-white shadow-card relative overflow-hidden">
+            <div className="absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[#F4510B]/20 blur-2xl pointer-events-none" />
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider">
+                    Parent Portal
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/90 border border-white/15">
+                    {parentProfile.center || myChildren[0]?.center || 'Chennai Academy'} • Term 2026-27
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  Welcome, {parentProfile.name}
+                </h1>
+                <p className="text-xs sm:text-sm text-white/80 mt-1">
+                  Track your child&apos;s synchronized class timetables, attendance records, makeup requests &amp; fees at a glance.
+                </p>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Welcome, {parentProfile.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Little Spartans Parent Dashboard • Tracking {myChildren.length} Registered Champions
-              </p>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={openParentCompModal}
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4 text-white" />
+                  <span>Request Compensation</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPayModalOpen(true)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-white text-[#172B50] rounded-xl shadow-sm hover:bg-[#FFF4E8] active:scale-95 transition-all cursor-pointer"
+                >
+                  <CreditCard className="w-4 h-4 text-[#F4510B]" />
+                  <span>Pay Fee</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsLeaveModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold bg-white/10 text-white border border-white/20 rounded-xl hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <CalendarOff className="w-4 h-4 text-[#FFA366]" />
+                  <span>Apply Leave</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Live Next Class Highlight Strip */}
+            <div className="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10">
+              {nextUpcomingSession ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#F4510B]/20 border border-[#F4510B]/40 flex items-center justify-center text-[#FFA366] shrink-0">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#FFA366] block">
+                      Next Upcoming Class • {nextUpcomingSession.location}
+                    </span>
+                    <span className="font-bold text-white">
+                      {nextUpcomingSession.childName}: {nextUpcomingSession.className || nextUpcomingSession.batch} ({nextUpcomingSession.date} • {nextUpcomingSession.startTime} - {nextUpcomingSession.endTime}) with Coach {nextUpcomingSession.coachName}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-white/80">
+                  <Sparkles className="w-4 h-4 text-[#FFA366]" />
+                  <span>Your upcoming location-synced sessions published by Admin will appear right here.</span>
+                </div>
+              )}
               <button
-                onClick={() => setIsPayModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-md hover:bg-[#DC4405] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                type="button"
+                onClick={() => setCurrentView('classes')}
+                className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
               >
-                <CreditCard className="w-4 h-4 text-white" />
-                <span>Pay Term Fee</span>
-              </button>
-
-              <button
-                onClick={() => setIsLeaveModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5025] rounded-xl hover:bg-[#FFF4E8] hover:border-[#F4510B55] hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <CalendarOff className="w-4 h-4 text-[#F4510B]" />
-                <span>Apply Leave</span>
+                Open Class Timetable &rarr;
               </button>
             </div>
           </div>
 
-          {/* Motivational Attendance Streak Banner */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#172B50] via-[#1D3560] to-[#233966] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-[#F4510B]/20 to-transparent pointer-events-none" />
-            <div className="flex items-center gap-3.5 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl animate-flame shrink-0">
-                🔥
+          {/* Summary KPI Strip */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Registered Children</span>
+              <div className="flex items-end justify-between mt-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#172B50]">{myChildren.length}</h3>
+                <GraduationCap className="w-5 h-5 text-[#F4510B]" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#FFA366]">
-                    14-Session Champion Streak
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#F4510B] text-white">
-                    TOP 5%
-                  </span>
-                </div>
-                <h4 className="text-sm sm:text-base font-extrabold text-white mt-0.5">
-                  {myChildren.length > 0
-                    ? `${myChildren.map(c => c.name).join(' & ')} ${myChildren.length === 1 ? 'has' : 'have'} active training access under ${parentProfile.center || 'Little Spartans'}!`
-                    : 'View children profiles, classes, attendance, fees & achievements in one place.'}
-                </h4>
-              </div>
+              <p className="text-[11px] font-semibold text-[#172B50]/65 mt-1">{parentProfile.center || 'Active Academy'}</p>
             </div>
-            <button 
-              onClick={() => setCurrentView('progress')}
-              className="relative z-10 px-4 py-2 rounded-xl bg-[#F4510B] hover:bg-[#DC4405] text-white text-xs font-bold transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
-            >
-              View Badges & Awards &rarr;
-            </button>
+
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Upcoming Classes</span>
+              <div className="flex items-end justify-between mt-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#172B50]">{upcomingChildSessions.length}</h3>
+                <CalendarDays className="w-5 h-5 text-[#F4510B]" />
+              </div>
+              <p className="text-[11px] font-semibold text-emerald-700 mt-1">{mySchedulesCount} Total Synced</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Attendance Records</span>
+              <div className="flex items-end justify-between mt-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#172B50]">{myAttendanceCount}</h3>
+                <ClipboardCheck className="w-5 h-5 text-[#F4510B]" />
+              </div>
+              <p className="text-[11px] font-semibold text-[#172B50]/65 mt-1">Verified coach check-ins</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Compensation Status</span>
+              <div className="flex items-end justify-between mt-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#F4510B]">{parentCompRequests.length}</h3>
+                <RefreshCw className="w-5 h-5 text-[#172B50]" />
+              </div>
+              <p className="text-[11px] font-semibold text-[#172B50]/65 mt-1">
+                {parentCompRequests.filter(r => r.status === 'Scheduled').length} Scheduled Makeup(s)
+              </p>
+            </div>
           </div>
 
           {/* All Parent Navbar Modules Inside Dashboard */}
@@ -309,7 +508,7 @@ export default function ParentPortalView() {
                     key={mod.id}
                     type="button"
                     onClick={() => setCurrentView(mod.id)}
-                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] hover:shadow-dropdown transition-all group flex flex-col justify-between cursor-pointer"
+                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] hover:-translate-y-0.5 hover:shadow-dropdown transition-all group flex flex-col justify-between cursor-pointer"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-3">
@@ -421,34 +620,281 @@ export default function ParentPortalView() {
         </div>
       )}
 
-      {/* 3. CLASSES & SCHEDULE */}
+      {/* 3. CLASSES & SCHEDULE (Auto-Synchronized Read-Only View by Location, Program & Batch) */}
       {currentView === 'classes' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Class Timetable & Sessions
-          </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {data.classes.slice(0, 3).map(cls => (
-              <div key={cls.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-                <span className="text-[10px] font-bold uppercase text-[#F4510B]">{cls.program}</span>
-                <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{cls.name}</h3>
-                <div className="mt-3 space-y-1.5 text-xs text-[#172B50]">
-                  <p className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span className="font-semibold">{cls.schedule}</span>
-                  </p>
-                  <p className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>{cls.center}</span>
-                  </p>
-                  <p className="flex items-center gap-1.5">
-                    <UserCheck2 className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>{cls.coach}</span>
-                  </p>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#172B5015]">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                  Live Academy Timetable Sync (Read-Only)
+                </span>
               </div>
-            ))}
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight mt-1">
+                Class Timetable &amp; Sessions
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Showing only published classes matching your children&apos;s enrolled location, program, and batch.
+              </p>
+            </div>
+
+            {myChildren.length > 1 && (
+              <div className="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-[#172B501A]">
+                <button
+                  type="button"
+                  onClick={() => setSelectedScheduleChildId('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${
+                    selectedScheduleChildId === 'all' ? 'bg-[#172B50] text-white' : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                  }`}
+                >
+                  All Children ({myChildren.length})
+                </button>
+                {myChildren.map(child => (
+                  <button
+                    key={child.id}
+                    type="button"
+                    onClick={() => setSelectedScheduleChildId(child.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${
+                      selectedScheduleChildId === child.id ? 'bg-[#F4510B] text-white' : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                    }`}
+                  >
+                    {child.name} ({child.center})
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Timetable View Switcher + Date Nav */}
+          <div className="bg-white rounded-2xl p-3.5 border border-[#172B501A] shadow-card flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[
+                { id: 'weekly', label: 'Weekly Timetable' },
+                { id: 'calendar', label: 'Monthly Calendar' },
+                { id: 'upcoming', label: `Upcoming (${visibleChildSessions.filter(s => s.status !== 'Cancelled' && s.status !== 'Completed' && (!s.date || s.date >= todayYmd)).length})` },
+                { id: 'completed', label: `Completed (${visibleChildSessions.filter(s => s.status === 'Completed').length})` },
+                { id: 'cancelled', label: `Cancelled (${visibleChildSessions.filter(s => s.status === 'Cancelled').length})` },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setScheduleTab(tab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    scheduleTab === tab.id
+                      ? 'bg-[#F4510B] text-white shadow-xs'
+                      : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {(scheduleTab === 'weekly' || scheduleTab === 'calendar') && (
+              <div className="flex items-center gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => shiftFocusDate(scheduleTab === 'weekly' ? -7 : -30)}
+                  className="p-1.5 rounded-lg border border-[#172B5020] hover:bg-[#FFF4E8] text-[#172B50] cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="font-extrabold text-[#172B50] min-w-[140px] text-center">
+                  {scheduleTab === 'calendar'
+                    ? monthGrid.label
+                    : `${weekDates[0].ymd} to ${weekDates[6].ymd}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => shiftFocusDate(scheduleTab === 'weekly' ? 7 : 30)}
+                  className="p-1.5 rounded-lg border border-[#172B5020] hover:bg-[#FFF4E8] text-[#172B50] cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScheduleFocusDate(todayYmd)}
+                  className="px-2.5 py-1 rounded-lg bg-[#FFF4E8] text-[#F4510B] font-bold cursor-pointer"
+                >
+                  Today
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* VIEW 1: WEEKLY TIMETABLE */}
+          {scheduleTab === 'weekly' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
+              {weekDates.map(col => {
+                const daySessions = visibleChildSessions.filter(s => s.date === col.ymd);
+                return (
+                  <div key={col.ymd} className="bg-white rounded-2xl border border-[#172B501A] shadow-card flex flex-col min-h-[220px]">
+                    <div className={`px-3 py-2.5 border-b border-[#172B5012] rounded-t-2xl ${
+                      col.ymd === todayYmd ? 'bg-[#172B50] text-white' : 'bg-[#FFF4E8] text-[#172B50]'
+                    }`}>
+                      <span className="text-[11px] font-black uppercase tracking-wider block">{col.dayName.slice(0, 3)}</span>
+                      <span className="text-[11px] opacity-80 font-semibold">{col.ymd}</span>
+                    </div>
+                    <div className="p-2.5 space-y-2 flex-1">
+                      {daySessions.length === 0 ? (
+                        <p className="text-[11px] text-[#172B50]/45 text-center py-6">No session</p>
+                      ) : (
+                        daySessions.map(sch => (
+                          <div key={`${sch.id}-${sch.childId}`} className={`p-2.5 rounded-xl border text-[11px] space-y-1 ${
+                            sch.status === 'Cancelled'
+                              ? 'bg-rose-50 border-rose-200'
+                              : sch.isCompensationReplacement
+                              ? 'bg-[#FFF4E8] border-[#F4510B]/40'
+                              : 'bg-white border-[#172B501A]'
+                          }`}>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-black text-[#F4510B]">{sch.startTime} - {sch.endTime}</span>
+                              {sch.isCompensationReplacement && (
+                                <span className="px-1.5 py-0.2 rounded bg-[#F4510B] text-white text-[9px] font-bold">Makeup</span>
+                              )}
+                            </div>
+                            <p className="font-extrabold text-[#172B50] leading-tight">{sch.className || sch.batch}</p>
+                            <p className="text-[10px] font-semibold text-[#172B50]/75">{sch.childName} • {sch.location}</p>
+                            <p className="text-[10px] text-[#172B50]/70">Coach: {sch.coachName}</p>
+                            <div className="flex items-center justify-between pt-1">
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                sch.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
+                                sch.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>{sch.status}</span>
+                              <span className={`text-[9px] font-bold ${
+                                sch.attendanceStatus === 'Present' ? 'text-emerald-700' :
+                                sch.attendanceStatus === 'Absent' ? 'text-rose-600' : 'text-[#172B50]/50'
+                              }`}>{sch.attendanceStatus}</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* VIEW 2: MONTHLY CALENDAR */}
+          {scheduleTab === 'calendar' && (
+            <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card p-4">
+              <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-extrabold text-[#172B50] pb-2 border-b border-[#172B5012]">
+                {MON_FIRST_WEEKDAYS.map(d => <div key={d}>{d.slice(0, 3)}</div>)}
+              </div>
+              <div className="grid grid-cols-7 gap-2 pt-2">
+                {monthGrid.cells.map((ymd, idx) => {
+                  if (!ymd) return <div key={`empty-${idx}`} className="min-h-[82px] rounded-xl bg-slate-50/50" />;
+                  const daySessions = visibleChildSessions.filter(s => s.date === ymd);
+                  return (
+                    <div key={ymd} className={`min-h-[82px] p-1.5 rounded-xl border text-[10px] ${
+                      ymd === todayYmd ? 'border-[#F4510B] bg-[#FFF4E8]/40' : 'border-[#172B5012] bg-white'
+                    }`}>
+                      <span className="font-extrabold text-[#172B50] block mb-1">{ymd.slice(8)}</span>
+                      <div className="space-y-1">
+                        {daySessions.slice(0, 2).map(sch => (
+                          <div key={`${sch.id}-${sch.childId}`} className={`px-1.5 py-0.5 rounded font-bold truncate ${
+                            sch.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
+                            sch.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                            'bg-[#172B50] text-white'
+                          }`} title={`${sch.childName}: ${sch.className || sch.batch} (${sch.startTime})`}>
+                            {sch.startTime} {sch.className || sch.batch}
+                          </div>
+                        ))}
+                        {daySessions.length > 2 && (
+                          <span className="text-[9px] font-bold text-[#F4510B]">+{daySessions.length - 2} more</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 3/4/5: UPCOMING / COMPLETED / CANCELLED LIST */}
+          {(scheduleTab === 'upcoming' || scheduleTab === 'completed' || scheduleTab === 'cancelled') && (() => {
+            const list = visibleChildSessions.filter(s => {
+              if (scheduleTab === 'completed') return s.status === 'Completed';
+              if (scheduleTab === 'cancelled') return s.status === 'Cancelled';
+              return s.status !== 'Cancelled' && s.status !== 'Completed' && (!s.date || s.date >= todayYmd);
+            });
+            return list.length === 0 ? (
+              <div className="bg-white rounded-2xl p-10 text-center border border-[#172B501A] shadow-card text-xs text-[#172B50]/70">
+                No {scheduleTab} class sessions found for your children&apos;s enrolled location and batch.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {list.map(sch => (
+                  <div key={`${sch.id}-${sch.childId}`} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#172B50] text-white">
+                            {sch.childName}
+                          </span>
+                          <span className="text-[10px] font-bold uppercase text-[#F4510B]">{sch.program}</span>
+                          {sch.isCompensationReplacement && (
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#F4510B] text-white">
+                              Replacement Class
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-base font-extrabold text-[#172B50] mt-1.5">{sch.className || sch.batch}</h3>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        sch.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
+                        sch.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {sch.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-[#FFF4E8]/60 border border-[#172B5010] text-xs text-[#172B50]">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <span className="font-bold">{sch.date} ({sch.weekday})</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <span className="font-bold">{sch.startTime} - {sch.endTime}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <span className="font-semibold">{sch.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <UserCheck2 className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <span className="font-semibold">Coach {sch.coachName}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 text-xs">
+                      <span className="text-[#172B50]/70 font-semibold">Batch: {sch.batch}</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        sch.attendanceStatus === 'Present'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : sch.attendanceStatus === 'Absent'
+                          ? 'bg-rose-100 text-rose-800'
+                          : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        Attendance: {sch.attendanceStatus}
+                      </span>
+                    </div>
+
+                    {sch.cancellationReason && (
+                      <p className="text-[11px] font-semibold text-rose-700 bg-rose-50 p-2 rounded-lg">
+                        Reason: {sch.cancellationReason}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -458,51 +904,68 @@ export default function ParentPortalView() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Attendance Record & Compensation Classes
+                Attendance &amp; Compensation Classes
               </h1>
               <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Monitor monthly session attendance and book replacement compensation classes for missed sessions
+                Track session attendance logs and request authorized replacement classes when your child misses a session
               </p>
             </div>
 
             <button
-              onClick={() => setIsCompModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
+              type="button"
+              onClick={openParentCompModal}
+              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
-              <span>Book Compensation Class</span>
+              <span>Request Compensation</span>
             </button>
           </div>
 
-          {/* Attendance Cards */}
+          {/* Attendance Register Cards (Real Attendance Records per Child) */}
           <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
             <h3 className="text-sm font-extrabold text-[#172B50] pb-3 border-b border-[#172B5012] mb-4">
-              Monthly Attendance Register (November 2026)
+              Attendance Register Summary
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {myChildren.map(child => (
-                <div key={child.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-extrabold text-[#172B50]">{child.name}</span>
-                    <span className="text-xs font-black text-[#F4510B]">{child.attendanceRate}% Present</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#172B5015]">
-                    <div style={{ width: `${child.attendanceRate}%` }} className="h-full bg-[#172B50] rounded-full" />
-                  </div>
-                  <p className="text-[11px] text-[#172B50] opacity-75 mt-2">
-                    19 sessions attended out of 20 scheduled. 1 missed session eligible for compensation.
-                  </p>
-                </div>
-              ))}
-            </div>
+            {myChildren.length === 0 ? (
+              <p className="text-xs text-[#172B50]/70">No child profile is linked to this parent account yet.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {myChildren.map(child => {
+                  const childRecords = myAttendanceRecords.filter(r => r.studentId === child.id);
+                  const presentCount = childRecords.filter(r => r.status === 'Present').length;
+                  const absentCount = childRecords.filter(r => r.status === 'Absent').length;
+                  const totalMarked = childRecords.length;
+                  const computedRate = totalMarked > 0 ? Math.round((presentCount / totalMarked) * 100) : (child.attendanceRate || 0);
+                  return (
+                    <div key={child.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
+                      <div className="flex justify-between items-center mb-2">
+                        <div>
+                          <span className="text-sm font-extrabold text-[#172B50] block">{child.name}</span>
+                          <span className="text-[10px] font-bold text-[#172B50]/65">{child.center} • {child.program}</span>
+                        </div>
+                        <span className="text-xs font-black text-[#F4510B]">{computedRate}% Present</span>
+                      </div>
+                      <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#172B5015]">
+                        <div style={{ width: `${computedRate}%` }} className="h-full bg-[#172B50] rounded-full" />
+                      </div>
+                      <p className="text-[11px] text-[#172B50] opacity-75 mt-2">
+                        {totalMarked === 0
+                          ? 'No attendance logs recorded yet.'
+                          : `${presentCount} present, ${absentCount} absent out of ${totalMarked} marked sessions.`}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Compensation Requests Section */}
           <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
             <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-black text-[#172B50]">Compensation & Makeup Classes History</h3>
-                <p className="text-xs text-[#172B50] opacity-70">Replacement sessions booked for excused medical or exam leaves</p>
+                <h3 className="text-sm font-black text-[#172B50]">Compensation Requests</h3>
+                <p className="text-xs text-[#172B50] opacity-70">Track approval status, admin remarks &amp; scheduled replacement slots</p>
               </div>
               <span className="text-xs font-bold text-[#F4510B]">
                 {parentCompRequests.length} Requests
@@ -512,33 +975,57 @@ export default function ParentPortalView() {
             <div className="divide-y divide-[#172B500C]">
               {parentCompRequests.length === 0 ? (
                 <div className="p-8 text-center text-xs text-[#172B50] opacity-70">
-                  No active compensation requests. Missed an authorized session? Click "Book Compensation Class".
+                  No compensation requests yet. Missed a class? Click <strong>Request Compensation</strong> above.
                 </div>
               ) : (
                 parentCompRequests.map(comp => (
-                  <div key={comp.id} className="p-4 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-[#172B50]">{comp.studentName}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          comp.status.includes('Approved') || comp.status.includes('Completed')
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-900'
+                  <div key={comp.id} className="p-4 sm:p-5 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-black text-[#172B50] text-sm">{comp.studentName}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                          COMP_STATUS_STYLES[comp.status] || 'bg-amber-100 text-amber-900'
                         }`}>
                           {comp.status}
                         </span>
+                        {comp.requestSource && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5015]">
+                            Source: {comp.requestSource}
+                          </span>
+                        )}
                       </div>
-                      <p className="text-[11px] text-[#172B50] opacity-75 mt-0.5">
-                        Missed Class: <strong>{comp.missedDate}</strong> • Reason: "{comp.reason}"
+                      <p className="text-[11px] text-[#172B50] opacity-80">
+                        Location: <strong>{comp.center || comp.location}</strong> • Missed: <strong>{comp.missedClass}</strong> on <strong>{comp.missedDate}</strong>
                       </p>
-                      <p className="text-[11px] text-[#F4510B] font-semibold mt-0.5">
-                        Makeup Slot: {comp.replacementSlot} {comp.coach ? `(Coach ${comp.coach})` : ''}
+                      <p className="text-[11px] text-[#172B50] opacity-75">
+                        Reason: &quot;{comp.reason}&quot;
                       </p>
+                      {comp.approvalNotes && (
+                        <p className="text-[11px] text-[#172B50] bg-[#FFF4E8]/60 px-2.5 py-1.5 rounded-lg inline-block mt-1">
+                          <strong>Admin Response:</strong> {comp.approvalNotes}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="text-right shrink-0">
+                    <div className="lg:text-right shrink-0 space-y-1">
+                      {comp.replacementSlot ? (
+                        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-left lg:text-right space-y-0.5">
+                          <span className="text-[10px] font-black uppercase text-emerald-700 block">
+                            Scheduled Replacement Class
+                          </span>
+                          <span className="text-xs font-extrabold text-[#172B50] block">{comp.replacementSlot}</span>
+                          {comp.replacementCoach && (
+                            <span className="text-[11px] font-bold text-[#F4510B] block">
+                              Assigned Coach: {comp.replacementCoach}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[11px] font-semibold text-[#172B50]/60 block">
+                          Awaiting Admin slot assignment
+                        </span>
+                      )}
                       <span className="text-[10px] font-mono text-gray-500 block">ID: {comp.id}</span>
-                      <span className="text-[11px] font-bold text-emerald-700">No Extra Charge</span>
                     </div>
                   </div>
                 ))
@@ -856,76 +1343,144 @@ export default function ParentPortalView() {
         </form>
       </Modal>
 
-      {/* Compensation Class Request Modal */}
+      {/* Compensation Request Modal (Parent Submission) */}
       <Modal
         isOpen={isCompModalOpen}
         onClose={() => setIsCompModalOpen(false)}
-        title="Book Compensation Class"
-        subtitle="Request an authorized replacement slot for a missed class"
+        title="Request Compensation Class"
+        subtitle="Submit a makeup class request for Admin eligibility review & coach scheduling"
       >
-        <form onSubmit={handleSubmitCompensation} className="space-y-3.5">
+        <form onSubmit={handleSubmitCompensation} className="space-y-3.5 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Select Child *</label>
+              <select
+                required
+                value={compChildId}
+                onChange={(e) => handleCompChildChange(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
+              >
+                {myChildren.length === 0 ? (
+                  <option value="">No registered child linked</option>
+                ) : (
+                  myChildren.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Academy Location (Auto)</label>
+              <input
+                type="text"
+                readOnly
+                value={activeCompChild?.center || parentProfile.center || ''}
+                className="w-full px-3 py-2 text-xs bg-[#FFF4E8]/60 text-[#172B50] font-bold border border-[#172B5020] rounded-xl outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Sports Program *</label>
+              <select
+                required
+                value={compProgram}
+                onChange={(e) => setCompProgram(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
+              >
+                {(data.programs || []).map(p => (
+                  <option key={p.id} value={p.name}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Training Batch</label>
+              <select
+                value={compBatchId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setCompBatchId(id);
+                  const b = compChildBatches.find(x => x.id === id);
+                  if (b) setCompMissedSession(b.name);
+                }}
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
+              >
+                <option value="">{activeCompChild?.batchName || 'Registered Program Batch'}</option>
+                {compChildBatches.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Missed Class Date *</label>
+              <input
+                type="date"
+                required
+                value={missedDate}
+                onChange={(e) => setMissedDate(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Missed Class / Session *</label>
+              <input
+                type="text"
+                required
+                value={compMissedSession}
+                onChange={(e) => setCompMissedSession(e.target.value)}
+                placeholder="e.g. Evening Batch A / Session"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Select Child</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Reason for Missing Class *</label>
             <select
-              value={compChild}
-              onChange={(e) => setCompChild(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              required
+              value={compReasonCategory}
+              onChange={(e) => setCompReasonCategory(e.target.value)}
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
             >
-              {myChildren.map(c => (
-                <option key={c.id} value={c.name}>{c.name} ({c.program})</option>
+              {COMPENSATION_REASONS.map(r => (
+                <option key={r} value={r}>{r}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Missed Class Date</label>
-            <input
-              type="date"
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Additional Explanation *</label>
+            <textarea
+              rows={2}
               required
-              value={missedDate}
-              onChange={(e) => setMissedDate(e.target.value)}
+              value={compExplanation}
+              onChange={(e) => setCompExplanation(e.target.value)}
+              placeholder="Share brief details for Admin review..."
               className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Reason for Absence</label>
-            <input
-              type="text"
-              required
-              value={compReason}
-              onChange={(e) => setCompReason(e.target.value)}
-              placeholder="e.g. Doctor appointment, illness, school clash"
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Preferred Replacement Slot</label>
-            <select
-              value={selectedSlot}
-              onChange={(e) => setSelectedSlot(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-            >
-              <option value="Saturday 10:00 AM - 11:30 AM (Batch B-Gym)">Saturday 10:00 AM - 11:30 AM (Batch B-Gym)</option>
-              <option value="Sunday 04:00 PM - 05:30 PM (Batch C-Athletics)">Sunday 04:00 PM - 05:30 PM (Batch C-Athletics)</option>
-              <option value="Wednesday 05:30 PM - 07:00 PM (Batch D-Martial)">Wednesday 05:30 PM - 07:00 PM (Batch D-Martial)</option>
-            </select>
           </div>
 
           <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsCompModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              disabled={!activeCompChild}
+              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 disabled:opacity-50 cursor-pointer"
             >
-              Request Replacement Slot
+              Submit Request
             </button>
           </div>
         </form>

@@ -51,6 +51,7 @@ export default function CoachPortalView() {
     data, 
     saveBatchAttendance,
     applyLeave, 
+    updateCompensationRequest,
     updateCoachCompensation,
     completeClassSchedule,
     addToast 
@@ -245,10 +246,48 @@ export default function CoachPortalView() {
     addToast('Athlete performance assessment saved and synced to parent report card!');
   };
 
-  // Filter coach compensation classes
+  // Filter coach absence coverage + assigned student compensation replacement classes
   const coachComps = (data.coachCompensationClasses || []).filter(
-    c => c.coachName?.includes('Vikram') || c.substituteCoach?.includes('Vikram')
+    c =>
+      c.coachId === coachProfile.id ||
+      (coachFirstName && (c.coachName?.toLowerCase().includes(coachFirstName) || c.substituteCoach?.toLowerCase().includes(coachFirstName)))
   );
+
+  const assignedStudentReplacements = (data.compensationRequests || []).filter(
+    r =>
+      (r.status === 'Scheduled' || r.status === 'Completed') &&
+      (r.replacementCoachId === coachProfile.id ||
+        (coachProfile.name && r.replacementCoach === coachProfile.name) ||
+        (coachFirstName && r.replacementCoach?.toLowerCase().includes(coachFirstName)))
+  );
+
+  const handleMarkReplacementAttendance = (repReq, attendanceStatus) => {
+    const repDate = repReq.replacementDate || coachAttDate;
+    const repLoc = repReq.replacementLocation || repReq.center || coachProfile.center;
+    if (repReq.studentId) {
+      saveBatchAttendance({
+        location: repLoc,
+        program: repReq.replacementProgram || repReq.program,
+        batchId: repReq.replacementBatchId || repReq.batchId || 'COMPENSATION',
+        batchName: repReq.replacementBatch || 'Compensation Replacement Session',
+        date: repDate,
+        markedBy: coachProfile.name,
+        entries: [
+          {
+            studentId: repReq.studentId,
+            studentName: repReq.studentName,
+            status: attendanceStatus,
+          },
+        ],
+      });
+    }
+    if (attendanceStatus === ATTENDANCE_STATUSES.PRESENT && repReq.status === 'Scheduled') {
+      updateCompensationRequest(repReq.id, {
+        status: 'Completed',
+        approvalNotes: `Attended replacement session with Coach ${coachProfile.name} on ${repDate}.`,
+      });
+    }
+  };
 
   // Filtered coach schedules
   const filteredMySchedules = mySchedules.filter(s => {
@@ -259,6 +298,8 @@ export default function CoachPortalView() {
 
   // Upcoming live schedule
   const nextScheduledClass = mySchedules.find(s => s.status === 'Scheduled' || s.status === 'Updated') || mySchedules[0];
+
+  const totalCompSlotCount = coachComps.length + assignedStudentReplacements.length;
 
   const coachDashboardModules = [
     {
@@ -292,8 +333,8 @@ export default function CoachPortalView() {
     {
       id: 'compensation',
       label: 'Compensation Classes',
-      desc: 'Substitute sessions & makeup class slots',
-      stat: `${coachComps.length} Slots`,
+      desc: 'Assigned replacement sessions & coach coverage',
+      stat: `${totalCompSlotCount} Slots`,
       icon: RefreshCw,
     },
     {
@@ -315,113 +356,139 @@ export default function CoachPortalView() {
   return (
     <div className="space-y-6">
       
-      {/* 1. COACH DASHBOARD */}
+      {/* 1. COACH DASHBOARD (Upgraded Brand UI/UX) */}
       {currentView === 'dashboard' && (
         <div className="space-y-6 animate-slide-up">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#172B50] text-white tracking-wider animate-pulse">
-                  Coach Workspace
-                </span>
-                <span className="text-xs font-semibold text-[#172B50] opacity-60">FIG Certified Faculty</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Coach Command: {coachProfile.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Head Coach • {coachProfile.specialization} ({coachProfile.center})
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentView('classes')}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-md hover:bg-[#DC4405] hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <CalendarDays className="w-4 h-4 text-white" />
-                <span>My Schedules ({mySchedules.length})</span>
-              </button>
-
-              <button
-                onClick={() => setIsLeaveOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5025] rounded-xl hover:bg-[#FFF4E8] hover:border-[#F4510B55] hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <CalendarOff className="w-4 h-4 text-[#F4510B]" />
-                <span>Coach Leave</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Live Synchronized Scheduled Class Banner */}
-          {nextScheduledClass ? (
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#172B50] via-[#1E345D] to-[#254173] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-[#F4510B]/20 to-transparent pointer-events-none" />
-              <div className="flex items-center gap-3.5 relative z-10">
-                <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl shrink-0">
-                  📍
+          {/* Hero Command Header */}
+          <div className="rounded-3xl bg-gradient-to-br from-[#172B50] via-[#1E3560] to-[#264275] p-6 sm:p-7 text-white shadow-card relative overflow-hidden">
+            <div className="absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[#F4510B]/20 blur-2xl pointer-events-none" />
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider">
+                    Coach Workspace
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/90 border border-white/15">
+                    {coachProfile.certification || 'Certified Coach'} • {coachProfile.center}
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-[#FFA366]">
-                      Next Session: {nextScheduledClass.location} • {nextScheduledClass.venue}
-                    </span>
-                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                      nextScheduledClass.status === 'Updated' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
-                    } animate-pulse`}>
-                      {nextScheduledClass.status.toUpperCase()}
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  Coach Command: {coachProfile.name}
+                </h1>
+                <p className="text-xs sm:text-sm text-white/80 mt-1">
+                  {coachProfile.specialization} • Assigned Schedules, Daily Attendance &amp; Replacement Sessions synced live from Admin.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('attendance')}
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                >
+                  <ClipboardCheck className="w-4 h-4 text-white" />
+                  <span>Mark Attendance</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('classes')}
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-white text-[#172B50] rounded-xl shadow-sm hover:bg-[#FFF4E8] active:scale-95 transition-all cursor-pointer"
+                >
+                  <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+                  <span>My Schedules ({mySchedules.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsLeaveOpen(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold bg-white/10 text-white border border-white/20 rounded-xl hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <CalendarOff className="w-4 h-4 text-[#FFA366]" />
+                  <span>Coach Leave</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Synchronized Next Class Highlight */}
+            <div className="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10">
+              {nextScheduledClass ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#F4510B]/20 border border-[#F4510B]/40 flex items-center justify-center text-[#FFA366] shrink-0">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#FFA366]">
+                        Next Synchronized Session • {nextScheduledClass.location}
+                      </span>
+                      {nextScheduledClass.isCompensationReplacement && (
+                        <span className="px-1.5 py-0.2 rounded bg-[#F4510B] text-white text-[9px] font-bold">REPLACEMENT</span>
+                      )}
+                    </div>
+                    <span className="font-bold text-white block">
+                      {nextScheduledClass.className || nextScheduledClass.batch} • {nextScheduledClass.date} ({nextScheduledClass.startTime} – {nextScheduledClass.endTime})
                     </span>
                   </div>
-                  <h4 className="text-sm sm:text-base font-extrabold text-white mt-0.5">
-                    {nextScheduledClass.batch} • {nextScheduledClass.date} ({nextScheduledClass.startTime} – {nextScheduledClass.endTime})
-                  </h4>
                 </div>
-              </div>
-              <button 
+              ) : (
+                <div className="flex items-center gap-2 text-white/80">
+                  <Sparkles className="w-4 h-4 text-[#FFA366]" />
+                  <span>No upcoming classes scheduled yet. Sessions assigned by Admin appear here automatically.</span>
+                </div>
+              )}
+              <button
+                type="button"
                 onClick={() => setCurrentView('classes')}
-                className="relative z-10 px-4 py-2 rounded-xl bg-[#F4510B] hover:bg-[#DC4405] text-white text-xs font-bold transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
               >
                 View Full Schedule &rarr;
               </button>
             </div>
-          ) : (
-            <div className="p-4 rounded-xl bg-white border border-[#172B5015] text-xs text-[#172B50]">
-              No active classes scheduled yet today. Check back as Admin publishes new sessions.
-            </div>
-          )}
+          </div>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
                 Published Schedules
               </span>
-              <h3 className="text-3xl font-extrabold text-[#172B50]">{mySchedules.length}</h3>
+              <div className="flex items-end justify-between">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{mySchedules.length}</h3>
+                <CalendarDays className="w-5 h-5 text-[#F4510B]" />
+              </div>
               <p className="text-xs font-bold text-[#F4510B] mt-1">Synced from Admin</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
-                Active Athletes Assigned
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
+                Assigned Athletes
               </span>
-              <h3 className="text-3xl font-extrabold text-[#172B50]">{myStudents.length}</h3>
-              <p className="text-xs font-bold text-emerald-600 mt-1">Across 3 Batches</p>
+              <div className="flex items-end justify-between">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{myStudents.length}</h3>
+                <GraduationCap className="w-5 h-5 text-[#F4510B]" />
+              </div>
+              <p className="text-xs font-bold text-emerald-600 mt-1">Across {coachAssignedBatches.length} Batches</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
                 Compensation Slots
               </span>
-              <h3 className="text-3xl font-extrabold text-[#172B50]">{coachComps.length}</h3>
-              <p className="text-xs font-bold text-[#F4510B] mt-1">Substitute / Makeup</p>
+              <div className="flex items-end justify-between">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{totalCompSlotCount}</h3>
+                <RefreshCw className="w-5 h-5 text-[#F4510B]" />
+              </div>
+              <p className="text-xs font-bold text-[#F4510B] mt-1">{assignedStudentReplacements.filter(r => r.status === 'Scheduled').length} Upcoming Replacements</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
                 Faculty Rating
               </span>
-              <h3 className="text-3xl font-extrabold text-[#172B50]">4.9 / 5.0</h3>
-              <p className="text-xs font-bold text-emerald-600 mt-1">Top rated coach</p>
+              <div className="flex items-end justify-between">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{coachProfile.rating || '4.9'} / 5.0</h3>
+                <Star className="w-5 h-5 text-[#F4510B]" />
+              </div>
+              <p className="text-xs font-bold text-emerald-600 mt-1">{coachProfile.experience || 'Experienced'} Experience</p>
             </div>
           </div>
 
@@ -443,7 +510,7 @@ export default function CoachPortalView() {
                     key={mod.id}
                     type="button"
                     onClick={() => setCurrentView(mod.id)}
-                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] hover:shadow-dropdown transition-all group flex flex-col justify-between cursor-pointer"
+                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] hover:-translate-y-0.5 hover:shadow-dropdown transition-all group flex flex-col justify-between cursor-pointer"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-3">
@@ -593,9 +660,16 @@ export default function CoachPortalView() {
                         <div>
                           {/* Top Badges */}
                           <div className="flex items-start justify-between gap-2">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#172B50] text-white">
-                              {sch.program}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#172B50] text-white">
+                                {sch.program}
+                              </span>
+                              {sch.isCompensationReplacement && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white">
+                                  Replacement
+                                </span>
+                              )}
+                            </div>
 
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                               sch.status === 'Scheduled'
@@ -614,17 +688,14 @@ export default function CoachPortalView() {
                           <h3 className={`text-base font-extrabold text-[#172B50] mt-2 ${
                             isCancelled ? 'line-through text-gray-500' : ''
                           }`}>
-                            {sch.batch}
+                            {sch.className || sch.batch}
                           </h3>
 
-                          {/* Location & Court / Venue */}
+                          {/* Location */}
                           <div className="mt-3 p-3 bg-[#FFF4E8]/60 rounded-xl border border-[#172B5010] space-y-1 text-xs">
                             <div className="flex items-center gap-1.5 font-bold text-[#172B50]">
                               <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
                               <span>{sch.location}</span>
-                            </div>
-                            <div className="text-[11px] font-semibold text-[#F4510B] pl-5">
-                              Allocated Court: {sch.venue}
                             </div>
                           </div>
 
@@ -659,11 +730,15 @@ export default function CoachPortalView() {
                               <div className="mt-2 p-2.5 bg-[#FFF4E8]/40 rounded-xl border border-[#172B5010] text-[11px] space-y-1 animate-in fade-in">
                                 <span className="font-bold text-[#172B50] block mb-1">Enrolled Kids:</span>
                                 <div className="flex flex-wrap gap-1.5">
-                                  {(sch.enrolledStudents || ["Aarav Sharma", "Ananya Sharma", "Vihaan Patel"]).map((kid, idx) => (
-                                    <span key={idx} className="px-2 py-0.5 rounded-md bg-white border border-[#172B5015] text-[#172B50] font-medium">
-                                      {kid}
-                                    </span>
-                                  ))}
+                                  {(sch.enrolledStudents || []).length === 0 ? (
+                                    <span className="text-[#172B50]/60">No athletes assigned yet</span>
+                                  ) : (
+                                    (sch.enrolledStudents || []).map((kid, idx) => (
+                                      <span key={idx} className="px-2 py-0.5 rounded-md bg-white border border-[#172B5015] text-[#172B50] font-medium">
+                                        {kid}
+                                      </span>
+                                    ))
+                                  )}
                                 </div>
                               </div>
                             )}
@@ -1010,6 +1085,52 @@ export default function CoachPortalView() {
             </div>
           </div>
 
+          {assignedStudentReplacements.filter(r => r.status === 'Scheduled').length > 0 && (
+            <div className="bg-white rounded-2xl border border-[#F4510B30] shadow-card overflow-hidden">
+              <div className="p-4 border-b border-[#172B5010] bg-[#FFF4E8]/60 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#172B50]">
+                    Replacement Compensation Sessions — Attendance
+                  </h3>
+                  <p className="text-[11px] text-[#172B50]/70">
+                    Mark Present or Absent for makeup classes scheduled to you by Admin
+                  </p>
+                </div>
+                <span className="text-xs font-extrabold text-[#F4510B]">
+                  {assignedStudentReplacements.filter(r => r.status === 'Scheduled').length} Active
+                </span>
+              </div>
+              <div className="divide-y divide-[#172B5010]">
+                {assignedStudentReplacements.filter(r => r.status === 'Scheduled').map(rep => (
+                  <div key={rep.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                      <span className="font-extrabold text-[#172B50] text-sm">{rep.studentName}</span>
+                      <p className="text-[11px] text-[#172B50]/75 mt-0.5">
+                        {rep.replacementSlot} • {rep.replacementProgram || rep.program} (Makeup for {rep.missedDate})
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleMarkReplacementAttendance(rep, ATTENDANCE_STATUSES.PRESENT)}
+                        className="px-3.5 py-1.5 rounded-lg bg-[#172B50] text-white font-bold hover:bg-emerald-600 transition-colors cursor-pointer"
+                      >
+                        Present &amp; Complete
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMarkReplacementAttendance(rep, ATTENDANCE_STATUSES.ABSENT)}
+                        className="px-3.5 py-1.5 rounded-lg bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30] font-bold hover:bg-rose-50 transition-colors cursor-pointer"
+                      >
+                        Mark Absent
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-[11px] text-[#172B50]">
             <Info className="w-4 h-4 text-[#F4510B] shrink-0 mt-0.5" />
             <span>
@@ -1091,24 +1212,94 @@ export default function CoachPortalView() {
         </div>
       )}
 
-      {/* 6. COMPENSATION CLASSES (Module 7.6) */}
+      {/* 6. COMPENSATION CLASSES (Student Replacements + Coach Coverage) */}
       {currentView === 'compensation' && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Compensation Classes & Substitute Assignments
+                Compensation Classes &amp; Replacement Assignments
               </h1>
               <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Manage makeup sessions, substitute trainer coverage, and verify completed compensation drills
+                Track student makeup sessions assigned to you, mark replacement attendance, and manage substitute coverage
               </p>
+            </div>
+          </div>
+
+          {/* Assigned Student Compensation Replacement Sessions */}
+          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+            <div className="p-4 border-b border-[#172B5010] flex items-center justify-between bg-[#FFF4E8]/40">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#172B50]">
+                Assigned Student Replacement Sessions
+              </h3>
+              <span className="text-xs font-bold text-[#F4510B]">
+                {assignedStudentReplacements.length} Assigned
+              </span>
+            </div>
+
+            <div className="divide-y divide-[#172B500C]">
+              {assignedStudentReplacements.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[#172B50] opacity-70">
+                  No student replacement sessions assigned to you yet. When Admin schedules a replacement slot under Student Compensation, it appears here automatically.
+                </div>
+              ) : (
+                assignedStudentReplacements.map(rep => (
+                  <div key={rep.id} className="p-4 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-[#172B50] text-sm">{rep.studentName}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          rep.status === 'Completed'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {rep.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#172B50] opacity-80 mt-1">
+                        Replacement Slot: <strong>{rep.replacementSlot}</strong> • Program: {rep.replacementProgram || rep.program}
+                      </p>
+                      <p className="text-[11px] text-[#F4510B] font-semibold mt-0.5">
+                        Makeup for missed class on {rep.missedDate} ({rep.missedClass})
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      {rep.status === 'Scheduled' ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleMarkReplacementAttendance(rep, ATTENDANCE_STATUSES.PRESENT)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Mark Present &amp; Completed</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMarkReplacementAttendance(rep, ATTENDANCE_STATUSES.ABSENT)}
+                            className="px-3 py-1.5 rounded-lg bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30] text-xs font-bold cursor-pointer"
+                          >
+                            Absent
+                          </button>
+                        </>
+                      ) : (
+                        <span className="flex items-center gap-1 text-emerald-700 font-bold text-xs">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Completed</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
             <div className="p-4 border-b border-[#172B5010] flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-wider text-[#172B50]">
-                Assigned Compensation Sessions
+                Coach Substitute Coverage Sessions
               </h3>
               <span className="text-xs font-bold text-[#F4510B]">
                 {coachComps.length} Active Sessions
@@ -1118,14 +1309,14 @@ export default function CoachPortalView() {
             <div className="divide-y divide-[#172B500C]">
               {coachComps.length === 0 ? (
                 <div className="p-8 text-center text-xs text-[#172B50] opacity-70">
-                  No substitute sessions assigned today. Great job!
+                  No substitute coverage sessions assigned today.
                 </div>
               ) : (
                 coachComps.map(c => (
                   <div key={c.id} className="p-4 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-[#172B50]">{c.program} - Batch {c.batch}</span>
+                        <span className="font-black text-[#172B50]">{c.missedSession || c.program}</span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           c.status === 'Completed'
                             ? 'bg-emerald-100 text-emerald-800'
@@ -1135,18 +1326,19 @@ export default function CoachPortalView() {
                         </span>
                       </div>
                       <p className="text-[11px] text-[#172B50] opacity-75 mt-1">
-                        Schedule: <strong>{c.schedule}</strong> • Arena: {c.center || 'Main Arena'}
+                        Schedule: <strong>{c.scheduledDate || c.schedule}</strong> • Center: {c.center || 'Main Center'}
                       </p>
                       <p className="text-[11px] text-[#F4510B] font-semibold mt-0.5">
-                        Substitute for: {c.missedSessionCoach || 'Scheduled Trainer'}
+                        Coverage: {c.coverageType || 'Substitute'} • {c.substituteCoach || c.coachName}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2 self-start sm:self-auto">
                       {c.status !== 'Completed' ? (
                         <button
+                          type="button"
                           onClick={() => updateCoachCompensation(c.id, 'Completed')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer"
                         >
                           <Check className="w-3.5 h-3.5" />
                           <span>Mark Session Completed</span>
@@ -1154,7 +1346,7 @@ export default function CoachPortalView() {
                       ) : (
                         <span className="flex items-center gap-1 text-emerald-700 font-bold text-xs">
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>Verified & Paid</span>
+                          <span>Verified</span>
                         </span>
                       )}
                     </div>
