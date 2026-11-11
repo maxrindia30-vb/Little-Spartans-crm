@@ -25,7 +25,64 @@ export const initialAcademyData = {
 
   classes: [],
 
-  coaches: [],
+  coaches: [
+    {
+      id: "COACH-1",
+      name: "Kapil",
+      specialization: "Gymnastics & Multi-Sports",
+      experience: "6 Yrs",
+      certification: "NIS Certified",
+      phone: "",
+      email: "kapil@littlespartans.co.in",
+      center: "KK NAGAR",
+      rating: 4.9,
+      activeBatches: 0,
+      studentsCount: 0,
+      status: "Active"
+    },
+    {
+      id: "COACH-2",
+      name: "Dibi",
+      specialization: "Kids Fitness & Athletics",
+      experience: "5 Yrs",
+      certification: "Certified Youth Trainer",
+      phone: "",
+      email: "dibi@littlespartans.co.in",
+      center: "KK NAGAR",
+      rating: 4.9,
+      activeBatches: 0,
+      studentsCount: 0,
+      status: "Active"
+    },
+    {
+      id: "COACH-3",
+      name: "Hanif",
+      specialization: "Agility & Team Sports",
+      experience: "5 Yrs",
+      certification: "Sports Coaching Diploma",
+      phone: "",
+      email: "hanif@littlespartans.co.in",
+      center: "KILPAUK",
+      rating: 4.8,
+      activeBatches: 0,
+      studentsCount: 0,
+      status: "Active"
+    },
+    {
+      id: "COACH-4",
+      name: "Teja",
+      specialization: "Foundational Movement & Gymnastics",
+      experience: "4 Yrs",
+      certification: "Certified Coach",
+      phone: "",
+      email: "teja@littlespartans.co.in",
+      center: "ANNA NAGAR",
+      rating: 4.8,
+      activeBatches: 0,
+      studentsCount: 0,
+      status: "Active"
+    }
+  ],
 
   students: [],
 

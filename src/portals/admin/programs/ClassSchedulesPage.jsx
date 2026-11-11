@@ -72,8 +72,8 @@ export default function ClassSchedulesPage() {
     weekday: WEEKDAYS[new Date(`${todayYmd}T00:00:00`).getDay()],
     startTime: '16:30',
     endTime: '17:30',
-    venue: activeLocations[0]?.courts?.[0] || 'Main Arena',
     coachId: '',
+    coach2Id: '',
     capacity: '15',
     notes: '',
   });
@@ -97,11 +97,6 @@ export default function ClassSchedulesPage() {
       .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`));
   }, [data.classSchedules, locationFilter, programFilter, coachFilter, statusFilter]);
 
-  const locationCourts = useMemo(() => {
-    const locObj = activeLocations.find((l) => l.name === scheduleForm.location);
-    return locObj?.courts && locObj.courts.length > 0 ? locObj.courts : ['Main Training Arena'];
-  }, [activeLocations, scheduleForm.location]);
-
   // Hierarchy: batches belonging to the selected Location + Program
   const matchingBatchesForForm = useMemo(() => {
     return (data.classes || []).filter(
@@ -116,17 +111,21 @@ export default function ClassSchedulesPage() {
   const formConflict = useMemo(() => {
     if (!isScheduleModalOpen) return { hasConflict: false };
     const coachObj = (data.coaches || []).find((c) => c.id === scheduleForm.coachId);
+    const coach2Obj = (data.coaches || []).find((c) => c.id === scheduleForm.coach2Id);
     const matchedBatch = (data.classes || []).find((c) => c.id === scheduleForm.batchId);
+    const additionalCoaches = coach2Obj
+      ? [{ coachId: coach2Obj.id, coachName: coach2Obj.name }]
+      : matchedBatch?.additionalCoaches || [];
     return checkScheduleConflictLive(
       {
         location: scheduleForm.location,
         coachId: scheduleForm.coachId,
         coachName: coachObj?.name || '',
-        additionalCoaches: matchedBatch?.additionalCoaches || [],
+        additionalCoaches,
         date: scheduleForm.date,
         startTime: scheduleForm.startTime,
         endTime: scheduleForm.endTime,
-        venue: scheduleForm.venue,
+        venue: '',
       },
       editingSchedule?.id || null
     );
@@ -136,7 +135,6 @@ export default function ClassSchedulesPage() {
     const defaultLoc = locationFilter !== 'All' ? locationFilter : activeLocations[0]?.name || '';
     const defaultProg =
       programFilter !== 'All' ? programFilter : (data.programs || [])[0]?.name || '';
-    const locObj = activeLocations.find((l) => l.name === defaultLoc);
     const firstBatch = (data.classes || []).find(
       (c) => c.center === defaultLoc && c.program === defaultProg && c.status !== 'Inactive'
     );
@@ -152,8 +150,8 @@ export default function ClassSchedulesPage() {
       weekday,
       startTime: '16:30',
       endTime: '17:30',
-      venue: locObj?.courts?.[0] || 'Main Training Arena',
-      coachId: firstBatch?.coachId || data.coaches?.[0]?.id || '',
+      coachId: firstBatch?.coachId || '',
+      coach2Id: firstBatch?.additionalCoaches?.[0]?.coachId || '',
       capacity: String(firstBatch?.capacity || 15),
       notes: '',
     });
@@ -173,8 +171,8 @@ export default function ClassSchedulesPage() {
       weekday: derivedWeekday,
       startTime: sch.startTime || '16:30',
       endTime: sch.endTime || '17:30',
-      venue: sch.venue || 'Main Training Arena',
       coachId: sch.coachId || '',
+      coach2Id: sch.additionalCoaches?.[0]?.coachId || '',
       capacity: String(sch.capacity || 15),
       notes: sch.notes || '',
     });
@@ -192,6 +190,7 @@ export default function ClassSchedulesPage() {
       batchId: batch.id,
       batch: batch.name,
       coachId: batch.coachId || prev.coachId,
+      coach2Id: batch.additionalCoaches?.[0]?.coachId || prev.coach2Id,
       capacity: String(batch.capacity || prev.capacity),
     }));
   };
@@ -199,7 +198,12 @@ export default function ClassSchedulesPage() {
   const handleSaveSchedule = (e) => {
     e.preventDefault();
     const selectedCoach = (data.coaches || []).find((c) => c.id === scheduleForm.coachId);
+    const selectedCoach2 = (data.coaches || []).find((c) => c.id === scheduleForm.coach2Id);
     const selectedBatch = (data.classes || []).find((c) => c.id === scheduleForm.batchId);
+
+    const additionalCoaches = selectedCoach2
+      ? [{ coachId: selectedCoach2.id, coachName: selectedCoach2.name }]
+      : selectedBatch?.additionalCoaches || [];
 
     const payload = {
       location: scheduleForm.location,
@@ -208,12 +212,12 @@ export default function ClassSchedulesPage() {
       batch: selectedBatch?.name || scheduleForm.batch || `${scheduleForm.program} Session`,
       coachId: selectedCoach?.id || '',
       coachName: selectedCoach?.name || 'Unassigned',
-      additionalCoaches: selectedBatch?.additionalCoaches || [],
+      additionalCoaches,
       date: scheduleForm.date,
       weekday: scheduleForm.weekday,
       startTime: scheduleForm.startTime,
       endTime: scheduleForm.endTime,
-      venue: scheduleForm.venue,
+      venue: '',
       capacity: parseInt(scheduleForm.capacity, 10) || 15,
       notes: scheduleForm.notes,
     };
@@ -477,13 +481,13 @@ export default function ClassSchedulesPage() {
                     </span>
                     <span className="flex items-center gap-1.5 font-semibold">
                       <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                      {sch.venue}
+                      {sch.location}
                     </span>
                     <span className="flex items-center gap-1.5 font-semibold col-span-2">
                       <UserCheck className="w-3.5 h-3.5 text-[#172B50]" />
-                      Coach: {sch.coachName}
+                      Coach 1: {sch.coachName}
                       {sch.additionalCoaches?.length > 0 &&
-                        ` (+${sch.additionalCoaches.map((c) => c.coachName).join(', ')})`}
+                        ` • Coach 2: ${sch.additionalCoaches.map((c) => c.coachName).join(', ')}`}
                     </span>
                   </div>
 
@@ -580,10 +584,12 @@ export default function ClassSchedulesPage() {
                         </div>
                         <p className="font-extrabold text-[#172B50] leading-tight">{sch.batch}</p>
                         <p className="text-[10px] text-[#172B50] opacity-75">
-                          {sch.location} • {sch.venue}
+                          {sch.location}
                         </p>
                         <p className="text-[10px] font-semibold text-[#172B50]">
-                          Coach: {sch.coachName}
+                          Coach 1: {sch.coachName}
+                          {sch.additionalCoaches?.length > 0 &&
+                            ` • Coach 2: ${sch.additionalCoaches.map((c) => c.coachName).join(', ')}`}
                         </p>
                         <div className="flex items-center gap-1 pt-1">
                           <button
@@ -721,13 +727,11 @@ export default function ClassSchedulesPage() {
                 value={scheduleForm.location}
                 onChange={(e) => {
                   const nextLoc = e.target.value;
-                  const nextLocObj = activeLocations.find((l) => l.name === nextLoc);
                   setScheduleForm((prev) => ({
                     ...prev,
                     location: nextLoc,
                     batchId: '',
                     batch: '',
-                    venue: nextLocObj?.courts?.[0] || 'Main Training Arena',
                   }));
                 }}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
@@ -765,48 +769,31 @@ export default function ClassSchedulesPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Training Batch *</label>
-              {matchingBatchesForForm.length > 0 ? (
-                <select
-                  value={scheduleForm.batchId}
-                  onChange={(e) => handleBatchSelection(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-                >
-                  <option value="">Select Training Batch</option>
-                  {matchingBatchesForForm.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} (Cap {b.capacity})
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  required
-                  value={scheduleForm.batch}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, batch: e.target.value })}
-                  placeholder="Enter batch label or create in Training Batches"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-                />
-              )}
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Court / Venue *</label>
+          <div>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">Batches *</label>
+            {matchingBatchesForForm.length > 0 ? (
               <select
-                required
-                value={scheduleForm.venue}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, venue: e.target.value })}
+                value={scheduleForm.batchId}
+                onChange={(e) => handleBatchSelection(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
-                {locationCourts.map((court) => (
-                  <option key={court} value={court}>
-                    {court}
+                <option value="">Select Batch</option>
+                {matchingBatchesForForm.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} (Cap {b.capacity})
                   </option>
                 ))}
               </select>
-            </div>
+            ) : (
+              <input
+                type="text"
+                required
+                value={scheduleForm.batch}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, batch: e.target.value })}
+                placeholder="Enter batch name or create under Batches"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -864,30 +851,55 @@ export default function ClassSchedulesPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Assigned Coach</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Coach 1</label>
               <select
                 value={scheduleForm.coachId}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, coachId: e.target.value })}
+                onChange={(e) => {
+                  const nextCoach1 = e.target.value;
+                  setScheduleForm((prev) => ({
+                    ...prev,
+                    coachId: nextCoach1,
+                    coach2Id: prev.coach2Id === nextCoach1 ? '' : prev.coach2Id,
+                  }));
+                }}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
-                <option value="">Select Coach</option>
+                <option value="">Select Coach 1</option>
                 {(data.coaches || []).map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} ({c.center || 'All Locations'})
+                    {c.name}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Session Notes / Drills</label>
-              <input
-                type="text"
-                value={scheduleForm.notes}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
-                placeholder="Equipment setup or drill instructions..."
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Coach 2</label>
+              <select
+                value={scheduleForm.coach2Id}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, coach2Id: e.target.value })}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-              />
+              >
+                <option value="">Select Coach 2 (Optional)</option>
+                {(data.coaches || [])
+                  .filter((c) => c.id !== scheduleForm.coachId)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+              </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">Session Notes / Drills</label>
+            <input
+              type="text"
+              value={scheduleForm.notes}
+              onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
+              placeholder="Equipment setup or drill instructions..."
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">

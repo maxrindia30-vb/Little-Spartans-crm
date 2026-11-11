@@ -15,16 +15,31 @@ export function CrmProvider({ children }) {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Ensure canonical locations and required arrays exist
+        // Ensure canonical locations, default coaches, and required arrays exist
+        const storedCoaches = Array.isArray(parsed.coaches) ? parsed.coaches : [];
+        const existingCoachNames = new Set(storedCoaches.map((c) => (c.name || '').toLowerCase()));
+        const mergedCoaches = [
+          ...storedCoaches,
+          ...initialAcademyData.coaches.filter((c) => !existingCoachNames.has(c.name.toLowerCase())),
+        ];
+        const storedLocations =
+          Array.isArray(parsed.locations) && parsed.locations.length > 0
+            ? parsed.locations
+            : initialAcademyData.locations;
+        const activeCenters = storedLocations
+          .filter((l) => l.status !== 'Inactive')
+          .map((l) => l.name);
+
         return {
           ...initialAcademyData,
           ...parsed,
           academy: {
             ...initialAcademyData.academy,
             ...(parsed.academy || {}),
-            centers: initialAcademyData.academy.centers,
+            centers: activeCenters.length > 0 ? activeCenters : initialAcademyData.academy.centers,
           },
-          locations: initialAcademyData.locations,
+          locations: storedLocations,
+          coaches: mergedCoaches,
           classSchedules: Array.isArray(parsed.classSchedules) ? parsed.classSchedules : initialAcademyData.classSchedules,
           attendanceRecords: Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
         };
