@@ -16,12 +16,15 @@ import {
 import { useCrm } from '../../context/CrmContext';
 
 export default function FullLoginScreen() {
-  const { login, addToast } = useCrm();
+  const { data, login, addToast } = useCrm();
 
   const [activeRole, setActiveRole] = useState('admin');
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('Spartan2026!');
   const [rememberMe, setRememberMe] = useState(true);
+
+  const firstParentAcc = (data.userAccounts || []).find(a => a.role === 'parent') || data.parents?.[0];
+  const firstCoachAcc = (data.userAccounts || []).find(a => a.role === 'coach') || data.coaches?.[0];
 
   const roleConfigs = {
     admin: {
@@ -38,9 +41,9 @@ export default function FullLoginScreen() {
     parent: {
       id: 'parent',
       roleLabel: 'Parent Portal',
-      userTitle: 'Dr. Rohan Sharma',
-      roleSubtitle: 'Parent of Aarav & Sanya',
-      defaultEmail: 'rohan.sharma@gmail.com',
+      userTitle: firstParentAcc?.name || 'Parent Account',
+      roleSubtitle: firstParentAcc?.center ? `Guardian • ${firstParentAcc.center}` : 'Add Parent via Admin Portal first',
+      defaultEmail: firstParentAcc?.email || 'parent@littlespartans.co.in',
       badge: 'Verified Guardian',
       icon: GraduationCap,
       description: 'Monitor your children’s training timetable, punctuality records, fee dues, certificates, and coach assessments.',
@@ -49,10 +52,10 @@ export default function FullLoginScreen() {
     coach: {
       id: 'coach',
       roleLabel: 'Coach Portal',
-      userTitle: 'Coach Vikram Singh',
-      roleSubtitle: 'Head Coach (Gymnastics)',
-      defaultEmail: 'vikram@littlespartans.co.in',
-      badge: 'FIG Level 2 Faculty',
+      userTitle: firstCoachAcc?.name || 'Coach Account',
+      roleSubtitle: firstCoachAcc?.specialization || 'Assign Coach via Admin Portal',
+      defaultEmail: firstCoachAcc?.email || 'coach@littlespartans.co.in',
+      badge: 'Academy Faculty',
       icon: UserCheck2,
       description: 'Manage session rosters, record athlete attendance, evaluate motor agility, and review drill manuals.',
       highlights: ['Session Attendance Marker', 'Skill & Agility Rubrics', 'Competition Squad Nominations']

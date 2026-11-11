@@ -24,6 +24,7 @@ import StudentManagement from './StudentManagement';
 import ParentManagement from './ParentManagement';
 import CoachManagement from './CoachManagement';
 import Modal from '../../components/common/Modal';
+import { getCommonLocations } from '../../services/locationService';
 
 export default function PeopleManagementModule() {
   const { 
@@ -35,6 +36,7 @@ export default function PeopleManagementModule() {
     toggleAccountStatus,
     addToast 
   } = useCrm();
+  const commonLocations = getCommonLocations(data);
 
   // Active tab: 'students' | 'parents' | 'coaches' | 'accounts'
   const currentTab = activeSubTab || 'students';
@@ -45,6 +47,7 @@ export default function PeopleManagementModule() {
   const [accountName, setAccountName] = useState('');
   const [accountEmail, setAccountEmail] = useState('');
   const [accountPhone, setAccountPhone] = useState('');
+  const [accountCenter, setAccountCenter] = useState(commonLocations[0]?.name || 'KK NAGAR');
   const [selectedChildren, setSelectedChildren] = useState([]);
   const [selectedPrograms, setSelectedPrograms] = useState([]);
   const [accountSearch, setAccountSearch] = useState('');
@@ -67,6 +70,7 @@ export default function PeopleManagementModule() {
       name: accountName.trim(),
       email: accountEmail.trim(),
       phone: accountPhone.trim(),
+      center: accountCenter,
       linkedStudents: accountRole === 'parent' ? selectedChildren : undefined,
       assignedPrograms: accountRole === 'coach' ? selectedPrograms : undefined,
     };
@@ -439,6 +443,19 @@ export default function PeopleManagementModule() {
               onChange={(e) => setAccountPhone(e.target.value)}
               className="w-full px-3 py-2 text-xs bg-white border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
+            <select
+              value={accountCenter}
+              onChange={(e) => setAccountCenter(e.target.value)}
+              className="w-full px-3 py-2 text-xs font-bold bg-white border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+            >
+              {commonLocations.map(loc => (
+                <option key={loc.id} value={loc.name}>{loc.name}</option>
+              ))}
+            </select>
           </div>
 
           {accountRole === 'parent' && (

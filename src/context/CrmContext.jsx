@@ -112,20 +112,20 @@ export function CrmProvider({ children }) {
       badge: "Super Admin"
     },
     parent: {
-      name: "Dr. Rohan Sharma",
-      role: "Parent (Aarav & Sanya)",
+      name: data.parents[0]?.name || "Parent Account",
+      role: data.parents[0]?.center ? `Parent (${data.parents[0].center})` : "Parent Portal",
       portalTitle: "Parent Portal",
-      email: "rohan.sharma@gmail.com",
+      email: data.parents[0]?.email || "parent@littlespartans.co.in",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
       badge: "Verified Parent"
     },
     coach: {
-      name: "Coach Vikram Singh",
-      role: "Head Coach (Gymnastics)",
+      name: data.coaches[0]?.name || "Coach Account",
+      role: data.coaches[0]?.specialization || "Sports Coach",
       portalTitle: "Coach Portal",
-      email: "vikram@littlespartans.co.in",
+      email: data.coaches[0]?.email || "coach@littlespartans.co.in",
       avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-      badge: "FIG Level 2 Coach"
+      badge: "Academy Coach"
     },
     support: {
       name: "Priya Menon",
@@ -369,6 +369,100 @@ export function CrmProvider({ children }) {
     addToast(`Successfully registered ${studentName} for the tournament!`);
   };
 
+  const addParent = (parentData) => {
+    const existingParents = data.parents || [];
+    const parentId = `PAR-${String(existingParents.length + 1).padStart(3, '0')}`;
+    const linkedStudentNames = Array.isArray(parentData.children) ? parentData.children : [];
+    const normalizedEmail = (parentData.email || '').trim().toLowerCase();
+
+    let createdAccountResult = null;
+    let nextUserAccounts = data.userAccounts || [];
+
+    if (parentData.grantPortalAccess !== false) {
+      if (!normalizedEmail) {
+        addToast('Parent Email ID is required to grant Parent Portal access.', 'error');
+        return { success: false, error: 'Email required' };
+      }
+      const emailExists = nextUserAccounts.some(
+        a => a.email.toLowerCase() === normalizedEmail
+      );
+      if (emailExists) {
+        addToast(`Error: An account with email "${parentData.email}" already exists.`, 'error');
+        return { success: false, error: 'Email already exists' };
+      }
+
+      const tempPassword = `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
+      const newAccount = {
+        id: `ACC-${String(nextUserAccounts.length + 1).padStart(3, '0')}`,
+        role: 'parent',
+        name: parentData.name.trim(),
+        email: normalizedEmail,
+        phone: parentData.phone?.trim() || '',
+        center: parentData.center,
+        linkedStudents: linkedStudentNames,
+        status: 'Active',
+        isTemporaryPassword: true,
+        tempPasswordDisplay: tempPassword,
+        createdAt: new Date().toISOString().split('T')[0],
+        lastLogin: 'Never',
+        permissions: ['VIEW_OWN_CHILDREN', 'MAKE_PAYMENTS', 'REQUEST_COMPENSATION'],
+      };
+      nextUserAccounts = [newAccount, ...nextUserAccounts];
+      createdAccountResult = { account: newAccount, tempPassword };
+    }
+
+    const newParent = {
+      id: parentId,
+      name: parentData.name.trim(),
+      phone: parentData.phone?.trim() || '',
+      email: normalizedEmail,
+      center: parentData.center,
+      address: parentData.address?.trim() || `${parentData.center}, Chennai`,
+      children: linkedStudentNames,
+      totalFeesPaid: '₹0',
+      pendingDue: '₹0',
+      portalAccess: parentData.grantPortalAccess !== false,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
+    const updatedStudents = (data.students || []).map(stu => {
+      const matchedById =
+        Array.isArray(parentData.linkedStudentIds) &&
+        parentData.linkedStudentIds.includes(stu.id);
+      const matchedByName =
+        linkedStudentNames.includes(stu.name) && stu.center === parentData.center;
+
+      if (matchedById || matchedByName) {
+        return {
+          ...stu,
+          parentId,
+          parentName: newParent.name,
+          parentPhone: newParent.phone || stu.parentPhone,
+          parentEmail: newParent.email || stu.parentEmail,
+        };
+      }
+      return stu;
+    });
+
+    setData(prev => ({
+      ...prev,
+      parents: [newParent, ...(prev.parents || [])],
+      students: updatedStudents,
+      userAccounts: nextUserAccounts,
+    }));
+
+    if (createdAccountResult) {
+      addToast(
+        `Parent "${newParent.name}" (${newParent.center}) added & Parent Portal activated! Temp Password: ${createdAccountResult.tempPassword}`,
+        'success'
+      );
+    } else {
+      addToast(`Parent "${newParent.name}" added under ${newParent.center}.`, 'success');
+    }
+
+    return { success: true, parent: newParent, ...createdAccountResult };
+  };
+
   // Module 5: Account Management (Admin Creates Parent & Coach Accounts)
   const createAccount = (accountData) => {
     // Check email uniqueness
@@ -381,10 +475,11 @@ export function CrmProvider({ children }) {
     }
 
     const tempPassword = `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
+    const normalizedEmail = accountData.email.trim().toLowerCase();
     const newAccount = {
-      id: `ACC-00${(data.userAccounts || []).length + 1}`,
+      id: `ACC-${String((data.userAccounts || []).length + 1).padStart(3, '0')}`,
       ...accountData,
-      email: accountData.email.trim().toLowerCase(),
+      email: normalizedEmail,
       status: 'Active',
       isTemporaryPassword: true,
       tempPasswordDisplay: tempPassword,
@@ -395,12 +490,51 @@ export function CrmProvider({ children }) {
         : ["VIEW_OWN_CHILDREN", "MAKE_PAYMENTS", "REQUEST_COMPENSATION"]
     };
 
-    setData(prev => ({
-      ...prev,
-      userAccounts: [newAccount, ...(prev.userAccounts || [])]
-    }));
+    setData(prev => {
+      let nextParents = prev.parents || [];
+      let nextStudents = prev.students || [];
 
-    addToast(`Account created for ${newAccount.name}! Invitation sent to ${newAccount.email} with temp password.`);
+      if (
+        accountData.role === 'parent' &&
+        !nextParents.some(p => (p.email || '').toLowerCase() === normalizedEmail)
+      ) {
+        const parentId = `PAR-${String(nextParents.length + 1).padStart(3, '0')}`;
+        const childrenNames = Array.isArray(accountData.linkedStudents) ? accountData.linkedStudents : [];
+        const center = accountData.center || prev.academy?.centers?.[0] || 'KK NAGAR';
+
+        nextParents = [
+          {
+            id: parentId,
+            name: accountData.name.trim(),
+            phone: accountData.phone?.trim() || '',
+            email: normalizedEmail,
+            center,
+            address: `${center}, Chennai`,
+            children: childrenNames,
+            totalFeesPaid: '₹0',
+            pendingDue: '₹0',
+            portalAccess: true,
+            createdAt: new Date().toISOString().split('T')[0],
+          },
+          ...nextParents,
+        ];
+
+        nextStudents = nextStudents.map(stu =>
+          childrenNames.includes(stu.name)
+            ? { ...stu, parentId, parentName: accountData.name.trim(), parentEmail: normalizedEmail }
+            : stu
+        );
+      }
+
+      return {
+        ...prev,
+        parents: nextParents,
+        students: nextStudents,
+        userAccounts: [newAccount, ...(prev.userAccounts || [])]
+      };
+    });
+
+    addToast(`Account created for ${newAccount.name}! Temp password: ${tempPassword}`);
     return { success: true, account: newAccount, tempPassword };
   };
 
@@ -706,6 +840,7 @@ export function CrmProvider({ children }) {
         resetAllData,
         // Actions
         addStudent,
+        addParent,
         updateStudent,
         deleteStudent,
         addEnquiry,
