@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   GraduationCap, 
   Search, 
   Plus, 
   Trash2, 
   Eye, 
+  Edit3,
   Shield, 
   AlertTriangle, 
   CheckCircle2, 
@@ -19,7 +20,7 @@ import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
 
 export default function StudentManagement() {
-  const { data, addStudent, deleteStudent } = useCrm();
+  const { data, addStudent, updateStudent, deleteStudent, focusedRecord, setFocusedRecord } = useCrm();
   const commonLocations = getCommonLocations(data);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,6 +28,18 @@ export default function StudentManagement() {
   const [selectedProgram, setSelectedProgram] = useState('All');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [viewStudent, setViewStudent] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
+
+  useEffect(() => {
+    if (focusedRecord?.type === 'student' && focusedRecord.id) {
+      const target = (data.students || []).find((s) => s.id === focusedRecord.id);
+      if (target) {
+        setViewStudent(target);
+        setSearchTerm(target.id);
+      }
+      setFocusedRecord(null);
+    }
+  }, [focusedRecord, data.students, setFocusedRecord]);
 
   // Form states
   const [name, setName] = useState('');
@@ -206,7 +219,12 @@ export default function StudentManagement() {
                     {/* Program */}
                     <td className="py-3 px-4">
                       <span className="font-bold text-[#172B50] block">{student.program}</span>
-                      <span className="text-[10px] text-[#F4510B] font-semibold">{student.center}</span>
+                      <span className="text-[10px] text-[#F4510B] font-semibold block">{student.center}</span>
+                      {(student.batchName || student.enrolledClasses?.length > 0) && (
+                        <span className="text-[10px] text-[#172B50] opacity-70">
+                          Batch: {student.batchName || student.enrolledClasses.join(', ')}
+                        </span>
+                      )}
                     </td>
 
                     {/* Rank */}
@@ -252,14 +270,21 @@ export default function StudentManagement() {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => setViewStudent(student)}
-                          className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] transition-colors"
+                          className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] transition-colors cursor-pointer"
                           title="View Athlete Profile & Badges"
                         >
                           <Eye className="w-4 h-4 text-[#172B50]" />
                         </button>
                         <button
+                          onClick={() => setEditingStudent({ ...student })}
+                          className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] transition-colors cursor-pointer"
+                          title="Edit Student Record"
+                        >
+                          <Edit3 className="w-4 h-4 text-[#172B50]" />
+                        </button>
+                        <button
                           onClick={() => deleteStudent(student.id)}
-                          className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors"
+                          className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors cursor-pointer"
                           title="Delete Record"
                         >
                           <Trash2 className="w-4 h-4 text-[#F4510B]" />
@@ -294,10 +319,17 @@ export default function StudentManagement() {
               />
               <div>
                 <h4 className="text-base font-extrabold text-[#172B50]">{viewStudent.name}</h4>
-                <p className="text-xs font-bold text-[#F4510B]">{viewStudent.rank}</p>
+                <p className="text-xs font-bold text-[#F4510B]">{viewStudent.rank} • {viewStudent.status || 'Active'}</p>
                 <p className="text-xs text-[#172B50] opacity-75 mt-0.5">
                   {viewStudent.program} • {viewStudent.center}
                 </p>
+                {(viewStudent.enquiryId || viewStudent.parentId) && (
+                  <p className="text-[10px] font-semibold text-[#172B50] opacity-70 mt-0.5">
+                    {viewStudent.enquiryId ? `Enquiry: ${viewStudent.enquiryId}` : ''}
+                    {viewStudent.enquiryId && viewStudent.parentId ? ' • ' : ''}
+                    {viewStudent.parentId ? `Parent: ${viewStudent.parentId}` : ''}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -487,6 +519,132 @@ export default function StudentManagement() {
         </form>
       </Modal>
 
+      {/* Edit Student Modal */}
+      <Modal
+        isOpen={Boolean(editingStudent)}
+        onClose={() => setEditingStudent(null)}
+        title={editingStudent ? `Edit Student: ${editingStudent.id}` : 'Edit Student'}
+        subtitle="Update athlete, program, academy location, or guardian contact details"
+      >
+        {editingStudent && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateStudent(editingStudent.id, {
+                name: editingStudent.name,
+                age: parseInt(editingStudent.age, 10) || editingStudent.age,
+                gender: editingStudent.gender,
+                center: editingStudent.center,
+                program: editingStudent.program,
+                parentName: editingStudent.parentName,
+                parentPhone: editingStudent.parentPhone,
+                parentEmail: editingStudent.parentEmail,
+                status: editingStudent.status || 'Active',
+                medicalNote: editingStudent.medicalNote,
+              });
+              setEditingStudent(null);
+            }}
+            className="space-y-3.5"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Student Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingStudent.name || ''}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, name: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Status</label>
+                <select
+                  value={editingStudent.status || 'Active'}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, status: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Paused">Paused</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Academy Location *</label>
+                <select
+                  value={editingStudent.center || ''}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, center: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                >
+                  {commonLocations.map((loc) => (
+                    <option key={loc.id} value={loc.name}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Sports Program *</label>
+                <select
+                  value={editingStudent.program || ''}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, program: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                >
+                  {data.programs.map((p) => (
+                    <option key={p.id} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Phone</label>
+                <input
+                  type="tel"
+                  value={editingStudent.parentPhone || ''}
+                  onChange={(e) =>
+                    setEditingStudent({ ...editingStudent, parentPhone: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Email</label>
+                <input
+                  type="email"
+                  value={editingStudent.parentEmail || ''}
+                  onChange={(e) =>
+                    setEditingStudent({ ...editingStudent, parentEmail: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl cursor-pointer"
+              >
+                Save Student
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

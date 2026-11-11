@@ -1,7 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { initialAcademyData } from '../data/mockData';
 import { checkScheduleConflict } from '../services/scheduleService';
 import { upsertBatchAttendanceRecords } from '../services/attendanceService';
+import {
+  executeEnquiryEnrollmentTransaction,
+  generateUniquePrefixedId,
+} from '../services/enrollmentService';
 
 const CrmContext = createContext();
 
@@ -70,6 +74,10 @@ export function CrmProvider({ children }) {
 
   // Mobile sidebar drawer state
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Focus navigation state (e.g. jump directly from Enquiry Enrollment -> Student / Parent record)
+  const [focusedRecord, setFocusedRecord] = useState(null);
+  const enrollingIdsRef = useRef(new Set());
 
   // Authentication state (default false to present the Little Spartans ZenConnect login portal immediately)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -162,17 +170,19 @@ export function CrmProvider({ children }) {
       ) ||
       (data.classes || []).find(c => !studentData.center || c.center === studentData.center);
 
+    const studentId = generateUniquePrefixedId(data.students || [], 'STU');
     const newStudent = {
       ...studentData,
-      id: `STU-00${data.students.length + 1}`,
+      id: studentId,
       joinDate: new Date().toISOString().split('T')[0],
+      status: studentData.status || 'Active',
       attendanceRate: 100,
       feeStatus: studentData.feeStatus || 'Paid',
       enrolledClasses:
         studentData.enrolledClasses && studentData.enrolledClasses.length > 0
           ? studentData.enrolledClasses
           : matchedClass
-          ? [matchedClass.id]
+          ? [matchedClass.name]
           : [],
       badges: ['New Spartan recruit'],
       avatar: studentData.avatar || 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=150&auto=format&fit=crop&q=80'
@@ -204,8 +214,9 @@ export function CrmProvider({ children }) {
   const addEnquiry = (enquiryData) => {
     const newEnq = {
       ...enquiryData,
-      id: `ENQ-${500 + data.enquiries.length + 1}`,
-      createdAt: new Date().toISOString().split('T')[0],
+      id: generateUniquePrefixedId(data.enquiries || [], 'ENQ'),
+      enquiryDate: enquiryData.enquiryDate || new Date().toISOString().split('T')[0],
+      createdAt: enquiryData.enquiryDate || new Date().toISOString().split('T')[0],
       stage: enquiryData.stage || 'New'
     };
     setData(prev => ({
@@ -216,12 +227,75 @@ export function CrmProvider({ children }) {
     return newEnq;
   };
 
+  const updateEnquiry = (id, updatedFields) => {
+    setData(prev => ({
+      ...prev,
+      enquiries: (prev.enquiries || []).map(e =>
+        e.id === id
+          ? {
+              ...e,
+              ...updatedFields,
+              createdAt: updatedFields.enquiryDate || e.createdAt,
+            }
+          : e
+      )
+    }));
+    addToast(`Enquiry ${id} details updated.`);
+    return { success: true };
+  };
+
   const updateEnquiryStage = (id, newStage) => {
     setData(prev => ({
       ...prev,
       enquiries: prev.enquiries.map(e => e.id === id ? { ...e, stage: newStage } : e)
     }));
     addToast(`Enquiry moved to ${newStage}.`);
+  };
+
+  // Atomic Enquiry-to-Enrollment Transaction:
+  // Creates Student + Creates or Links Existing Parent + Syncs Batch & Location + Marks Enquiry Enrolled
+  const enrollFromEnquiry = (enquiryId, overrides = {}) => {
+    if (enrollingIdsRef.current.has(enquiryId)) {
+      return {
+        success: false,
+        duplicate: true,
+        errors: ['Enrollment is already in progress for this enquiry.'],
+      };
+    }
+
+    enrollingIdsRef.current.add(enquiryId);
+    try {
+      const activeLocations = (data.locations || []).filter((l) => l.status !== 'Inactive');
+      const result = executeEnquiryEnrollmentTransaction(data, {
+        enquiryId,
+        overrides,
+        activeLocations,
+      });
+
+      if (!result.success) {
+        addToast(result.errors?.[0] || 'Enrollment validation failed.', 'error');
+        return result;
+      }
+
+      setData((prev) => ({
+        ...prev,
+        ...result.nextStateSlice,
+      }));
+
+      const parentMsg =
+        result.parentAction === 'linked_existing'
+          ? `linked to existing Parent ${result.parent.name} (${result.parent.id})`
+          : `new Parent ${result.parent.name} (${result.parent.id}) created`;
+
+      addToast(
+        `Enrolled ${result.student.name} (${result.student.id}) at ${result.student.center} and ${parentMsg}.`,
+        'success'
+      );
+
+      return result;
+    } finally {
+      enrollingIdsRef.current.delete(enquiryId);
+    }
   };
 
   const addPayment = (paymentData) => {
@@ -386,7 +460,7 @@ export function CrmProvider({ children }) {
 
   const addParent = (parentData) => {
     const existingParents = data.parents || [];
-    const parentId = `PAR-${String(existingParents.length + 1).padStart(3, '0')}`;
+    const parentId = generateUniquePrefixedId(existingParents, 'PAR');
     const linkedStudentNames = Array.isArray(parentData.children) ? parentData.children : [];
     const normalizedEmail = (parentData.email || '').trim().toLowerCase();
 
@@ -476,6 +550,17 @@ export function CrmProvider({ children }) {
     }
 
     return { success: true, parent: newParent, ...createdAccountResult };
+  };
+
+  const updateParent = (id, updatedFields) => {
+    setData((prev) => ({
+      ...prev,
+      parents: (prev.parents || []).map((p) =>
+        p.id === id ? { ...p, ...updatedFields } : p
+      ),
+    }));
+    addToast('Parent record updated.');
+    return { success: true };
   };
 
   // Module 5: Account Management (Admin Creates Parent & Coach Accounts)
@@ -1352,6 +1437,13 @@ export function CrmProvider({ children }) {
     setSidebarOpen(false);
   };
 
+  const navigateToPersonRecord = (type, id) => {
+    setCurrentView('people');
+    setActiveSubTab(type === 'parent' ? 'parents' : 'students');
+    setFocusedRecord({ type, id });
+    setSidebarOpen(false);
+  };
+
   return (
     <CrmContext.Provider
       value={{
@@ -1369,6 +1461,9 @@ export function CrmProvider({ children }) {
         setGlobalSearch,
         sidebarOpen,
         setSidebarOpen,
+        focusedRecord,
+        setFocusedRecord,
+        navigateToPersonRecord,
         isLoggedIn,
         login: (portalRole) => {
           if (portalRole) setCurrentPortal(portalRole);
@@ -1384,10 +1479,13 @@ export function CrmProvider({ children }) {
         // Actions
         addStudent,
         addParent,
+        updateParent,
         updateStudent,
         deleteStudent,
         addEnquiry,
+        updateEnquiry,
         updateEnquiryStage,
+        enrollFromEnquiry,
         addPayment,
         markAttendance,
         applyLeave,

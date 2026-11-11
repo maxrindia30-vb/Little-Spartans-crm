@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   Search,
@@ -9,19 +9,34 @@ import {
   CheckCircle2,
   Plus,
   Key,
-  ShieldCheck
+  ShieldCheck,
+  Edit3
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
 
 export default function ParentManagement() {
-  const { data, addParent, addToast } = useCrm();
+  const { data, addParent, updateParent, addToast, focusedRecord, setFocusedRecord } = useCrm();
   const commonLocations = getCommonLocations(data);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingParent, setEditingParent] = useState(null);
+  const [highlightedParentId, setHighlightedParentId] = useState(null);
+
+  useEffect(() => {
+    if (focusedRecord?.type === 'parent' && focusedRecord.id) {
+      const target = (data.parents || []).find((p) => p.id === focusedRecord.id);
+      if (target) {
+        setHighlightedParentId(target.id);
+        setSelectedLocation('All');
+        setSearchTerm(target.id);
+      }
+      setFocusedRecord(null);
+    }
+  }, [focusedRecord, data.parents, setFocusedRecord]);
 
   // Add Parent Modal form states
   const [parentName, setParentName] = useState('');
@@ -35,6 +50,7 @@ export default function ParentManagement() {
 
   const filteredParents = (data.parents || []).filter(p => {
     const matchesSearch =
+      p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.phone || '').includes(searchTerm) ||
       (p.email || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -198,7 +214,12 @@ export default function ParentManagement() {
             );
 
             return (
-              <div key={parent.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
+              <div
+                key={parent.id}
+                className={`bg-white rounded-2xl p-5 border shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow ${
+                  highlightedParentId === parent.id ? 'border-[#F4510B] ring-2 ring-[#F4510B]/30' : 'border-[#172B501A]'
+                }`}
+              >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -207,13 +228,23 @@ export default function ParentManagement() {
                       </span>
                       <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{parent.name}</h3>
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${
-                      parent.pendingDue === '₹0'
-                        ? 'bg-[#172B50] text-white'
-                        : 'bg-[#F4510B] text-white'
-                    }`}>
-                      {parent.pendingDue === '₹0' ? 'No Dues' : `Due ${parent.pendingDue}`}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setEditingParent({ ...parent })}
+                        title="Edit Parent Record"
+                        className="p-1.5 rounded-lg bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${
+                        parent.pendingDue === '₹0'
+                          ? 'bg-[#172B50] text-white'
+                          : 'bg-[#F4510B] text-white'
+                      }`}>
+                        {parent.pendingDue === '₹0' ? 'No Dues' : `Due ${parent.pendingDue}`}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Portal Access Pill */}
@@ -444,6 +475,106 @@ export default function ParentManagement() {
             </button>
           </div>
         </form>
+      </Modal>
+      {/* Edit Parent Modal */}
+      <Modal
+        isOpen={Boolean(editingParent)}
+        onClose={() => setEditingParent(null)}
+        title={editingParent ? `Edit Parent: ${editingParent.id}` : 'Edit Parent'}
+        subtitle="Update guardian contact info or academy location"
+      >
+        {editingParent && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateParent(editingParent.id, {
+                name: editingParent.name,
+                phone: editingParent.phone,
+                email: editingParent.email,
+                center: editingParent.center,
+                address: editingParent.address,
+              });
+              setEditingParent(null);
+            }}
+            className="space-y-3.5"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingParent.name || ''}
+                  onChange={(e) => setEditingParent({ ...editingParent, name: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Academy Location *</label>
+                <select
+                  value={editingParent.center || ''}
+                  onChange={(e) => setEditingParent({ ...editingParent, center: e.target.value })}
+                  className="w-full px-3 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                >
+                  {commonLocations.map((loc) => (
+                    <option key={loc.id} value={loc.name}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Phone *</label>
+                <input
+                  type="tel"
+                  required
+                  value={editingParent.phone || ''}
+                  onChange={(e) => setEditingParent({ ...editingParent, phone: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={editingParent.email || ''}
+                  onChange={(e) => setEditingParent({ ...editingParent, email: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Address</label>
+              <input
+                type="text"
+                value={editingParent.address || ''}
+                onChange={(e) => setEditingParent({ ...editingParent, address: e.target.value })}
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
+              />
+            </div>
+
+            <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingParent(null)}
+                className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl cursor-pointer"
+              >
+                Save Parent
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   );
