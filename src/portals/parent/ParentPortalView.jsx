@@ -22,7 +22,8 @@ import {
   RefreshCw,
   Sparkles,
   ShieldCheck,
-  Check
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import KpiCard from '../../components/common/KpiCard';
@@ -141,10 +142,82 @@ export default function ParentPortalView() {
     setCompReason('');
   };
 
-  // Filter parent's compensation requests
+  // Filter parent's compensation requests, payments & attendance
+  const myChildNames = new Set(myChildren.map(c => c.name));
+  const myChildIds = new Set(myChildren.map(c => c.id));
   const parentCompRequests = (data.compensationRequests || []).filter(
-    c => c.parentName?.includes('Rohan') || c.studentName?.includes('Aarav') || c.studentName?.includes('Sanya')
+    c =>
+      (parentProfile.name && c.parentName === parentProfile.name) ||
+      myChildNames.has(c.studentName) ||
+      myChildIds.has(c.studentId)
   );
+  const myPayments = (data.payments || []).filter(
+    p => myChildIds.has(p.studentId) || myChildNames.has(p.studentName) || (parentProfile.name && p.parentName === parentProfile.name)
+  );
+  const myAttendanceCount = (data.attendanceRecords || []).filter(
+    r => myChildIds.has(r.studentId)
+  ).length;
+  const mySchedulesCount = (data.classSchedules || []).filter(
+    s =>
+      s.status !== 'Cancelled' &&
+      myChildren.some(
+        c =>
+          c.center === s.location &&
+          (c.program === s.program || (c.enrolledClasses || []).includes(s.batch) || c.batchName === s.batch)
+      )
+  ).length;
+
+  const parentDashboardModules = [
+    {
+      id: 'children',
+      label: 'My Children',
+      desc: 'Profiles, academy centres, assigned coaches & ranks',
+      stat: `${myChildren.length} Registered`,
+      icon: GraduationCap,
+    },
+    {
+      id: 'classes',
+      label: 'Classes & Schedule',
+      desc: 'Weekly timetables, timings & batch allocations',
+      stat: `${mySchedulesCount} Sessions`,
+      icon: Calendar,
+    },
+    {
+      id: 'attendance_compensation',
+      label: 'Attendance & Compensation',
+      desc: 'Daily attendance logs & makeup class requests',
+      stat: `${myAttendanceCount} Logs • ${parentCompRequests.length} Requests`,
+      icon: ClipboardCheck,
+    },
+    {
+      id: 'fees_payments',
+      label: 'Fees & Payments',
+      desc: 'Tuition status, fee receipts & instant payment',
+      stat: `${myPayments.length} Invoices`,
+      icon: CreditCard,
+    },
+    {
+      id: 'progress',
+      label: 'Progress & Achievements',
+      desc: 'Badges earned, coach ratings & performance milestones',
+      stat: `${myChildren.reduce((sum, c) => sum + (c.badges?.length || 0), 0)} Badges`,
+      icon: Award,
+    },
+    {
+      id: 'competitions',
+      label: 'Sports & Events',
+      desc: 'Upcoming academy tournaments & event registrations',
+      stat: `${(data.competitions || []).length} Events`,
+      icon: Trophy,
+    },
+    {
+      id: 'communication',
+      label: 'Communication',
+      desc: 'Academy announcements, notices & coach feedback',
+      stat: `${(data.announcements || []).length} Notices`,
+      icon: MessageSquare,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -204,7 +277,9 @@ export default function ParentPortalView() {
                   </span>
                 </div>
                 <h4 className="text-sm sm:text-base font-extrabold text-white mt-0.5">
-                  Aarav & Ananya have maintained 100% punctuality this month!
+                  {myChildren.length > 0
+                    ? `${myChildren.map(c => c.name).join(' & ')} ${myChildren.length === 1 ? 'has' : 'have'} active training access under ${parentProfile.center || 'Little Spartans'}!`
+                    : 'View children profiles, classes, attendance, fees & achievements in one place.'}
                 </h4>
               </div>
             </div>
@@ -214,6 +289,52 @@ export default function ParentPortalView() {
             >
               View Badges & Awards &rarr;
             </button>
+          </div>
+
+          {/* All Parent Navbar Modules Inside Dashboard */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#172B50]">
+                Parent Portal Modules
+              </h2>
+              <span className="text-xs font-semibold text-[#172B50] opacity-65">
+                Quick access to every section
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {parentDashboardModules.map((mod) => {
+                const Icon = mod.icon;
+                return (
+                  <button
+                    key={mod.id}
+                    type="button"
+                    onClick={() => setCurrentView(mod.id)}
+                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] hover:shadow-dropdown transition-all group flex flex-col justify-between cursor-pointer"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#FFF4E8] border border-[#F4510B25] flex items-center justify-center text-[#F4510B] group-hover:bg-[#F4510B] group-hover:text-white transition-colors">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5012]">
+                          {mod.stat}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                        {mod.label}
+                      </h3>
+                      <p className="text-[11px] text-[#172B50] opacity-70 mt-1 line-clamp-2">
+                        {mod.desc}
+                      </p>
+                    </div>
+                    <div className="mt-3 pt-2.5 border-t border-[#172B5010] flex items-center justify-between text-[11px] font-extrabold text-[#F4510B]">
+                      <span>Open {mod.label}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Children Summary Cards */}

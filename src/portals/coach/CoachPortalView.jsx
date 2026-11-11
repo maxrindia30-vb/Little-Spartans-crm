@@ -31,7 +31,8 @@ import {
   Save,
   Info,
   Users,
-  X
+  X,
+  ArrowRight
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -259,6 +260,58 @@ export default function CoachPortalView() {
   // Upcoming live schedule
   const nextScheduledClass = mySchedules.find(s => s.status === 'Scheduled' || s.status === 'Updated') || mySchedules[0];
 
+  const coachDashboardModules = [
+    {
+      id: 'classes',
+      label: 'My Classes',
+      desc: 'Published timetables, batches & session status',
+      stat: `${mySchedules.length} Schedules`,
+      icon: Calendar,
+    },
+    {
+      id: 'students',
+      label: 'My Students',
+      desc: 'Athletes assigned across your active batches',
+      stat: `${myStudents.length} Athletes`,
+      icon: GraduationCap,
+    },
+    {
+      id: 'attendance',
+      label: 'Attendance',
+      desc: 'Location-scoped Present / Absent daily register',
+      stat: `${coachAssignedBatches.length} Batches`,
+      icon: ClipboardCheck,
+    },
+    {
+      id: 'evaluations',
+      label: 'Student Performance',
+      desc: 'Skill scoring, agility tracking & parent reports',
+      stat: `${myStudents.length} Profiles`,
+      icon: Award,
+    },
+    {
+      id: 'compensation',
+      label: 'Compensation Classes',
+      desc: 'Substitute sessions & makeup class slots',
+      stat: `${coachComps.length} Slots`,
+      icon: RefreshCw,
+    },
+    {
+      id: 'competitions',
+      label: 'Sports & Events',
+      desc: 'Academy tournaments, trials & sports meets',
+      stat: `${(data.competitions || []).length} Events`,
+      icon: Trophy,
+    },
+    {
+      id: 'workspace',
+      label: 'My Workspace',
+      desc: 'Coach profile, leave requests & faculty tools',
+      stat: `${coachProfile.center || 'Active'}`,
+      icon: UserCheck,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       
@@ -369,6 +422,52 @@ export default function CoachPortalView() {
               </span>
               <h3 className="text-3xl font-extrabold text-[#172B50]">4.9 / 5.0</h3>
               <p className="text-xs font-bold text-emerald-600 mt-1">Top rated coach</p>
+            </div>
+          </div>
+
+          {/* All Coach Navbar Modules Inside Dashboard */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#172B50]">
+                Coach Portal Modules
+              </h2>
+              <span className="text-xs font-semibold text-[#172B50] opacity-65">
+                Quick access to every section
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {coachDashboardModules.map((mod) => {
+                const Icon = mod.icon;
+                return (
+                  <button
+                    key={mod.id}
+                    type="button"
+                    onClick={() => setCurrentView(mod.id)}
+                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] hover:shadow-dropdown transition-all group flex flex-col justify-between cursor-pointer"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#FFF4E8] border border-[#F4510B25] flex items-center justify-center text-[#F4510B] group-hover:bg-[#F4510B] group-hover:text-white transition-colors">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5012]">
+                          {mod.stat}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                        {mod.label}
+                      </h3>
+                      <p className="text-[11px] text-[#172B50] opacity-70 mt-1 line-clamp-2">
+                        {mod.desc}
+                      </p>
+                    </div>
+                    <div className="mt-3 pt-2.5 border-t border-[#172B5010] flex items-center justify-between text-[11px] font-extrabold text-[#F4510B]">
+                      <span>Open {mod.label}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
