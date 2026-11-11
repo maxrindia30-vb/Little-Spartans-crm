@@ -11,15 +11,19 @@ import {
   Clock, 
   Trophy,
   Heart,
-  Phone
+  Phone,
+  MapPin
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import { getCommonLocations } from '../../services/locationService';
 
 export default function StudentManagement() {
   const { data, addStudent, deleteStudent } = useCrm();
+  const commonLocations = getCommonLocations(data);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedProgram, setSelectedProgram] = useState('All');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [viewStudent, setViewStudent] = useState(null);
@@ -29,7 +33,7 @@ export default function StudentManagement() {
   const [age, setAge] = useState('7');
   const [gender, setGender] = useState('Male');
   const [program, setProgram] = useState(data.programs[0]?.name || '');
-  const [center, setCenter] = useState(data.academy.centers[0] || 'KK NAGAR');
+  const [center, setCenter] = useState(commonLocations[0]?.name || 'KK NAGAR');
   const [parentName, setParentName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [parentEmail, setParentEmail] = useState('');
@@ -40,9 +44,19 @@ export default function StudentManagement() {
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLocation = selectedLocation === 'All' || s.center === selectedLocation;
     const matchesProgram = selectedProgram === 'All' || s.program === selectedProgram;
-    return matchesSearch && matchesProgram;
+    return matchesSearch && matchesLocation && matchesProgram;
   });
+
+  const handleOpenAddModal = () => {
+    if (selectedLocation !== 'All') {
+      setCenter(selectedLocation);
+    } else {
+      setCenter(commonLocations[0]?.name || 'KK NAGAR');
+    }
+    setIsAddOpen(true);
+  };
 
   const handleAddStudent = (e) => {
     e.preventDefault();
@@ -60,13 +74,14 @@ export default function StudentManagement() {
       medicalNote: medicalNote || 'No special medical conditions reported.',
       rank: 'Junior Warrior',
       feeStatus: 'Paid',
-      coachName: 'Coach Vikram Singh'
+      coachName: data.coaches[0]?.name || 'Unassigned Coach'
     });
 
     setIsAddOpen(false);
     setName('');
     setParentName('');
     setParentPhone('');
+    setParentEmail('');
     setMedicalNote('');
   };
 
@@ -85,7 +100,7 @@ export default function StudentManagement() {
         </div>
 
         <button
-          onClick={() => setIsAddOpen(true)}
+          onClick={handleOpenAddModal}
           className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-white" />
@@ -94,8 +109,8 @@ export default function StudentManagement() {
       </div>
 
       {/* Filter and Search Bar: Pure White (#FFFFFF) */}
-      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="relative w-full md:w-80">
+      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        <div className="relative w-full lg:w-80">
           <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
           <input
             type="text"
@@ -106,18 +121,40 @@ export default function StudentManagement() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <label className="text-xs font-bold text-[#172B50] whitespace-nowrap">Program:</label>
-          <select
-            value={selectedProgram}
-            onChange={(e) => setSelectedProgram(e.target.value)}
-            className="px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none"
-          >
-            <option value="All">All Sports Programs</option>
-            {data.programs.map(p => (
-              <option key={p.id} value={p.name}>{p.name}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-bold text-[#172B50] whitespace-nowrap inline-flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+              <span>Location:</span>
+            </label>
+            <select
+              aria-label="Filter students by location"
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none cursor-pointer focus:ring-2 focus:ring-[#F4510B]"
+            >
+              <option value="All">All Locations ({data.students.length})</option>
+              {commonLocations.map(loc => (
+                <option key={loc.id} value={loc.name}>
+                  {loc.name} ({data.students.filter(s => s.center === loc.name).length})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-bold text-[#172B50] whitespace-nowrap">Program:</label>
+            <select
+              value={selectedProgram}
+              onChange={(e) => setSelectedProgram(e.target.value)}
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none cursor-pointer focus:ring-2 focus:ring-[#F4510B]"
+            >
+              <option value="All">All Sports Programs</option>
+              {data.programs.map(p => (
+                <option key={p.id} value={p.name}>{p.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -389,8 +426,8 @@ export default function StudentManagement() {
                 onChange={(e) => setCenter(e.target.value)}
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
-                {data.academy.centers.map(c => (
-                  <option key={c} value={c}>{c}</option>
+                {commonLocations.map(loc => (
+                  <option key={loc.id} value={loc.name}>{loc.name}</option>
                 ))}
               </select>
             </div>
