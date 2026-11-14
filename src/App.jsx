@@ -21,7 +21,9 @@ import ReportsSettingsModule from './portals/admin/ReportsSettingsModule';
 // Other Portals
 import ParentPortalView from './portals/parent/ParentPortalView';
 import CoachPortalView from './portals/coach/CoachPortalView';
+import SuperCoachPortalView from './portals/supercoach/SuperCoachPortalView';
 import SupportPortalView from './portals/support/SupportPortalView';
+import EquipmentManagementModule from './portals/common/EquipmentManagementModule';
 
 export default function App() {
   const { currentPortal, currentView, setCurrentPortal, isLoggedIn, sidebarOpen, setSidebarOpen } = useCrm();
@@ -102,6 +104,10 @@ export default function App() {
       case 'permissions':
         return <ReportsSettingsModule />;
 
+      // 10. Sports Equipment Management (Academy-Wide Inventory & Sanctions)
+      case 'equipment':
+        return <EquipmentManagementModule role="admin" />;
+
       default:
         return <AdminDashboard />;
     }
@@ -155,6 +161,7 @@ export default function App() {
             
             {/* Active Portal Content */}
             {currentPortal === 'admin' && renderAdminView()}
+            {currentPortal === 'super_coach' && <SuperCoachPortalView />}
             {currentPortal === 'parent' && <ParentPortalView />}
             {currentPortal === 'coach' && <CoachPortalView />}
             {currentPortal === 'support' && <SupportPortalView />}

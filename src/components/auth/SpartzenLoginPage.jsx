@@ -41,6 +41,8 @@ export default function SpartzenLoginPage() {
 
     if (input.includes('parent') || input.includes('rohan')) {
       targetRole = 'parent';
+    } else if (input.includes('super') || input.includes('kabir')) {
+      targetRole = 'super_coach';
     } else if (input.includes('coach') || input.includes('vikram')) {
       targetRole = 'coach';
     } else if (input.includes('support') || input.includes('priya')) {
@@ -51,7 +53,7 @@ export default function SpartzenLoginPage() {
 
     setCurrentPortal(targetRole);
     login(targetRole);
-    addToast(`Welcome to ZenConnect! Signed in to ${targetRole.toUpperCase()} Portal.`);
+    addToast(`Welcome to ZenConnect! Signed in to ${targetRole === 'super_coach' ? 'SUPER COACH' : targetRole.toUpperCase()} Portal.`);
   };
 
   const handleForgotSubmit = (e) => {
@@ -243,6 +245,68 @@ export default function SpartzenLoginPage() {
                   <span>Sign In</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
+
+                {/* Quick 1-Click Portal Switcher */}
+                <div className="pt-2">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-[#8A99AD] uppercase tracking-wider mb-1.5">
+                    <span>Quick Portal Demo Access</span>
+                    <span>4 Portals</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailOrPhone('director@littlespartans.co.in');
+                        setPassword('admin123');
+                        setCurrentPortal('admin');
+                        login('admin');
+                        addToast('Signed in as Director / Super Admin');
+                      }}
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#172B5010] text-[#172B50] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
+                    >
+                      Admin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailOrPhone('supercoach@littlespartans.co.in');
+                        setPassword('super123');
+                        setCurrentPortal('super_coach');
+                        login('super_coach');
+                        addToast('Signed in as Senior Coach Kabir (Super Coach)');
+                      }}
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#F4510B15] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
+                    >
+                      Super Coach
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailOrPhone('vikram@littlespartans.co.in');
+                        setPassword('coach123');
+                        setCurrentPortal('coach');
+                        login('coach');
+                        addToast('Signed in as Coach Vikram Singh');
+                      }}
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#172B5010] text-[#172B50] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
+                    >
+                      Coach
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailOrPhone('rohan.sharma@gmail.com');
+                        setPassword('parent123');
+                        setCurrentPortal('parent');
+                        login('parent');
+                        addToast('Signed in as Dr. Rohan Sharma (Parent)');
+                      }}
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#172B5010] text-[#172B50] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
+                    >
+                      Parent
+                    </button>
+                  </div>
+                </div>
 
               </form>
 

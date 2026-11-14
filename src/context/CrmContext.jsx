@@ -22,6 +22,11 @@ import {
   DEMO_STATUSES,
   ENQUIRY_SOURCES,
 } from '../services/demoService';
+import {
+  initialEquipmentInventory,
+  initialEquipmentReports,
+  REPORT_STATUSES,
+} from '../services/equipmentService';
 
 const CrmContext = createContext();
 
@@ -78,19 +83,26 @@ export function CrmProvider({ children }) {
           classSchedules: Array.isArray(parsed.classSchedules) ? parsed.classSchedules : initialAcademyData.classSchedules,
           attendanceRecords: Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
           notifications: Array.isArray(parsed.notifications) ? parsed.notifications : (initialAcademyData.notifications || []),
+          superCoaches: Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : initialAcademyData.superCoaches,
+          equipment: Array.isArray(parsed.equipment) && parsed.equipment.length > 0 ? parsed.equipment : initialEquipmentInventory,
+          equipmentReports: Array.isArray(parsed.equipmentReports) && parsed.equipmentReports.length > 0 ? parsed.equipmentReports : initialEquipmentReports,
         };
       }
     } catch (e) {
       console.error('Error loading stored CRM data', e);
     }
-    return initialAcademyData;
+    return {
+      ...initialAcademyData,
+      equipment: initialEquipmentInventory,
+      equipmentReports: initialEquipmentReports,
+    };
   });
 
-  // Current active portal: 'admin' | 'parent' | 'coach' | 'support'
+  // Current active portal: 'admin' | 'parent' | 'coach' | 'super_coach' | 'support'
   const [currentPortal, setCurrentPortal] = useState(() => {
     try {
       const savedPortal = localStorage.getItem(CURRENT_ROLE_KEY);
-      if (savedPortal && ['admin', 'parent', 'coach', 'support'].includes(savedPortal)) {
+      if (savedPortal && ['admin', 'parent', 'coach', 'super_coach', 'support'].includes(savedPortal)) {
         return savedPortal;
       }
     } catch (e) {}
@@ -181,6 +193,15 @@ export function CrmProvider({ children }) {
       email: data.coaches[0]?.email || "coach@littlespartans.co.in",
       avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
       badge: "Academy Coach"
+    },
+    super_coach: {
+      name: (data.superCoaches && data.superCoaches[0]?.name) || "Senior Coach Kabir Rao",
+      role: (data.superCoaches && data.superCoaches[0]?.title) || "Senior Super Coach & Operations Lead",
+      portalTitle: "Super Coach Portal",
+      email: (data.superCoaches && data.superCoaches[0]?.email) || "supercoach@littlespartans.co.in",
+      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80",
+      badge: "Super Coach",
+      assignedLocations: (data.superCoaches && data.superCoaches[0]?.assignedLocations) || ["KK NAGAR", "KILPAUK", "MAHALINGAPURAM"]
     },
     support: {
       name: "Priya Menon",
@@ -2043,6 +2064,308 @@ export function CrmProvider({ children }) {
     return { success: true };
   };
 
+  // Equipment Management Actions
+  const addEquipmentItem = (itemPayload) => {
+    const newItem = {
+      ...itemPayload,
+      id: itemPayload.id || `EQ-${itemPayload.location?.slice(0, 3).toUpperCase() || 'GEN'}-${Date.now().toString().slice(-4)}`,
+      totalQty: Number(itemPayload.totalQty) || 0,
+      availableQty: Number(itemPayload.availableQty) || Number(itemPayload.totalQty) || 0,
+      damagedQty: Number(itemPayload.damagedQty) || 0,
+      missingQty: Number(itemPayload.missingQty) || 0,
+      condition: itemPayload.condition || 'Good',
+      purchaseDate: itemPayload.purchaseDate || new Date().toISOString().split('T')[0],
+      lastInspectionDate: itemPayload.lastInspectionDate || new Date().toISOString().split('T')[0],
+      lastUpdatedBy: itemPayload.lastUpdatedBy || 'Administrator',
+      remarks: itemPayload.remarks || '',
+      history: [
+        {
+          id: `EQH-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          action: 'Item Registered',
+          user: itemPayload.lastUpdatedBy || 'Administrator',
+          role: currentPortal === 'super_coach' ? 'Super Coach' : 'Admin',
+          details: `Initial stock registered: ${itemPayload.totalQty} units.`
+        }
+      ]
+    };
+
+    setData(prev => ({
+      ...prev,
+      equipment: [newItem, ...(prev.equipment || [])]
+    }));
+
+    addToast(`Equipment "${newItem.name}" added to ${newItem.location} inventory.`, 'success');
+    return { success: true, item: newItem };
+  };
+
+  const updateEquipmentItem = (id, updates, auditNote = '') => {
+    const existing = (data.equipment || []).find(e => e.id === id);
+    if (!existing) {
+      addToast('Equipment item not found.', 'error');
+      return { success: false };
+    }
+
+    const updatedItem = {
+      ...existing,
+      ...updates,
+      totalQty: updates.totalQty !== undefined ? Number(updates.totalQty) : existing.totalQty,
+      availableQty: updates.availableQty !== undefined ? Number(updates.availableQty) : existing.availableQty,
+      damagedQty: updates.damagedQty !== undefined ? Number(updates.damagedQty) : existing.damagedQty,
+      missingQty: updates.missingQty !== undefined ? Number(updates.missingQty) : existing.missingQty,
+      lastUpdatedBy: updates.lastUpdatedBy || currentUserProfiles[currentPortal]?.name || 'Admin',
+      lastInspectionDate: updates.lastInspectionDate || new Date().toISOString().split('T')[0],
+      history: [
+        {
+          id: `EQH-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          action: updates.action || 'Inventory Updated',
+          user: updates.lastUpdatedBy || currentUserProfiles[currentPortal]?.name || 'Admin',
+          role: currentPortal === 'super_coach' ? 'Super Coach' : currentPortal === 'coach' ? 'Coach' : 'Admin',
+          details: auditNote || `Condition: ${updates.condition || existing.condition}; Available: ${updates.availableQty ?? existing.availableQty}`
+        },
+        ...(existing.history || [])
+      ]
+    };
+
+    setData(prev => ({
+      ...prev,
+      equipment: (prev.equipment || []).map(e => e.id === id ? updatedItem : e)
+    }));
+
+    addToast(`Equipment "${updatedItem.name}" updated successfully.`, 'success');
+    return { success: true, item: updatedItem };
+  };
+
+  const deleteEquipmentItem = (id) => {
+    const existing = (data.equipment || []).find(e => e.id === id);
+    setData(prev => ({
+      ...prev,
+      equipment: (prev.equipment || []).filter(e => e.id !== id)
+    }));
+    addToast(`Equipment record "${existing?.name || id}" removed.`, 'info');
+    return { success: true };
+  };
+
+  const submitEquipmentReport = (reportPayload) => {
+    const newReport = {
+      ...reportPayload,
+      id: `EQREP-${Date.now().toString().slice(-4)}`,
+      status: REPORT_STATUSES.PENDING_REVIEW,
+      submittedBy: reportPayload.submittedBy || currentUserProfiles[currentPortal]?.name || 'Coach',
+      submittedRole: 'coach',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setData(prev => ({
+      ...prev,
+      equipmentReports: [newReport, ...(prev.equipmentReports || [])]
+    }));
+
+    addToast(`Equipment report submitted for "${newReport.equipmentName}". Super Coach notified for verification.`, 'success');
+    return { success: true, report: newReport };
+  };
+
+  const verifyEquipmentReport = (reportId, verificationData = {}) => {
+    const report = (data.equipmentReports || []).find(r => r.id === reportId);
+    if (!report) return { success: false, message: 'Report not found' };
+
+    const reviewerName = verificationData.reviewer || currentUserProfiles.super_coach?.name || 'Senior Coach Kabir Rao';
+    const notes = verificationData.notes || 'Verified on site by Super Coach';
+    const status = verificationData.status || REPORT_STATUSES.VERIFIED_BY_SUPER_COACH;
+
+    const updatedReport = {
+      ...report,
+      status,
+      superCoachReview: {
+        reviewer: reviewerName,
+        role: 'Super Coach',
+        timestamp: new Date().toISOString(),
+        notes,
+        action: verificationData.action || 'Verified'
+      },
+      updatedAt: new Date().toISOString()
+    };
+
+    let updatedEquipment = [...(data.equipment || [])];
+    if (verificationData.updateInventory && report.equipmentId) {
+      updatedEquipment = updatedEquipment.map(item => {
+        if (item.id === report.equipmentId) {
+          const damagedCount = Number(report.damagedCount) || 0;
+          const missingCount = Number(report.missingCount) || 0;
+          const newDamaged = Math.max(item.damagedQty || 0, damagedCount);
+          const newMissing = Math.max(item.missingQty || 0, missingCount);
+          const newAvailable = Math.max(0, item.totalQty - newDamaged - newMissing);
+
+          return {
+            ...item,
+            condition: report.reportedCondition || item.condition,
+            damagedQty: newDamaged,
+            missingQty: newMissing,
+            availableQty: newAvailable,
+            lastInspectionDate: new Date().toISOString().split('T')[0],
+            lastUpdatedBy: reviewerName,
+            history: [
+              {
+                id: `EQH-${Date.now()}`,
+                timestamp: new Date().toISOString(),
+                action: 'Verified by Super Coach',
+                user: reviewerName,
+                role: 'Super Coach',
+                details: `Super Coach verified report ${reportId}: ${notes}`
+              },
+              ...(item.history || [])
+            ]
+          };
+        }
+        return item;
+      });
+    }
+
+    setData(prev => ({
+      ...prev,
+      equipment: updatedEquipment,
+      equipmentReports: (prev.equipmentReports || []).map(r => r.id === reportId ? updatedReport : r)
+    }));
+
+    addToast(`Equipment Report ${reportId} verified by Super Coach!`, 'success');
+    return { success: true, report: updatedReport };
+  };
+
+  const adminApproveEquipmentReport = (reportId, approvalData = {}) => {
+    const report = (data.equipmentReports || []).find(r => r.id === reportId);
+    if (!report) return { success: false, message: 'Report not found' };
+
+    const reviewerName = approvalData.reviewer || currentUserProfiles.admin?.name || 'Commander Vikramaditya';
+    const notes = approvalData.notes || 'Admin approved maintenance/replacement.';
+    const status = approvalData.status || REPORT_STATUSES.APPROVED_BY_ADMIN;
+
+    const updatedReport = {
+      ...report,
+      status,
+      adminApproval: {
+        reviewer: reviewerName,
+        role: 'Admin',
+        timestamp: new Date().toISOString(),
+        notes,
+        action: approvalData.action || 'Approved'
+      },
+      updatedAt: new Date().toISOString()
+    };
+
+    setData(prev => ({
+      ...prev,
+      equipmentReports: (prev.equipmentReports || []).map(r => r.id === reportId ? updatedReport : r)
+    }));
+
+    addToast(`Equipment Report ${reportId} sanctioned by Admin (${approvalData.action || 'Approved'}).`, 'success');
+    return { success: true, report: updatedReport };
+  };
+
+  const updateSuperCoachLocations = (superCoachId, assignedLocations) => {
+    setData(prev => ({
+      ...prev,
+      superCoaches: (prev.superCoaches || []).map(sc => 
+        sc.id === superCoachId ? { ...sc, assignedLocations } : sc
+      )
+    }));
+    addToast('Super Coach assigned locations updated successfully.', 'success');
+    return { success: true };
+  };
+
+  const reassignScheduleCoach = (scheduleId, newCoachId, newCoachName, reassignedBy = 'Super Coach', note = '') => {
+    const existing = (data.classSchedules || []).find(s => s.id === scheduleId);
+    if (!existing) {
+      addToast('Class schedule not found.', 'error');
+      return { success: false };
+    }
+
+    const candidate = {
+      ...existing,
+      coachId: newCoachId,
+      coachName: newCoachName
+    };
+
+    const conflict = checkScheduleConflict(candidate, data.classSchedules || [], scheduleId);
+    if (conflict.hasConflict) {
+      addToast(conflict.message, 'error');
+      return { success: false, message: conflict.message };
+    }
+
+    const coachNotif = createNotificationRecord({
+      targetRole: 'coach',
+      targetCoachId: newCoachId,
+      targetLocation: existing.location,
+      title: 'Class Reassigned to You',
+      message: `You have been reassigned to ${existing.className || existing.batch} at ${existing.location} on ${existing.date} (${existing.startTime} - ${existing.endTime}) by ${reassignedBy}.`,
+      type: 'info'
+    });
+
+    setData(prev => ({
+      ...prev,
+      classSchedules: (prev.classSchedules || []).map(s => 
+        s.id === scheduleId
+          ? {
+              ...s,
+              coachId: newCoachId,
+              coachName: newCoachName,
+              reassignedBy,
+              reassignNote: note,
+              updatedAt: new Date().toISOString()
+            }
+          : s
+      ),
+      notifications: [coachNotif, ...(prev.notifications || [])].slice(0, 80)
+    }));
+
+    addToast(`Coach reassigned to ${newCoachName} for "${existing.className || existing.batch}". Synced to Coach & Admin portals.`, 'success');
+    return { success: true };
+  };
+
+  const reportCoachIssue = ({ coachId, coachName, location, issueType, priority = 'Medium', description, reportedBy = 'Super Coach' }) => {
+    const newTicket = {
+      id: `CISSUE-${Date.now().toString().slice(-4)}`,
+      category: 'Coach Operations',
+      subject: `[${priority}] Coach Issue: ${coachName} (${location}) - ${issueType}`,
+      location,
+      coachId,
+      coachName,
+      issueType,
+      priority,
+      description,
+      reportedBy,
+      status: 'Open',
+      createdAt: new Date().toISOString(),
+      messages: [
+        {
+          id: `MSG-${Date.now()}`,
+          sender: reportedBy,
+          role: 'Super Coach',
+          text: description,
+          timestamp: new Date().toISOString()
+        }
+      ]
+    };
+
+    const adminNotif = createNotificationRecord({
+      targetRole: 'admin',
+      targetLocation: location,
+      title: `Coach Issue Reported: ${coachName}`,
+      message: `[${priority}] ${issueType} reported at ${location} by ${reportedBy}.`,
+      type: 'warning'
+    });
+
+    setData(prev => ({
+      ...prev,
+      supportTickets: [newTicket, ...(prev.supportTickets || [])],
+      notifications: [adminNotif, ...(prev.notifications || [])].slice(0, 80)
+    }));
+
+    addToast(`Issue regarding Coach ${coachName} reported to Admin Command Center.`, 'success');
+    return { success: true, ticket: newTicket };
+  };
+
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
     if (subTab) setActiveSubTab(subTab);
@@ -2145,7 +2468,17 @@ export function CrmProvider({ children }) {
         updateBatch,
         toggleBatchStatus,
         updateBatchEnrollment,
-        assignCoachesToBatch
+        assignCoachesToBatch,
+        // Super Coach & Sports Equipment Management Actions
+        addEquipmentItem,
+        updateEquipmentItem,
+        deleteEquipmentItem,
+        submitEquipmentReport,
+        verifyEquipmentReport,
+        adminApproveEquipmentReport,
+        updateSuperCoachLocations,
+        reassignScheduleCoach,
+        reportCoachIssue
       }}
     >
       {children}

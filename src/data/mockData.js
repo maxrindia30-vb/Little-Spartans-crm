@@ -368,5 +368,27 @@ export const initialAcademyData = {
   attendanceRecords: [],
 
   // Cross-Portal Real-Time Alerts (Admin <-> Parent <-> Coach)
-  notifications: []
+  notifications: [],
+
+  // Super Coaches managing multi-location operations
+  superCoaches: [
+    {
+      id: "SCOACH-1",
+      name: "Senior Coach Kabir Rao",
+      title: "Senior Super Coach & Operations Lead",
+      email: "supercoach@littlespartans.co.in",
+      phone: "+91 98840 55443",
+      assignedLocations: ["KK NAGAR", "KILPAUK", "MAHALINGAPURAM"],
+      specialization: "Multi-Disciplinary Program Director & Coach Mentor",
+      experience: "9 Yrs",
+      certification: "AFC & National Gymnastics Certified Master Coach",
+      status: "Active"
+    }
+  ],
+
+  // Location-Isolated Sports Equipment Inventory
+  equipment: [],
+
+  // Coach-submitted Equipment Condition & Damage Reports
+  equipmentReports: []
 };

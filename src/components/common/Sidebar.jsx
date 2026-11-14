@@ -39,7 +39,10 @@ import {
   Download,
   Settings,
   HardDrive,
-  CalendarDays
+  CalendarDays,
+  Package,
+  MapPin,
+  Activity
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
@@ -106,6 +109,15 @@ const submenuConfig = {
       { parentId: 'attendance_compensation', subTab: 'student_comp', label: 'Student Compensation', desc: 'Book replacement slots for missed classes', icon: RefreshCw },
       { parentId: 'attendance_compensation', subTab: 'coach_comp', label: 'Coach Compensation', desc: 'Substitute coverage & payout logs', icon: Clock },
       { parentId: 'attendance_compensation', subTab: 'audit', label: 'Compensation History', desc: 'Audit log of past approvals & credits', icon: History },
+    ]
+  },
+
+  // Equipment Management (Multi-Location Inventory & Maintenance Reports)
+  equipment: {
+    title: 'Equipment Management',
+    items: [
+      { parentId: 'equipment', subTab: 'inventory', label: 'Location Inventory', desc: 'All gear, quantities, health & audit logs', icon: Package },
+      { parentId: 'equipment', subTab: 'reports', label: 'Condition Reports Queue', desc: 'Review coach reports & authorize maintenance', icon: AlertCircle },
     ]
   },
 
@@ -211,7 +223,7 @@ export default function Sidebar() {
   }, []);
 
   // =========================================================================
-  // 1. ADMIN NAVIGATION: STRICTLY 9 ITEMS (Master Development Prompt Section 3)
+  // 1. ADMIN NAVIGATION (Master Operations)
   // =========================================================================
   const adminNavItems = [
     { id: 'enquiries', label: 'Enquiries', icon: Users },
@@ -219,6 +231,7 @@ export default function Sidebar() {
     { id: 'people', label: 'People Management', icon: GraduationCap },
     { id: 'programs', label: 'Programs & Classes', icon: Calendar },
     { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: CalendarCheck },
+    { id: 'equipment', label: 'Equipment Management', icon: Package },
     { id: 'fees_payments', label: 'Fees & Payments', icon: CreditCard },
     { id: 'sports_events', label: 'Sports & Events', icon: Trophy },
     { id: 'communication', label: 'Communication', icon: MessageSquare },
@@ -226,12 +239,26 @@ export default function Sidebar() {
   ];
 
   // =========================================================================
-  // 2. COACH NAVIGATION: STRICTLY 8 ITEMS (Master Development Prompt Section 3)
+  // 2. SUPER COACH NAVIGATION: MULTI-LOCATION MANAGEMENT
+  // =========================================================================
+  const superCoachNavItems = [
+    { id: 'dashboard', label: 'Operations Dashboard', icon: Activity },
+    { id: 'locations', label: 'Multi-Location Hub', icon: MapPin },
+    { id: 'coaches', label: 'Coach Management', icon: UserCheck },
+    { id: 'equipment', label: 'Equipment Management', icon: Package },
+    { id: 'schedules', label: 'Class & Schedules', icon: Calendar },
+    { id: 'attendance', label: 'Attendance & Progress', icon: CalendarCheck },
+    { id: 'reports', label: 'Reports & Analytics', icon: BarChart2 },
+  ];
+
+  // =========================================================================
+  // 3. COACH NAVIGATION: LOCATION INSPECTION & CLASSES
   // =========================================================================
   const coachNavItems = [
     { id: 'classes', label: 'My Classes', icon: Calendar },
     { id: 'students', label: 'My Students', icon: GraduationCap },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'equipment', label: 'Equipment Inspection', icon: Package },
     { id: 'evaluations', label: 'Student Performance', icon: Award },
     { id: 'compensation', label: 'Compensation Classes', icon: RefreshCw },
     { id: 'competitions', label: 'Sports & Events', icon: Trophy },
@@ -239,7 +266,7 @@ export default function Sidebar() {
   ];
 
   // =========================================================================
-  // 3. PARENT NAVIGATION: STRICTLY 8 ITEMS (Master Development Prompt Section 3)
+  // 4. PARENT NAVIGATION
   // =========================================================================
   const parentNavItems = [
     { id: 'children', label: 'My Children', icon: GraduationCap },
@@ -258,7 +285,13 @@ export default function Sidebar() {
   let profileName = 'Little Spartans';
   let profileRole = 'Admin / Super Admin';
 
-  if (currentPortal === 'parent') {
+  if (currentPortal === 'super_coach') {
+    sectionTitle = 'SUPER COACH PORTAL';
+    navItems = superCoachNavItems;
+    profileInitials = 'KR';
+    profileName = 'Senior Coach Kabir Rao';
+    profileRole = 'Super Coach · Area Lead';
+  } else if (currentPortal === 'parent') {
     sectionTitle = 'PARENT PORTAL';
     navItems = parentNavItems;
     profileInitials = 'RS';

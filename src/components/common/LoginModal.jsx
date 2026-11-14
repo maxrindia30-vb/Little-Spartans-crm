@@ -12,6 +12,7 @@ export default function LoginModal({ isOpen, onClose }) {
 
   const roleCredentials = {
     admin: { email: 'director@littlespartans.co.in', title: 'Admin Command Login', roleDesc: 'Director / Operations Head' },
+    super_coach: { email: 'supercoach@littlespartans.co.in', title: 'Super Coach Portal Login', roleDesc: 'Multi-Location Lead' },
     parent: { email: 'rohan.sharma@gmail.com', title: 'Parent Portal Login', roleDesc: 'Parent / Guardian' },
     coach: { email: 'vikram@littlespartans.co.in', title: 'Coach Portal Login', roleDesc: 'Certified Academy Coach' },
     support: { email: 'support@littlespartans.co.in', title: 'Customer Support Login', roleDesc: 'Relations & Admissions Desk' },
@@ -42,11 +43,12 @@ export default function LoginModal({ isOpen, onClose }) {
         {/* Role Selector Tabs */}
         <div>
           <label className="text-xs font-bold text-[#172B50] block mb-1.5">Select Role Account</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {[
               { id: 'admin', label: 'Admin', icon: Shield },
-              { id: 'parent', label: 'Parent', icon: GraduationCap },
+              { id: 'super_coach', label: 'Super Coach', icon: Shield },
               { id: 'coach', label: 'Coach', icon: UserCheck2 },
+              { id: 'parent', label: 'Parent', icon: GraduationCap },
               { id: 'support', label: 'Support', icon: LifeBuoy },
             ].map(r => {
               const Icon = r.icon;

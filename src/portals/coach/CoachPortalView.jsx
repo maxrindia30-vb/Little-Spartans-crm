@@ -43,6 +43,7 @@ import {
 } from '../../services/attendanceService';
 import KpiCard from '../../components/common/KpiCard';
 import Modal from '../../components/common/Modal';
+import EquipmentManagementModule from '../common/EquipmentManagementModule';
 
 export default function CoachPortalView() {
   const { 
@@ -1382,7 +1383,15 @@ export default function CoachPortalView() {
         </div>
       )}
 
-      {/* 8. MY WORKSPACE (Module 7.8: Leave, Announcements, Profile) */}
+      {/* 8. EQUIPMENT INSPECTION & REPORTING */}
+      {currentView === 'equipment' && (
+        <EquipmentManagementModule
+          role="coach"
+          allowedLocations={coachProfile.center ? [coachProfile.center] : null}
+        />
+      )}
+
+      {/* 9. MY WORKSPACE (Module 7.8: Leave, Announcements, Profile) */}
       {(currentView === 'workspace' || currentView === 'leaves' || currentView === 'profile') && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
