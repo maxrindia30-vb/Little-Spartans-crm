@@ -41,7 +41,8 @@ import {
   filterStudentsForAttendance,
   getSavedAttendanceRecord,
 } from '../../services/attendanceService';
-import KpiCard from '../../components/common/KpiCard';
+import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
+import FloatingCard from '../../components/common/FloatingCard';
 import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 
@@ -366,8 +367,12 @@ export default function CoachPortalView() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider">
-                    Coach Workspace
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider flex items-center gap-1.5 shadow-xs">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span>COACH WORKSPACE • LIVE SYNC</span>
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/90 border border-white/15">
                     {coachProfile.certification || 'Certified Coach'} • {coachProfile.center}
@@ -503,11 +508,10 @@ export default function CoachPortalView() {
               {coachDashboardModules.map((mod) => {
                 const Icon = mod.icon;
                 return (
-                  <button
+                  <FloatingCard
                     key={mod.id}
-                    type="button"
                     onClick={() => setCurrentView(mod.id)}
-                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] hover:-translate-y-0.5 hover:shadow-dropdown transition-all group flex flex-col justify-between cursor-pointer"
+                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] group flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-3">
@@ -529,7 +533,7 @@ export default function CoachPortalView() {
                       <span>Open {mod.label}</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                     </div>
-                  </button>
+                  </FloatingCard>
                 );
               })}
             </div>

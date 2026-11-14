@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
+import FloatingCard from '../../components/common/FloatingCard';
+import AdmissionPipelineStepper from '../../components/common/AdmissionPipelineStepper';
 import { RevenueTrendChart, AttendanceDonutChart, ProgramDistributionChart } from '../../components/common/Charts';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
@@ -194,7 +196,6 @@ export default function AdminDashboard() {
         <KpiCard
           title="Total Enquiries"
           value={demoMetrics.totalEnquiries || 25}
-          subtitle={`${data.locations?.length || 5} Academy Branches`}
           icon={Users}
           color="orange"
           trend={12}
@@ -204,7 +205,6 @@ export default function AdminDashboard() {
         <KpiCard
           title="Demo Scheduled"
           value={String(demoMetrics.upcomingDemos || 8).padStart(2, '0')}
-          subtitle="Upcoming Trial Sessions"
           icon={Calendar}
           color="blue"
           trend={8}
@@ -214,7 +214,6 @@ export default function AdminDashboard() {
         <KpiCard
           title="Enrolled Students"
           value={totalStudents || 12}
-          subtitle="Active Enrolled Athletes"
           icon={GraduationCap}
           color="green"
           trend={20}
@@ -224,7 +223,6 @@ export default function AdminDashboard() {
         <KpiCard
           title="Conversion Rate"
           value={`${demoMetrics.conversionRate || 48}%`}
-          subtitle="Lead-to-Admission Funnel"
           icon={TrendingUp}
           color="purple"
           trend={10}
@@ -232,12 +230,15 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Row 2: Secondary Academy Financial & Staff Operations Strip */}
+      {/* Admission Pipeline Interactive Progression Stepper matching Image 2 */}
+      <AdmissionPipelineStepper />
+
+      {/* Row 2: Secondary Academy Financial & Staff Operations Strip with Floating Physics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         {/* Tuition Collected */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('fees_payments')}
-          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between"
         >
           <div className="flex items-center gap-4">
             <div className="w-13 h-13 rounded-2xl bg-[#FFF5ED] text-[#F59E0B] flex items-center justify-center shrink-0">
@@ -256,12 +257,12 @@ export default function AdminDashboard() {
           <div className="w-10 h-10 rounded-2xl bg-[#F0FDF4] text-emerald-600 flex items-center justify-center shrink-0">
             <CreditCard className="w-5 h-5 text-emerald-600" />
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Pending Dues */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('fees_payments')}
-          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between"
         >
           <div className="flex items-center gap-4">
             <div className="w-13 h-13 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
@@ -280,12 +281,12 @@ export default function AdminDashboard() {
           <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
             <AlertCircle className="w-5 h-5 text-rose-500" />
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Certified Faculty */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('people')}
-          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between"
         >
           <div className="flex items-center gap-4">
             <div className="w-13 h-13 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
@@ -304,7 +305,7 @@ export default function AdminDashboard() {
           <div className="w-10 h-10 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
             <User className="w-5 h-5 text-[#F4510B]" />
           </div>
-        </div>
+        </FloatingCard>
       </div>
 
       {/* Row 3: Two Big Analytics Panels (Donut + Funnel on left, Enquiries Trend on right) */}
@@ -603,12 +604,12 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Row 4: Five Source Breakdown Cards */}
+      {/* Row 4: Five Source Breakdown Cards with Floating Physics */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
         {/* Total Enquiries */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('enquiries')}
-          className="bg-gradient-to-br from-[#FFF5ED] to-white border border-[#FED7AA]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(244,81,11,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#FFF5ED] to-white border border-[#FED7AA]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(244,81,11,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
             <Users className="w-5 h-5 text-[#F4510B]" />
@@ -622,12 +623,12 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-[#172B50] opacity-60 block">All lead channels</span>
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Website Enquiries */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('enquiries')}
-          className="bg-gradient-to-br from-[#F0F7FF] to-white border border-[#BAE6FD]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(2,132,199,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#F0F7FF] to-white border border-[#BAE6FD]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(2,132,199,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#D6ECFF] text-[#0284C7] flex items-center justify-center shrink-0">
             <Globe className="w-5 h-5 text-[#0284C7]" />
@@ -641,12 +642,12 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-blue-700 block">Online Web Ingestion</span>
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Instagram Enquiries */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('enquiries')}
-          className="bg-gradient-to-br from-[#FAF5FF] to-white border border-[#F5D0FE]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(236,72,153,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#FAF5FF] to-white border border-[#F5D0FE]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(236,72,153,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center shrink-0">
             <InstagramIcon className="w-5 h-5 text-[#EC4899]" />
@@ -660,12 +661,12 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-fuchsia-700 block">Social Media Leads</span>
           </div>
-        </div>
+        </FloatingCard>
 
         {/* WhatsApp Enquiries */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('enquiries')}
-          className="bg-gradient-to-br from-[#F0FDF4] to-white border border-[#BBF7D0]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(16,185,129,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#F0FDF4] to-white border border-[#BBF7D0]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(16,185,129,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
             <WhatsAppIcon className="w-5 h-5 text-[#16A34A]" />
@@ -679,12 +680,12 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-emerald-700 block">Direct Inquiries</span>
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Manual / Walk-in */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('enquiries')}
-          className="bg-gradient-to-br from-[#FFF9F5] to-white border border-[#FED7AA]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(244,81,11,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200 col-span-2 sm:col-span-1"
+          className="bg-gradient-to-br from-[#FFF9F5] to-white border border-[#FED7AA]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(244,81,11,0.04)] col-span-2 sm:col-span-1"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
             <UserCheck className="w-5 h-5 text-[#F4510B]" />
@@ -698,15 +699,15 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-amber-800 block">Reception Desk</span>
           </div>
-        </div>
+        </FloatingCard>
       </div>
 
-      {/* Row 5: Four Demo & Admission Funnel Cards */}
+      {/* Row 5: Four Demo & Admission Funnel Cards with Floating Physics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Total Demos */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('demos')}
-          className="bg-gradient-to-br from-[#F0F7FF] via-[#F8FBFF] to-white border border-[#BAE6FD]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(2,132,199,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#F0F7FF] via-[#F8FBFF] to-white border border-[#BAE6FD]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(2,132,199,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#D6ECFF] text-[#0284C7] flex items-center justify-center shrink-0">
             <Calendar className="w-5 h-5 text-[#0284C7]" />
@@ -720,12 +721,12 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-blue-700 block">Trials Scheduled</span>
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Upcoming Demos */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('demos')}
-          className="bg-gradient-to-br from-[#FAF5FF] via-[#FCF9FF] to-white border border-[#E9D5FF]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(147,51,234,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#FAF5FF] via-[#FCF9FF] to-white border border-[#E9D5FF]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(147,51,234,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
             <Clock className="w-5 h-5 text-[#9333EA]" />
@@ -739,12 +740,12 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-purple-700 block">Active Bookings</span>
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Completed Demos */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('demos')}
-          className="bg-gradient-to-br from-[#F0FDF4] via-[#F8FDF9] to-white border border-[#BBF7D0]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(22,163,74,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#F0FDF4] via-[#F8FDF9] to-white border border-[#BBF7D0]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(22,163,74,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
@@ -758,12 +759,12 @@ export default function AdminDashboard() {
             </p>
             <span className="text-[11px] font-semibold text-emerald-700 block">Sessions Finished</span>
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Student Conversions */}
-        <div 
+        <FloatingCard 
           onClick={() => setCurrentView('demos')}
-          className="bg-gradient-to-br from-[#FFF5ED] via-[#FFF9F5] to-white border border-[#FED7AA]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(244,81,11,0.04)] cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-br from-[#FFF5ED] via-[#FFF9F5] to-white border border-[#FED7AA]/70 rounded-[22px] p-4 flex items-center gap-3.5 shadow-[0_4px_20px_rgba(244,81,11,0.04)]"
         >
           <div className="w-12 h-12 rounded-2xl bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
             <Trophy className="w-5 h-5 text-[#F4510B]" />
@@ -779,7 +780,7 @@ export default function AdminDashboard() {
               {demoMetrics.conversionRate || 80}% Conversion Rate
             </span>
           </div>
-        </div>
+        </FloatingCard>
       </div>
 
       {/* Visual Analytics & Attendance Section */}

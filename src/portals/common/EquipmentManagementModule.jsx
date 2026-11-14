@@ -37,6 +37,7 @@ import {
   exportEquipmentToCsv
 } from '../../services/equipmentService';
 import { AnimatedCounter } from '../../components/common/KpiCard';
+import FloatingCard from '../../components/common/FloatingCard';
 import Modal from '../../components/common/Modal';
 
 export default function EquipmentManagementModule({
@@ -410,7 +411,7 @@ export default function EquipmentManagementModule({
       {/* ============================================================ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Equipment */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+        <FloatingCard className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
           <div>
             <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#172B50] opacity-75 block">
               Total Inventory Units
@@ -425,10 +426,10 @@ export default function EquipmentManagementModule({
           <div className="w-11 h-11 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
             <Package className="w-5 h-5 text-[#F4510B]" />
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Available Condition */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+        <FloatingCard className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
           <div>
             <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-800 block">
               Available &amp; Ready
@@ -443,10 +444,10 @@ export default function EquipmentManagementModule({
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Damaged & Missing */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+        <FloatingCard className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
           <div>
             <span className="text-[10.5px] font-bold uppercase tracking-wider text-rose-800 block">
               Damaged / Missing
@@ -461,10 +462,10 @@ export default function EquipmentManagementModule({
           <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
             <AlertTriangle className="w-5 h-5 text-rose-600" />
           </div>
-        </div>
+        </FloatingCard>
 
         {/* Pending Reports Queue */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+        <FloatingCard className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
           <div>
             <span className="text-[10.5px] font-bold uppercase tracking-wider text-amber-800 block">
               Pending Reports
@@ -479,7 +480,7 @@ export default function EquipmentManagementModule({
           <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
             <Clock className="w-5 h-5 text-amber-600" />
           </div>
-        </div>
+        </FloatingCard>
       </div>
 
       {/* ============================================================ */}

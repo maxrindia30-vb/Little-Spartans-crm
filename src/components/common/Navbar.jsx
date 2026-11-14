@@ -63,18 +63,23 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Center: Global Search bar */}
+        {/* Center: Global Search bar matching senior UI/UX spec */}
         <div className="relative flex-1 max-w-lg mx-2 sm:mx-4">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-[#172B50] opacity-50" />
+            <Search className="h-4 w-4 text-[#172B50] opacity-45" />
           </div>
           <input
             type="text"
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
             placeholder="Search students, classes, coaches, enquiries..."
-            className="w-full pl-9 pr-3.5 py-2 text-xs bg-white text-[#172B50] placeholder-[#172B5070] border border-[#172B5018] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B] focus:border-transparent shadow-xs transition-all font-sans"
+            className="w-full pl-9 pr-14 py-2 text-xs bg-white text-[#172B50] placeholder-[#172B5060] border border-[#172B5018] rounded-full focus:outline-none focus:ring-2 focus:ring-[#F4510B]/30 focus:border-[#F4510B] shadow-xs hover:border-[#172B5030] transition-all font-medium"
           />
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9.5px] font-bold text-[#172B50]/50 bg-[#FFF4E8] rounded border border-[#172B5014] select-none">
+              ⌘K
+            </kbd>
+          </div>
         </div>
 
         {/* Right Action Icons: Notifications, User Profile Menu */}
@@ -87,21 +92,21 @@ export default function Navbar() {
                 setNotificationsOpen(!notificationsOpen);
                 setProfileOpen(false);
               }}
-              className="relative p-2 rounded-xl bg-white border border-[#172B5020] text-[#172B50] hover:bg-[#FFF4E8] transition-colors shadow-sm cursor-pointer"
+              className="relative p-2.5 rounded-full bg-white border border-[#172B5018] text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B35] transition-all shadow-xs cursor-pointer active:scale-95"
               aria-label="Academy Notifications"
             >
               <Bell className="w-4 h-4 text-[#172B50]" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#F4510B] text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white">
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#F4510B] text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white animate-pulse">
                   {unreadCount}
                 </span>
               )}
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-dropdown border border-[#172B501A] p-3 z-50">
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-dropdown border border-[#172B501A] p-3.5 z-50 animate-slide-up">
                 <div className="flex items-center justify-between pb-2 border-b border-[#172B5015] mb-2">
-                  <span className="text-xs font-bold text-[#172B50] uppercase tracking-wider">
+                  <span className="text-xs font-black text-[#172B50] uppercase tracking-wider">
                     Academy Alerts ({portalNotifications.length + (data.announcements || []).length})
                   </span>
                   {unreadCount > 0 && (
@@ -124,7 +129,7 @@ export default function Navbar() {
                       {portalNotifications.slice(0, 6).map(ntf => (
                         <div
                           key={ntf.id}
-                          className={`p-2.5 rounded-lg border transition-colors ${
+                          className={`p-2.5 rounded-xl border transition-colors ${
                             ntf.read
                               ? 'bg-white border-[#172B5012]'
                               : 'bg-[#FFF4E8] border-[#F4510B30]'
@@ -144,7 +149,7 @@ export default function Navbar() {
                       ))}
 
                       {(data.announcements || []).slice(0, 2).map(ann => (
-                        <div key={ann.id} className="p-2 rounded-lg bg-white border border-[#172B5010] hover:bg-[#FFF4E8] transition-colors">
+                        <div key={ann.id} className="p-2 rounded-xl bg-white border border-[#172B5010] hover:bg-[#FFF4E8] transition-colors">
                           <span className="text-xs font-semibold text-[#172B50] block">{ann.title}</span>
                           <p className="text-[10px] text-[#172B50] opacity-75 line-clamp-2 mt-0.5">{ann.content}</p>
                           <span className="text-[9px] text-[#172B50] opacity-50 block mt-1">{ann.date}</span>
@@ -164,18 +169,21 @@ export default function Navbar() {
                 setProfileOpen(!profileOpen);
                 setNotificationsOpen(false);
               }}
-              className="flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-xl bg-white border border-[#172B5020] hover:bg-[#FFF4E8] transition-colors shadow-sm"
+              className="flex items-center gap-2.5 p-1 pl-1.5 pr-3 rounded-full bg-white border border-[#172B5018] hover:bg-[#FFF4E8] hover:border-[#F4510B35] transition-all shadow-xs cursor-pointer select-none active:scale-95 group"
             >
-              <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
-                className="w-7 h-7 rounded-lg object-cover ring-1 ring-[#172B5020]"
-              />
-              <div className="text-left hidden sm:block">
-                <span className="text-xs font-bold text-[#172B50] block leading-tight">{currentUser.name}</span>
-                <span className="text-[10px] font-semibold text-[#F4510B] block leading-tight">{currentUser.badge}</span>
+              <div className="relative">
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-1 ring-[#172B5018]"
+                />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-[#172B50] opacity-60" />
+              <div className="text-left hidden sm:block">
+                <span className="text-xs font-black text-[#172B50] block leading-tight">{currentUser.name}</span>
+                <span className="text-[10.5px] font-bold text-[#F4510B] block leading-tight tracking-wide">{currentUser.badge || 'SuperAdmin'}</span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-[#172B50] opacity-60 group-hover:opacity-100 group-hover:translate-y-0.5 transition-all" />
             </button>
 
             {profileOpen && (

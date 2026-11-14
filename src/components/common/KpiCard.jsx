@@ -109,6 +109,41 @@ export default function KpiCard({
 }) {
   const theme = COLOR_THEMES[color] || COLOR_THEMES.orange;
 
+  // Floating 3D mouse physics
+  const [tilt, setTilt] = useState({
+    rotateX: 0,
+    rotateY: 0,
+    glareX: 50,
+    glareY: 50,
+    isHovered: false,
+  });
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    const rotateX = (0.5 - y) * 12;
+    const rotateY = (x - 0.5) * 12;
+
+    setTilt({
+      rotateX: Number(rotateX.toFixed(2)),
+      rotateY: Number(rotateY.toFixed(2)),
+      glareX: Number((x * 100).toFixed(1)),
+      glareY: Number((y * 100).toFixed(1)),
+      isHovered: true,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({
+      rotateX: 0,
+      rotateY: 0,
+      glareX: 50,
+      glareY: 50,
+      isHovered: false,
+    });
+  };
+
   // Format trend string e.g. "+12%" or "12%" -> "↑ 12%"
   let trendText = null;
   let isPositiveTrend = true;
@@ -120,20 +155,51 @@ export default function KpiCard({
     trendText = `${isPositiveTrend ? '↑' : '↓'} ${absVal}`;
   }
 
+  const transformStyle = tilt.isHovered
+    ? `perspective(800px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) translateY(-6px) scale(1.025)`
+    : 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1)';
+
   return (
     <div
       onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setTilt((prev) => ({ ...prev, isHovered: true }))}
+      onMouseLeave={handleMouseLeave}
       className={`group relative overflow-hidden rounded-[24px] p-5 border ${theme.border} ${theme.bgGradient} ${theme.shadow} ${
         theme.hoverRing
-      } transition-all duration-300 hover:-translate-y-0.5 select-none ${
+      } select-none will-change-transform ${
         onClick ? 'cursor-pointer' : ''
       } ${highlight ? 'ring-2 ring-[#F4510B]' : ''}`}
+      style={{
+        transform: transformStyle,
+        transition: tilt.isHovered
+          ? 'transform 0.08s ease-out, box-shadow 0.2s ease-out'
+          : 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s ease',
+        transformStyle: 'preserve-3d',
+      }}
     >
-      <div className="relative z-10 flex items-center gap-4">
+      {/* Dynamic Specular Spotlight Glare on Hover */}
+      {tilt.isHovered && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[24px] z-20 transition-opacity duration-200"
+          style={{
+            background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255, 255, 255, 0.4) 0%, rgba(244, 81, 11, 0.06) 50%, transparent 80%)`,
+          }}
+        />
+      )}
+
+      <div
+        className="relative z-10 flex items-center gap-4"
+        style={{
+          transform: tilt.isHovered ? 'translateZ(8px)' : 'translateZ(0px)',
+          transition: 'transform 0.2s ease',
+        }}
+      >
         {/* Left: Squircle pastel icon container */}
         {Icon && (
           <div
-            className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl ${theme.iconBg} flex items-center justify-center shrink-0 shadow-xs transition-transform duration-300 group-hover:scale-105`}
+            className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl ${theme.iconBg} flex items-center justify-center shrink-0 shadow-xs transition-transform duration-300 group-hover:scale-110`}
           >
             <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${theme.iconColor}`} />
           </div>

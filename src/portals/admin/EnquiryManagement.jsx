@@ -25,6 +25,7 @@ import {
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
 import KpiCard from '../../components/common/KpiCard';
+import AdmissionPipelineStepper from '../../components/common/AdmissionPipelineStepper';
 import { getCommonLocations, filterEnquiries } from '../../services/locationService';
 import {
   calculateAgeFromDob,
@@ -436,6 +437,8 @@ export default function EnquiryManagement() {
         />
       </div>
 
+      {/* Interactive Admission Pipeline Stepper matching senior UI/UX standard */}
+      <AdmissionPipelineStepper />
 
       {/* Filter and Search Bar */}
       <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-3">

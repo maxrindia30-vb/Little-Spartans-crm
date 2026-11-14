@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import { AnimatedCounter } from '../../components/common/KpiCard';
+import FloatingCard from '../../components/common/FloatingCard';
 import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import { checkScheduleConflict } from '../../services/scheduleService';
@@ -410,9 +411,9 @@ export default function SuperCoachPortalView() {
       {/* ============================================================ */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-          {/* Row of 4 Primary KPIs */}
+          {/* Row of 4 Primary KPIs with Floating 3D Physics */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
                   Assigned Locations
@@ -427,9 +428,9 @@ export default function SuperCoachPortalView() {
               <div className="w-12 h-12 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
                 <MapPin className="w-6 h-6 text-[#F4510B]" />
               </div>
-            </div>
+            </FloatingCard>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
                   Authorized Faculty
@@ -444,9 +445,9 @@ export default function SuperCoachPortalView() {
               <div className="w-12 h-12 rounded-2xl bg-[#F0FDF4] text-emerald-600 flex items-center justify-center shrink-0">
                 <Users className="w-6 h-6 text-emerald-600" />
               </div>
-            </div>
+            </FloatingCard>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
                   Today's Court Classes
@@ -461,9 +462,9 @@ export default function SuperCoachPortalView() {
               <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
-            </div>
+            </FloatingCard>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
+            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
                   Equipment Health
@@ -478,7 +479,7 @@ export default function SuperCoachPortalView() {
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                 <Package className="w-6 h-6 text-emerald-600" />
               </div>
-            </div>
+            </FloatingCard>
           </div>
 
           {/* Center Operational Grid: Today's Class Timetable & Coach Performance */}
@@ -697,9 +698,9 @@ export default function SuperCoachPortalView() {
               const locSchedules = scopedSchedules.filter((s) => s.location === loc.name);
 
               return (
-                <div
+                <FloatingCard
                   key={loc.id}
-                  className="bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card hover:-translate-y-1 transition-all duration-200"
+                  className="bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -738,19 +739,27 @@ export default function SuperCoachPortalView() {
                   <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-[#172B5010]">
                     <div className="p-2.5 rounded-xl bg-[#FFF4E8]/60 text-center">
                       <span className="text-[10px] font-bold text-[#172B50] opacity-70 block">Coaches</span>
-                      <strong className="text-lg font-black text-[#172B50]">{locCoaches.length}</strong>
+                      <strong className="text-lg font-black text-[#172B50]">
+                        <AnimatedCounter value={locCoaches.length} />
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[#FFF4E8]/60 text-center">
                       <span className="text-[10px] font-bold text-[#172B50] opacity-70 block">Athletes</span>
-                      <strong className="text-lg font-black text-[#172B50]">{locStudents.length}</strong>
+                      <strong className="text-lg font-black text-[#172B50]">
+                        <AnimatedCounter value={locStudents.length} />
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[#FFF4E8]/60 text-center">
                       <span className="text-[10px] font-bold text-[#172B50] opacity-70 block">Equipment Types</span>
-                      <strong className="text-lg font-black text-[#172B50]">{locEq.length}</strong>
+                      <strong className="text-lg font-black text-[#172B50]">
+                        <AnimatedCounter value={locEq.length} />
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[#FFF4E8]/60 text-center">
                       <span className="text-[10px] font-bold text-[#172B50] opacity-70 block">Active Schedules</span>
-                      <strong className="text-lg font-black text-[#172B50]">{locSchedules.length}</strong>
+                      <strong className="text-lg font-black text-[#172B50]">
+                        <AnimatedCounter value={locSchedules.length} />
+                      </strong>
                     </div>
                   </div>
 
@@ -766,7 +775,7 @@ export default function SuperCoachPortalView() {
                       Inspect Operations →
                     </button>
                   </div>
-                </div>
+                </FloatingCard>
               );
             })}
           </div>
