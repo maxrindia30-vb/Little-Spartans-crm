@@ -23,7 +23,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
-import KpiCard from '../../components/common/KpiCard';
+import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import { RevenueTrendChart, AttendanceDonutChart, ProgramDistributionChart } from '../../components/common/Charts';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
@@ -148,13 +148,17 @@ export default function AdminDashboard() {
       
       {/* Top Header & Quick Action Buttons matching reference image */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
-            Academy Command Center
+            Dashboard
           </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-            Little Spartans Chennai • Real-time Operations &amp; Student Performance
-          </p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] shadow-xs select-none">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#16A34A]"></span>
+            </span>
+            <span className="tracking-wider">LIVE SYNC</span>
+          </div>
         </div>
 
         {/* Quick Action CTAs */}
@@ -243,7 +247,7 @@ export default function AdminDashboard() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-80 block">
                 Tuition Collected
               </span>
-              <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">₹{paidRevenue.toLocaleString()}</p>
+              <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">₹<AnimatedCounter value={paidRevenue} /></p>
               <span className="text-xs font-bold text-emerald-600 block mt-0.5">
                 {data.payments.filter((p) => p.status === 'Paid').length} paid invoices
               </span>
@@ -267,7 +271,7 @@ export default function AdminDashboard() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-80 block">
                 Pending Dues
               </span>
-              <p className="text-2xl font-black text-rose-600 mt-0.5 tracking-tight">₹{pendingAmount.toLocaleString()}</p>
+              <p className="text-2xl font-black text-rose-600 mt-0.5 tracking-tight">₹<AnimatedCounter value={pendingAmount} /></p>
               <span className="text-xs font-bold text-rose-500 block mt-0.5">
                 {pendingPayments} outstanding invoices
               </span>
@@ -291,7 +295,7 @@ export default function AdminDashboard() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-80 block">
                 Certified Faculty
               </span>
-              <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">{totalCoaches} Coaches</p>
+              <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight"><AnimatedCounter value={totalCoaches} /> Coaches</p>
               <span className="text-xs font-medium text-[#172B50] opacity-70 block mt-0.5">
                 Kapil, Dibi, Hanif, Teja
               </span>
@@ -431,38 +435,46 @@ export default function AdminDashboard() {
               {/* 4 Pillars with chevrons */}
               <div className="flex items-end justify-between gap-1.5 sm:gap-2 mt-4 pt-2">
                 {/* 1: Enquiries */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">{demoMetrics.totalEnquiries || 25}</span>
-                  <div className="w-11 sm:w-13 h-24 bg-[#D6ECFF] rounded-2xl shadow-xs" />
+                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('enquiries')}>
+                  <span className="text-xs font-black text-[#172B50] mb-1.5">
+                    <AnimatedCounter value={demoMetrics.totalEnquiries || 25} />
+                  </span>
+                  <div className="w-11 sm:w-13 h-24 bg-[#D6ECFF] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#BAE6FD]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Enquiries</span>
                 </div>
 
-                <span className="text-[#172B50] opacity-40 font-bold mb-8">&gt;</span>
+                <span className="text-[#172B50] opacity-40 font-bold mb-8 select-none">&gt;</span>
 
                 {/* 2: Demos */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">{String(demoMetrics.upcomingDemos || 8).padStart(2, '0')}</span>
-                  <div className="w-11 sm:w-13 h-18 bg-[#F3E8FF] rounded-2xl shadow-xs" />
+                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('demos')}>
+                  <span className="text-xs font-black text-[#172B50] mb-1.5">
+                    <AnimatedCounter value={demoMetrics.upcomingDemos || 8} padZero />
+                  </span>
+                  <div className="w-11 sm:w-13 h-18 bg-[#F3E8FF] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#E9D5FF]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Demos</span>
                 </div>
 
-                <span className="text-[#172B50] opacity-40 font-bold mb-8">&gt;</span>
+                <span className="text-[#172B50] opacity-40 font-bold mb-8 select-none">&gt;</span>
 
                 {/* 3: Completed Demos */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">{String(demoMetrics.completedDemos || 4).padStart(2, '0')}</span>
-                  <div className="w-11 sm:w-13 h-13 bg-[#DCFCE7] rounded-2xl shadow-xs" />
+                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('demos')}>
+                  <span className="text-xs font-black text-[#172B50] mb-1.5">
+                    <AnimatedCounter value={demoMetrics.completedDemos || 4} padZero />
+                  </span>
+                  <div className="w-11 sm:w-13 h-13 bg-[#DCFCE7] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#BBF7D0]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center leading-tight">
                     Completed<br />Demos
                   </span>
                 </div>
 
-                <span className="text-[#172B50] opacity-40 font-bold mb-8">&gt;</span>
+                <span className="text-[#172B50] opacity-40 font-bold mb-8 select-none">&gt;</span>
 
                 {/* 4: Enrolled */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">{totalStudents || 12}</span>
-                  <div className="w-11 sm:w-13 h-20 bg-[#FFE2D1] rounded-2xl shadow-xs" />
+                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('people')}>
+                  <span className="text-xs font-black text-[#172B50] mb-1.5">
+                    <AnimatedCounter value={totalStudents || 12} />
+                  </span>
+                  <div className="w-11 sm:w-13 h-20 bg-[#FFE2D1] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#FED7AA]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Enrolled</span>
                 </div>
               </div>
@@ -547,7 +559,7 @@ export default function AdminDashboard() {
                 strokeLinecap="round"
               />
 
-              {/* Data Node Circles */}
+              {/* Data Node Circles with Live Ping on Latest Node */}
               {[
                 { x: 50, y: 140 },
                 { x: 100, y: 115 },
@@ -558,6 +570,9 @@ export default function AdminDashboard() {
                 { x: 355, y: 38 },
               ].map((pt, i) => (
                 <g key={i}>
+                  {i === 6 && (
+                    <circle cx={pt.x} cy={pt.y} r="10" fill="#F4510B" opacity="0.4" className="animate-ping" />
+                  )}
                   <circle cx={pt.x} cy={pt.y} r="5.5" fill="#F4510B" opacity="0.25" />
                   <circle cx={pt.x} cy={pt.y} r="4" fill="#FFFFFF" stroke="#F4510B" strokeWidth="2.5" />
                 </g>
@@ -602,7 +617,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50] opacity-70 block">
               Total Enquiries
             </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5">{demoMetrics.totalEnquiries || 5}</p>
+            <p className="text-2xl font-black text-[#172B50] mt-0.5">
+              <AnimatedCounter value={demoMetrics.totalEnquiries || 5} />
+            </p>
             <span className="text-[11px] font-semibold text-[#172B50] opacity-60 block">All lead channels</span>
           </div>
         </div>
@@ -619,7 +636,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-800 block">
               Website Enquiries
             </span>
-            <p className="text-2xl font-black text-blue-900 mt-0.5">{demoMetrics.websiteEnquiries || 1}</p>
+            <p className="text-2xl font-black text-blue-900 mt-0.5">
+              <AnimatedCounter value={demoMetrics.websiteEnquiries || 1} />
+            </p>
             <span className="text-[11px] font-semibold text-blue-700 block">Online Web Ingestion</span>
           </div>
         </div>
@@ -636,7 +655,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-fuchsia-800 block">
               Instagram Enquiries
             </span>
-            <p className="text-2xl font-black text-fuchsia-900 mt-0.5">{demoMetrics.instagramEnquiries || 1}</p>
+            <p className="text-2xl font-black text-fuchsia-900 mt-0.5">
+              <AnimatedCounter value={demoMetrics.instagramEnquiries || 1} />
+            </p>
             <span className="text-[11px] font-semibold text-fuchsia-700 block">Social Media Leads</span>
           </div>
         </div>
@@ -653,7 +674,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 block">
               WhatsApp Enquiries
             </span>
-            <p className="text-2xl font-black text-emerald-900 mt-0.5">{demoMetrics.whatsappEnquiries || 1}</p>
+            <p className="text-2xl font-black text-emerald-900 mt-0.5">
+              <AnimatedCounter value={demoMetrics.whatsappEnquiries || 1} />
+            </p>
             <span className="text-[11px] font-semibold text-emerald-700 block">Direct Inquiries</span>
           </div>
         </div>
@@ -670,7 +693,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900 block">
               Manual / Walk-in
             </span>
-            <p className="text-2xl font-black text-[#F4510B] mt-0.5">{demoMetrics.manualEnquiries || 2}</p>
+            <p className="text-2xl font-black text-[#F4510B] mt-0.5">
+              <AnimatedCounter value={demoMetrics.manualEnquiries || 2} />
+            </p>
             <span className="text-[11px] font-semibold text-amber-800 block">Reception Desk</span>
           </div>
         </div>
@@ -690,7 +715,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-800 block">
               Total Demos
             </span>
-            <p className="text-2xl font-black text-blue-900 mt-0.5">{demoMetrics.totalDemos || 3}</p>
+            <p className="text-2xl font-black text-blue-900 mt-0.5">
+              <AnimatedCounter value={demoMetrics.totalDemos || 3} />
+            </p>
             <span className="text-[11px] font-semibold text-blue-700 block">Trials Scheduled</span>
           </div>
         </div>
@@ -707,7 +734,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-800 block">
               Upcoming Demos
             </span>
-            <p className="text-2xl font-black text-purple-900 mt-0.5">{demoMetrics.upcomingDemos || 1}</p>
+            <p className="text-2xl font-black text-purple-900 mt-0.5">
+              <AnimatedCounter value={demoMetrics.upcomingDemos || 1} />
+            </p>
             <span className="text-[11px] font-semibold text-purple-700 block">Active Bookings</span>
           </div>
         </div>
@@ -724,7 +753,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 block">
               Completed Demos
             </span>
-            <p className="text-2xl font-black text-emerald-900 mt-0.5">{demoMetrics.completedDemos || 2}</p>
+            <p className="text-2xl font-black text-emerald-900 mt-0.5">
+              <AnimatedCounter value={demoMetrics.completedDemos || 2} />
+            </p>
             <span className="text-[11px] font-semibold text-emerald-700 block">Sessions Finished</span>
           </div>
         </div>
@@ -741,7 +772,9 @@ export default function AdminDashboard() {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B] block">
               Student Conversions
             </span>
-            <p className="text-2xl font-black text-[#F4510B] mt-0.5">{demoMetrics.studentConversions || 4}</p>
+            <p className="text-2xl font-black text-[#F4510B] mt-0.5">
+              <AnimatedCounter value={demoMetrics.studentConversions || 4} />
+            </p>
             <span className="text-[11px] font-semibold text-[#F4510B] block">
               {demoMetrics.conversionRate || 80}% Conversion Rate
             </span>

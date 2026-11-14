@@ -1,5 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
+
+export function AnimatedCounter({ value, duration = 1100, padZero = false }) {
+  const [displayValue, setDisplayValue] = useState(() => String(value ?? '0'));
+
+  useEffect(() => {
+    const strVal = String(value ?? 0);
+    const cleaned = strVal.replace(/,/g, '');
+    const match = cleaned.match(/^([^0-9]*)([0-9]+(?:\.[0-9]+)?)([^0-9]*)$/);
+
+    if (!match) {
+      setDisplayValue(strVal);
+      return;
+    }
+
+    const prefix = match[1] || '';
+    const targetNum = parseFloat(match[2]);
+    const suffix = match[3] || '';
+    const isZeroPadded = padZero || (match[2].length > 1 && match[2].startsWith('0'));
+    const isCurrency = prefix.includes('₹') || prefix.includes('$');
+
+    if (isNaN(targetNum)) {
+      setDisplayValue(strVal);
+      return;
+    }
+
+    let startTimestamp = null;
+    let animId;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(targetNum * ease);
+
+      let formatted = `${current}`;
+      if (isCurrency) {
+        formatted = current.toLocaleString('en-IN');
+      } else if (isZeroPadded && current < 10) {
+        formatted = `0${current}`;
+      }
+
+      setDisplayValue(`${prefix}${formatted}${suffix}`);
+
+      if (progress < 1) {
+        animId = requestAnimationFrame(step);
+      }
+    };
+
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [value, duration, padZero]);
+
+  return <>{displayValue}</>;
+}
 
 const COLOR_THEMES = {
   orange: {
@@ -87,7 +143,7 @@ export default function KpiCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight leading-none">
-              {value}
+              <AnimatedCounter value={value} />
             </h3>
 
             {trendText && (
