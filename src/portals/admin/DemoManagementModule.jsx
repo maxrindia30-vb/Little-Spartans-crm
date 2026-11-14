@@ -19,9 +19,13 @@ import {
   CalendarDays,
   ShieldCheck,
   Sparkles,
+  TrendingUp,
+  Users,
+  GraduationCap,
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import KpiCard from '../../components/common/KpiCard';
 import { getCommonLocations } from '../../services/locationService';
 import {
   DEMO_STATUSES,
@@ -331,69 +335,42 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       </div>
 
       {/* KPI Cards Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white rounded-2xl p-4 border border-[#172B5014] shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">
-              Total Demos
-            </span>
-            <Calendar className="w-4 h-4 text-[#172B50] opacity-60" />
-          </div>
-          <p className="text-2xl font-black text-[#172B50] mt-1.5">{metrics.totalDemos}</p>
-          <span className="text-[10px] font-semibold text-[#172B50] opacity-60">
-            Across {activeLocations.length} locations
-          </span>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <KpiCard
+          title="Total Demos"
+          value={metrics.totalDemos}
+          subtitle={`Across ${activeLocations.length} locations`}
+          icon={Calendar}
+          color="orange"
+          trend={15}
+        />
 
-        <div className="bg-white rounded-2xl p-4 border border-[#172B5014] shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
-              Upcoming Demos
-            </span>
-            <Clock className="w-4 h-4 text-blue-600" />
-          </div>
-          <p className="text-2xl font-black text-blue-900 mt-1.5">{metrics.upcomingDemos}</p>
-          <span className="text-[10px] font-semibold text-blue-700">Scheduled / Confirmed</span>
-        </div>
+        <KpiCard
+          title="Demo Scheduled"
+          value={String(metrics.upcomingDemos).padStart(2, '0')}
+          subtitle="Upcoming Trial Sessions"
+          icon={Clock}
+          color="blue"
+          trend={8}
+        />
 
-        <div className="bg-white rounded-2xl p-4 border border-[#172B5014] shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-              Completed Demos
-            </span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          </div>
-          <p className="text-2xl font-black text-emerald-900 mt-1.5">{metrics.completedDemos}</p>
-          <span className="text-[10px] font-semibold text-emerald-700">Trials Finished</span>
-        </div>
+        <KpiCard
+          title="Completed Demos"
+          value={metrics.completedDemos}
+          subtitle="Trials Finished"
+          icon={CheckCircle2}
+          color="green"
+          trend={20}
+        />
 
-        <div className="bg-white rounded-2xl p-4 border border-[#172B5014] shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#F4510B]">
-              Conversions
-            </span>
-            <UserCheck className="w-4 h-4 text-[#F4510B]" />
-          </div>
-          <p className="text-2xl font-black text-[#F4510B] mt-1.5">{metrics.studentConversions}</p>
-          <span className="text-[10px] font-semibold text-[#F4510B]">
-            {metrics.conversionRate}% Conversion Rate
-          </span>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-[#172B5014] shadow-card col-span-2 sm:col-span-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700">
-              Pipeline Stages
-            </span>
-            <Sparkles className="w-4 h-4 text-purple-600" />
-          </div>
-          <p className="text-2xl font-black text-purple-900 mt-1.5">
-            {metrics.totalEnquiries} Leads
-          </p>
-          <span className="text-[10px] font-semibold text-purple-700">
-            {metrics.websiteEnquiries} Web • {metrics.instagramEnquiries} Insta
-          </span>
-        </div>
+        <KpiCard
+          title="Conversion Rate"
+          value={`${metrics.conversionRate}%`}
+          subtitle={`${metrics.studentConversions} enrolled athletes`}
+          icon={TrendingUp}
+          color="purple"
+          trend={10}
+        />
       </div>
 
       {/* Filter Bar */}

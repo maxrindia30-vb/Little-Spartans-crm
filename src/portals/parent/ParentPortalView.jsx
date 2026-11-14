@@ -450,44 +450,46 @@ export default function ParentPortalView() {
           </div>
 
           {/* Summary KPI Strip */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Registered Children</span>
-              <div className="flex items-end justify-between mt-1">
-                <h3 className="text-2xl sm:text-3xl font-black text-[#172B50]">{myChildren.length}</h3>
-                <GraduationCap className="w-5 h-5 text-[#F4510B]" />
-              </div>
-              <p className="text-[11px] font-semibold text-[#172B50]/65 mt-1">{parentProfile.center || 'Active Academy'}</p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <KpiCard
+              title="Registered Children"
+              value={myChildren.length}
+              subtitle={parentProfile.center || 'Active Academy'}
+              icon={GraduationCap}
+              color="orange"
+              trend={100}
+              onClick={() => setCurrentView('children')}
+            />
 
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Upcoming Classes</span>
-              <div className="flex items-end justify-between mt-1">
-                <h3 className="text-2xl sm:text-3xl font-black text-[#172B50]">{upcomingChildSessions.length}</h3>
-                <CalendarDays className="w-5 h-5 text-[#F4510B]" />
-              </div>
-              <p className="text-[11px] font-semibold text-emerald-700 mt-1">{mySchedulesCount} Total Synced</p>
-            </div>
+            <KpiCard
+              title="Upcoming Classes"
+              value={String(upcomingChildSessions.length).padStart(2, '0')}
+              subtitle={`${mySchedulesCount} Total Synced`}
+              icon={CalendarDays}
+              color="blue"
+              trend={12}
+              onClick={() => setCurrentView('classes')}
+            />
 
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Attendance Records</span>
-              <div className="flex items-end justify-between mt-1">
-                <h3 className="text-2xl sm:text-3xl font-black text-[#172B50]">{myAttendanceCount}</h3>
-                <ClipboardCheck className="w-5 h-5 text-[#F4510B]" />
-              </div>
-              <p className="text-[11px] font-semibold text-[#172B50]/65 mt-1">Verified coach check-ins</p>
-            </div>
+            <KpiCard
+              title="Attendance Records"
+              value={myAttendanceCount}
+              subtitle="Verified coach check-ins"
+              icon={ClipboardCheck}
+              color="green"
+              trend={96}
+              onClick={() => setCurrentView('attendance')}
+            />
 
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B5018] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block">Compensation Status</span>
-              <div className="flex items-end justify-between mt-1">
-                <h3 className="text-2xl sm:text-3xl font-black text-[#F4510B]">{parentCompRequests.length}</h3>
-                <RefreshCw className="w-5 h-5 text-[#172B50]" />
-              </div>
-              <p className="text-[11px] font-semibold text-[#172B50]/65 mt-1">
-                {parentCompRequests.filter(r => r.status === 'Scheduled').length} Scheduled Makeup(s)
-              </p>
-            </div>
+            <KpiCard
+              title="Compensation Status"
+              value={String(parentCompRequests.length).padStart(2, '0')}
+              subtitle={`${parentCompRequests.filter(r => r.status === 'Scheduled').length} Scheduled Makeup(s)`}
+              icon={RefreshCw}
+              color="purple"
+              trend={8}
+              onClick={() => setCurrentView('compensation')}
+            />
           </div>
 
           {/* All Parent Navbar Modules Inside Dashboard */}

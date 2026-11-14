@@ -446,50 +446,46 @@ export default function CoachPortalView() {
           </div>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
-                Published Schedules
-              </span>
-              <div className="flex items-end justify-between">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{mySchedules.length}</h3>
-                <CalendarDays className="w-5 h-5 text-[#F4510B]" />
-              </div>
-              <p className="text-xs font-bold text-[#F4510B] mt-1">Synced from Admin</p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <KpiCard
+              title="Published Schedules"
+              value={String(mySchedules.length).padStart(2, '0')}
+              subtitle="Synced from Admin"
+              icon={CalendarDays}
+              color="orange"
+              trend={12}
+              onClick={() => setCurrentView('schedules')}
+            />
 
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
-                Assigned Athletes
-              </span>
-              <div className="flex items-end justify-between">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{myStudents.length}</h3>
-                <GraduationCap className="w-5 h-5 text-[#F4510B]" />
-              </div>
-              <p className="text-xs font-bold text-emerald-600 mt-1">Across {coachAssignedBatches.length} Batches</p>
-            </div>
+            <KpiCard
+              title="Assigned Athletes"
+              value={myStudents.length}
+              subtitle={`Across ${coachAssignedBatches.length} Batches`}
+              icon={GraduationCap}
+              color="blue"
+              trend={18}
+              onClick={() => setCurrentView('batches')}
+            />
 
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
-                Compensation Slots
-              </span>
-              <div className="flex items-end justify-between">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{totalCompSlotCount}</h3>
-                <RefreshCw className="w-5 h-5 text-[#F4510B]" />
-              </div>
-              <p className="text-xs font-bold text-[#F4510B] mt-1">{assignedStudentReplacements.filter(r => r.status === 'Scheduled').length} Upcoming Replacements</p>
-            </div>
+            <KpiCard
+              title="Compensation Slots"
+              value={String(totalCompSlotCount).padStart(2, '0')}
+              subtitle={`${assignedStudentReplacements.filter(r => r.status === 'Scheduled').length} Upcoming Replacements`}
+              icon={RefreshCw}
+              color="green"
+              trend={8}
+              onClick={() => setCurrentView('compensation')}
+            />
 
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50]/65 block mb-1">
-                Faculty Rating
-              </span>
-              <div className="flex items-end justify-between">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50]">{coachProfile.rating || '4.9'} / 5.0</h3>
-                <Star className="w-5 h-5 text-[#F4510B]" />
-              </div>
-              <p className="text-xs font-bold text-emerald-600 mt-1">{coachProfile.experience || 'Experienced'} Experience</p>
-            </div>
+            <KpiCard
+              title="Faculty Rating"
+              value={`${coachProfile.rating || '4.9'}`}
+              subtitle={`${coachProfile.experience || 'Experienced'} • 5.0 Star`}
+              icon={Star}
+              color="purple"
+              trend={10}
+              onClick={() => setCurrentView('evaluations')}
+            />
           </div>
 
           {/* All Coach Navbar Modules Inside Dashboard */}

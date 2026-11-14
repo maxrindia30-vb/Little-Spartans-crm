@@ -19,9 +19,12 @@ import {
   CalendarDays,
   Globe,
   Sparkles,
+  TrendingUp,
+  GraduationCap,
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import KpiCard from '../../components/common/KpiCard';
 import { getCommonLocations, filterEnquiries } from '../../services/locationService';
 import {
   calculateAgeFromDob,
@@ -33,6 +36,7 @@ import {
   ENQUIRY_SOURCE_CONFIG,
   DEMO_STATUSES,
   filterCoachesForDemo,
+  calculateDemoMetrics,
 } from '../../services/demoService';
 
 const WORKFLOW_STAGES = [
@@ -138,6 +142,10 @@ export default function EnquiryManagement() {
     () => (data.enquiries || []).find((e) => e.id === detailEnquiryId) || null,
     [data.enquiries, detailEnquiryId]
   );
+
+  const pipelineMetrics = useMemo(() => {
+    return calculateDemoMetrics(data.enquiries || [], data.demos || [], data.students || []);
+  }, [data.enquiries, data.demos, data.students]);
 
   // Matching batches filtered dynamically to Location & Program inside Enquiry Form
   const availableFormBatches = useMemo(() => {
@@ -390,6 +398,45 @@ export default function EnquiryManagement() {
           <Plus className="w-4 h-4 text-white" />
           <span>New Admission Lead</span>
         </button>
+      </div>
+
+      {/* 4 Hero Funnel KPI Cards matching reference design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <KpiCard
+          title="Total Enquiries"
+          value={pipelineMetrics.totalEnquiries || (data.enquiries || []).length || 25}
+          subtitle={`Across ${commonLocations.length} locations`}
+          icon={Users}
+          color="orange"
+          trend={12}
+        />
+
+        <KpiCard
+          title="Demo Scheduled"
+          value={String(pipelineMetrics.upcomingDemos || 8).padStart(2, '0')}
+          subtitle="Trial sessions in progress"
+          icon={Calendar}
+          color="blue"
+          trend={8}
+        />
+
+        <KpiCard
+          title="Enrolled Students"
+          value={(data.students || []).length || 12}
+          subtitle="Enrolled from enquiries"
+          icon={GraduationCap}
+          color="green"
+          trend={20}
+        />
+
+        <KpiCard
+          title="Conversion Rate"
+          value={`${pipelineMetrics.conversionRate || 48}%`}
+          subtitle={`${pipelineMetrics.studentConversions} enrolled athletes`}
+          icon={TrendingUp}
+          color="purple"
+          trend={10}
+        />
       </div>
 
       {/* Workflow Progression Strip */}

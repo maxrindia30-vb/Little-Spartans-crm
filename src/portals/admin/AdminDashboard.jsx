@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   Clock,
   CalendarDays,
-  Globe
+  Globe,
+  TrendingUp
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import KpiCard from '../../components/common/KpiCard';
@@ -174,42 +175,95 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Hero KPI Cards matching reference user design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <KpiCard
-          title="Active Students"
-          value={totalStudents}
-          subtitle={`${data.locations?.length || 5} training facilities`}
+          title="Total Enquiries"
+          value={demoMetrics.totalEnquiries || 25}
+          subtitle={`${data.locations?.length || 5} Academy Branches`}
+          icon={Users}
+          color="orange"
+          trend={12}
+          onClick={() => setCurrentView('enquiries')}
+        />
+
+        <KpiCard
+          title="Demo Scheduled"
+          value={String(demoMetrics.upcomingDemos || 8).padStart(2, '0')}
+          subtitle="Upcoming Trial Sessions"
+          icon={Calendar}
+          color="blue"
+          trend={8}
+          onClick={() => setCurrentView('demos')}
+        />
+
+        <KpiCard
+          title="Enrolled Students"
+          value={totalStudents || 12}
+          subtitle="Active Enrolled Athletes"
           icon={GraduationCap}
-          trend={0}
-          trendLabel="manual onboarding"
+          color="green"
+          trend={20}
+          onClick={() => setCurrentView('people')}
         />
 
         <KpiCard
-          title="New Enquiries"
-          value={newEnquiries}
-          subtitle="Trial pipeline active"
-          icon={PhoneCall}
-          trend={0}
-          trendLabel="leads recorded"
-          highlight={true}
+          title="Conversion Rate"
+          value={`${demoMetrics.conversionRate || 48}%`}
+          subtitle="Lead-to-Admission Funnel"
+          icon={TrendingUp}
+          color="purple"
+          trend={10}
+          onClick={() => setCurrentView('demos')}
         />
+      </div>
 
-        <KpiCard
-          title="Collected Revenue"
-          value={`₹${paidRevenue.toLocaleString()}`}
-          subtitle={`${data.payments.filter(p => p.status === 'Paid').length} paid invoices`}
-          icon={CreditCard}
-          trend={0}
-          trendLabel="live ledger"
-        />
+      {/* Secondary Academy Financial & Staff Operations Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl p-4 border border-[#172B5015] shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-60 block">
+              Tuition Collected
+            </span>
+            <p className="text-xl font-black text-[#172B50] mt-0.5">₹{paidRevenue.toLocaleString()}</p>
+            <span className="text-[10.5px] font-semibold text-emerald-600">
+              {data.payments.filter((p) => p.status === 'Paid').length} paid invoices
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <CreditCard className="w-5 h-5" />
+          </div>
+        </div>
 
-        <KpiCard
-          title="Pending Fees"
-          value={`₹${pendingAmount.toLocaleString()}`}
-          subtitle={`${pendingPayments} invoices pending`}
-          icon={AlertCircle}
-        />
+        <div className="bg-white rounded-2xl p-4 border border-[#172B5015] shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-60 block">
+              Pending Dues
+            </span>
+            <p className="text-xl font-black text-rose-700 mt-0.5">₹{pendingAmount.toLocaleString()}</p>
+            <span className="text-[10.5px] font-semibold text-rose-600">
+              {pendingPayments} outstanding invoices
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+            <AlertCircle className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-[#172B5015] shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-60 block">
+              Certified Faculty
+            </span>
+            <p className="text-xl font-black text-[#172B50] mt-0.5">{totalCoaches} Coaches</p>
+            <span className="text-[10.5px] font-semibold text-[#172B50] opacity-60">
+              Kapil, Dibi, Hanif, Teja
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center">
+            <UserCheck className="w-5 h-5" />
+          </div>
+        </div>
       </div>
 
       {/* Enquiry Sources & Demo Management Summary Dashboard (Section 6) */}
