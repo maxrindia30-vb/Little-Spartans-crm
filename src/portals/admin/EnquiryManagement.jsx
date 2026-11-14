@@ -383,11 +383,8 @@ export default function EnquiryManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Enquiry &amp; Lead Management
+            Enquiries
           </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-            Capture child &amp; guardian details, track admission readiness, and convert enquiries automatically into linked Student &amp; Parent records
-          </p>
         </div>
 
         <button
