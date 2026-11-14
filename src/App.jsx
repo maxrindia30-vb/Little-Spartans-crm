@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { Menu } from 'lucide-react';
 import { useCrm } from './context/CrmContext';
-import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';
 import ToastContainer from './components/common/ToastContainer';
 import LoginModal from './components/common/LoginModal';
@@ -24,7 +24,7 @@ import CoachPortalView from './portals/coach/CoachPortalView';
 import SupportPortalView from './portals/support/SupportPortalView';
 
 export default function App() {
-  const { currentPortal, currentView, setCurrentPortal, isLoggedIn } = useCrm();
+  const { currentPortal, currentView, setCurrentPortal, isLoggedIn, sidebarOpen, setSidebarOpen } = useCrm();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // If logged out, display exact Little Spartans Spartzen login screen matching reference
@@ -132,8 +132,22 @@ export default function App() {
           />
         </div>
 
-        {/* Right Top Navbar: starts immediately after left sidebar */}
-        <Navbar onOpenLogin={() => setIsLoginModalOpen(true)} />
+        {/* Mobile Header Menu (Only visible on screens < 1024px) */}
+        <div className="lg:hidden p-3 flex items-center justify-between bg-[#FFF4E8] border-b border-[#172B501A] shrink-0 z-20">
+          <button 
+            type="button"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 rounded-lg text-[#172B50] hover:bg-white transition-colors cursor-pointer"
+            aria-label="Toggle Navigation Menu"
+          >
+            <Menu className="w-5 h-5 text-[#172B50]" />
+          </button>
+          <img 
+            src="/assets/zenconnect-navbar-logo.png" 
+            alt="Little Spartans ZenConnect" 
+            className="h-8 w-auto object-contain"
+          />
+        </div>
 
         {/* Right Main Dashboard Content: independently scrollable */}
         <main className="flex-1 overflow-y-auto relative z-10">
