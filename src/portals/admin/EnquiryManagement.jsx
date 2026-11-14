@@ -439,24 +439,6 @@ export default function EnquiryManagement() {
         />
       </div>
 
-      {/* Workflow Progression Strip */}
-      <div className="bg-white rounded-2xl px-4 py-3 border border-[#172B5015] shadow-card flex flex-wrap items-center gap-2 text-[11px] font-bold text-[#172B50]">
-        <span className="text-[#F4510B] uppercase tracking-wider mr-1">Admission Pipeline:</span>
-        {[
-          'New Enquiry',
-          'Follow-up',
-          'Interested',
-          'Enroll Student',
-          'Student Created',
-          'Parent Linked/Created',
-          'Enrolled',
-        ].map((step, i, arr) => (
-          <React.Fragment key={step}>
-            <span className="px-2.5 py-1 rounded-lg bg-[#FFF4E8] border border-[#172B5014]">{step}</span>
-            {i < arr.length - 1 && <ArrowRight className="w-3 h-3 text-[#F4510B]" />}
-          </React.Fragment>
-        ))}
-      </div>
 
       {/* Filter and Search Bar */}
       <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-3">
