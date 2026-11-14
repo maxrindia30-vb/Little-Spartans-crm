@@ -38,7 +38,8 @@ import {
   Database,
   Download,
   Settings,
-  HardDrive
+  HardDrive,
+  CalendarDays
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
@@ -59,8 +60,18 @@ const submenuConfig = {
     title: 'Enquiry Management',
     items: [
       { parentId: 'enquiries', subTab: 'all', label: 'Active Pipeline', desc: 'Track prospective spartans & conversion', icon: Users },
-      { parentId: 'enquiries', subTab: 'trials', label: 'Trial Sessions', desc: 'Booked demo trials & appointments', icon: CalendarCheck },
-      { parentId: 'enquiries', subTab: 'new', label: 'Capture New Lead', desc: 'Walk-in or telephone enquiry registration', icon: PlusCircle },
+      { parentId: 'demos', subTab: 'all', label: 'Demo Classes', desc: 'Booked demo trials & student conversion', icon: CalendarDays },
+      { parentId: 'enquiries', subTab: 'new', label: 'Capture New Lead', desc: 'Website, Instagram, WhatsApp & walk-ins', icon: PlusCircle },
+    ]
+  },
+
+  // Demo Management
+  demos: {
+    title: 'Demo Management',
+    items: [
+      { parentId: 'demos', subTab: 'all', label: 'Demo Register', desc: 'All scheduled & completed demo classes', icon: CalendarDays },
+      { parentId: 'demos', subTab: 'upcoming', label: 'Upcoming Demos', desc: 'Booked sessions & coach assignments', icon: Clock },
+      { parentId: 'demos', subTab: 'completed', label: 'Completed Trials', desc: 'Ready for student conversion', icon: CheckCircle2 },
     ]
   },
 
@@ -204,6 +215,7 @@ export default function Sidebar() {
   // =========================================================================
   const adminNavItems = [
     { id: 'enquiries', label: 'Enquiries', icon: Users },
+    { id: 'demos', label: 'Demo Management', icon: CalendarDays },
     { id: 'people', label: 'People Management', icon: GraduationCap },
     { id: 'programs', label: 'Programs & Classes', icon: Calendar },
     { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: CalendarCheck },

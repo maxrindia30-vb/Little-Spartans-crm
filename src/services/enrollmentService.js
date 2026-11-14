@@ -368,9 +368,12 @@ export function executeEnquiryEnrollmentTransaction(
   }
 
   // 6. Create Student Record
+  const targetDemoId = merged.demoId || enquiry.demoId || null;
+
   const newStudent = {
     id: studentId,
     enquiryId: enquiry.id,
+    demoId: targetDemoId,
     parentId: resolvedParent.id,
     name: childName,
     dob: merged.dob || '',
@@ -398,6 +401,37 @@ export function executeEnquiryEnrollmentTransaction(
   };
 
   const nextStudents = [newStudent, ...students];
+
+  // 7. Update Demo Record if linked
+  const demos = stateSnapshot?.demos || [];
+  const nextDemos = demos.map((d) => {
+    if (d.id === targetDemoId) {
+      return {
+        ...d,
+        convertedToStudent: true,
+        studentId,
+        status: 'Completed',
+        updatedAt: nowIso,
+        history: [
+          {
+            id: `HIST-${Date.now()}-conv`,
+            timestamp: nowIso,
+            action: `Converted to Student (${studentId})`,
+            fromStatus: d.status,
+            toStatus: 'Completed',
+            date: d.demoDate,
+            time: d.demoTime,
+            location: d.location,
+            coachName: d.coachName,
+            note: `Successfully enrolled as Student ${studentId} (${childName}) under Parent ${resolvedParent.name}.`,
+            updatedBy: 'Admin',
+          },
+          ...(d.history || []),
+        ],
+      };
+    }
+    return d;
+  });
 
   // 7. Update Original Enquiry (preserved for future reference & auditability)
   const updatedEnquiry = {
@@ -430,6 +464,7 @@ export function executeEnquiryEnrollmentTransaction(
       userAccounts: nextUserAccounts,
       classes: nextClasses,
       enquiries: nextEnquiries,
+      demos: nextDemos,
     },
   };
 }

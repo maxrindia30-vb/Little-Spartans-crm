@@ -35,22 +35,29 @@ export function getCommonLocations(data, { includeInactive = false } = {}) {
 }
 
 /**
- * Filters enquiries strictly by location, stage, date, and search query.
+ * Filters enquiries strictly by location, stage, source, date, and search query.
  */
-export function filterEnquiries(enquiries = [], { location = 'All', stage = 'All', date = '', search = '' } = {}) {
+export function filterEnquiries(
+  enquiries = [],
+  { location = 'All', stage = 'All', source = 'All', date = '', search = '' } = {}
+) {
   const query = search.trim().toLowerCase();
 
   return enquiries.filter((enq) => {
     const matchesLocation = location === 'All' || enq.center === location;
     const matchesStage = stage === 'All' || enq.stage === stage;
-    const matchesDate = !date || enq.createdAt === date || enq.trialDate === date;
+    const matchesSource =
+      source === 'All' || (enq.source || '').toLowerCase() === source.toLowerCase();
+    const matchesDate =
+      !date || enq.createdAt === date || enq.enquiryDate === date || enq.trialDate === date;
     const matchesSearch =
       !query ||
       enq.childName?.toLowerCase().includes(query) ||
       enq.parentName?.toLowerCase().includes(query) ||
       enq.phone?.includes(search.trim()) ||
+      enq.email?.toLowerCase().includes(query) ||
       enq.id?.toLowerCase().includes(query);
 
-    return matchesLocation && matchesStage && matchesDate && matchesSearch;
+    return matchesLocation && matchesStage && matchesSource && matchesDate && matchesSearch;
   });
 }

@@ -6,9 +6,10 @@ import ToastContainer from './components/common/ToastContainer';
 import LoginModal from './components/common/LoginModal';
 import SpartzenLoginPage from './components/auth/SpartzenLoginPage';
 
-// Admin Portal 9 Master Modules
+// Admin Portal Master Modules
 import AdminDashboard from './portals/admin/AdminDashboard';
 import EnquiryManagement from './portals/admin/EnquiryManagement';
+import DemoManagementModule from './portals/admin/DemoManagementModule';
 import PeopleManagementModule from './portals/admin/PeopleManagementModule';
 import ProgramsClassesModule from './portals/admin/ProgramsClassesModule';
 import AttendanceCompensationModule from './portals/admin/AttendanceCompensationModule';
@@ -43,9 +44,13 @@ export default function App() {
       case 'dashboard':
         return <AdminDashboard />;
 
-      // 2. Enquiries
+      // 2. Enquiries & Leads
       case 'enquiries':
         return <EnquiryManagement />;
+
+      // Demo Management (Enquiry-to-Demo Conversion & Tracking)
+      case 'demos':
+        return <DemoManagementModule />;
 
       // 3. People Management (Students, Parents, Coaches, Account Management)
       case 'people':

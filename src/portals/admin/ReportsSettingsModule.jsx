@@ -90,13 +90,39 @@ export default function ReportsSettingsModule() {
       } else if (exportEntity === 'enquiries') {
         exportData = data.enquiries.map(e => ({
           ID: e.id,
-          StudentName: e.studentName,
+          Source: e.source || 'Manual / Walk-in',
+          ChildName: e.childName || e.studentName,
+          Age: e.childAge || '',
+          Gender: e.gender || '',
           ParentName: e.parentName,
           Phone: e.phone,
-          Program: e.program,
-          Status: e.status,
-          Date: e.date,
-          TrialDate: e.trialDate || 'N/A'
+          Email: e.email || '',
+          Location: e.center || '',
+          Program: e.interestedProgram || e.program,
+          Stage: e.stage || e.status,
+          DemoID: e.demoId || 'N/A',
+          EnquiryDate: e.enquiryDate || e.date,
+          Notes: e.notes || ''
+        }));
+      } else if (exportEntity === 'demos') {
+        exportData = (data.demos || []).map(d => ({
+          DemoID: d.id,
+          EnquiryRef: d.enquiryId || 'N/A',
+          ChildName: d.childName,
+          Age: d.childAge || '',
+          Gender: d.gender || '',
+          ParentName: d.parentName,
+          Phone: d.phone,
+          Email: d.email || '',
+          Location: d.location,
+          Program: d.program,
+          DemoDate: d.demoDate,
+          DemoTime: d.demoTime,
+          Coach: d.coachName || '',
+          Status: d.status,
+          ConvertedToStudent: d.convertedToStudent ? 'Yes' : 'No',
+          StudentID: d.studentId || 'N/A',
+          Notes: d.notes || ''
         }));
       } else if (exportEntity === 'fees') {
         exportData = (data.studentFeeAssignments || []).map(f => ({
@@ -312,6 +338,7 @@ export default function ReportsSettingsModule() {
                   <option value="parents">Parents Directory ({data.parents.length})</option>
                   <option value="coaches">Coaching Staff ({data.coaches.length})</option>
                   <option value="enquiries">Lead Enquiries ({data.enquiries.length})</option>
+                  <option value="demos">Demo Class Bookings ({(data.demos || []).length})</option>
                   <option value="fees">Fee Assignments & Dues ({(data.studentFeeAssignments || []).length})</option>
                   <option value="payments">Payment Receipts ({(data.payments || []).length})</option>
                   <option value="attendance">Attendance Sessions ({(data.attendanceHistory || []).length})</option>

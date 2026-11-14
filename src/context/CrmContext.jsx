@@ -14,6 +14,14 @@ import {
   executeEnquiryEnrollmentTransaction,
   generateUniquePrefixedId,
 } from '../services/enrollmentService';
+import {
+  validateDemoPayload,
+  buildDemoRecord,
+  rescheduleDemoRecord,
+  updateDemoStatusRecord,
+  DEMO_STATUSES,
+  ENQUIRY_SOURCES,
+} from '../services/demoService';
 
 const CrmContext = createContext();
 
@@ -27,12 +35,20 @@ export function CrmProvider({ children }) {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Ensure canonical locations, default coaches, and required arrays exist
-        const storedCoaches = Array.isArray(parsed.coaches) ? parsed.coaches : [];
-        const existingCoachNames = new Set(storedCoaches.map((c) => (c.name || '').toLowerCase()));
+        // Ensure canonical coaches (Kapil, Dibi, Hanif, Teja), canonical locations, and required arrays exist
+        const legacyCoachNames = new Set([
+          'coach vikram singh', 
+          'sensei rajesh kumar', 
+          'coach priya nair', 
+          'coach david miller'
+        ]);
+        const storedCoaches = (Array.isArray(parsed.coaches) ? parsed.coaches : [])
+          .filter((c) => !legacyCoachNames.has((c.name || '').toLowerCase().trim()));
+
+        const existingCoachNames = new Set(storedCoaches.map((c) => (c.name || '').toLowerCase().trim()));
         const mergedCoaches = [
-          ...storedCoaches,
-          ...initialAcademyData.coaches.filter((c) => !existingCoachNames.has(c.name.toLowerCase())),
+          ...initialAcademyData.coaches,
+          ...storedCoaches.filter((c) => !new Set(initialAcademyData.coaches.map(ic => ic.name.toLowerCase().trim())).has((c.name || '').toLowerCase().trim())),
         ];
         const storedLocations =
           Array.isArray(parsed.locations) && parsed.locations.length > 0
@@ -52,6 +68,13 @@ export function CrmProvider({ children }) {
           },
           locations: storedLocations,
           coaches: mergedCoaches,
+          enquiries: Array.isArray(parsed.enquiries) && parsed.enquiries.length > 0
+            ? parsed.enquiries.map(enq => ({
+                ...enq,
+                source: enq.source || ENQUIRY_SOURCES.MANUAL,
+              }))
+            : (initialAcademyData.enquiries || []),
+          demos: Array.isArray(parsed.demos) && parsed.demos.length > 0 ? parsed.demos : (initialAcademyData.demos || []),
           classSchedules: Array.isArray(parsed.classSchedules) ? parsed.classSchedules : initialAcademyData.classSchedules,
           attendanceRecords: Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
           notifications: Array.isArray(parsed.notifications) ? parsed.notifications : (initialAcademyData.notifications || []),
@@ -224,15 +247,17 @@ export function CrmProvider({ children }) {
     const newEnq = {
       ...enquiryData,
       id: generateUniquePrefixedId(data.enquiries || [], 'ENQ'),
+      source: enquiryData.source || ENQUIRY_SOURCES.MANUAL,
       enquiryDate: enquiryData.enquiryDate || new Date().toISOString().split('T')[0],
       createdAt: enquiryData.enquiryDate || new Date().toISOString().split('T')[0],
-      stage: enquiryData.stage || 'New'
+      stage: enquiryData.stage || 'New',
+      demoId: enquiryData.demoId || null,
     };
     setData(prev => ({
       ...prev,
       enquiries: [newEnq, ...prev.enquiries]
     }));
-    addToast(`New enquiry for "${newEnq.childName}" registered.`);
+    addToast(`New enquiry for "${newEnq.childName}" registered (${newEnq.source}).`);
     return newEnq;
   };
 
@@ -305,6 +330,169 @@ export function CrmProvider({ children }) {
     } finally {
       enrollingIdsRef.current.delete(enquiryId);
     }
+  };
+
+  // --- Demo Management Actions ---
+  const addDemo = (demoPayload) => {
+    const activeLocations = (data.locations || []).filter(l => l.status !== 'Inactive');
+    const validation = validateDemoPayload(demoPayload, activeLocations);
+    if (!validation.isValid) {
+      addToast(validation.errors[0] || 'Demo details are incomplete.', 'error');
+      return { success: false, errors: validation.errors };
+    }
+
+    const newDemo = buildDemoRecord(demoPayload, data.demos || []);
+    
+    setData(prev => {
+      let updatedEnquiries = prev.enquiries || [];
+      if (newDemo.enquiryId) {
+        updatedEnquiries = updatedEnquiries.map(e => {
+          if (e.id === newDemo.enquiryId) {
+            return {
+              ...e,
+              demoId: newDemo.id,
+              stage: 'Demo Scheduled',
+            };
+          }
+          return e;
+        });
+      }
+      return {
+        ...prev,
+        demos: [newDemo, ...(prev.demos || [])],
+        enquiries: updatedEnquiries,
+      };
+    });
+
+    addToast(`Demo ${newDemo.id} scheduled for ${newDemo.childName} on ${newDemo.demoDate} at ${newDemo.location}.`, 'success');
+    return { success: true, demo: newDemo };
+  };
+
+  const updateDemo = (id, updates) => {
+    setData(prev => ({
+      ...prev,
+      demos: (prev.demos || []).map(d => d.id === id ? { ...d, ...updates, updatedAt: new Date().toISOString() } : d),
+    }));
+    addToast(`Demo ${id} updated.`);
+    return { success: true };
+  };
+
+  const updateDemoStatus = (id, newStatus, note = '') => {
+    const target = (data.demos || []).find(d => d.id === id);
+    if (!target) return { success: false, error: 'Demo not found' };
+
+    const updated = updateDemoStatusRecord(target, newStatus, note);
+    
+    setData(prev => {
+      let updatedEnquiries = prev.enquiries || [];
+      if (target.enquiryId) {
+        let enquiryStage = null;
+        if (newStatus === DEMO_STATUSES.COMPLETED) enquiryStage = 'Demo Completed';
+        else if (newStatus === DEMO_STATUSES.CANCELLED) enquiryStage = 'Demo Cancelled';
+        else if (newStatus === DEMO_STATUSES.NO_SHOW) enquiryStage = 'Demo No Show';
+        else if (newStatus === DEMO_STATUSES.CONFIRMED) enquiryStage = 'Demo Scheduled';
+        else if (newStatus === DEMO_STATUSES.RESCHEDULED) enquiryStage = 'Demo Scheduled';
+
+        if (enquiryStage) {
+          updatedEnquiries = updatedEnquiries.map(e => e.id === target.enquiryId ? { ...e, stage: enquiryStage } : e);
+        }
+      }
+
+      return {
+        ...prev,
+        demos: (prev.demos || []).map(d => d.id === id ? updated : d),
+        enquiries: updatedEnquiries,
+      };
+    });
+
+    addToast(`Demo ${id} status updated to ${newStatus}.`, 'info');
+    return { success: true, demo: updated };
+  };
+
+  const rescheduleDemo = (id, updates) => {
+    const target = (data.demos || []).find(d => d.id === id);
+    if (!target) return { success: false, error: 'Demo not found' };
+
+    const updated = rescheduleDemoRecord(target, updates);
+    
+    setData(prev => ({
+      ...prev,
+      demos: (prev.demos || []).map(d => d.id === id ? updated : d),
+    }));
+
+    addToast(`Demo ${id} rescheduled to ${updates.demoDate} at ${updates.demoTime}.`, 'success');
+    return { success: true, demo: updated };
+  };
+
+  const convertDemoToStudent = (demoId, overrides = {}) => {
+    const demo = (data.demos || []).find(d => d.id === demoId);
+    if (!demo) {
+      addToast('Demo record not found.', 'error');
+      return { success: false, error: 'Demo record not found.' };
+    }
+
+    if (demo.convertedToStudent) {
+      addToast(`Demo ${demo.id} has already been converted to Student (${demo.studentId}). Duplicate conversion blocked.`, 'error');
+      return { success: false, duplicate: true, error: 'Demo already converted' };
+    }
+
+    // Build or find synthetic or real enquiry
+    let targetEnquiryId = demo.enquiryId;
+    let existingEnquiry = (data.enquiries || []).find(e => e.id === targetEnquiryId);
+
+    if (!existingEnquiry) {
+      const syntheticEnq = {
+        id: `ENQ-DEMO-${demo.id}`,
+        childName: demo.childName,
+        childAge: demo.childAge || '6',
+        gender: demo.gender || 'Male',
+        dob: demo.dob || '',
+        parentName: demo.parentName,
+        phone: demo.phone,
+        email: demo.email || '',
+        interestedProgram: demo.program,
+        center: demo.location,
+        preferredBatchId: overrides.preferredBatchId || '',
+        enquiryDate: demo.demoDate,
+        notes: demo.notes || `Converted from Demo ${demo.id}`,
+        stage: 'Demo Completed',
+        source: ENQUIRY_SOURCES.MANUAL,
+        demoId: demo.id,
+      };
+      targetEnquiryId = syntheticEnq.id;
+      existingEnquiry = syntheticEnq;
+
+      setData(prev => ({
+        ...prev,
+        enquiries: [syntheticEnq, ...(prev.enquiries || [])],
+      }));
+    }
+
+    const enrollmentOverrides = {
+      ...overrides,
+      demoId: demo.id,
+      center: overrides.center || demo.location,
+      interestedProgram: overrides.interestedProgram || demo.program,
+      childName: overrides.childName || demo.childName,
+      parentName: overrides.parentName || demo.parentName,
+      phone: overrides.phone || demo.phone,
+      email: overrides.email || demo.email,
+    };
+
+    const res = enrollFromEnquiry(targetEnquiryId, enrollmentOverrides);
+    if (res.success) {
+      setData(prev => ({
+        ...prev,
+        demos: (prev.demos || []).map(d => d.id === demo.id ? {
+          ...d,
+          convertedToStudent: true,
+          studentId: res.student.id,
+          status: DEMO_STATUSES.COMPLETED,
+          updatedAt: new Date().toISOString(),
+        } : d),
+      }));
+    }
+    return res;
   };
 
   const addPayment = (paymentData) => {
@@ -1910,6 +2098,12 @@ export function CrmProvider({ children }) {
         updateEnquiry,
         updateEnquiryStage,
         enrollFromEnquiry,
+        // Demo Management
+        addDemo,
+        updateDemo,
+        updateDemoStatus,
+        rescheduleDemo,
+        convertDemoToStudent,
         addPayment,
         markAttendance,
         applyLeave,

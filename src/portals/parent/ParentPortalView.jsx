@@ -1397,7 +1397,7 @@ export default function ParentPortalView() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Training Batch</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Batches</label>
               <select
                 value={compBatchId}
                 onChange={(e) => {

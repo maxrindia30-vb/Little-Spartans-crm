@@ -881,7 +881,7 @@ export default function AttendanceCompensationModule() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Training Batch</label>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Batches</label>
                 <select
                   value={repBatchId}
                   onChange={(e) => setRepBatchId(e.target.value)}
@@ -1031,7 +1031,7 @@ export default function AttendanceCompensationModule() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Training Batch</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Batches</label>
               <select
                 value={manualBatchId}
                 onChange={(e) => {

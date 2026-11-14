@@ -14,13 +14,16 @@ import {
   Sparkles,
   ShieldAlert,
   CheckCircle2,
-  Clock
+  Clock,
+  CalendarDays,
+  Globe
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import KpiCard from '../../components/common/KpiCard';
 import { RevenueTrendChart, AttendanceDonutChart, ProgramDistributionChart } from '../../components/common/Charts';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
+import { calculateDemoMetrics } from '../../services/demoService';
 
 export default function AdminDashboard() {
   const { data, setCurrentView, addStudent, addEnquiry, addPayment, addToast } = useCrm();
@@ -57,6 +60,8 @@ export default function AdminDashboard() {
   const pendingAmount = data.payments
     .filter(p => p.status === 'Pending')
     .reduce((sum, p) => sum + p.amount, 0);
+
+  const demoMetrics = calculateDemoMetrics(data.enquiries || [], data.demos || [], data.students || []);
 
   const handleCreateStudent = (e) => {
     e.preventDefault();
@@ -205,6 +210,125 @@ export default function AdminDashboard() {
           subtitle={`${pendingPayments} invoices pending`}
           icon={AlertCircle}
         />
+      </div>
+
+      {/* Enquiry Sources & Demo Management Summary Dashboard (Section 6) */}
+      <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#172B5010]">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#F4510B] animate-pulse" />
+              <h2 className="text-sm font-extrabold text-[#172B50] uppercase tracking-wide">
+                Enquiry Sources &amp; Demo Conversion Performance
+              </h2>
+            </div>
+            <p className="text-[11px] text-[#172B50] opacity-70 mt-0.5">
+              Live funnel from multichannel leads to demo bookings and verified student admissions
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentView('enquiries')}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] hover:border-[#F4510B] cursor-pointer"
+            >
+              View Enquiries
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentView('demos')}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#172B50] text-white hover:bg-[#F4510B] cursor-pointer shadow-xs"
+            >
+              Demo Management →
+            </button>
+          </div>
+        </div>
+
+        {/* 9 Summary Cards Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* 1. Total Enquiries */}
+          <div className="p-3 rounded-xl bg-[#FFF4E8]/60 border border-[#172B5014]">
+            <span className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-65 block">
+              Total Enquiries
+            </span>
+            <p className="text-xl font-black text-[#172B50] mt-1">{demoMetrics.totalEnquiries}</p>
+            <span className="text-[10px] font-semibold text-[#172B50] opacity-60">All lead channels</span>
+          </div>
+
+          {/* 2. Website Enquiries (Blue) */}
+          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
+            <span className="text-[10px] font-extrabold uppercase text-blue-700 block">
+              Website Enquiries
+            </span>
+            <p className="text-xl font-black text-blue-900 mt-1">{demoMetrics.websiteEnquiries}</p>
+            <span className="text-[10px] font-bold text-blue-700">Online Web Ingestion</span>
+          </div>
+
+          {/* 3. Instagram Enquiries (Pink) */}
+          <div className="p-3 rounded-xl bg-fuchsia-50 border border-fuchsia-200">
+            <span className="text-[10px] font-extrabold uppercase text-fuchsia-700 block">
+              Instagram Enquiries
+            </span>
+            <p className="text-xl font-black text-fuchsia-900 mt-1">{demoMetrics.instagramEnquiries}</p>
+            <span className="text-[10px] font-bold text-fuchsia-700">Social Media Leads</span>
+          </div>
+
+          {/* 4. WhatsApp Enquiries (Green) */}
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+            <span className="text-[10px] font-extrabold uppercase text-emerald-700 block">
+              WhatsApp Enquiries
+            </span>
+            <p className="text-xl font-black text-emerald-900 mt-1">{demoMetrics.whatsappEnquiries}</p>
+            <span className="text-[10px] font-bold text-emerald-700">Direct Inquiries</span>
+          </div>
+
+          {/* 5. Manual / Walk-in Enquiries (Orange) */}
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-300">
+            <span className="text-[10px] font-extrabold uppercase text-amber-900 block">
+              Manual / Walk-in
+            </span>
+            <p className="text-xl font-black text-[#F4510B] mt-1">{demoMetrics.manualEnquiries}</p>
+            <span className="text-[10px] font-bold text-amber-800">Reception Desk</span>
+          </div>
+
+          {/* 6. Total Demos */}
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-[10px] font-extrabold uppercase text-slate-700 block">
+              Total Demos
+            </span>
+            <p className="text-xl font-black text-[#172B50] mt-1">{demoMetrics.totalDemos}</p>
+            <span className="text-[10px] font-semibold text-slate-600">Trials Scheduled</span>
+          </div>
+
+          {/* 7. Upcoming Demos */}
+          <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
+            <span className="text-[10px] font-extrabold uppercase text-indigo-700 block">
+              Upcoming Demos
+            </span>
+            <p className="text-xl font-black text-indigo-900 mt-1">{demoMetrics.upcomingDemos}</p>
+            <span className="text-[10px] font-bold text-indigo-700">Active Bookings</span>
+          </div>
+
+          {/* 8. Completed Demos */}
+          <div className="p-3 rounded-xl bg-teal-50 border border-teal-200">
+            <span className="text-[10px] font-extrabold uppercase text-teal-700 block">
+              Completed Demos
+            </span>
+            <p className="text-xl font-black text-teal-900 mt-1">{demoMetrics.completedDemos}</p>
+            <span className="text-[10px] font-bold text-teal-700">Sessions Finished</span>
+          </div>
+
+          {/* 9. Student Conversions */}
+          <div className="p-3 rounded-xl bg-[#FFF4E8] border border-[#F4510B40] col-span-2 sm:col-span-1">
+            <span className="text-[10px] font-extrabold uppercase text-[#F4510B] block">
+              Student Conversions
+            </span>
+            <p className="text-xl font-black text-[#F4510B] mt-1">{demoMetrics.studentConversions}</p>
+            <span className="text-[10px] font-bold text-[#F4510B]">
+              {demoMetrics.conversionRate}% Conversion Rate
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Visual Analytics & Attendance Section */}
