@@ -61,10 +61,23 @@ export default function AdminDashboard() {
   const websitePct = totalEnquiries > 0 ? Math.round((websiteCount / totalEnquiries) * 100) : 0;
   const manualPct = totalEnquiries > 0 ? Math.round((manualCount / totalEnquiries) * 100) : 0;
 
-  // Live lists
-  const activeEnquiries = (data.enquiries || []).filter(e => e.stage === 'New' || e.stage === 'Follow-up' || e.stage === 'Interested');
-  const activeDemos = (data.demos || []).filter(d => d.status !== 'Cancelled');
-  const activeStudents = (data.students || []).slice(-3).reverse();
+  // Helper to sort latest records first
+  const getLatestRecords = (items) => {
+    if (!Array.isArray(items)) return [];
+    return [...items].sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.date || a.enquiryDate || a.joinDate || 0).getTime();
+      const timeB = new Date(b.createdAt || b.date || b.enquiryDate || b.joinDate || 0).getTime();
+      if (!isNaN(timeA) && !isNaN(timeB) && timeA !== timeB && (timeA > 0 || timeB > 0)) {
+        return timeB - timeA;
+      }
+      return 0;
+    });
+  };
+
+  // Live dynamic lists sorted latest first (NO hardcoded records)
+  const allEnquiries = getLatestRecords(data.enquiries || []);
+  const allDemos = getLatestRecords(data.demos || []);
+  const allStudents = getLatestRecords(data.students || []);
   const liveClasses = data.classSchedules || [];
 
   const handleCreateStudent = (e) => {
@@ -224,12 +237,12 @@ export default function AdminDashboard() {
           {/* ---------------------------------------------------- */}
           {/* Card 1: Enquiry Intake (Lead Capture)                 */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#FFF9F5] rounded-[24px] p-4.5 sm:p-5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] flex flex-col justify-between min-h-[290px]">
+          <div className="relative bg-[#FFF9F5] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] flex flex-col justify-between">
             <div>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
-                  <Inbox className="w-4.5 h-4.5 text-[#F4510B]" />
+              <div className="flex items-center gap-3 mb-3.5">
+                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                  <Inbox className="w-4 h-4 text-[#F4510B]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-[#172B50] tracking-tight">
@@ -241,35 +254,40 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Dynamic Enquiries or Clean Zero State */}
-              {activeEnquiries.length === 0 ? (
-                <div className="py-7 text-center flex flex-col items-center justify-center">
+              {/* Dynamic Enquiries (5 Visible, Scroll if > 5) or Clean Zero State */}
+              {allEnquiries.length === 0 ? (
+                <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
                   <div className="w-10 h-10 rounded-xl bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-2 shadow-2xs">
                     <Inbox className="w-5 h-5 text-[#F4510B]" />
                   </div>
                   <p className="text-xs font-black text-[#172B50]">No enquiries logged yet</p>
-                  <p className="text-[10.5px] font-medium text-[#172B50]/55 mt-0.5">Capture new leads to start pipeline</p>
+                  <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Capture new leads to start pipeline</p>
                   <button
                     type="button"
                     onClick={() => setModalType('enquiry')}
-                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                    className="mt-3 px-3 py-1.5 text-xs font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
                   >
                     + Add Enquiry
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2.5">
-                  {activeEnquiries.slice(0, 3).map((enq) => (
-                    <div key={enq.id} className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                  {allEnquiries.map((enq) => (
+                    <div
+                      key={enq.id}
+                      className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#F4510B30] transition-colors"
+                    >
                       <div className="min-w-0">
-                        <p className="text-xs font-black text-[#172B50] truncate">{enq.childName}</p>
-                        <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">{enq.interestedProgram || 'Sports'} • {enq.center || 'KK NAGAR'}</p>
+                        <p className="text-xs font-black text-[#172B50] truncate leading-tight">{enq.childName}</p>
+                        <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                          {enq.interestedProgram || 'Sports'} • {enq.center || 'KK NAGAR'}
+                        </p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => addToast(`${enq.childName} enquiry verified`)}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
                           title="Verify"
                         >
                           <Check className="w-3.5 h-3.5" />
@@ -277,7 +295,7 @@ export default function AdminDashboard() {
                         <button
                           type="button"
                           onClick={() => setCurrentView('demos')}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
+                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
                           title="Schedule Trial"
                         >
                           <Calendar className="w-3.5 h-3.5" />
@@ -289,49 +307,57 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Bottom Label */}
-            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
-              Lead Capture
-            </p>
+            {/* Bottom Footer: Workflow Stage & View All Link */}
+            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                Lead Capture
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentView('enquiries')}
+                className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
+              >
+                <span>View All ({allEnquiries.length})</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
 
             {/* Desktop Connector 1 to Card 2: Cyan/Blue Bracket Curve */}
-            {activeEnquiries.length > 0 && (
-              <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-                <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                  <path 
-                    d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" 
-                    stroke="#0284C7" 
-                    strokeWidth="1.8" 
-                    fill="none" 
-                    strokeLinecap="round" 
-                  />
-                  <path 
-                    d="M 14,52 L 24,52" 
-                    stroke="#0284C7" 
-                    strokeWidth="1.8" 
-                    strokeLinecap="round" 
-                  />
-                  <path 
-                    d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" 
-                    stroke="#0284C7" 
-                    strokeWidth="1.8" 
-                    fill="none" 
-                    strokeLinecap="round" 
-                  />
-                </svg>
-              </div>
-            )}
+            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                <path 
+                  d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 14,52 L 24,52" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+              </svg>
+            </div>
           </div>
 
           {/* ---------------------------------------------------- */}
           {/* Card 2: Demo & Assessment (Demo Management)           */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#F4FAFF] rounded-[24px] p-4.5 sm:p-5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] flex flex-col justify-between min-h-[290px]">
+          <div className="relative bg-[#F4FAFF] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] flex flex-col justify-between">
             <div>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
-                  <Mail className="w-4.5 h-4.5 text-[#0284C7]" />
+              <div className="flex items-center gap-3 mb-3.5">
+                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
+                  <Mail className="w-4 h-4 text-[#0284C7]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-[#172B50] tracking-tight">
@@ -343,35 +369,40 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Dynamic Demos or Clean Zero State */}
-              {activeDemos.length === 0 ? (
-                <div className="py-7 text-center flex flex-col items-center justify-center">
+              {/* Dynamic Demos (5 Visible, Scroll if > 5) or Clean Zero State */}
+              {allDemos.length === 0 ? (
+                <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
                   <div className="w-10 h-10 rounded-xl bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-2 shadow-2xs">
                     <Mail className="w-5 h-5 text-[#0284C7]" />
                   </div>
                   <p className="text-xs font-black text-[#172B50]">No demos scheduled</p>
-                  <p className="text-[10.5px] font-medium text-[#172B50]/55 mt-0.5">Trials will appear here once booked</p>
+                  <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Trials will appear here once booked</p>
                   <button
                     type="button"
                     onClick={() => setCurrentView('demos')}
-                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#0284C7] bg-white border border-[#0284C730] hover:bg-[#0284C7] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                    className="mt-3 px-3 py-1.5 text-xs font-bold text-[#0284C7] bg-white border border-[#0284C730] hover:bg-[#0284C7] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
                   >
                     Demo Register
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2.5">
-                  {activeDemos.slice(0, 3).map((demo) => (
-                    <div key={demo.id} className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                  {allDemos.map((demo) => (
+                    <div
+                      key={demo.id}
+                      className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#0284C730] transition-colors"
+                    >
                       <div className="min-w-0">
-                        <p className="text-xs font-black text-[#172B50] truncate">{demo.childName}</p>
-                        <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">{demo.program || 'Trial'} Demo</p>
+                        <p className="text-xs font-black text-[#172B50] truncate leading-tight">{demo.childName}</p>
+                        <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                          {demo.program || demo.className || 'Trial'} Demo
+                        </p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => addToast(`${demo.childName} demo verified`)}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
                           title="Verify Demo"
                         >
                           <Check className="w-3.5 h-3.5" />
@@ -379,7 +410,7 @@ export default function AdminDashboard() {
                         <button
                           type="button"
                           onClick={() => setCurrentView('demos')}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
+                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
                           title="View Slot"
                         >
                           <Calendar className="w-3.5 h-3.5" />
@@ -391,49 +422,57 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Bottom Label */}
-            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
-              Demo Management
-            </p>
+            {/* Bottom Footer: Workflow Stage & View All Link */}
+            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                Demo Management
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentView('demos')}
+                className="text-[11.5px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
+              >
+                <span>View All ({allDemos.length})</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
 
             {/* Desktop Connector 2 to Card 3: Orange Bracket Curve */}
-            {activeDemos.length > 0 && (
-              <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-                <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                  <path 
-                    d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" 
-                    stroke="#F4510B" 
-                    strokeWidth="1.8" 
-                    fill="none" 
-                    strokeLinecap="round" 
-                  />
-                  <path 
-                    d="M 0,52 L 24,52" 
-                    stroke="#F4510B" 
-                    strokeWidth="1.8" 
-                    strokeLinecap="round" 
-                  />
-                  <path 
-                    d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" 
-                    stroke="#F4510B" 
-                    strokeWidth="1.8" 
-                    fill="none" 
-                    strokeLinecap="round" 
-                  />
-                </svg>
-              </div>
-            )}
+            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                <path 
+                  d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" 
+                  stroke="#F4510B" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 0,52 L 24,52" 
+                  stroke="#F4510B" 
+                  strokeWidth="1.8" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" 
+                  stroke="#F4510B" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+              </svg>
+            </div>
           </div>
 
           {/* ---------------------------------------------------- */}
           {/* Card 3: Admission & Enrollment (Enrollment)          */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#F4FDF7] rounded-[24px] p-4.5 sm:p-5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] flex flex-col justify-between min-h-[290px]">
+          <div className="relative bg-[#F4FDF7] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] flex flex-col justify-between">
             <div>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
-                  <GraduationCap className="w-4.5 h-4.5 text-[#16A34A]" />
+              <div className="flex items-center gap-3 mb-3.5">
+                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-4 h-4 text-[#16A34A]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-[#172B50] tracking-tight">
@@ -445,48 +484,56 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Dynamic Students or Clean Zero State */}
-              {activeStudents.length === 0 ? (
-                <div className="py-7 text-center flex flex-col items-center justify-center">
+              {/* Dynamic Students (5 Visible, Scroll if > 5) or Clean Zero State */}
+              {allStudents.length === 0 ? (
+                <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
                   <div className="w-10 h-10 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-2 shadow-2xs">
                     <GraduationCap className="w-5 h-5 text-[#16A34A]" />
                   </div>
                   <p className="text-xs font-black text-[#172B50]">No enrolled students yet</p>
-                  <p className="text-[10.5px] font-medium text-[#172B50]/55 mt-0.5">Enrolled recruits will appear here</p>
+                  <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Enrolled recruits will appear here</p>
                   <button
                     type="button"
                     onClick={() => setModalType('student')}
-                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#16A34A] bg-white border border-[#16A34A30] hover:bg-[#16A34A] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                    className="mt-3 px-3 py-1.5 text-xs font-bold text-[#16A34A] bg-white border border-[#16A34A30] hover:bg-[#16A34A] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
                   >
                     + Enroll Student
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2.5">
-                  {activeStudents.map((stu) => (
-                    <div key={stu.id} className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                  {allStudents.map((stu) => (
+                    <div
+                      key={stu.id}
+                      className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#16A34A30] transition-colors"
+                    >
                       <div className="min-w-0">
-                        <p className="text-xs font-black text-[#172B50] truncate">{stu.name}</p>
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] mt-0.5">
-                          Enrolled
-                        </span>
+                        <p className="text-xs font-black text-[#172B50] truncate leading-tight">{stu.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="inline-block px-1.5 py-0.2 rounded-full text-[9px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]">
+                            {stu.status || 'Enrolled'}
+                          </span>
+                          <span className="text-[9.5px] font-medium text-[#172B50]/55 truncate">
+                            {stu.program || 'Junior Football'}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
-                          onClick={() => addToast(`${stu.name} roster active`)}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="Enrolled"
+                          onClick={() => addToast(`${stu.name} attendance recorded`)}
+                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          title="Active Student"
                         >
                           <Check className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => setCurrentView('people')}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
                           title="View Profile"
                         >
-                          <Check className="w-3.5 h-3.5" />
+                          <User className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
@@ -495,38 +542,46 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Bottom Label */}
-            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
-              Enrollment
-            </p>
+            {/* Bottom Footer: Workflow Stage & View All Link */}
+            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                Enrollment
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentView('people')}
+                className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
+              >
+                <span>View All ({allStudents.length})</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
 
             {/* Desktop Connector 3 to Card 4: S-curve line directly to Class Schedule tile */}
-            {activeStudents.length > 0 && (
-              <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-                <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                  <path 
-                    d="M 0,82 C 10,82 12,30 24,30" 
-                    stroke="#0284C7" 
-                    strokeWidth="1.8" 
-                    fill="none" 
-                    strokeLinecap="round" 
-                  />
-                  <circle cx="2" cy="82" r="2" fill="#0284C7" />
-                  <circle cx="22" cy="30" r="2" fill="#0284C7" />
-                </svg>
-              </div>
-            )}
+            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                <path 
+                  d="M 0,82 C 10,82 12,30 24,30" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+                <circle cx="2" cy="82" r="2" fill="#0284C7" />
+                <circle cx="22" cy="30" r="2" fill="#0284C7" />
+              </svg>
+            </div>
           </div>
 
           {/* ---------------------------------------------------- */}
           {/* Card 4: Student Engagement (After Enrollment)        */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-white rounded-[24px] p-4.5 sm:p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between min-h-[290px]">
+          <div className="relative bg-white rounded-[24px] p-4 sm:p-4.5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
             <div>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
-                  <Calendar className="w-4.5 h-4.5 text-[#F4510B]" />
+              <div className="flex items-center gap-3 mb-3.5">
+                <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-[#F4510B]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-[#172B50] tracking-tight">
@@ -538,62 +593,94 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* 4 Action Tiles: 2x2 grid */}
-              <div className="grid grid-cols-2 gap-2.5">
-                {/* Tile 1: Class Schedule (Active dark blue) */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('schedules')}
-                  className="bg-[#0B3B60] text-white rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[72px]"
-                >
-                  <Calendar className="w-4.5 h-4.5 text-white mb-1.5" />
-                  <span className="text-[11px] font-black text-white leading-tight">
-                    Class Schedule
-                  </span>
-                </button>
+              {/* 4 Action Tiles: 2x2 grid aligned with 5-record height */}
+              <div className="min-h-[258px] max-h-[258px] flex flex-col justify-center">
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Tile 1: Class Schedule (Active dark blue) */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('schedules')}
+                    className="bg-[#0B3B60] text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                      <Calendar className="w-4.5 h-4.5 text-white" />
+                    </div>
+                    <span className="text-xs font-black text-white leading-tight">
+                      Class Schedule
+                    </span>
+                    <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
+                      Daily Sessions
+                    </span>
+                  </button>
 
-                {/* Tile 2: Attendance */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('attendance_compensation')}
-                  className="bg-white text-[#172B50] rounded-2xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[72px]"
-                >
-                  <BarChart2 className="w-4.5 h-4.5 text-[#172B50] mb-1.5" />
-                  <span className="text-[11px] font-black text-[#172B50] leading-tight">
-                    Attendance
-                  </span>
-                </button>
+                  {/* Tile 2: Attendance */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('attendance_compensation')}
+                    className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                      <BarChart2 className="w-4.5 h-4.5 text-[#172B50]" />
+                    </div>
+                    <span className="text-xs font-black text-[#172B50] leading-tight">
+                      Attendance
+                    </span>
+                    <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                      Roll Call & Logs
+                    </span>
+                  </button>
 
-                {/* Tile 3: Performance */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('sports_events')}
-                  className="bg-white text-[#172B50] rounded-2xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[72px]"
-                >
-                  <Star className="w-4.5 h-4.5 text-[#172B50] mb-1.5" />
-                  <span className="text-[11px] font-black text-[#172B50] leading-tight">
-                    Performance
-                  </span>
-                </button>
+                  {/* Tile 3: Performance */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('sports_events')}
+                    className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                      <Star className="w-4.5 h-4.5 text-[#F4510B]" />
+                    </div>
+                    <span className="text-xs font-black text-[#172B50] leading-tight">
+                      Performance
+                    </span>
+                    <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                      Badges & Skills
+                    </span>
+                  </button>
 
-                {/* Tile 4: Parent Updates */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('communication')}
-                  className="bg-white text-[#172B50] rounded-2xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[72px]"
-                >
-                  <Users className="w-4.5 h-4.5 text-[#172B50] mb-1.5" />
-                  <span className="text-[11px] font-black text-[#172B50] leading-tight">
-                    Parent Updates
-                  </span>
-                </button>
+                  {/* Tile 4: Parent Updates */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('communication')}
+                    className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#F0F7FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                      <Users className="w-4.5 h-4.5 text-[#0284C7]" />
+                    </div>
+                    <span className="text-xs font-black text-[#172B50] leading-tight">
+                      Parent Updates
+                    </span>
+                    <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                      Broadcasts
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Bottom Label */}
-            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
-              After Enrollment
-            </p>
+            {/* Bottom Footer: Workflow Stage & View All Link */}
+            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                After Enrollment
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentView('schedules')}
+                className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+              >
+                <span>View All ({liveClasses.length})</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
           </div>
 
         </div>
