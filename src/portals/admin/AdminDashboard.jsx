@@ -29,16 +29,6 @@ import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
 
-// Real coach avatar portraits matching reference image
-const COACH_AVATARS = [
-  { name: 'Arjun Rao', src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80', fallback: 'AR' },
-  { name: 'Priya Nair', src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80', fallback: 'PN' },
-  { name: 'Daniel Fernandes', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80', fallback: 'DF' },
-  { name: 'Sneha Patel', src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80', fallback: 'SP' },
-  { name: 'Vikram Singh', src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80', fallback: 'VS' },
-  { name: 'Rajesh Sharma', src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80', fallback: 'RS' },
-];
-
 export default function AdminDashboard() {
   const { data, setCurrentView, addStudent, addEnquiry, addPayment, addToast } = useCrm();
   const commonLocations = getCommonLocations(data);
@@ -128,59 +118,18 @@ export default function AdminDashboard() {
     <div className="space-y-6 sm:space-y-7 animate-slide-up pb-8">
       
       {/* ============================================================ */}
-      {/* 1. TOP HEADER: Good Morning, Admin!, Coaches & Action Icons   */}
+      {/* 1. TOP HEADER: Good Morning, Admin! & Action Icons           */}
       {/* ============================================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Left: Heading, Subtitle & Coach Avatars */}
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-          <div>
-            <h1 className="text-2xl sm:text-[28px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
-              <span>Good Morning, Admin!</span>
-              <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default">👋</span>
-            </h1>
-            <p className="text-xs sm:text-[13px] font-semibold text-[#172B50]/60 mt-0.5 tracking-tight">
-              Dashboard
-            </p>
-          </div>
-
-          {/* Coach Profile Avatars + Add Button */}
-          <div className="flex items-center -space-x-1 sm:-space-x-1.5 pl-2">
-            {COACH_AVATARS.map((coach, idx) => (
-              <div 
-                key={idx}
-                className="relative group cursor-pointer"
-                title={`Coach ${coach.name}`}
-                onClick={() => setCurrentView('people')}
-              >
-                <img
-                  src={coach.src}
-                  alt={coach.name}
-                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white object-cover shadow-2xs group-hover:scale-105 group-hover:z-10 transition-transform"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    if (e.currentTarget.nextSibling) {
-                      e.currentTarget.nextSibling.style.display = 'flex';
-                    }
-                  }}
-                />
-                <div 
-                  style={{ display: 'none' }}
-                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white bg-[#172B50] text-white font-bold text-[10px] items-center justify-center shadow-2xs"
-                >
-                  {coach.fallback}
-                </div>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => setCurrentView('people')}
-              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-[#172B5020] bg-white text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B55] flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer transition-all active:scale-95 ml-2.5 shrink-0"
-              title="Add New Coach"
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#172B50]" />
-            </button>
-          </div>
+        {/* Left: Heading & Subtitle */}
+        <div>
+          <h1 className="text-2xl sm:text-[28px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
+            <span>Good Morning, Admin!</span>
+            <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default">👋</span>
+          </h1>
+          <p className="text-xs sm:text-[13px] font-semibold text-[#172B50]/60 mt-0.5 tracking-tight">
+            Dashboard
+          </p>
         </div>
 
         {/* Right: Quick Action Round Buttons (Search, Bell, Profile, Plus, Export, Calendar) */}
