@@ -10,6 +10,7 @@ import React, { useState, useRef } from 'react';
 export default function FloatingCard({
   children,
   className = '',
+  contentClassName = '',
   maxTilt = 7,
   scale = 1.02,
   glare = true,
@@ -93,7 +94,10 @@ export default function FloatingCard({
       )}
 
       {/* Card Content with subtle 3D lift */}
-      <div style={{ transform: tilt.isHovered ? 'translateZ(10px)' : 'translateZ(0px)', transition: 'transform 0.2s ease' }}>
+      <div 
+        className={`h-full ${contentClassName}`}
+        style={{ transform: tilt.isHovered ? 'translateZ(10px)' : 'translateZ(0px)', transition: 'transform 0.2s ease' }}
+      >
         {children}
       </div>
     </div>

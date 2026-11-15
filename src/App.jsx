@@ -5,6 +5,7 @@ import Sidebar from './components/common/Sidebar';
 import ToastContainer from './components/common/ToastContainer';
 import LoginModal from './components/common/LoginModal';
 import SpartzenLoginPage from './components/auth/SpartzenLoginPage';
+import MouseFloatingGlow from './components/common/MouseFloatingGlow';
 
 // Admin Portal Master Modules
 import AdminDashboard from './portals/admin/AdminDashboard';
@@ -132,6 +133,9 @@ export default function App() {
       {/* ============================================================ */}
       <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden relative">
         
+        {/* Ambient Mouse Floating Glow */}
+        <MouseFloatingGlow />
+
         {/* Subtle Branded Background Watermark (img2) */}
         <div 
           aria-hidden="true"

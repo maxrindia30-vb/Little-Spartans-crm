@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import FloatingCard from '../../components/common/FloatingCard';
 import { getCommonLocations } from '../../services/locationService';
 import { calculateDemoMetrics } from '../../services/demoService';
 
@@ -237,7 +238,13 @@ export default function AdminDashboard() {
           {/* ---------------------------------------------------- */}
           {/* Card 1: Enquiry Intake (Lead Capture)                 */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#FFF9F5] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] flex flex-col justify-between">
+          <FloatingCard 
+            maxTilt={3} 
+            scale={1.01} 
+            glare={false}
+            className="relative bg-[#FFF9F5] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] h-full"
+            contentClassName="flex flex-col justify-between h-full"
+          >
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-3.5">
@@ -347,12 +354,18 @@ export default function AdminDashboard() {
                 />
               </svg>
             </div>
-          </div>
+          </FloatingCard>
 
           {/* ---------------------------------------------------- */}
           {/* Card 2: Demo & Assessment (Demo Management)           */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#F4FAFF] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] flex flex-col justify-between">
+          <FloatingCard 
+            maxTilt={3} 
+            scale={1.01} 
+            glare={false}
+            className="relative bg-[#F4FAFF] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] h-full"
+            contentClassName="flex flex-col justify-between h-full"
+          >
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-3.5">
@@ -462,12 +475,18 @@ export default function AdminDashboard() {
                 />
               </svg>
             </div>
-          </div>
+          </FloatingCard>
 
           {/* ---------------------------------------------------- */}
           {/* Card 3: Admission & Enrollment (Enrollment)          */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#F4FDF7] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] flex flex-col justify-between">
+          <FloatingCard 
+            maxTilt={3} 
+            scale={1.01} 
+            glare={false}
+            className="relative bg-[#F4FDF7] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] h-full"
+            contentClassName="flex flex-col justify-between h-full"
+          >
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-3.5">
@@ -571,12 +590,18 @@ export default function AdminDashboard() {
                 <circle cx="22" cy="30" r="2" fill="#0284C7" />
               </svg>
             </div>
-          </div>
+          </FloatingCard>
 
           {/* ---------------------------------------------------- */}
           {/* Card 4: Student Engagement (After Enrollment)        */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-white rounded-[24px] p-4 sm:p-4.5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+          <FloatingCard 
+            maxTilt={3} 
+            scale={1.01} 
+            glare={false}
+            className="relative bg-white rounded-[24px] p-4 sm:p-4.5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-full"
+            contentClassName="flex flex-col justify-between h-full"
+          >
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-3.5">
@@ -681,7 +706,7 @@ export default function AdminDashboard() {
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
-          </div>
+          </FloatingCard>
 
         </div>
       </div>
@@ -694,7 +719,13 @@ export default function AdminDashboard() {
         {/* ---------------------------------------------------- */}
         {/* Left: Today's Classes Table (~60% / 7-8 cols)         */}
         {/* ---------------------------------------------------- */}
-        <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+        <FloatingCard 
+          maxTilt={2} 
+          scale={1.006} 
+          glare={false}
+          className="lg:col-span-7 xl:col-span-8 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-full"
+          contentClassName="flex flex-col justify-between h-full"
+        >
           <div>
             {/* Header */}
             <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
@@ -791,14 +822,18 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-        </div>
+        </FloatingCard>
 
         {/* ---------------------------------------------------- */}
         {/* Right: Enquiry Sources Donut Chart (~40% / 4-5 cols)  */}
         {/* ---------------------------------------------------- */}
-        <div 
+        <FloatingCard 
+          maxTilt={4} 
+          scale={1.015} 
+          glare={true}
           onClick={() => setCurrentView('enquiries')}
-          className="lg:col-span-5 xl:col-span-4 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between cursor-pointer hover:border-[#F4510B35] transition-all"
+          className="lg:col-span-5 xl:col-span-4 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] cursor-pointer hover:border-[#F4510B35] h-full"
+          contentClassName="flex flex-col justify-between h-full"
         >
           <div>
             {/* Header */}
@@ -889,7 +924,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </FloatingCard>
 
       </div>
 
@@ -910,8 +945,10 @@ export default function AdminDashboard() {
         {/* 4 Metric Cards Bound to Real Live CRM Data */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {/* Card 1: Total Demos */}
-          <div 
+          <FloatingCard 
             onClick={() => setCurrentView('demos')}
+            maxTilt={6}
+            scale={1.025}
             className="bg-gradient-to-br from-[#F0F7FF] via-[#F8FBFF] to-white rounded-2xl p-4 sm:p-5 border border-[#BAE6FD]/60 flex items-center gap-4 shadow-2xs hover:border-[#0284C7] transition-all cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
@@ -925,11 +962,13 @@ export default function AdminDashboard() {
                 Total Demos
               </p>
             </div>
-          </div>
+          </FloatingCard>
 
           {/* Card 2: Upcoming */}
-          <div 
+          <FloatingCard 
             onClick={() => setCurrentView('demos')}
+            maxTilt={6}
+            scale={1.025}
             className="bg-gradient-to-br from-[#FAF5FF] via-[#FCF9FF] to-white rounded-2xl p-4 sm:p-5 border border-[#E9D5FF]/60 flex items-center gap-4 shadow-2xs hover:border-[#9333EA] transition-all cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
@@ -943,11 +982,13 @@ export default function AdminDashboard() {
                 Upcoming
               </p>
             </div>
-          </div>
+          </FloatingCard>
 
           {/* Card 3: Completed */}
-          <div 
+          <FloatingCard 
             onClick={() => setCurrentView('demos')}
+            maxTilt={6}
+            scale={1.025}
             className="bg-gradient-to-br from-[#F0FDF4] via-[#F8FDF9] to-white rounded-2xl p-4 sm:p-5 border border-[#BBF7D0]/60 flex items-center gap-4 shadow-2xs hover:border-[#16A34A] transition-all cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
@@ -961,11 +1002,13 @@ export default function AdminDashboard() {
                 Completed
               </p>
             </div>
-          </div>
+          </FloatingCard>
 
           {/* Card 4: Conversions */}
-          <div 
+          <FloatingCard 
             onClick={() => setCurrentView('demos')}
+            maxTilt={6}
+            scale={1.025}
             className="bg-gradient-to-br from-[#FFF5ED] via-[#FFF9F5] to-white rounded-2xl p-4 sm:p-5 border border-[#FED7AA]/60 flex items-center gap-4 shadow-2xs hover:border-[#F4510B] transition-all cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
@@ -979,7 +1022,7 @@ export default function AdminDashboard() {
                 Conversions
               </p>
             </div>
-          </div>
+          </FloatingCard>
         </div>
       </div>
 
