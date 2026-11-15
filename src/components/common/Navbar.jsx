@@ -32,7 +32,7 @@ export default function Navbar() {
   const unreadCount = portalNotifications.filter(n => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-[#FFF4E8] border-b border-[#172B501A] px-4 sm:px-6 py-3 shrink-0 transition-colors duration-200">
+    <header className="sticky top-0 z-30 w-full bg-white border-b border-[#172B501A] px-4 sm:px-6 py-3 shrink-0 transition-colors duration-200">
       <div className="flex items-center justify-between gap-3 sm:gap-4 w-full">
         
         {/* Left: Mobile hamburger & Brand */}

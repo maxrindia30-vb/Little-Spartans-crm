@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --color-warm-cream: #FFF4E8;
+  --color-warm-cream: #FFFFFF;
   --color-spartan-orange: #F4510B;
   --color-navy-blue: #172B50;
   --color-pure-white: #FFFFFF;
@@ -11,7 +11,7 @@
 
 body {
   margin: 0;
-  background-color: #FFF4E8;
+  background-color: #FFFFFF;
   color: #172B50;
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;

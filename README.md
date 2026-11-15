@@ -11,10 +11,8 @@ The entire frontend interface uses exclusively the four official brand colours:
 
 | Colour Name | Hex Code | System Usage |
 | :--- | :--- | :--- |
-| **Warm Cream** | `#FFF4E8` | Top navigation bar background, main application canvas background, subtle cards, and status containers |
-| **Spartan Orange** | `#F4510B` | Active sidebar navigation states, primary action CTA buttons (`#FFFFFF` text), KPI highlights, badges & attendance rings |
-| **Navy Blue** | `#172B50` | Primary page headers, typography, module labels, secondary badges, and comparative chart series |
-| **Pure White** | `#FFFFFF` | Sidebar containers, dashboard cards, modal dialogs, dropdown menus, and data tables |
+| **Pure White** | `#FFFFFF` | Main application canvas background across all portals, top navigation bar, dashboard cards, modal dialogs, and data tables |
+| **Warm Cream** | `#FFF4E8` | Subtle card accents, badge backgrounds, and warm status highlights |
 
 ---
 

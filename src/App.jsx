@@ -120,7 +120,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#FFF4E8] text-[#172B50] flex overflow-hidden font-sans selection:bg-[#F4510B] selection:text-white">
+    <div className="h-screen w-full bg-white text-[#172B50] flex overflow-hidden font-sans selection:bg-[#F4510B] selection:text-white">
       
       {/* ============================================================ */}
       {/* 1. LEFT SIDEBAR: Independent Navigation (100vh, fixed width) */}
@@ -145,7 +145,7 @@ export default function App() {
         </div>
 
         {/* Mobile Header Menu (Only visible on screens < 1024px) */}
-        <div className="lg:hidden p-3 flex items-center justify-between bg-[#FFF4E8] border-b border-[#172B501A] shrink-0 z-20">
+        <div className="lg:hidden p-3 flex items-center justify-between bg-white border-b border-[#172B501A] shrink-0 z-20">
           <button 
             type="button"
             onClick={() => setSidebarOpen(!sidebarOpen)}
