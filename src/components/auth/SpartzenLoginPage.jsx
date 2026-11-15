@@ -65,12 +65,12 @@ export default function SpartzenLoginPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#080B0C] text-[#F4F7F6] font-sans flex items-center justify-center p-4 sm:p-6 lg:p-10 select-none relative overflow-x-hidden">
+    <div className="w-full min-h-screen bg-white text-[#172B50] font-sans flex items-center justify-center p-4 sm:p-6 lg:p-10 select-none relative overflow-x-hidden">
       
       {/* ============================================================ */}
       {/* 4K ULTRA-SHARP SPORTS BALLS AT CORNER EDGE OF LOGIN PAGE     */}
       {/* ============================================================ */}
-      <div className="absolute bottom-0 left-0 pointer-events-none select-none z-10 p-2 sm:p-4 lg:p-6 animate-float-gentle opacity-80">
+      <div className="absolute bottom-0 left-0 pointer-events-none select-none z-10 p-2 sm:p-4 lg:p-6 animate-float-gentle">
         <SportsBallsCorner 
           position="bottom-left" 
           className="w-[230px] sm:w-[300px] md:w-[360px] lg:w-[420px] max-w-[85vw]" 
@@ -87,7 +87,7 @@ export default function SpartzenLoginPage() {
           <img 
             src="/assets/zenconnect-logo-4k-crisp.png" 
             alt="Little Spartans ZenConnect" 
-            className="w-full max-w-[340px] sm:max-w-[370px] lg:max-w-[385px] h-auto object-contain pointer-events-none drop-shadow-md transition-transform hover:scale-[1.02] duration-300"
+            className="w-full max-w-[340px] sm:max-w-[370px] lg:max-w-[385px] h-auto object-contain pointer-events-none drop-shadow-xs transition-transform hover:scale-[1.02] duration-300"
             style={{ 
               imageRendering: '-webkit-optimize-contrast',
               transform: 'translateZ(0)'
@@ -100,37 +100,37 @@ export default function SpartzenLoginPage() {
         {/* ============================================================ */}
         <div className="w-full lg:w-1/2 flex justify-center items-center">
           
-          <div className="relative w-full max-w-[405px] sm:max-w-[425px] bg-[#F4F7F6] text-[#080B0C] rounded-[28px] sm:rounded-[32px] border border-[#493548]/30 shadow-[0_20px_50px_rgba(8,11,12,0.6),0_4px_16px_rgba(73,53,72,0.2)] px-6 sm:px-8 pt-7 pb-6 overflow-hidden animate-scale-in">
+          <div className="relative w-full max-w-[405px] sm:max-w-[425px] bg-white rounded-[28px] sm:rounded-[32px] border border-[#172B5014] shadow-[0_20px_50px_rgba(23,43,80,0.08),0_4px_16px_rgba(23,43,80,0.03)] px-6 sm:px-8 pt-7 pb-6 overflow-hidden animate-scale-in">
             
-            {/* 1. Vector Top-Left Teal Curved Swoosh */}
+            {/* 1. Vector Top-Left Orange Curved Swoosh */}
             <svg 
               className="absolute top-0 left-0 w-24 h-24 pointer-events-none select-none z-0" 
               viewBox="0 0 100 100" 
               fill="none"
             >
               {/* Main swoosh */}
-              <path d="M 0 0 L 80 0 C 55 4, 25 20, 8 48 C 3 58, 1 70, 0 85 Z" fill="#55CDB3" />
+              <path d="M 0 0 L 80 0 C 55 4, 25 20, 8 48 C 3 58, 1 70, 0 85 Z" fill="#F4510B" />
               {/* Accent wave line */}
-              <path d="M 0 85 C 3 65, 12 45, 28 30 C 45 15, 68 3, 95 0 L 98 0 C 70 5, 42 20, 24 38 C 8 56, 1 74, 0 92 Z" fill="#493548" opacity="0.85" />
+              <path d="M 0 85 C 3 65, 12 45, 28 30 C 45 15, 68 3, 95 0 L 98 0 C 70 5, 42 20, 24 38 C 8 56, 1 74, 0 92 Z" fill="#F4510B" opacity="0.85" />
             </svg>
 
-            {/* 2. Vector Bottom-Right Teal Curved Swoosh */}
+            {/* 2. Vector Bottom-Right Orange Curved Swoosh */}
             <svg 
               className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none select-none z-0" 
               viewBox="0 0 100 100" 
               fill="none"
             >
               {/* Main swoosh */}
-              <path d="M 100 100 L 20 100 C 45 96, 75 80, 92 52 C 97 42, 99 30, 100 15 Z" fill="#55CDB3" />
+              <path d="M 100 100 L 20 100 C 45 96, 75 80, 92 52 C 97 42, 99 30, 100 15 Z" fill="#F4510B" />
               {/* Accent wave line */}
-              <path d="M 100 15 C 97 35, 88 55, 72 70 C 55 85, 32 97, 5 100 L 2 100 C 30 95, 58 80, 76 62 C 92 44, 99 26, 100 8 Z" fill="#493548" opacity="0.85" />
+              <path d="M 100 15 C 97 35, 88 55, 72 70 C 55 85, 32 97, 5 100 L 2 100 C 30 95, 58 80, 76 62 C 92 44, 99 26, 100 8 Z" fill="#F4510B" opacity="0.85" />
             </svg>
 
             <div className="relative z-10">
               
               {/* 3. Vector 4K Laurel & Trophy Crest */}
               <div className="flex justify-center mb-1">
-                <svg className="w-16 h-12 text-[#55CDB3]" viewBox="0 0 68 52" fill="currentColor">
+                <svg className="w-16 h-12 text-[#F4510B]" viewBox="0 0 68 52" fill="currentColor">
                   {/* Left Laurel Leaves */}
                   <path d="M12 18c-3 4-3 9 0 13-3-2-5-6-4-10 1-2 3-3 4-3zM7 28c-3 3-3 8 0 12-3-3-3-8 0-11 1-1 2-1 0-1zM18 10c-1 3-1 7 1 10-3-1-4-5-4-8 1-2 3-2 3-2zM23 4c0 3 1 6 3 8-2 0-4-3-4-6 0-2 1-3 1-2z" />
                   {/* Right Laurel Leaves */}
@@ -149,23 +149,23 @@ export default function SpartzenLoginPage() {
               </div>
 
               {/* 4. Welcome to ZenConnect Title (Pure Vector Text) */}
-              <h2 className="text-[23px] sm:text-[25px] font-extrabold text-[#080B0C] tracking-tight text-center font-sans">
+              <h2 className="text-[23px] sm:text-[25px] font-extrabold text-[#172B50] tracking-tight text-center font-sans">
                 Welcome to ZenConnect
               </h2>
               <svg className="w-36 h-2 mx-auto mt-1" viewBox="0 0 144 8" fill="none">
-                <path d="M 4 2 Q 72 8 140 2" stroke="#55CDB3" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M 4 2 Q 72 8 140 2" stroke="#F4510B" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
 
               {/* 5. Subtitle (Pure Vector Text) */}
-              <p className="text-[12px] sm:text-[12.5px] font-semibold text-[#493548] text-center mt-2 max-w-[270px] mx-auto leading-snug font-sans">
+              <p className="text-[12px] sm:text-[12.5px] font-semibold text-[#172B50] text-center mt-2 max-w-[270px] mx-auto leading-snug opacity-80 font-sans">
                 Sign in to manage, track and grow the Little Spartans community.
               </p>
 
               {/* Validation Error Alert */}
               {errorMsg && (
-                <div className="w-full mt-3 p-2 bg-[#493548]/15 border border-[#493548] text-[#080B0C] text-xs font-bold rounded-xl flex items-center justify-between">
+                <div className="w-full mt-3 p-2 bg-[#FFF4E8] border border-[#F4510B] text-[#F4510B] text-xs font-bold rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-1.5 truncate">
-                    <AlertCircle className="w-3.5 h-3.5 text-[#55CDB3] shrink-0" />
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{errorMsg}</span>
                   </div>
                   <X className="w-3.5 h-3.5 shrink-0 cursor-pointer hover:opacity-75" onClick={() => setErrorMsg('')} />
@@ -176,8 +176,8 @@ export default function SpartzenLoginPage() {
               <form onSubmit={handleSignIn} className="mt-4 space-y-2.5">
                 
                 {/* Email / Mobile Input */}
-                <div className="relative flex items-center bg-white border border-[#493548]/30 rounded-xl px-3.5 py-2.5 focus-within:border-[#55CDB3] focus-within:ring-1 focus-within:ring-[#55CDB3] transition-all">
-                  <Mail className="w-4 h-4 text-[#493548] mr-2.5 shrink-0" />
+                <div className="relative flex items-center bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 focus-within:border-[#F4510B] focus-within:ring-1 focus-within:ring-[#F4510B] transition-all">
+                  <Mail className="w-4 h-4 text-[#172B50] opacity-75 mr-2.5 shrink-0" />
                   <input
                     type="text"
                     value={emailOrPhone}
@@ -186,14 +186,14 @@ export default function SpartzenLoginPage() {
                       setErrorMsg('');
                     }}
                     placeholder="Enter your email or mobile number"
-                    className="w-full bg-transparent border-0 outline-none text-xs sm:text-[13px] text-[#080B0C] font-normal placeholder-[#493548]/60 font-sans"
+                    className="w-full bg-transparent border-0 outline-none text-xs sm:text-[13px] text-[#172B50] font-normal placeholder-[#8A99AD] font-sans"
                     autoComplete="username"
                   />
                 </div>
 
                 {/* Password Input */}
-                <div className="relative flex items-center bg-white border border-[#493548]/30 rounded-xl px-3.5 py-2.5 focus-within:border-[#55CDB3] focus-within:ring-1 focus-within:ring-[#55CDB3] transition-all">
-                  <Lock className="w-4 h-4 text-[#493548] mr-2.5 shrink-0" />
+                <div className="relative flex items-center bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 focus-within:border-[#F4510B] focus-within:ring-1 focus-within:ring-[#F4510B] transition-all">
+                  <Lock className="w-4 h-4 text-[#172B50] opacity-75 mr-2.5 shrink-0" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -202,35 +202,35 @@ export default function SpartzenLoginPage() {
                       setErrorMsg('');
                     }}
                     placeholder="Enter your password"
-                    className="w-full bg-transparent border-0 outline-none text-xs sm:text-[13px] text-[#080B0C] font-normal placeholder-[#493548]/60 font-sans"
+                    className="w-full bg-transparent border-0 outline-none text-xs sm:text-[13px] text-[#172B50] font-normal placeholder-[#8A99AD] font-sans"
                     autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-[#493548] hover:text-[#080B0C] ml-2 shrink-0 cursor-pointer transition-colors"
+                    className="text-[#8A99AD] hover:text-[#172B50] ml-2 shrink-0 cursor-pointer transition-colors"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4 text-[#55CDB3]" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-4 h-4 text-[#F4510B]" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
 
                 {/* Remember Me & Forgot Password Row */}
                 <div className="flex items-center justify-between text-xs pt-0.5 px-0.5 font-sans">
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-[#080B0C]">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-[#172B50]">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded border-[#493548]/30 text-[#55CDB3] focus:ring-[#55CDB3] accent-[#55CDB3] cursor-pointer"
+                      className="w-3.5 h-3.5 rounded border-[#CBD5E1] text-[#F4510B] focus:ring-[#F4510B] accent-[#F4510B] cursor-pointer"
                     />
-                    <span className="text-[12px] font-bold text-[#080B0C]">Remember me</span>
+                    <span className="text-[12px] font-bold text-[#172B50]">Remember me</span>
                   </label>
 
                   <button
                     type="button"
                     onClick={() => setIsForgotPasswordOpen(true)}
-                    className="text-[12px] font-bold text-[#55CDB3] hover:underline cursor-pointer"
+                    className="text-[12px] font-bold text-[#F4510B] hover:underline cursor-pointer"
                   >
                     Forgot password?
                   </button>
@@ -240,7 +240,7 @@ export default function SpartzenLoginPage() {
                 <button
                   type="submit"
                   title="Sign in to ZenConnect"
-                  className="w-full py-2.5 sm:py-3 bg-[#55CDB3] hover:bg-[#48bfa5] active:scale-[0.99] text-[#080B0C] text-[14px] font-black rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 font-sans"
+                  className="w-full py-2.5 sm:py-3 bg-[#F4510B] hover:bg-[#E04505] active:scale-[0.99] text-white text-[14px] font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 font-sans"
                 >
                   <span>Sign In</span>
                   <ArrowRight className="w-4 h-4" />
@@ -248,7 +248,7 @@ export default function SpartzenLoginPage() {
 
                 {/* Quick 1-Click Portal Switcher */}
                 <div className="pt-2">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-[#493548] uppercase tracking-wider mb-1.5">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-[#8A99AD] uppercase tracking-wider mb-1.5">
                     <span>Quick Portal Demo Access</span>
                     <span>4 Portals</span>
                   </div>
@@ -262,7 +262,7 @@ export default function SpartzenLoginPage() {
                         login('admin');
                         addToast('Signed in as Director / Super Admin');
                       }}
-                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#493548]/15 text-[#080B0C] hover:bg-[#55CDB3] hover:text-[#080B0C] transition-all cursor-pointer text-center"
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#172B5010] text-[#172B50] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
                     >
                       Admin
                     </button>
@@ -275,7 +275,7 @@ export default function SpartzenLoginPage() {
                         login('super_coach');
                         addToast('Signed in as Senior Coach Kabir (Super Coach)');
                       }}
-                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#55CDB3]/20 text-[#080B0C] hover:bg-[#55CDB3] hover:text-[#080B0C] transition-all cursor-pointer text-center"
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#F4510B15] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
                     >
                       Super Coach
                     </button>
@@ -288,7 +288,7 @@ export default function SpartzenLoginPage() {
                         login('coach');
                         addToast('Signed in as Coach Vikram Singh');
                       }}
-                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#493548]/15 text-[#080B0C] hover:bg-[#55CDB3] hover:text-[#080B0C] transition-all cursor-pointer text-center"
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#172B5010] text-[#172B50] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
                     >
                       Coach
                     </button>
@@ -301,7 +301,7 @@ export default function SpartzenLoginPage() {
                         login('parent');
                         addToast('Signed in as Dr. Rohan Sharma (Parent)');
                       }}
-                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#493548]/15 text-[#080B0C] hover:bg-[#55CDB3] hover:text-[#080B0C] transition-all cursor-pointer text-center"
+                      className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-[#172B5010] text-[#172B50] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer text-center"
                     >
                       Parent
                     </button>
@@ -311,11 +311,11 @@ export default function SpartzenLoginPage() {
               </form>
 
               {/* Divider Line */}
-              <div className="w-full h-px bg-[#493548]/20 mt-3.5 mb-3" />
+              <div className="w-full h-px bg-[#E2E8F0] mt-3.5 mb-3" />
 
-              {/* Bottom Footer Text */}
-              <p className="text-[11.5px] text-[#493548] text-center font-sans">
-                New to <strong className="font-bold text-[#080B0C]">ZenConnect</strong>? Contact your academy administrator.
+              {/* Bottom Footer Text (Pure Vector Text) */}
+              <p className="text-[11.5px] text-[#485C82] text-center font-sans">
+                New to <strong className="font-bold text-[#172B50]">ZenConnect</strong>? Contact your academy administrator.
               </p>
 
             </div>
@@ -328,25 +328,25 @@ export default function SpartzenLoginPage() {
 
       {/* Forgot Password Modal */}
       {isForgotPasswordOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#080B0C]/85 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#F4F7F6] text-[#080B0C] rounded-3xl p-6 sm:p-7 border border-[#493548]/30 shadow-dropdown relative font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#172B5066] backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-[#172B501A] shadow-dropdown relative font-sans">
             <button
               onClick={() => setIsForgotPasswordOpen(false)}
-              className="absolute top-5 right-5 p-1 rounded-xl text-[#493548] hover:bg-[#55CDB3]/20 hover:text-[#080B0C] transition-colors cursor-pointer"
+              className="absolute top-5 right-5 p-1 rounded-xl text-[#172B50] opacity-60 hover:opacity-100 hover:bg-[#FFF4E8] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-black text-[#080B0C] tracking-tight">
+            <h3 className="text-xl font-black text-[#172B50] tracking-tight">
               Password Recovery
             </h3>
-            <p className="text-xs text-[#493548] mt-1">
+            <p className="text-xs text-[#485C82] mt-1">
               Enter your registered email address or mobile number to receive reset instructions.
             </p>
 
             <form onSubmit={handleForgotSubmit} className="mt-5 space-y-4">
               <div>
-                <label className="text-xs font-bold text-[#080B0C] block mb-1">
+                <label className="text-xs font-bold text-[#172B50] block mb-1">
                   Email or Mobile Number
                 </label>
                 <input
@@ -355,7 +355,7 @@ export default function SpartzenLoginPage() {
                   value={forgotInput}
                   onChange={(e) => setForgotInput(e.target.value)}
                   placeholder="e.g. director@littlespartans.co.in"
-                  className="w-full px-3.5 py-2.5 text-xs font-medium text-[#080B0C] placeholder-[#493548]/50 bg-white border border-[#493548]/30 rounded-xl focus:outline-none focus:border-[#55CDB3]"
+                  className="w-full px-3.5 py-2.5 text-xs font-medium text-[#172B50] placeholder-[#94A3B8] bg-[#FFF4E8]/60 border border-[#CBD5E1] rounded-xl focus:outline-none focus:border-[#F4510B]"
                 />
               </div>
 
@@ -363,13 +363,13 @@ export default function SpartzenLoginPage() {
                 <button
                   type="button"
                   onClick={() => setIsForgotPasswordOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-[#493548] hover:bg-[#55CDB3]/15 rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-black bg-[#55CDB3] text-[#080B0C] hover:bg-[#48bfa5] rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   Send Reset Link
                 </button>
