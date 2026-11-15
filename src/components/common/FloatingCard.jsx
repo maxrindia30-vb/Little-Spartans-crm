@@ -87,7 +87,7 @@ export default function FloatingCard({
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 rounded-3xl z-20 transition-opacity duration-200"
           style={{
-            background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255, 255, 255, 0.35) 0%, rgba(244, 81, 11, 0.06) 45%, transparent 75%)`
+            background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255, 255, 255, 0.45) 0%, rgba(85, 205, 179, 0.12) 45%, transparent 75%)`
           }}
         />
       )}

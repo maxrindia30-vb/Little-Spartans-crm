@@ -382,7 +382,7 @@ export default function EnquiryManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Enquiries
           </h1>
         </div>
@@ -390,7 +390,7 @@ export default function EnquiryManagement() {
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 text-white" />
           <span>New Admission Lead</span>
@@ -433,17 +433,17 @@ export default function EnquiryManagement() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-3">
+      <div className="bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
             {/* Location Filter Dropdown */}
             <div className="relative min-w-[210px]">
-              <MapPin className="w-4 h-4 text-[#F4510B] absolute left-3 top-2.5 pointer-events-none" />
+              <MapPin className="w-4 h-4 text-[#55CDB3] absolute left-3 top-2.5 pointer-events-none" />
               <select
                 aria-label="Filter enquiries by academy location"
                 value={selectedLocation}
                 onChange={(e) => handleLocationChange(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5025] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B] cursor-pointer"
+                className="w-full pl-9 pr-3 py-2 text-xs font-bold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3] cursor-pointer"
               >
                 <option value="All">All Locations ({(data.enquiries || []).length})</option>
                 {commonLocations.map((loc) => (
@@ -456,7 +456,7 @@ export default function EnquiryManagement() {
 
             {/* Search */}
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-[#493548] absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchTerm}
@@ -465,14 +465,14 @@ export default function EnquiryManagement() {
                   setCurrentPage(1);
                 }}
                 placeholder="Search by child, parent, phone, or ID..."
-                className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-[#493548]/15 text-[#080B0C] placeholder-[#493548] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
               />
             </div>
 
             {/* Date Filter */}
             <div className="flex items-center gap-1.5">
               <div className="relative">
-                <Calendar className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute left-3 top-2.5 pointer-events-none" />
+                <Calendar className="w-3.5 h-3.5 text-[#493548] absolute left-3 top-2.5 pointer-events-none" />
                 <input
                   type="date"
                   aria-label="Filter enquiries by created or enquiry date"
@@ -481,7 +481,7 @@ export default function EnquiryManagement() {
                     setSelectedDate(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-8 pr-2.5 py-2 text-xs font-semibold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+                  className="pl-8 pr-2.5 py-2 text-xs font-semibold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
                 />
               </div>
               {selectedDate && (
@@ -491,7 +491,7 @@ export default function EnquiryManagement() {
                     setSelectedDate('');
                     setCurrentPage(1);
                   }}
-                  className="px-2.5 py-2 text-[11px] font-bold text-[#F4510B] bg-[#FFF4E8] border border-[#F4510B30] rounded-xl hover:bg-white transition-all cursor-pointer"
+                  className="px-2.5 py-2 text-[11px] font-bold text-[#55CDB3] bg-[#493548]/15 border border-[#55CDB3]/40 rounded-xl hover:bg-[#F4F7F6] transition-all cursor-pointer"
                 >
                   Clear Date
                 </button>
@@ -499,9 +499,9 @@ export default function EnquiryManagement() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] font-semibold text-[#172B50] opacity-75">
+          <div className="flex items-center gap-2 text-[11px] font-semibold text-[#080B0C] opacity-75">
             <span>
-              Showing <strong className="text-[#172B50]">{filteredEnquiries.length}</strong>{' '}
+              Showing <strong className="text-[#080B0C]">{filteredEnquiries.length}</strong>{' '}
               {selectedLocation === 'All' ? 'across all locations' : `at ${selectedLocation}`}
             </span>
           </div>
@@ -519,8 +519,8 @@ export default function EnquiryManagement() {
               }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 selectedStage === st
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'bg-[#FFF4E8] text-[#172B50] hover:bg-white border border-[#172B5015]'
+                  ? 'bg-[#080B0C] text-[#F4F7F6] shadow-sm'
+                  : 'bg-[#493548]/15 text-[#080B0C] hover:bg-[#F4F7F6] border border-[#493548]/20'
               }`}
             >
               {st}{' '}
@@ -532,8 +532,8 @@ export default function EnquiryManagement() {
         </div>
 
         {/* Source Filter Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-[#172B5010]">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50] opacity-60 mr-1 shrink-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-[#493548]/20">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] mr-1 shrink-0">
             Enquiry Source:
           </span>
           <button
@@ -544,8 +544,8 @@ export default function EnquiryManagement() {
             }}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               selectedSource === 'All'
-                ? 'bg-[#172B50] text-white shadow-xs'
-                : 'bg-slate-100 text-[#172B50] hover:bg-slate-200'
+                ? 'bg-[#080B0C] text-[#F4F7F6] shadow-xs'
+                : 'bg-slate-100 text-[#080B0C] hover:bg-slate-200'
             }`}
           >
             All Sources ({locationScopedEnquiries.length})
@@ -566,7 +566,7 @@ export default function EnquiryManagement() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                   isSelected
-                    ? `${cfg.badgeClass} ring-2 ring-[#F4510B]`
+                    ? `${cfg.badgeClass} ring-2 ring-[#55CDB3]`
                     : `${cfg.badgeClass} opacity-85 hover:opacity-100`
                 }`}
               >
@@ -581,11 +581,11 @@ export default function EnquiryManagement() {
       </div>
 
       {/* Enquiries Table */}
-      <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+      <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-[#FFF4E8] text-[#172B50] font-extrabold uppercase tracking-wider text-[11px] border-b border-[#172B5015]">
+              <tr className="bg-[#493548]/15 text-[#080B0C] font-extrabold uppercase tracking-wider text-[11px] border-b border-[#493548]/20">
                 <th className="py-3.5 px-4">Enquiry ID &amp; Date</th>
                 <th className="py-3.5 px-4">Lead Source</th>
                 <th className="py-3.5 px-4">Child Details</th>
@@ -595,10 +595,10 @@ export default function EnquiryManagement() {
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#172B5010]">
+            <tbody className="divide-y divide-[#493548]/15">
               {paginatedEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-[#172B50] opacity-60">
+                  <td colSpan="7" className="py-8 text-center text-[#493548]">
                     No enquiries match the selected location, stage, source, date, or search filter.
                   </td>
                 </tr>
@@ -609,16 +609,16 @@ export default function EnquiryManagement() {
                     ENQUIRY_SOURCE_CONFIG[src] || ENQUIRY_SOURCE_CONFIG[ENQUIRY_SOURCES.OTHER];
 
                   return (
-                    <tr key={enq.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
+                    <tr key={enq.id} className="hover:bg-[#55CDB3]/15/40 transition-colors">
                       <td className="py-3 px-4">
                         <button
                           type="button"
                           onClick={() => setDetailEnquiryId(enq.id)}
-                          className="font-extrabold text-[#172B50] hover:text-[#F4510B] block cursor-pointer"
+                          className="font-extrabold text-[#080B0C] hover:text-[#55CDB3] block cursor-pointer"
                         >
                           {enq.id}
                         </button>
-                        <span className="text-[10px] text-[#172B50] opacity-60">
+                        <span className="text-[10px] text-[#493548]">
                           {enq.enquiryDate || enq.createdAt}
                         </span>
                       </td>
@@ -634,30 +634,30 @@ export default function EnquiryManagement() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="font-extrabold text-[#172B50] text-sm block">
+                        <span className="font-extrabold text-[#080B0C] text-sm block">
                           {enq.childName}
                         </span>
-                        <span className="text-[11px] text-[#172B50] opacity-70">
+                        <span className="text-[11px] text-[#493548]">
                           {enq.childAge} yrs {enq.gender ? `• ${enq.gender}` : ''}
                           {enq.dob ? ` • DOB ${enq.dob}` : ''}
                         </span>
                       </td>
 
                       <td className="py-3 px-4">
-                        <div className="font-bold text-[#172B50]">{enq.parentName}</div>
-                        <div className="text-[11px] text-[#172B50] opacity-75">{enq.phone}</div>
-                        <div className="text-[10px] text-[#172B50] opacity-55 truncate max-w-[165px]">
+                        <div className="font-bold text-[#080B0C]">{enq.parentName}</div>
+                        <div className="text-[11px] text-[#080B0C] opacity-75">{enq.phone}</div>
+                        <div className="text-[10px] text-[#080B0C] opacity-55 truncate max-w-[165px]">
                           {enq.email}
                         </div>
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="text-[10px] text-[#F4510B] font-extrabold uppercase block">
+                        <span className="text-[10px] text-[#55CDB3] font-extrabold uppercase block">
                           {enq.center}
                         </span>
-                        <span className="font-bold text-[#172B50] block">{enq.interestedProgram}</span>
+                        <span className="font-bold text-[#080B0C] block">{enq.interestedProgram}</span>
                         {enq.preferredBatchName && (
-                          <span className="text-[10px] text-[#172B50] opacity-70">
+                          <span className="text-[10px] text-[#493548]">
                             Batch: {enq.preferredBatchName}
                           </span>
                         )}
@@ -668,14 +668,14 @@ export default function EnquiryManagement() {
                           value={enq.stage}
                           disabled={enq.stage === 'Enrolled'}
                           onChange={(e) => updateEnquiryStage(enq.id, e.target.value)}
-                          className={`text-[11px] font-extrabold px-2.5 py-1 rounded-lg border border-[#172B5025] outline-none ${
+                          className={`text-[11px] font-extrabold px-2.5 py-1 rounded-lg border border-[#493548]/20 outline-none ${
                             enq.stage === 'Enrolled'
-                              ? 'bg-[#172B50] text-white cursor-not-allowed'
+                              ? 'bg-[#080B0C] text-[#F4F7F6] cursor-not-allowed'
                               : enq.stage === 'Interested' || enq.stage === 'Demo Scheduled'
-                              ? 'bg-[#F4510B] text-white cursor-pointer'
+                              ? 'bg-[#55CDB3] text-[#080B0C] font-bold cursor-pointer'
                               : enq.stage === 'Demo Completed'
                               ? 'bg-emerald-600 text-white cursor-pointer'
-                              : 'bg-[#FFF4E8] text-[#172B50] cursor-pointer'
+                              : 'bg-[#493548]/15 text-[#080B0C] cursor-pointer'
                           }`}
                         >
                           <option value="New">New</option>
@@ -697,7 +697,7 @@ export default function EnquiryManagement() {
                           type="button"
                           onClick={() => setDetailEnquiryId(enq.id)}
                           title="View Enquiry Details"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B501A] rounded-lg hover:border-[#F4510B] cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20 rounded-lg hover:border-[#55CDB3] cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Details</span>
@@ -710,7 +710,7 @@ export default function EnquiryManagement() {
                                 type="button"
                                 onClick={() => handleOpenConvertDemo(enq)}
                                 title="Convert Lead into Scheduled Demo Class"
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-lg shadow-sm hover:bg-[#F4510B] transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-[#080B0C] text-[#F4F7F6] rounded-lg shadow-sm hover:bg-[#55CDB3] transition-all cursor-pointer"
                               >
                                 <CalendarDays className="w-3.5 h-3.5" />
                                 <span>Convert to Demo</span>
@@ -724,14 +724,14 @@ export default function EnquiryManagement() {
                               type="button"
                               onClick={() => handleOpenEditModal(enq)}
                               title="Edit Enquiry"
-                              className="p-1.5 text-[#172B50] hover:bg-[#FFF4E8] rounded-lg cursor-pointer"
+                              className="p-1.5 text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-lg cursor-pointer"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               type="button"
                               onClick={() => openEnrollConfirmation(enq)}
-                              className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg shadow-sm hover:brightness-110 transition-all inline-flex items-center gap-1 cursor-pointer"
+                              className="px-3 py-1.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-lg shadow-sm hover:bg-[#55CDB3]/90 transition-all inline-flex items-center gap-1 cursor-pointer"
                             >
                               <UserPlus className="w-3.5 h-3.5" />
                               <span>Enroll Student</span>
@@ -747,7 +747,7 @@ export default function EnquiryManagement() {
                               <button
                                 type="button"
                                 onClick={() => navigateToPersonRecord('student', enq.enrolledStudentId)}
-                                className="text-[10px] font-extrabold text-[#F4510B] hover:underline cursor-pointer"
+                                className="text-[10px] font-extrabold text-[#55CDB3] hover:underline cursor-pointer"
                               >
                                 {enq.enrolledStudentId}
                               </button>
@@ -765,7 +765,7 @@ export default function EnquiryManagement() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-4 py-3 bg-[#FFF4E8]/60 border-t border-[#172B5015] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#172B50]">
+        <div className="px-4 py-3 bg-[#493548]/15/60 border-t border-[#493548]/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#080B0C]">
           <span className="font-semibold opacity-75">
             Page {safePage} of {totalPages} • {filteredEnquiries.length} enquiry record
             {filteredEnquiries.length === 1 ? '' : 's'}
@@ -775,7 +775,7 @@ export default function EnquiryManagement() {
               type="button"
               disabled={safePage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="px-2.5 py-1.5 rounded-lg border border-[#172B5020] bg-white font-bold text-[#172B50] disabled:opacity-40 hover:bg-[#FFF4E8] inline-flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg border border-[#493548]/20 bg-[#F4F7F6] font-bold text-[#080B0C] disabled:opacity-40 hover:bg-[#55CDB3]/15 inline-flex items-center gap-1 cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Prev</span>
@@ -784,7 +784,7 @@ export default function EnquiryManagement() {
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="px-2.5 py-1.5 rounded-lg border border-[#172B5020] bg-white font-bold text-[#172B50] disabled:opacity-40 hover:bg-[#FFF4E8] inline-flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg border border-[#493548]/20 bg-[#F4F7F6] font-bold text-[#080B0C] disabled:opacity-40 hover:bg-[#55CDB3]/15 inline-flex items-center gap-1 cursor-pointer"
             >
               <span>Next</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -794,8 +794,8 @@ export default function EnquiryManagement() {
       </div>
 
       {/* Backend API / Persistence Transparency Notice */}
-      <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-[11px] text-[#172B50]">
-        <Info className="w-4 h-4 text-[#F4510B] shrink-0 mt-0.5" />
+      <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-xl bg-[#493548]/15 border border-[#493548]/20 text-[11px] text-[#080B0C]">
+        <Info className="w-4 h-4 text-[#55CDB3] shrink-0 mt-0.5" />
         <span>
           Atomic Enquiry → Student → Parent enrollment currently executes in browser state (no live server API connected). Backend database persistence requires transactional endpoint{' '}
           <code className="font-bold">POST /api/v1/enquiries/:id/enroll</code> enforcing unique{' '}
@@ -814,22 +814,22 @@ export default function EnquiryManagement() {
         <form onSubmit={handleFormSubmit} className="space-y-3.5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Child Athlete Name *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Child Athlete Name *</label>
               <input
                 type="text"
                 required
                 value={formState.childName}
                 onChange={(e) => setFormState({ ...formState, childName: e.target.value })}
                 placeholder="e.g. Samar Sen"
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Gender *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Gender *</label>
               <select
                 value={formState.gender}
                 onChange={(e) => setFormState({ ...formState, gender: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -840,16 +840,16 @@ export default function EnquiryManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Date of Birth</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Date of Birth</label>
               <input
                 type="date"
                 value={formState.dob}
                 onChange={(e) => handleDobChange(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Age (Years) *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Age (Years) *</label>
               <input
                 type="number"
                 min="2"
@@ -857,66 +857,66 @@ export default function EnquiryManagement() {
                 required
                 value={formState.childAge}
                 onChange={(e) => setFormState({ ...formState, childAge: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Enquiry Date *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Enquiry Date *</label>
               <input
                 type="date"
                 required
                 value={formState.enquiryDate}
                 onChange={(e) => setFormState({ ...formState, enquiryDate: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent / Guardian Name *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Parent / Guardian Name *</label>
               <input
                 type="text"
                 required
                 value={formState.parentName}
                 onChange={(e) => setFormState({ ...formState, parentName: e.target.value })}
                 placeholder="Parent's Name"
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Mobile Number *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Parent Mobile Number *</label>
               <input
                 type="tel"
                 required
                 value={formState.phone}
                 onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
                 placeholder="+91 98..."
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Email Address *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Parent Email Address *</label>
               <input
                 type="email"
                 required
                 value={formState.email}
                 onChange={(e) => setFormState({ ...formState, email: e.target.value })}
                 placeholder="parent@example.com"
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Preferred Academy Location *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Preferred Academy Location *</label>
               <select
                 value={formState.center}
                 onChange={(e) =>
                   setFormState({ ...formState, center: e.target.value, preferredBatchId: '' })
                 }
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 {commonLocations.map((loc) => (
                   <option key={loc.id} value={loc.name}>
@@ -926,7 +926,7 @@ export default function EnquiryManagement() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Interested Sports Program *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Interested Sports Program *</label>
               <select
                 value={formState.interestedProgram}
                 onChange={(e) =>
@@ -936,7 +936,7 @@ export default function EnquiryManagement() {
                     preferredBatchId: '',
                   })
                 }
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 {data.programs.map((p) => (
                   <option key={p.id} value={p.name}>
@@ -946,11 +946,11 @@ export default function EnquiryManagement() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Preferred Batch (Optional)</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Preferred Batch (Optional)</label>
               <select
                 value={formState.preferredBatchId}
                 onChange={(e) => setFormState({ ...formState, preferredBatchId: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 <option value="">Select later / Open</option>
                 {availableFormBatches.map((b) => (
@@ -964,12 +964,12 @@ export default function EnquiryManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Enquiry Lead Source *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Enquiry Lead Source *</label>
               <select
                 required
                 value={formState.source}
                 onChange={(e) => setFormState({ ...formState, source: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none font-bold"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none font-bold"
               >
                 {Object.values(ENQUIRY_SOURCES).map((src) => (
                   <option key={src} value={src}>
@@ -979,11 +979,11 @@ export default function EnquiryManagement() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Enquiry Stage</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Enquiry Stage</label>
               <select
                 value={formState.stage}
                 onChange={(e) => setFormState({ ...formState, stage: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 <option value="New">New</option>
                 <option value="Follow-up">Follow-up</option>
@@ -995,27 +995,27 @@ export default function EnquiryManagement() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Additional Notes</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Additional Notes</label>
             <textarea
               rows="3"
               value={formState.notes}
               onChange={(e) => setFormState({ ...formState, notes: e.target.value })}
               placeholder="e.g. Trial slot preference, prior experience, medical notes..."
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
-          <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-[#493548]/20 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsFormModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all cursor-pointer"
             >
               {editingEnquiry ? 'Save Enquiry Changes' : 'Create Enquiry Lead'}
             </button>
@@ -1038,9 +1038,9 @@ export default function EnquiryManagement() {
         {detailEnquiry && (
           <div className="space-y-4">
             {/* Header info bar with Source & Status */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-white border border-[#172B5014]">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-[#F4F7F6] border border-[#493548]/20">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#172B50]">Enquiry Source:</span>
+                <span className="text-xs font-bold text-[#080B0C]">Enquiry Source:</span>
                 {(() => {
                   const src = detailEnquiry.source || ENQUIRY_SOURCES.MANUAL;
                   const srcCfg =
@@ -1056,16 +1056,16 @@ export default function EnquiryManagement() {
                 })()}
               </div>
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="font-bold text-[#172B50]">Current Stage:</span>
-                <span className="px-2 py-0.5 rounded-md font-extrabold bg-[#172B50] text-white text-[11px]">
+                <span className="font-bold text-[#080B0C]">Current Stage:</span>
+                <span className="px-2 py-0.5 rounded-md font-extrabold bg-[#080B0C] text-[#F4F7F6] text-[11px]">
                   {detailEnquiry.stage}
                 </span>
               </div>
             </div>
 
             {/* Admission & Demo Progression Strip */}
-            <div className="p-3 rounded-xl bg-[#FFF4E8]/80 border border-[#172B5014] space-y-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B] block">
+            <div className="p-3 rounded-xl bg-[#55CDB3]/15 border border-[#493548]/20 space-y-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#55CDB3] block">
                 Workflow Progression:
               </span>
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
@@ -1090,63 +1090,63 @@ export default function EnquiryManagement() {
                     <span
                       className={`px-2.5 py-1 rounded-lg border text-[10px] ${
                         step.active
-                          ? 'bg-[#172B50] text-white border-[#172B50]'
-                          : 'bg-white text-[#172B50] border-[#172B5020] opacity-60'
+                          ? 'bg-[#080B0C] text-[#F4F7F6] border-[#493548]/20'
+                          : 'bg-[#F4F7F6] text-[#080B0C] border-[#493548]/20 opacity-60'
                       }`}
                     >
                       {step.name}
                     </span>
-                    {idx < arr.length - 1 && <ArrowRight className="w-3 h-3 text-[#F4510B]" />}
+                    {idx < arr.length - 1 && <ArrowRight className="w-3 h-3 text-[#55CDB3]" />}
                   </React.Fragment>
                 ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#FFF4E8] p-4 rounded-2xl border border-[#172B5014]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#493548]/15 p-4 rounded-2xl border border-[#493548]/20">
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+                <span className="text-[10px] font-bold uppercase text-[#493548] block">
                   Child Information
                 </span>
-                <p className="text-sm font-extrabold text-[#172B50] mt-0.5">{detailEnquiry.childName}</p>
-                <p className="text-xs text-[#172B50] opacity-80">
+                <p className="text-sm font-extrabold text-[#080B0C] mt-0.5">{detailEnquiry.childName}</p>
+                <p className="text-xs text-[#080B0C] opacity-80">
                   Age: {detailEnquiry.childAge} yrs • Gender: {detailEnquiry.gender || 'Not specified'}
                 </p>
                 {detailEnquiry.dob && (
-                  <p className="text-xs text-[#172B50] opacity-75">DOB: {detailEnquiry.dob}</p>
+                  <p className="text-xs text-[#080B0C] opacity-75">DOB: {detailEnquiry.dob}</p>
                 )}
               </div>
 
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+                <span className="text-[10px] font-bold uppercase text-[#493548] block">
                   Parent / Guardian
                 </span>
-                <p className="text-sm font-extrabold text-[#172B50] mt-0.5">{detailEnquiry.parentName}</p>
-                <p className="text-xs text-[#172B50] opacity-80">{detailEnquiry.phone}</p>
-                <p className="text-xs text-[#172B50] opacity-80">{detailEnquiry.email}</p>
+                <p className="text-sm font-extrabold text-[#080B0C] mt-0.5">{detailEnquiry.parentName}</p>
+                <p className="text-xs text-[#080B0C] opacity-80">{detailEnquiry.phone}</p>
+                <p className="text-xs text-[#080B0C] opacity-80">{detailEnquiry.email}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 rounded-xl border border-[#172B5015] bg-white">
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+              <div className="p-3 rounded-xl border border-[#493548]/20 bg-[#F4F7F6]">
+                <span className="text-[10px] font-bold uppercase text-[#493548] block">
                   Academy Location
                 </span>
-                <span className="font-extrabold text-[#F4510B]">{detailEnquiry.center}</span>
+                <span className="font-extrabold text-[#55CDB3]">{detailEnquiry.center}</span>
               </div>
-              <div className="p-3 rounded-xl border border-[#172B5015] bg-white">
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+              <div className="p-3 rounded-xl border border-[#493548]/20 bg-[#F4F7F6]">
+                <span className="text-[10px] font-bold uppercase text-[#493548] block">
                   Sports Program
                 </span>
-                <span className="font-bold text-[#172B50]">{detailEnquiry.interestedProgram}</span>
+                <span className="font-bold text-[#080B0C]">{detailEnquiry.interestedProgram}</span>
               </div>
-              <div className="p-3 rounded-xl border border-[#172B5015] bg-white">
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+              <div className="p-3 rounded-xl border border-[#493548]/20 bg-[#F4F7F6]">
+                <span className="text-[10px] font-bold uppercase text-[#493548] block">
                   Preferred Batch / Date
                 </span>
-                <span className="font-bold text-[#172B50] block">
+                <span className="font-bold text-[#080B0C] block">
                   {detailEnquiry.preferredBatchName || 'Open Batch'}
                 </span>
-                <span className="text-[10px] text-[#172B50] opacity-60">
+                <span className="text-[10px] text-[#493548]">
                   Enquiry: {detailEnquiry.enquiryDate || detailEnquiry.createdAt}
                 </span>
               </div>
@@ -1180,7 +1180,7 @@ export default function EnquiryManagement() {
               </div>
             )}
 
-            <div className="p-3 rounded-xl border border-[#172B5015] bg-white text-xs text-[#172B50]">
+            <div className="p-3 rounded-xl border border-[#493548]/20 bg-[#F4F7F6] text-xs text-[#080B0C]">
               <span className="text-[10px] font-bold uppercase opacity-60 block mb-1">Additional Notes</span>
               <p>{detailEnquiry.notes || 'No notes recorded.'}</p>
             </div>
@@ -1204,7 +1204,7 @@ export default function EnquiryManagement() {
                         setDetailEnquiryId(null);
                         navigateToPersonRecord('student', detailEnquiry.enrolledStudentId);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#172B50] text-white text-xs font-bold hover:bg-[#F4510B] cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#080B0C] text-[#F4F7F6] text-xs font-bold hover:bg-[#55CDB3] cursor-pointer"
                     >
                       <span>View Student Record</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1217,7 +1217,7 @@ export default function EnquiryManagement() {
                         setDetailEnquiryId(null);
                         navigateToPersonRecord('parent', detailEnquiry.enrolledParentId);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-[#172B50] border border-[#172B5022] text-xs font-bold hover:border-[#F4510B] cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 text-xs font-bold hover:border-[#55CDB3] cursor-pointer"
                     >
                       <span>View Parent Record</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1227,7 +1227,7 @@ export default function EnquiryManagement() {
               </div>
             )}
 
-            <div className="pt-3 border-t border-[#172B5014] flex flex-wrap items-center justify-between gap-2">
+            <div className="pt-3 border-t border-[#493548]/20 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 {detailEnquiry.stage !== 'Enrolled' && (
                   <button
@@ -1237,7 +1237,7 @@ export default function EnquiryManagement() {
                       setDetailEnquiryId(null);
                       handleOpenEditModal(target);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FFF4E8] text-[#172B50] text-xs font-bold border border-[#172B501C] hover:border-[#F4510B] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#493548]/15 text-[#080B0C] text-xs font-bold border border-[#493548]/20 hover:border-[#55CDB3] cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>Edit Lead</span>
@@ -1251,7 +1251,7 @@ export default function EnquiryManagement() {
                       setDetailEnquiryId(null);
                       handleOpenConvertDemo(target);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#172B50] text-white text-xs font-bold hover:bg-[#F4510B] transition-all cursor-pointer shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#080B0C] text-[#F4F7F6] text-xs font-bold hover:bg-[#55CDB3] transition-all cursor-pointer shadow-sm"
                   >
                     <CalendarDays className="w-3.5 h-3.5" />
                     <span>Convert to Demo</span>
@@ -1263,7 +1263,7 @@ export default function EnquiryManagement() {
                 <button
                   type="button"
                   onClick={() => setDetailEnquiryId(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
                 >
                   Close
                 </button>
@@ -1275,7 +1275,7 @@ export default function EnquiryManagement() {
                       setDetailEnquiryId(null);
                       openEnrollConfirmation(target);
                     }}
-                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 shadow-sm cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 shadow-sm cursor-pointer"
                   >
                     <UserPlus className="w-4 h-4" />
                     <span>Enroll Student</span>
@@ -1323,29 +1323,29 @@ export default function EnquiryManagement() {
             )}
 
             {/* Carried-forward Student Preview */}
-            <div className="bg-[#FFF4E8] p-4 rounded-2xl border border-[#172B5015] space-y-3">
+            <div className="bg-[#493548]/15 p-4 rounded-2xl border border-[#493548]/20 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-[#172B50] uppercase tracking-wider">
+                <span className="text-xs font-extrabold text-[#080B0C] uppercase tracking-wider">
                   Student Details Transferred From Enquiry ({enrollModalEnquiry.id})
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#F4510B] text-white">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold">
                   Location: {enrollOverrides.center || enrollModalEnquiry.center}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold text-[#172B50] opacity-65 block">Child Name</span>
-                  <span className="font-extrabold text-[#172B50]">{enrollModalEnquiry.childName}</span>
+                  <span className="text-[10px] font-bold text-[#080B0C] opacity-65 block">Child Name</span>
+                  <span className="font-extrabold text-[#080B0C]">{enrollModalEnquiry.childName}</span>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#172B50] opacity-75 block mb-0.5">
+                  <label className="text-[10px] font-bold text-[#080B0C] opacity-75 block mb-0.5">
                     Gender *
                   </label>
                   <select
                     value={enrollOverrides.gender}
                     onChange={(e) => setEnrollOverrides({ ...enrollOverrides, gender: e.target.value })}
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5022] bg-white text-[#172B50]"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -1353,7 +1353,7 @@ export default function EnquiryManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#172B50] opacity-75 block mb-0.5">
+                  <label className="text-[10px] font-bold text-[#080B0C] opacity-75 block mb-0.5">
                     Age (Years) *
                   </label>
                   <input
@@ -1362,14 +1362,14 @@ export default function EnquiryManagement() {
                     max="18"
                     value={enrollOverrides.childAge}
                     onChange={(e) => setEnrollOverrides({ ...enrollOverrides, childAge: e.target.value })}
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5022] bg-white text-[#172B50]"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div>
-                  <label className="text-[10px] font-bold text-[#172B50] opacity-75 block mb-0.5">
+                  <label className="text-[10px] font-bold text-[#080B0C] opacity-75 block mb-0.5">
                     Sports Program *
                   </label>
                   <select
@@ -1381,7 +1381,7 @@ export default function EnquiryManagement() {
                         preferredBatchId: '',
                       })
                     }
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5022] bg-white text-[#172B50]"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
                   >
                     {data.programs.map((p) => (
                       <option key={p.id} value={p.name}>
@@ -1391,7 +1391,7 @@ export default function EnquiryManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#172B50] opacity-75 block mb-0.5">
+                  <label className="text-[10px] font-bold text-[#080B0C] opacity-75 block mb-0.5">
                     Assign Batch at {enrollOverrides.center}
                   </label>
                   <select
@@ -1399,7 +1399,7 @@ export default function EnquiryManagement() {
                     onChange={(e) =>
                       setEnrollOverrides({ ...enrollOverrides, preferredBatchId: e.target.value })
                     }
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5022] bg-white text-[#172B50]"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
                   >
                     <option value="">No batch assigned yet</option>
                     {availableEnrollBatches.map((b) => (
@@ -1420,7 +1420,7 @@ export default function EnquiryManagement() {
                   : 'bg-emerald-50 border-emerald-200'
               }`}
             >
-              <div className="flex items-center gap-2 text-xs font-extrabold text-[#172B50]">
+              <div className="flex items-center gap-2 text-xs font-extrabold text-[#080B0C]">
                 {matchedExistingParentPreview ? (
                   <>
                     <Users className="w-4 h-4 text-sky-700" />
@@ -1440,7 +1440,7 @@ export default function EnquiryManagement() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="text-[10px] font-bold text-[#172B50] opacity-75 block mb-0.5">
+                  <label className="text-[10px] font-bold text-[#080B0C] opacity-75 block mb-0.5">
                     Parent Mobile Number *
                   </label>
                   <input
@@ -1448,11 +1448,11 @@ export default function EnquiryManagement() {
                     required
                     value={enrollOverrides.phone}
                     onChange={(e) => setEnrollOverrides({ ...enrollOverrides, phone: e.target.value })}
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5022] bg-white text-[#172B50]"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#172B50] opacity-75 block mb-0.5">
+                  <label className="text-[10px] font-bold text-[#080B0C] opacity-75 block mb-0.5">
                     Parent Email Address *
                   </label>
                   <input
@@ -1461,24 +1461,24 @@ export default function EnquiryManagement() {
                     value={enrollOverrides.email}
                     onChange={(e) => setEnrollOverrides({ ...enrollOverrides, email: e.target.value })}
                     placeholder="parent@example.com"
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5022] bg-white text-[#172B50]"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
               <button
                 type="button"
                 onClick={() => setEnrollModalEnquiry(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmittingEnrollment}
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 disabled:opacity-50 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{isSubmittingEnrollment ? 'Enrolling...' : 'Confirm & Complete Enrollment'}</span>
@@ -1495,9 +1495,9 @@ export default function EnquiryManagement() {
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 <span>Student &amp; Parent Records Synchronized</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-[#172B50]">
-                <div className="bg-white p-3 rounded-xl border border-emerald-200">
-                  <span className="text-[10px] font-bold uppercase text-[#F4510B] block">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-[#080B0C]">
+                <div className="bg-[#F4F7F6] p-3 rounded-xl border border-emerald-200">
+                  <span className="text-[10px] font-bold uppercase text-[#55CDB3] block">
                     Student Created
                   </span>
                   <p className="font-extrabold text-sm mt-0.5">{enrollmentResult.student.name}</p>
@@ -1514,8 +1514,8 @@ export default function EnquiryManagement() {
                   )}
                 </div>
 
-                <div className="bg-white p-3 rounded-xl border border-emerald-200">
-                  <span className="text-[10px] font-bold uppercase text-[#172B50] block">
+                <div className="bg-[#F4F7F6] p-3 rounded-xl border border-emerald-200">
+                  <span className="text-[10px] font-bold uppercase text-[#080B0C] block">
                     {enrollmentResult.parentAction === 'linked_existing'
                       ? 'Existing Parent Linked'
                       : 'Parent Record Created'}
@@ -1536,7 +1536,7 @@ export default function EnquiryManagement() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#172B5014]">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#493548]/20">
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -1546,7 +1546,7 @@ export default function EnquiryManagement() {
                     setEnrollmentResult(null);
                     navigateToPersonRecord('student', id);
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[#172B50] text-white hover:bg-[#F4510B] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[#080B0C] text-[#F4F7F6] hover:bg-[#55CDB3] cursor-pointer"
                 >
                   <span>View Student Record ({enrollmentResult.student.id})</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -1559,7 +1559,7 @@ export default function EnquiryManagement() {
                     setEnrollmentResult(null);
                     navigateToPersonRecord('parent', id);
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5022] hover:border-[#F4510B] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20 hover:border-[#55CDB3] cursor-pointer"
                 >
                   <span>View Parent Record ({enrollmentResult.parent.id})</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -1572,7 +1572,7 @@ export default function EnquiryManagement() {
                   setEnrollModalEnquiry(null);
                   setEnrollmentResult(null);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
               >
                 Done
               </button>
@@ -1610,7 +1610,7 @@ export default function EnquiryManagement() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Demo Date *</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">Demo Date *</label>
                 <input
                   type="date"
                   required
@@ -1618,11 +1618,11 @@ export default function EnquiryManagement() {
                   onChange={(e) =>
                     setDemoModalForm({ ...demoModalForm, demoDate: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Demo Time *</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">Demo Time *</label>
                 <input
                   type="time"
                   required
@@ -1630,13 +1630,13 @@ export default function EnquiryManagement() {
                   onChange={(e) =>
                     setDemoModalForm({ ...demoModalForm, demoTime: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">
                 Assigned Coach ({demoModalEnquiry.center}) *
               </label>
               <select
@@ -1651,7 +1651,7 @@ export default function EnquiryManagement() {
                     coachName: c ? c.name : '',
                   });
                 }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] font-semibold"
               >
                 <option value="">Select Coach</option>
                 {eligibleCoachesForDemoModal.map((c) => (
@@ -1663,7 +1663,7 @@ export default function EnquiryManagement() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">
                 Demo Session Notes / Objectives
               </label>
               <textarea
@@ -1673,21 +1673,21 @@ export default function EnquiryManagement() {
                   setDemoModalForm({ ...demoModalForm, notes: e.target.value })
                 }
                 placeholder="Specific session goals or parent instructions..."
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
               <button
                 type="button"
                 onClick={() => setDemoModalEnquiry(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 cursor-pointer shadow-sm"
+                className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 cursor-pointer shadow-sm"
               >
                 Schedule &amp; Link Demo
               </button>

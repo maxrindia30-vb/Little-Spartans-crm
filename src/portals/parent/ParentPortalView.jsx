@@ -48,7 +48,7 @@ const COMP_STATUS_STYLES = {
   Completed: 'bg-emerald-100 text-emerald-800',
   Rejected: 'bg-rose-100 text-rose-800',
   Cancelled: 'bg-slate-200 text-slate-700',
-  Expired: 'bg-orange-100 text-orange-800',
+  Expired: 'bg-[#493548]/20 text-[#493548]',
 };
 
 function getMondayOfWeek(ymd) {
@@ -370,19 +370,19 @@ export default function ParentPortalView() {
       {currentView === 'dashboard' && (
         <div className="space-y-6 animate-slide-up">
           {/* Hero Welcome Header */}
-          <div className="rounded-3xl bg-gradient-to-br from-[#172B50] via-[#1E3560] to-[#264275] p-6 sm:p-7 text-white shadow-card relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[#F4510B]/20 blur-2xl pointer-events-none" />
+          <div className="rounded-3xl bg-gradient-to-br from-[#080B0C] via-[#493548]/40 to-[#080B0C] border border-[#493548]/30 p-6 sm:p-7 text-white shadow-card relative overflow-hidden">
+            <div className="absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[#55CDB3]/20 blur-2xl pointer-events-none" />
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider flex items-center gap-1.5 shadow-xs">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#55CDB3] text-[#080B0C] font-bold tracking-wider flex items-center gap-1.5 shadow-xs">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F4F7F6] opacity-80"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F4F7F6]"></span>
                     </span>
                     <span>PARENT PORTAL • LIVE SYNC</span>
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/90 border border-white/15">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F4F7F6]/10 text-white/90 border border-white/15">
                     {parentProfile.center || myChildren[0]?.center || 'Chennai Academy'} • Term 2026-27
                   </span>
                 </div>
@@ -398,7 +398,7 @@ export default function ParentPortalView() {
                 <button
                   type="button"
                   onClick={openParentCompModal}
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-md hover:bg-[#55CDB3]/90 active:scale-95 transition-all cursor-pointer"
                 >
                   <RefreshCw className="w-4 h-4 text-white" />
                   <span>Request Compensation</span>
@@ -406,17 +406,17 @@ export default function ParentPortalView() {
                 <button
                   type="button"
                   onClick={() => setIsPayModalOpen(true)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-white text-[#172B50] rounded-xl shadow-sm hover:bg-[#FFF4E8] active:scale-95 transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4F7F6] text-[#080B0C] rounded-xl shadow-sm hover:bg-[#55CDB3]/15 active:scale-95 transition-all cursor-pointer"
                 >
-                  <CreditCard className="w-4 h-4 text-[#F4510B]" />
+                  <CreditCard className="w-4 h-4 text-[#55CDB3]" />
                   <span>Pay Fee</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsLeaveModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold bg-white/10 text-white border border-white/20 rounded-xl hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold bg-[#F4F7F6]/10 text-white border border-white/20 rounded-xl hover:bg-[#F4F7F6]/20 active:scale-95 transition-all cursor-pointer"
                 >
-                  <CalendarOff className="w-4 h-4 text-[#FFA366]" />
+                  <CalendarOff className="w-4 h-4 text-[#55CDB3]" />
                   <span>Apply Leave</span>
                 </button>
               </div>
@@ -426,11 +426,11 @@ export default function ParentPortalView() {
             <div className="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10">
               {nextUpcomingSession ? (
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#F4510B]/20 border border-[#F4510B]/40 flex items-center justify-center text-[#FFA366] shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-[#55CDB3]/20 border border-[#55CDB3]/40 flex items-center justify-center text-[#55CDB3] shrink-0">
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#FFA366] block">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#55CDB3] block">
                       Next Upcoming Class • {nextUpcomingSession.location}
                     </span>
                     <span className="font-bold text-white">
@@ -440,14 +440,14 @@ export default function ParentPortalView() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-white/80">
-                  <Sparkles className="w-4 h-4 text-[#FFA366]" />
+                  <Sparkles className="w-4 h-4 text-[#55CDB3]" />
                   <span>Your upcoming location-synced sessions published by Admin will appear right here.</span>
                 </div>
               )}
               <button
                 type="button"
                 onClick={() => setCurrentView('classes')}
-                className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
+                className="px-3.5 py-1.5 rounded-xl bg-[#F4F7F6]/15 hover:bg-[#F4F7F6]/25 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
               >
                 Open Class Timetable &rarr;
               </button>
@@ -496,10 +496,10 @@ export default function ParentPortalView() {
           {/* All Parent Navbar Modules Inside Dashboard */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#172B50]">
+              <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#080B0C]">
                 Parent Portal Modules
               </h2>
-              <span className="text-xs font-semibold text-[#172B50] opacity-65">
+              <span className="text-xs font-semibold text-[#080B0C] opacity-65">
                 Quick access to every section
               </span>
             </div>
@@ -510,25 +510,25 @@ export default function ParentPortalView() {
                   <FloatingCard
                     key={mod.id}
                     onClick={() => setCurrentView(mod.id)}
-                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] group flex flex-col justify-between"
+                    className="text-left bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card hover:border-[#55CDB3] group flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#FFF4E8] border border-[#F4510B25] flex items-center justify-center text-[#F4510B] group-hover:bg-[#F4510B] group-hover:text-white transition-colors">
+                        <div className="w-10 h-10 rounded-xl bg-[#493548]/15 border border-[#55CDB3]/40 flex items-center justify-center text-[#55CDB3] group-hover:bg-[#55CDB3] group-hover:text-white transition-colors">
                           <Icon className="w-5 h-5" />
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5012]">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20">
                           {mod.stat}
                         </span>
                       </div>
-                      <h3 className="text-sm font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                      <h3 className="text-sm font-extrabold text-[#080B0C] group-hover:text-[#55CDB3] transition-colors">
                         {mod.label}
                       </h3>
-                      <p className="text-[11px] text-[#172B50] opacity-70 mt-1 line-clamp-2">
+                      <p className="text-[11px] text-[#493548] mt-1 line-clamp-2">
                         {mod.desc}
                       </p>
                     </div>
-                    <div className="mt-3 pt-2.5 border-t border-[#172B5010] flex items-center justify-between text-[11px] font-extrabold text-[#F4510B]">
+                    <div className="mt-3 pt-2.5 border-t border-[#493548]/20 flex items-center justify-between text-[11px] font-extrabold text-[#55CDB3]">
                       <span>Open {mod.label}</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                     </div>
@@ -541,32 +541,32 @@ export default function ParentPortalView() {
           {/* Children Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {myChildren.map(child => (
-              <div key={child.id} className="interactive-card bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card group">
+              <div key={child.id} className="interactive-card bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card group">
                 <div className="flex items-start gap-4">
                   <img
                     src={child.avatar}
                     alt={child.name}
-                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#F4510B] group-hover:scale-105 transition-transform duration-300 shadow-sm"
+                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#55CDB3] group-hover:scale-105 transition-transform duration-300 shadow-sm"
                   />
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-base font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                        <h3 className="text-base font-extrabold text-[#080B0C] group-hover:text-[#55CDB3] transition-colors">
                           {child.name}
                         </h3>
-                        <span className="text-xs font-bold text-[#F4510B]">{child.rank}</span>
+                        <span className="text-xs font-bold text-[#55CDB3]">{child.rank}</span>
                       </div>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white shadow-xs">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#080B0C] text-[#F4F7F6] shadow-xs">
                         {child.feeStatus}
                       </span>
                     </div>
-                    <p className="text-xs text-[#172B50] opacity-75 mt-1">
+                    <p className="text-xs text-[#080B0C] opacity-75 mt-1">
                       {child.program} • {child.center}
                     </p>
                     <div className="mt-3 flex items-center gap-3 text-xs">
-                      <span className="font-bold text-[#172B50]">Attendance: {child.attendanceRate}%</span>
-                      <span className="text-[#172B50] opacity-40">•</span>
-                      <span className="font-bold text-[#172B50]">Coach: {child.coachName}</span>
+                      <span className="font-bold text-[#080B0C]">Attendance: {child.attendanceRate}%</span>
+                      <span className="text-[#080B0C] opacity-40">•</span>
+                      <span className="font-bold text-[#080B0C]">Coach: {child.coachName}</span>
                     </div>
                   </div>
                 </div>
@@ -579,41 +579,41 @@ export default function ParentPortalView() {
       {/* 2. MY CHILDREN */}
       {currentView === 'children' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             My Registered Spartan Children
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {myChildren.map(child => (
-              <div key={child.id} className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
-                <div className="flex items-center gap-4 pb-4 border-b border-[#172B5015]">
-                  <img src={child.avatar} alt={child.name} className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#F4510B]" />
+              <div key={child.id} className="bg-[#F4F7F6] rounded-2xl p-6 border border-[#493548]/20 shadow-card">
+                <div className="flex items-center gap-4 pb-4 border-b border-[#493548]/20">
+                  <img src={child.avatar} alt={child.name} className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#55CDB3]" />
                   <div>
-                    <h3 className="text-lg font-black text-[#172B50]">{child.name}</h3>
-                    <p className="text-xs font-bold text-[#F4510B]">{child.rank}</p>
-                    <p className="text-xs text-[#172B50] opacity-75">ID: {child.id} • DOB: {child.dob}</p>
+                    <h3 className="text-lg font-black text-[#080B0C]">{child.name}</h3>
+                    <p className="text-xs font-bold text-[#55CDB3]">{child.rank}</p>
+                    <p className="text-xs text-[#080B0C] opacity-75">ID: {child.id} • DOB: {child.dob}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3 mt-4 text-xs">
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Program Enrolled:</span>
-                    <span className="font-bold text-[#172B50]">{child.program}</span>
+                  <div className="flex justify-between py-1 border-b border-[#493548]/20">
+                    <span className="text-[#493548]">Program Enrolled:</span>
+                    <span className="font-bold text-[#080B0C]">{child.program}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Assigned Head Coach:</span>
-                    <span className="font-bold text-[#172B50]">{child.coachName}</span>
+                  <div className="flex justify-between py-1 border-b border-[#493548]/20">
+                    <span className="text-[#493548]">Assigned Head Coach:</span>
+                    <span className="font-bold text-[#080B0C]">{child.coachName}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Overall Attendance:</span>
-                    <span className="font-bold text-[#F4510B]">{child.attendanceRate}%</span>
+                  <div className="flex justify-between py-1 border-b border-[#493548]/20">
+                    <span className="text-[#493548]">Overall Attendance:</span>
+                    <span className="font-bold text-[#55CDB3]">{child.attendanceRate}%</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Tuition Status:</span>
-                    <span className="font-bold text-[#172B50]">{child.feeStatus}</span>
+                  <div className="flex justify-between py-1 border-b border-[#493548]/20">
+                    <span className="text-[#493548]">Tuition Status:</span>
+                    <span className="font-bold text-[#080B0C]">{child.feeStatus}</span>
                   </div>
-                  <div className="p-3 bg-[#FFF4E8] rounded-xl border border-[#172B5015]">
-                    <span className="font-bold text-[#172B50] block mb-1">Medical Record Note:</span>
-                    <span className="text-[#172B50] opacity-80">{child.medicalNote}</span>
+                  <div className="p-3 bg-[#493548]/15 rounded-xl border border-[#493548]/20">
+                    <span className="font-bold text-[#080B0C] block mb-1">Medical Record Note:</span>
+                    <span className="text-[#080B0C] opacity-80">{child.medicalNote}</span>
                   </div>
                 </div>
               </div>
@@ -625,7 +625,7 @@ export default function ParentPortalView() {
       {/* 3. CLASSES & SCHEDULE (Auto-Synchronized Read-Only View by Location, Program & Batch) */}
       {currentView === 'classes' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#172B5015]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#493548]/20">
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -633,21 +633,21 @@ export default function ParentPortalView() {
                   Live Academy Timetable Sync (Read-Only)
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight mt-1">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight mt-1">
                 Class Timetable &amp; Sessions
               </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+              <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
                 Showing only published classes matching your children&apos;s enrolled location, program, and batch.
               </p>
             </div>
 
             {myChildren.length > 1 && (
-              <div className="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-[#172B501A]">
+              <div className="flex flex-wrap items-center gap-1.5 bg-[#F4F7F6] p-1.5 rounded-xl border border-[#493548]/20">
                 <button
                   type="button"
                   onClick={() => setSelectedScheduleChildId('all')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${
-                    selectedScheduleChildId === 'all' ? 'bg-[#172B50] text-white' : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                    selectedScheduleChildId === 'all' ? 'bg-[#080B0C] text-[#F4F7F6]' : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
                   }`}
                 >
                   All Children ({myChildren.length})
@@ -658,7 +658,7 @@ export default function ParentPortalView() {
                     type="button"
                     onClick={() => setSelectedScheduleChildId(child.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${
-                      selectedScheduleChildId === child.id ? 'bg-[#F4510B] text-white' : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                      selectedScheduleChildId === child.id ? 'bg-[#55CDB3] text-[#080B0C] font-bold' : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
                     }`}
                   >
                     {child.name} ({child.center})
@@ -669,7 +669,7 @@ export default function ParentPortalView() {
           </div>
 
           {/* Timetable View Switcher + Date Nav */}
-          <div className="bg-white rounded-2xl p-3.5 border border-[#172B501A] shadow-card flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-[#F4F7F6] rounded-2xl p-3.5 border border-[#493548]/20 shadow-card flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5">
               {[
                 { id: 'weekly', label: 'Weekly Timetable' },
@@ -684,8 +684,8 @@ export default function ParentPortalView() {
                   onClick={() => setScheduleTab(tab.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     scheduleTab === tab.id
-                      ? 'bg-[#F4510B] text-white shadow-xs'
-                      : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                      ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
+                      : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
                   }`}
                 >
                   {tab.label}
@@ -698,11 +698,11 @@ export default function ParentPortalView() {
                 <button
                   type="button"
                   onClick={() => shiftFocusDate(scheduleTab === 'weekly' ? -7 : -30)}
-                  className="p-1.5 rounded-lg border border-[#172B5020] hover:bg-[#FFF4E8] text-[#172B50] cursor-pointer"
+                  className="p-1.5 rounded-lg border border-[#493548]/20 hover:bg-[#55CDB3]/15 text-[#080B0C] cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-extrabold text-[#172B50] min-w-[140px] text-center">
+                <span className="font-extrabold text-[#080B0C] min-w-[140px] text-center">
                   {scheduleTab === 'calendar'
                     ? monthGrid.label
                     : `${weekDates[0].ymd} to ${weekDates[6].ymd}`}
@@ -710,14 +710,14 @@ export default function ParentPortalView() {
                 <button
                   type="button"
                   onClick={() => shiftFocusDate(scheduleTab === 'weekly' ? 7 : 30)}
-                  className="p-1.5 rounded-lg border border-[#172B5020] hover:bg-[#FFF4E8] text-[#172B50] cursor-pointer"
+                  className="p-1.5 rounded-lg border border-[#493548]/20 hover:bg-[#55CDB3]/15 text-[#080B0C] cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setScheduleFocusDate(todayYmd)}
-                  className="px-2.5 py-1 rounded-lg bg-[#FFF4E8] text-[#F4510B] font-bold cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-[#493548]/15 text-[#55CDB3] font-bold cursor-pointer"
                 >
                   Today
                 </button>
@@ -731,34 +731,34 @@ export default function ParentPortalView() {
               {weekDates.map(col => {
                 const daySessions = visibleChildSessions.filter(s => s.date === col.ymd);
                 return (
-                  <div key={col.ymd} className="bg-white rounded-2xl border border-[#172B501A] shadow-card flex flex-col min-h-[220px]">
-                    <div className={`px-3 py-2.5 border-b border-[#172B5012] rounded-t-2xl ${
-                      col.ymd === todayYmd ? 'bg-[#172B50] text-white' : 'bg-[#FFF4E8] text-[#172B50]'
+                  <div key={col.ymd} className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card flex flex-col min-h-[220px]">
+                    <div className={`px-3 py-2.5 border-b border-[#493548]/20 rounded-t-2xl ${
+                      col.ymd === todayYmd ? 'bg-[#080B0C] text-[#F4F7F6]' : 'bg-[#493548]/15 text-[#080B0C]'
                     }`}>
                       <span className="text-[11px] font-black uppercase tracking-wider block">{col.dayName.slice(0, 3)}</span>
                       <span className="text-[11px] opacity-80 font-semibold">{col.ymd}</span>
                     </div>
                     <div className="p-2.5 space-y-2 flex-1">
                       {daySessions.length === 0 ? (
-                        <p className="text-[11px] text-[#172B50]/45 text-center py-6">No session</p>
+                        <p className="text-[11px] text-[#080B0C]/45 text-center py-6">No session</p>
                       ) : (
                         daySessions.map(sch => (
                           <div key={`${sch.id}-${sch.childId}`} className={`p-2.5 rounded-xl border text-[11px] space-y-1 ${
                             sch.status === 'Cancelled'
                               ? 'bg-rose-50 border-rose-200'
                               : sch.isCompensationReplacement
-                              ? 'bg-[#FFF4E8] border-[#F4510B]/40'
-                              : 'bg-white border-[#172B501A]'
+                              ? 'bg-[#493548]/15 border-[#55CDB3]/40'
+                              : 'bg-[#F4F7F6] border-[#493548]/20'
                           }`}>
                             <div className="flex items-center justify-between gap-1">
-                              <span className="font-black text-[#F4510B]">{sch.startTime} - {sch.endTime}</span>
+                              <span className="font-black text-[#55CDB3]">{sch.startTime} - {sch.endTime}</span>
                               {sch.isCompensationReplacement && (
-                                <span className="px-1.5 py-0.2 rounded bg-[#F4510B] text-white text-[9px] font-bold">Makeup</span>
+                                <span className="px-1.5 py-0.2 rounded bg-[#55CDB3] text-[#080B0C] font-bold text-[9px] font-bold">Makeup</span>
                               )}
                             </div>
-                            <p className="font-extrabold text-[#172B50] leading-tight">{sch.className || sch.batch}</p>
-                            <p className="text-[10px] font-semibold text-[#172B50]/75">{sch.childName} • {sch.location}</p>
-                            <p className="text-[10px] text-[#172B50]/70">Coach: {sch.coachName}</p>
+                            <p className="font-extrabold text-[#080B0C] leading-tight">{sch.className || sch.batch}</p>
+                            <p className="text-[10px] font-semibold text-[#080B0C]/75">{sch.childName} • {sch.location}</p>
+                            <p className="text-[10px] text-[#080B0C]/70">Coach: {sch.coachName}</p>
                             <div className="flex items-center justify-between pt-1">
                               <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                 sch.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
@@ -767,7 +767,7 @@ export default function ParentPortalView() {
                               }`}>{sch.status}</span>
                               <span className={`text-[9px] font-bold ${
                                 sch.attendanceStatus === 'Present' ? 'text-emerald-700' :
-                                sch.attendanceStatus === 'Absent' ? 'text-rose-600' : 'text-[#172B50]/50'
+                                sch.attendanceStatus === 'Absent' ? 'text-rose-600' : 'text-[#080B0C]/50'
                               }`}>{sch.attendanceStatus}</span>
                             </div>
                           </div>
@@ -782,8 +782,8 @@ export default function ParentPortalView() {
 
           {/* VIEW 2: MONTHLY CALENDAR */}
           {scheduleTab === 'calendar' && (
-            <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card p-4">
-              <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-extrabold text-[#172B50] pb-2 border-b border-[#172B5012]">
+            <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card p-4">
+              <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-extrabold text-[#080B0C] pb-2 border-b border-[#493548]/20">
                 {MON_FIRST_WEEKDAYS.map(d => <div key={d}>{d.slice(0, 3)}</div>)}
               </div>
               <div className="grid grid-cols-7 gap-2 pt-2">
@@ -792,21 +792,21 @@ export default function ParentPortalView() {
                   const daySessions = visibleChildSessions.filter(s => s.date === ymd);
                   return (
                     <div key={ymd} className={`min-h-[82px] p-1.5 rounded-xl border text-[10px] ${
-                      ymd === todayYmd ? 'border-[#F4510B] bg-[#FFF4E8]/40' : 'border-[#172B5012] bg-white'
+                      ymd === todayYmd ? 'border-[#55CDB3] bg-[#493548]/15/40' : 'border-[#493548]/20 bg-[#F4F7F6]'
                     }`}>
-                      <span className="font-extrabold text-[#172B50] block mb-1">{ymd.slice(8)}</span>
+                      <span className="font-extrabold text-[#080B0C] block mb-1">{ymd.slice(8)}</span>
                       <div className="space-y-1">
                         {daySessions.slice(0, 2).map(sch => (
                           <div key={`${sch.id}-${sch.childId}`} className={`px-1.5 py-0.5 rounded font-bold truncate ${
                             sch.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
                             sch.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
-                            'bg-[#172B50] text-white'
+                            'bg-[#080B0C] text-[#F4F7F6]'
                           }`} title={`${sch.childName}: ${sch.className || sch.batch} (${sch.startTime})`}>
                             {sch.startTime} {sch.className || sch.batch}
                           </div>
                         ))}
                         {daySessions.length > 2 && (
-                          <span className="text-[9px] font-bold text-[#F4510B]">+{daySessions.length - 2} more</span>
+                          <span className="text-[9px] font-bold text-[#55CDB3]">+{daySessions.length - 2} more</span>
                         )}
                       </div>
                     </div>
@@ -824,27 +824,27 @@ export default function ParentPortalView() {
               return s.status !== 'Cancelled' && s.status !== 'Completed' && (!s.date || s.date >= todayYmd);
             });
             return list.length === 0 ? (
-              <div className="bg-white rounded-2xl p-10 text-center border border-[#172B501A] shadow-card text-xs text-[#172B50]/70">
+              <div className="bg-[#F4F7F6] rounded-2xl p-10 text-center border border-[#493548]/20 shadow-card text-xs text-[#080B0C]/70">
                 No {scheduleTab} class sessions found for your children&apos;s enrolled location and batch.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {list.map(sch => (
-                  <div key={`${sch.id}-${sch.childId}`} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card space-y-3">
+                  <div key={`${sch.id}-${sch.childId}`} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#172B50] text-white">
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#080B0C] text-[#F4F7F6]">
                             {sch.childName}
                           </span>
-                          <span className="text-[10px] font-bold uppercase text-[#F4510B]">{sch.program}</span>
+                          <span className="text-[10px] font-bold uppercase text-[#55CDB3]">{sch.program}</span>
                           {sch.isCompensationReplacement && (
-                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#F4510B] text-white">
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#55CDB3] text-[#080B0C] font-bold">
                               Replacement Class
                             </span>
                           )}
                         </div>
-                        <h3 className="text-base font-extrabold text-[#172B50] mt-1.5">{sch.className || sch.batch}</h3>
+                        <h3 className="text-base font-extrabold text-[#080B0C] mt-1.5">{sch.className || sch.batch}</h3>
                       </div>
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                         sch.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
@@ -855,27 +855,27 @@ export default function ParentPortalView() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-[#FFF4E8]/60 border border-[#172B5010] text-xs text-[#172B50]">
+                    <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-[#493548]/15/60 border border-[#493548]/20 text-xs text-[#080B0C]">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <Calendar className="w-3.5 h-3.5 text-[#55CDB3]" />
                         <span className="font-bold">{sch.date} ({sch.weekday})</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <Clock className="w-3.5 h-3.5 text-[#55CDB3]" />
                         <span className="font-bold">{sch.startTime} - {sch.endTime}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <MapPin className="w-3.5 h-3.5 text-[#55CDB3]" />
                         <span className="font-semibold">{sch.location}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <UserCheck2 className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <UserCheck2 className="w-3.5 h-3.5 text-[#55CDB3]" />
                         <span className="font-semibold">Coach {sch.coachName}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-1 text-xs">
-                      <span className="text-[#172B50]/70 font-semibold">Batch: {sch.batch}</span>
+                      <span className="text-[#080B0C]/70 font-semibold">Batch: {sch.batch}</span>
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                         sch.attendanceStatus === 'Present'
                           ? 'bg-emerald-100 text-emerald-800'
@@ -905,10 +905,10 @@ export default function ParentPortalView() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
                 Attendance &amp; Compensation Classes
               </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+              <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
                 Track session attendance logs and request authorized replacement classes when your child misses a session
               </p>
             </div>
@@ -916,7 +916,7 @@ export default function ParentPortalView() {
             <button
               type="button"
               onClick={openParentCompModal}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Request Compensation</span>
@@ -924,12 +924,12 @@ export default function ParentPortalView() {
           </div>
 
           {/* Attendance Register Cards (Real Attendance Records per Child) */}
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
-            <h3 className="text-sm font-extrabold text-[#172B50] pb-3 border-b border-[#172B5012] mb-4">
+          <div className="bg-[#F4F7F6] rounded-2xl p-6 border border-[#493548]/20 shadow-card">
+            <h3 className="text-sm font-extrabold text-[#080B0C] pb-3 border-b border-[#493548]/20 mb-4">
               Attendance Register Summary
             </h3>
             {myChildren.length === 0 ? (
-              <p className="text-xs text-[#172B50]/70">No child profile is linked to this parent account yet.</p>
+              <p className="text-xs text-[#080B0C]/70">No child profile is linked to this parent account yet.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {myChildren.map(child => {
@@ -939,18 +939,18 @@ export default function ParentPortalView() {
                   const totalMarked = childRecords.length;
                   const computedRate = totalMarked > 0 ? Math.round((presentCount / totalMarked) * 100) : (child.attendanceRate || 0);
                   return (
-                    <div key={child.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
+                    <div key={child.id} className="p-4 rounded-xl bg-[#493548]/15 border border-[#493548]/20">
                       <div className="flex justify-between items-center mb-2">
                         <div>
-                          <span className="text-sm font-extrabold text-[#172B50] block">{child.name}</span>
-                          <span className="text-[10px] font-bold text-[#172B50]/65">{child.center} • {child.program}</span>
+                          <span className="text-sm font-extrabold text-[#080B0C] block">{child.name}</span>
+                          <span className="text-[10px] font-bold text-[#080B0C]/65">{child.center} • {child.program}</span>
                         </div>
-                        <span className="text-xs font-black text-[#F4510B]">{computedRate}% Present</span>
+                        <span className="text-xs font-black text-[#55CDB3]">{computedRate}% Present</span>
                       </div>
-                      <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#172B5015]">
-                        <div style={{ width: `${computedRate}%` }} className="h-full bg-[#172B50] rounded-full" />
+                      <div className="w-full h-2.5 bg-[#F4F7F6] rounded-full overflow-hidden border border-[#493548]/20">
+                        <div style={{ width: `${computedRate}%` }} className="h-full bg-[#080B0C] rounded-full" />
                       </div>
-                      <p className="text-[11px] text-[#172B50] opacity-75 mt-2">
+                      <p className="text-[11px] text-[#080B0C] opacity-75 mt-2">
                         {totalMarked === 0
                           ? 'No attendance logs recorded yet.'
                           : `${presentCount} present, ${absentCount} absent out of ${totalMarked} marked sessions.`}
@@ -963,47 +963,47 @@ export default function ParentPortalView() {
           </div>
 
           {/* Compensation Requests Section */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
+          <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
+            <div className="p-5 border-b border-[#493548]/20 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-black text-[#172B50]">Compensation Requests</h3>
-                <p className="text-xs text-[#172B50] opacity-70">Track approval status, admin remarks &amp; scheduled replacement slots</p>
+                <h3 className="text-sm font-black text-[#080B0C]">Compensation Requests</h3>
+                <p className="text-xs text-[#493548]">Track approval status, admin remarks &amp; scheduled replacement slots</p>
               </div>
-              <span className="text-xs font-bold text-[#F4510B]">
+              <span className="text-xs font-bold text-[#55CDB3]">
                 {parentCompRequests.length} Requests
               </span>
             </div>
 
-            <div className="divide-y divide-[#172B500C]">
+            <div className="divide-y divide-[#493548]/15">
               {parentCompRequests.length === 0 ? (
-                <div className="p-8 text-center text-xs text-[#172B50] opacity-70">
+                <div className="p-8 text-center text-xs text-[#493548]">
                   No compensation requests yet. Missed a class? Click <strong>Request Compensation</strong> above.
                 </div>
               ) : (
                 parentCompRequests.map(comp => (
-                  <div key={comp.id} className="p-4 sm:p-5 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs">
+                  <div key={comp.id} className="p-4 sm:p-5 hover:bg-[#55CDB3]/15/20 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-black text-[#172B50] text-sm">{comp.studentName}</span>
+                        <span className="font-black text-[#080B0C] text-sm">{comp.studentName}</span>
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                           COMP_STATUS_STYLES[comp.status] || 'bg-amber-100 text-amber-900'
                         }`}>
                           {comp.status}
                         </span>
                         {comp.requestSource && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5015]">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20">
                             Source: {comp.requestSource}
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-[#172B50] opacity-80">
+                      <p className="text-[11px] text-[#080B0C] opacity-80">
                         Location: <strong>{comp.center || comp.location}</strong> • Missed: <strong>{comp.missedClass}</strong> on <strong>{comp.missedDate}</strong>
                       </p>
-                      <p className="text-[11px] text-[#172B50] opacity-75">
+                      <p className="text-[11px] text-[#080B0C] opacity-75">
                         Reason: &quot;{comp.reason}&quot;
                       </p>
                       {comp.approvalNotes && (
-                        <p className="text-[11px] text-[#172B50] bg-[#FFF4E8]/60 px-2.5 py-1.5 rounded-lg inline-block mt-1">
+                        <p className="text-[11px] text-[#080B0C] bg-[#493548]/15/60 px-2.5 py-1.5 rounded-lg inline-block mt-1">
                           <strong>Admin Response:</strong> {comp.approvalNotes}
                         </p>
                       )}
@@ -1015,15 +1015,15 @@ export default function ParentPortalView() {
                           <span className="text-[10px] font-black uppercase text-emerald-700 block">
                             Scheduled Replacement Class
                           </span>
-                          <span className="text-xs font-extrabold text-[#172B50] block">{comp.replacementSlot}</span>
+                          <span className="text-xs font-extrabold text-[#080B0C] block">{comp.replacementSlot}</span>
                           {comp.replacementCoach && (
-                            <span className="text-[11px] font-bold text-[#F4510B] block">
+                            <span className="text-[11px] font-bold text-[#55CDB3] block">
                               Assigned Coach: {comp.replacementCoach}
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-[11px] font-semibold text-[#172B50]/60 block">
+                        <span className="text-[11px] font-semibold text-[#080B0C]/60 block">
                           Awaiting Admin slot assignment
                         </span>
                       )}
@@ -1042,17 +1042,17 @@ export default function ParentPortalView() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
                 Fees, Payments & Official Receipts
               </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+              <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
                 Transparent fee structures, sibling discount credits, online payment gateway & tax invoices
               </p>
             </div>
 
             <button
               onClick={() => setIsPayModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
+              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto"
             >
               <CreditCard className="w-4 h-4" />
               <span>Pay Online Now</span>
@@ -1061,53 +1061,53 @@ export default function ParentPortalView() {
 
           {/* Fee Structure Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#493548] block mb-1">
                 Aarav's Fee Plan
               </span>
-              <h3 className="text-2xl font-black text-[#172B50]">Quarterly Tuition</h3>
-              <p className="text-xs text-[#172B50] opacity-80 mt-1">₹12,000 / Quarter (Gymnastics)</p>
-              <div className="mt-3 pt-3 border-t border-[#172B5010] flex justify-between text-xs">
+              <h3 className="text-2xl font-black text-[#080B0C]">Quarterly Tuition</h3>
+              <p className="text-xs text-[#080B0C] opacity-80 mt-1">₹12,000 / Quarter (Gymnastics)</p>
+              <div className="mt-3 pt-3 border-t border-[#493548]/20 flex justify-between text-xs">
                 <span className="text-emerald-700 font-bold">Paid till Dec 2026</span>
                 <span className="font-mono text-gray-500">Zero Due</span>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#493548] block mb-1">
                 Family Benefit Applied
               </span>
               <h3 className="text-2xl font-black text-emerald-600">Sibling Discount 10%</h3>
-              <p className="text-xs text-[#172B50] opacity-80 mt-1">Automatically applied for 2 enrolled children</p>
-              <div className="mt-3 pt-3 border-t border-[#172B5010] flex justify-between text-xs">
-                <span className="text-[#F4510B] font-bold">Saves ₹2,400 / yr</span>
+              <p className="text-xs text-[#080B0C] opacity-80 mt-1">Automatically applied for 2 enrolled children</p>
+              <div className="mt-3 pt-3 border-t border-[#493548]/20 flex justify-between text-xs">
+                <span className="text-[#55CDB3] font-bold">Saves ₹2,400 / yr</span>
                 <span className="font-mono text-gray-500">Active</span>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#493548] block mb-1">
                 Upcoming Cycle Due
               </span>
-              <h3 className="text-2xl font-black text-[#F4510B]">₹4,500</h3>
-              <p className="text-xs text-[#172B50] opacity-80 mt-1">Due Date: 05 Jan 2027</p>
-              <div className="mt-3 pt-3 border-t border-[#172B5010] flex justify-between text-xs">
-                <span className="text-[#172B50] font-bold">UPI / Cards / NetBanking</span>
-                <span className="text-[#F4510B] font-bold cursor-pointer hover:underline" onClick={() => setIsPayModalOpen(true)}>Pay Early &rarr;</span>
+              <h3 className="text-2xl font-black text-[#55CDB3]">₹4,500</h3>
+              <p className="text-xs text-[#080B0C] opacity-80 mt-1">Due Date: 05 Jan 2027</p>
+              <div className="mt-3 pt-3 border-t border-[#493548]/20 flex justify-between text-xs">
+                <span className="text-[#080B0C] font-bold">UPI / Cards / NetBanking</span>
+                <span className="text-[#55CDB3] font-bold cursor-pointer hover:underline" onClick={() => setIsPayModalOpen(true)}>Pay Early &rarr;</span>
               </div>
             </div>
           </div>
 
           {/* Payment History Table */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-4 border-b border-[#172B5010] flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#172B50]">
+          <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
+            <div className="p-4 border-b border-[#493548]/20 flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#080B0C]">
                 Payment Receipts & Invoices
               </h3>
-              <span className="text-xs text-[#172B50] opacity-70">Official Tax Invoices</span>
+              <span className="text-xs text-[#493548]">Official Tax Invoices</span>
             </div>
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase text-[11px]">
+              <thead className="bg-[#493548]/15 text-[#080B0C] font-bold uppercase text-[11px]">
                 <tr>
                   <th className="p-3.5">Invoice #</th>
                   <th className="p-3.5">Athlete</th>
@@ -1118,23 +1118,23 @@ export default function ParentPortalView() {
                   <th className="p-3.5 text-right">Receipt</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#172B5010]">
+              <tbody className="divide-y divide-[#493548]/15">
                 {data.payments.filter(p => p.parentName.includes('Rohan') || p.studentName.includes('Aarav') || p.studentName.includes('Sanya')).map(p => (
-                  <tr key={p.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                    <td className="p-3.5 font-bold font-mono text-[#172B50]">{p.invoiceNumber}</td>
-                    <td className="p-3.5 font-semibold text-[#172B50]">{p.studentName}</td>
-                    <td className="p-3.5 font-black text-[#172B50]">₹{p.amount.toLocaleString()}</td>
-                    <td className="p-3.5 text-[#172B50] opacity-80">{p.paymentMethod}</td>
-                    <td className="p-3.5 text-[#172B50]">{p.date}</td>
+                  <tr key={p.id} className="hover:bg-[#55CDB3]/15/20 transition-colors">
+                    <td className="p-3.5 font-bold font-mono text-[#080B0C]">{p.invoiceNumber}</td>
+                    <td className="p-3.5 font-semibold text-[#080B0C]">{p.studentName}</td>
+                    <td className="p-3.5 font-black text-[#080B0C]">₹{p.amount.toLocaleString()}</td>
+                    <td className="p-3.5 text-[#080B0C] opacity-80">{p.paymentMethod}</td>
+                    <td className="p-3.5 text-[#080B0C]">{p.date}</td>
                     <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#172B50] text-white">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#080B0C] text-[#F4F7F6]">
                         {p.status}
                       </span>
                     </td>
                     <td className="p-3.5 text-right">
                       <button 
                         onClick={() => addToast(`Official receipt ${p.invoiceNumber} downloaded as PDF.`)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#F4510B] hover:underline"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#55CDB3] hover:underline"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Download PDF</span>
@@ -1151,19 +1151,19 @@ export default function ParentPortalView() {
       {/* 6. PROGRESS & ACHIEVEMENTS */}
       {currentView === 'progress' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Spartan Progress & Belt Milestones
           </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {myChildren.map(child => (
-              <div key={child.id} className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#172B5015]">
+              <div key={child.id} className="bg-[#F4F7F6] rounded-2xl p-6 border border-[#493548]/20 shadow-card space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#493548]/20">
                   <div>
-                    <h3 className="text-lg font-black text-[#172B50]">{child.name}</h3>
-                    <p className="text-xs font-bold text-[#F4510B]">{child.rank}</p>
+                    <h3 className="text-lg font-black text-[#080B0C]">{child.name}</h3>
+                    <p className="text-xs font-bold text-[#55CDB3]">{child.rank}</p>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-black bg-[#172B50] text-white">
+                  <span className="px-3 py-1 rounded-full text-xs font-black bg-[#080B0C] text-[#F4F7F6]">
                     Level 3 Advanced
                   </span>
                 </div>
@@ -1171,38 +1171,38 @@ export default function ParentPortalView() {
                 <div className="space-y-3 text-xs">
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="font-bold text-[#172B50]">Agility & Speed Obstacle Drill</span>
-                      <span className="font-black text-[#F4510B]">9 / 10</span>
+                      <span className="font-bold text-[#080B0C]">Agility & Speed Obstacle Drill</span>
+                      <span className="font-black text-[#55CDB3]">9 / 10</span>
                     </div>
-                    <div className="w-full h-2 bg-[#FFF4E8] rounded-full overflow-hidden">
-                      <div className="w-[90%] h-full bg-[#F4510B] rounded-full" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="font-bold text-[#172B50]">Balance Beam Routine</span>
-                      <span className="font-black text-[#F4510B]">8.5 / 10</span>
-                    </div>
-                    <div className="w-full h-2 bg-[#FFF4E8] rounded-full overflow-hidden">
-                      <div className="w-[85%] h-full bg-[#F4510B] rounded-full" />
+                    <div className="w-full h-2 bg-[#493548]/15 rounded-full overflow-hidden">
+                      <div className="w-[90%] h-full bg-[#55CDB3] rounded-full" />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="font-bold text-[#172B50]">Spartan Discipline & Team Spirit</span>
-                      <span className="font-black text-[#F4510B]">10 / 10</span>
+                      <span className="font-bold text-[#080B0C]">Balance Beam Routine</span>
+                      <span className="font-black text-[#55CDB3]">8.5 / 10</span>
                     </div>
-                    <div className="w-full h-2 bg-[#FFF4E8] rounded-full overflow-hidden">
-                      <div className="w-full h-full bg-[#172B50] rounded-full" />
+                    <div className="w-full h-2 bg-[#493548]/15 rounded-full overflow-hidden">
+                      <div className="w-[85%] h-full bg-[#55CDB3] rounded-full" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="font-bold text-[#080B0C]">Spartan Discipline & Team Spirit</span>
+                      <span className="font-black text-[#55CDB3]">10 / 10</span>
+                    </div>
+                    <div className="w-full h-2 bg-[#493548]/15 rounded-full overflow-hidden">
+                      <div className="w-full h-full bg-[#080B0C] rounded-full" />
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 bg-[#FFF4E8] rounded-xl border border-[#172B5015] text-xs">
-                  <span className="font-bold text-[#172B50] block mb-0.5">Head Coach Remark:</span>
-                  <p className="text-[#172B50] opacity-80 italic">
+                <div className="p-3 bg-[#493548]/15 rounded-xl border border-[#493548]/20 text-xs">
+                  <span className="font-bold text-[#080B0C] block mb-0.5">Head Coach Remark:</span>
+                  <p className="text-[#080B0C] opacity-80 italic">
                     "Excellent motor coordination. Ready for the upcoming Karnataka State Junior Cup nomination!"
                   </p>
                 </div>
@@ -1215,22 +1215,22 @@ export default function ParentPortalView() {
       {/* 7. SPORTS & EVENTS / COMPETITIONS */}
       {currentView === 'competitions' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Academy Competitions & Tournaments
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {data.competitions.map(comp => (
-              <div key={comp.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between">
+              <div key={comp.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-[#F4510B]">{comp.sport}</span>
-                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{comp.title}</h3>
-                  <p className="text-xs text-[#172B50] opacity-75 mt-2">{comp.date} • {comp.venue}</p>
+                  <span className="text-[10px] font-bold uppercase text-[#55CDB3]">{comp.sport}</span>
+                  <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{comp.title}</h3>
+                  <p className="text-xs text-[#080B0C] opacity-75 mt-2">{comp.date} • {comp.venue}</p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-[#172B5015] flex justify-between items-center">
-                  <span className="text-xs font-black text-[#172B50]">{comp.entryFee}</span>
+                <div className="mt-4 pt-3 border-t border-[#493548]/20 flex justify-between items-center">
+                  <span className="text-xs font-black text-[#080B0C]">{comp.entryFee}</span>
                   <button
                     onClick={() => myChildren[0] && registerCompetition(comp.id, myChildren[0].name)}
-                    className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg hover:brightness-110 cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-lg hover:bg-[#55CDB3]/90 cursor-pointer"
                   >
                     Register Child
                   </button>
@@ -1245,22 +1245,22 @@ export default function ParentPortalView() {
       {currentView === 'communication' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
               Announcements & Circulars
             </h1>
             <button
               onClick={() => setIsFeedbackModalOpen(true)}
-              className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              className="px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90"
             >
               Send Feedback to Coach
             </button>
           </div>
           <div className="space-y-4">
             {data.announcements.map(ann => (
-              <div key={ann.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-                <span className="text-[10px] font-bold text-[#F4510B] uppercase">{ann.date} • {ann.target}</span>
-                <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{ann.title}</h3>
-                <p className="text-xs text-[#172B50] opacity-80 mt-2 leading-relaxed">{ann.content}</p>
+              <div key={ann.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+                <span className="text-[10px] font-bold text-[#55CDB3] uppercase">{ann.date} • {ann.target}</span>
+                <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{ann.title}</h3>
+                <p className="text-xs text-[#080B0C] opacity-80 mt-2 leading-relaxed">{ann.content}</p>
               </div>
             ))}
           </div>
@@ -1280,11 +1280,11 @@ export default function ParentPortalView() {
       >
         <form onSubmit={handleApplyChildLeave} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Select Child</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Select Child</label>
             <select
               value={leaveChild}
               onChange={(e) => setLeaveChild(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             >
               {myChildren.map(c => (
                 <option key={c.id} value={c.name}>{c.name} ({c.program})</option>
@@ -1294,50 +1294,50 @@ export default function ParentPortalView() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">From Date</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">From Date</label>
               <input
                 type="date"
                 required
                 value={leaveStart}
                 onChange={(e) => setLeaveStart(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">To Date</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">To Date</label>
               <input
                 type="date"
                 required
                 value={leaveEnd}
                 onChange={(e) => setLeaveEnd(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Reason for Leave *</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Reason for Leave *</label>
             <textarea
               rows="3"
               required
               value={leaveReason}
               onChange={(e) => setLeaveReason(e.target.value)}
               placeholder="e.g. School midterm exams, out of town..."
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
-          <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
+          <div className="pt-3 border-t border-[#493548]/20 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsLeaveModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90"
             >
               Submit Leave Request
             </button>
@@ -1355,12 +1355,12 @@ export default function ParentPortalView() {
         <form onSubmit={handleSubmitCompensation} className="space-y-3.5 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Select Child *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Select Child *</label>
               <select
                 required
                 value={compChildId}
                 onChange={(e) => handleCompChildChange(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl font-semibold focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 {myChildren.length === 0 ? (
                   <option value="">No registered child linked</option>
@@ -1373,24 +1373,24 @@ export default function ParentPortalView() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Academy Location (Auto)</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Academy Location (Auto)</label>
               <input
                 type="text"
                 readOnly
                 value={activeCompChild?.center || parentProfile.center || ''}
-                className="w-full px-3 py-2 text-xs bg-[#FFF4E8]/60 text-[#172B50] font-bold border border-[#172B5020] rounded-xl outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#493548]/15/60 text-[#080B0C] font-bold border border-[#493548]/20 rounded-xl outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Sports Program *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Sports Program *</label>
               <select
                 required
                 value={compProgram}
                 onChange={(e) => setCompProgram(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl font-semibold focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 {(data.programs || []).map(p => (
                   <option key={p.id} value={p.name}>{p.name}</option>
@@ -1399,7 +1399,7 @@ export default function ParentPortalView() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Batches</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Batches</label>
               <select
                 value={compBatchId}
                 onChange={(e) => {
@@ -1408,7 +1408,7 @@ export default function ParentPortalView() {
                   const b = compChildBatches.find(x => x.id === id);
                   if (b) setCompMissedSession(b.name);
                 }}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl font-semibold focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 <option value="">{activeCompChild?.batchName || 'Registered Program Batch'}</option>
                 {compChildBatches.map(b => (
@@ -1420,36 +1420,36 @@ export default function ParentPortalView() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Missed Class Date *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Missed Class Date *</label>
               <input
                 type="date"
                 required
                 value={missedDate}
                 onChange={(e) => setMissedDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Missed Class / Session *</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Missed Class / Session *</label>
               <input
                 type="text"
                 required
                 value={compMissedSession}
                 onChange={(e) => setCompMissedSession(e.target.value)}
                 placeholder="e.g. Evening Batch A / Session"
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Reason for Missing Class *</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Reason for Missing Class *</label>
             <select
               required
               value={compReasonCategory}
               onChange={(e) => setCompReasonCategory(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl font-semibold focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl font-semibold focus:ring-2 focus:ring-[#55CDB3] outline-none"
             >
               {COMPENSATION_REASONS.map(r => (
                 <option key={r} value={r}>{r}</option>
@@ -1458,29 +1458,29 @@ export default function ParentPortalView() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Additional Explanation *</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Additional Explanation *</label>
             <textarea
               rows={2}
               required
               value={compExplanation}
               onChange={(e) => setCompExplanation(e.target.value)}
               placeholder="Share brief details for Admin review..."
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
-          <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
+          <div className="pt-3 border-t border-[#493548]/20 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsCompModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!activeCompChild}
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 disabled:opacity-50 cursor-pointer"
+              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 disabled:opacity-50 cursor-pointer"
             >
               Submit Request
             </button>
@@ -1497,11 +1497,11 @@ export default function ParentPortalView() {
       >
         <form onSubmit={handlePayTuition} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Select Child</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Select Child</label>
             <select
               value={selectedChildForPay}
               onChange={(e) => setSelectedChildForPay(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             >
               {myChildren.map(c => (
                 <option key={c.id} value={c.name}>{c.name} ({c.program})</option>
@@ -1510,26 +1510,26 @@ export default function ParentPortalView() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Fee Amount (₹)</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Fee Amount (₹)</label>
             <input
               type="number"
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
-          <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
+          <div className="pt-3 border-t border-[#493548]/20 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsPayModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90"
             >
               Proceed to Pay ₹{payAmount}
             </button>
@@ -1546,11 +1546,11 @@ export default function ParentPortalView() {
       >
         <form onSubmit={handleSendFeedback} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Star Rating</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Star Rating</label>
             <select
               value={fbRating}
               onChange={(e) => setFbRating(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             >
               <option value="5">★★★★★ (5/5 Exceptional)</option>
               <option value="4">★★★★☆ (4/5 Very Good)</option>
@@ -1559,28 +1559,28 @@ export default function ParentPortalView() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Your Feedback & Comments *</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Your Feedback & Comments *</label>
             <textarea
               rows="3"
               required
               value={fbComment}
               onChange={(e) => setFbComment(e.target.value)}
               placeholder="What did you love about recent sessions?"
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
-          <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
+          <div className="pt-3 border-t border-[#493548]/20 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsFeedbackModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90"
             >
               Submit Feedback
             </button>

@@ -97,25 +97,25 @@ export default function PeopleManagementModule() {
   return (
     <div className="space-y-6">
       {/* Module Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#172B501A] pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#493548]/20 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             People & Access Management
           </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
             Admin oversight for Students, Guardians, Coaches and Role-based Login Access
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#172B5018] shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1.5 p-1 bg-[#F4F7F6] rounded-xl border border-[#493548]/20 shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => setActiveSubTab('students')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'students'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
             <GraduationCap className="w-4 h-4" />
@@ -127,8 +127,8 @@ export default function PeopleManagementModule() {
             onClick={() => setActiveSubTab('parents')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'parents'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -140,8 +140,8 @@ export default function PeopleManagementModule() {
             onClick={() => setActiveSubTab('coaches')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'coaches'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
             <User className="w-4 h-4" />
@@ -153,11 +153,11 @@ export default function PeopleManagementModule() {
             onClick={() => setActiveSubTab('accounts')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'accounts'
-                ? 'bg-[#172B50] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#080B0C] text-[#F4F7F6] shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-[#F4510B]" />
+            <ShieldCheck className="w-4 h-4 text-[#55CDB3]" />
             <span>Account Management ({(data.userAccounts || []).length})</span>
           </button>
         </div>
@@ -173,10 +173,10 @@ export default function PeopleManagementModule() {
         <div className="space-y-6 animate-in fade-in duration-200">
           
           {/* Top Banner Notice */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#172B50] to-[#223B67] text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-card">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#080B0C] to-[#493548]/50 border border-[#493548]/30 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-card">
             <div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#F4510B]" />
+                <ShieldCheck className="w-5 h-5 text-[#55CDB3]" />
                 <h2 className="text-base font-extrabold tracking-wide">
                   Admin Authority: Zero Public Self-Registration
                 </h2>
@@ -189,7 +189,7 @@ export default function PeopleManagementModule() {
             <button
               type="button"
               onClick={() => setIsCreateAccountOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#F4510B] text-white text-xs font-bold rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all shrink-0 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#55CDB3] text-[#080B0C] font-bold text-xs font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create User Account</span>
@@ -197,24 +197,24 @@ export default function PeopleManagementModule() {
           </div>
 
           {/* Filters & Search */}
-          <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative flex-1 w-full sm:max-w-md">
-              <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#493548] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search by name, email address, role..."
                 value={accountSearch}
                 onChange={(e) => setAccountSearch(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 text-xs bg-[#FFF4E8]/40 border border-[#172B5018] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+                className="w-full pl-9 pr-3.5 py-2 text-xs bg-[#493548]/15/40 border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
               />
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-xs font-bold text-[#172B50] opacity-70">Role:</span>
+              <span className="text-xs font-bold text-[#493548]">Role:</span>
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-2 text-xs bg-white border border-[#172B5018] rounded-xl text-[#172B50] font-semibold focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+                className="px-3 py-2 text-xs bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-[#080B0C] font-semibold focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
               >
                 <option value="All">All Roles</option>
                 <option value="parent">Parents</option>
@@ -225,10 +225,10 @@ export default function PeopleManagementModule() {
           </div>
 
           {/* Accounts Table */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+          <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
+                <thead className="bg-[#493548]/15 text-[#080B0C] font-bold uppercase tracking-wider text-[11px] border-b border-[#493548]/20">
                   <tr>
                     <th className="px-5 py-3.5">User & Credentials</th>
                     <th className="px-4 py-3.5">Portal Role</th>
@@ -238,25 +238,25 @@ export default function PeopleManagementModule() {
                     <th className="px-4 py-3.5 text-right">Admin Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#172B5012]">
+                <tbody className="divide-y divide-[#493548]/15">
                   {accounts.map(acc => (
-                    <tr key={acc.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                    <tr key={acc.id} className="hover:bg-[#55CDB3]/15/20 transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                            acc.role === 'admin' ? 'bg-[#172B50] text-white' :
-                            acc.role === 'coach' ? 'bg-[#F4510B] text-white' : 'bg-[#00D1C1] text-[#0A0E17]'
+                            acc.role === 'admin' ? 'bg-[#080B0C] text-[#F4F7F6]' :
+                            acc.role === 'coach' ? 'bg-[#55CDB3] text-[#080B0C] font-bold' : 'bg-[#00D1C1] text-[#0A0E17]'
                           }`}>
                             {acc.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
                           </div>
                           <div>
-                            <span className="font-bold text-[#172B50] block text-[13px]">{acc.name}</span>
-                            <span className="text-[11px] text-[#172B50]/70 flex items-center gap-1 mt-0.5">
-                              <Mail className="w-3 h-3 text-[#F4510B]" />
+                            <span className="font-bold text-[#080B0C] block text-[13px]">{acc.name}</span>
+                            <span className="text-[11px] text-[#080B0C]/70 flex items-center gap-1 mt-0.5">
+                              <Mail className="w-3 h-3 text-[#55CDB3]" />
                               {acc.email}
                             </span>
                             {acc.phone && (
-                              <span className="text-[10px] text-[#172B50]/60 flex items-center gap-1 mt-0.5">
+                              <span className="text-[10px] text-[#080B0C]/60 flex items-center gap-1 mt-0.5">
                                 <Phone className="w-2.5 h-2.5" />
                                 {acc.phone}
                               </span>
@@ -267,8 +267,8 @@ export default function PeopleManagementModule() {
 
                       <td className="px-4 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide inline-block ${
-                          acc.role === 'admin' ? 'bg-[#172B50] text-white' :
-                          acc.role === 'coach' ? 'bg-[#F4510B]/15 text-[#F4510B]' :
+                          acc.role === 'admin' ? 'bg-[#080B0C] text-[#F4F7F6]' :
+                          acc.role === 'coach' ? 'bg-[#55CDB3]/15 text-[#55CDB3]' :
                           'bg-[#00D1C1]/20 text-[#008B80]'
                         }`}>
                           {acc.role.toUpperCase()} PORTAL
@@ -278,18 +278,18 @@ export default function PeopleManagementModule() {
                       <td className="px-4 py-4">
                         {acc.role === 'parent' && acc.linkedStudents && (
                           <div className="space-y-0.5">
-                            <span className="text-[11px] font-semibold text-[#172B50] block">Children:</span>
-                            <span className="text-[10px] text-[#172B50]/80 block">{acc.linkedStudents.join(', ')}</span>
+                            <span className="text-[11px] font-semibold text-[#080B0C] block">Children:</span>
+                            <span className="text-[10px] text-[#080B0C]/80 block">{acc.linkedStudents.join(', ')}</span>
                           </div>
                         )}
                         {acc.role === 'coach' && acc.assignedPrograms && (
                           <div className="space-y-0.5">
-                            <span className="text-[11px] font-semibold text-[#172B50] block">Specialty:</span>
-                            <span className="text-[10px] text-[#172B50]/80 block">{acc.assignedPrograms.join(', ')}</span>
+                            <span className="text-[11px] font-semibold text-[#080B0C] block">Specialty:</span>
+                            <span className="text-[10px] text-[#080B0C]/80 block">{acc.assignedPrograms.join(', ')}</span>
                           </div>
                         )}
                         {acc.role === 'admin' && (
-                          <span className="text-[11px] text-[#172B50]/70 font-medium">Academy Oversight</span>
+                          <span className="text-[11px] text-[#080B0C]/70 font-medium">Academy Oversight</span>
                         )}
                       </td>
 
@@ -297,18 +297,18 @@ export default function PeopleManagementModule() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${acc.status === 'Active' ? 'bg-emerald-500' : 'bg-red-400'}`} />
-                            <span className="font-bold text-[#172B50] text-[11px]">{acc.status}</span>
+                            <span className="font-bold text-[#080B0C] text-[11px]">{acc.status}</span>
                           </div>
                           {acc.isTemporaryPassword && (
-                            <div className="flex items-center gap-1.5 bg-[#FFF4E8] px-2 py-1 rounded-lg border border-[#F4510B]/20">
-                              <Key className="w-3 h-3 text-[#F4510B] shrink-0" />
-                              <span className="text-[10px] font-mono font-bold text-[#172B50]">
+                            <div className="flex items-center gap-1.5 bg-[#493548]/15 px-2 py-1 rounded-lg border border-[#55CDB3]/20">
+                              <Key className="w-3 h-3 text-[#55CDB3] shrink-0" />
+                              <span className="text-[10px] font-mono font-bold text-[#080B0C]">
                                 {showPasswordMap[acc.id] ? acc.tempPasswordDisplay || 'Spartan@2026' : '••••••••'}
                               </span>
                               <button 
                                 type="button" 
                                 onClick={() => toggleShowPassword(acc.id)}
-                                className="text-[#172B50]/60 hover:text-[#172B50] ml-1"
+                                className="text-[#080B0C]/60 hover:text-[#080B0C] ml-1"
                                 title="Toggle visibility"
                               >
                                 {showPasswordMap[acc.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -319,8 +319,8 @@ export default function PeopleManagementModule() {
                       </td>
 
                       <td className="px-4 py-4">
-                        <span className="text-[11px] text-[#172B50]/80 font-medium block">{acc.lastLogin}</span>
-                        <span className="text-[10px] text-[#172B50]/50 block">Created: {acc.createdAt}</span>
+                        <span className="text-[11px] text-[#080B0C]/80 font-medium block">{acc.lastLogin}</span>
+                        <span className="text-[10px] text-[#080B0C]/50 block">Created: {acc.createdAt}</span>
                       </td>
 
                       <td className="px-4 py-4 text-right">
@@ -330,10 +330,10 @@ export default function PeopleManagementModule() {
                               <button
                                 type="button"
                                 onClick={() => resetAccountPassword(acc.id)}
-                                className="p-1.5 rounded-lg border border-[#172B5020] text-[#172B50] hover:bg-[#FFF4E8] transition-colors"
+                                className="p-1.5 rounded-lg border border-[#493548]/20 text-[#080B0C] hover:bg-[#55CDB3]/15 transition-colors"
                                 title="Reset Temporary Password & Re-send Invite"
                               >
-                                <RefreshCw className="w-3.5 h-3.5 text-[#F4510B]" />
+                                <RefreshCw className="w-3.5 h-3.5 text-[#55CDB3]" />
                               </button>
                               <button
                                 type="button"
@@ -368,23 +368,23 @@ export default function PeopleManagementModule() {
         size="md"
       >
         <form onSubmit={handleCreateAccountSubmit} className="space-y-4">
-          <div className="p-3 rounded-xl bg-[#FFF4E8] border border-[#F4510B]/20 text-[11px] text-[#172B50] flex items-start gap-2">
-            <Lock className="w-4 h-4 text-[#F4510B] shrink-0 mt-0.5" />
+          <div className="p-3 rounded-xl bg-[#493548]/15 border border-[#55CDB3]/20 text-[11px] text-[#080B0C] flex items-start gap-2">
+            <Lock className="w-4 h-4 text-[#55CDB3] shrink-0 mt-0.5" />
             <p>
               Admin must provide a unique email address. The system automatically issues a secure temporary password and sends an invitation notification. Upon first login, the user will be prompted to reset their password.
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Account Role *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Account Role *</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setAccountRole('parent')}
                 className={`py-2 text-xs font-bold rounded-xl border flex items-center justify-center gap-2 transition-all ${
                   accountRole === 'parent' 
-                    ? 'bg-[#F4510B] text-white border-[#F4510B]' 
-                    : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-[#FFF4E8]'
+                    ? 'bg-[#55CDB3] text-[#080B0C] font-bold border-[#55CDB3]' 
+                    : 'bg-[#F4F7F6] text-[#080B0C] border-[#493548]/20 hover:bg-[#55CDB3]/15'
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -395,8 +395,8 @@ export default function PeopleManagementModule() {
                 onClick={() => setAccountRole('coach')}
                 className={`py-2 text-xs font-bold rounded-xl border flex items-center justify-center gap-2 transition-all ${
                   accountRole === 'coach' 
-                    ? 'bg-[#F4510B] text-white border-[#F4510B]' 
-                    : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-[#FFF4E8]'
+                    ? 'bg-[#55CDB3] text-[#080B0C] font-bold border-[#55CDB3]' 
+                    : 'bg-[#F4F7F6] text-[#080B0C] border-[#493548]/20 hover:bg-[#55CDB3]/15'
                 }`}
               >
                 <User className="w-4 h-4" />
@@ -406,19 +406,19 @@ export default function PeopleManagementModule() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Full Name *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Full Name *</label>
             <input
               type="text"
               required
               placeholder={accountRole === 'parent' ? "e.g. Dr. Rohan Sharma" : "e.g. Coach Vikram Singh"}
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">
               Mandatory Unique Email Address *
             </label>
             <input
@@ -427,30 +427,30 @@ export default function PeopleManagementModule() {
               placeholder="e.g. parent.name@example.com"
               value={accountEmail}
               onChange={(e) => setAccountEmail(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
             />
-            <span className="text-[10px] text-[#172B50]/60 mt-0.5 block">
+            <span className="text-[10px] text-[#080B0C]/60 mt-0.5 block">
               Duplicate email check is strictly enforced.
             </span>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Mobile Contact</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Mobile Contact</label>
             <input
               type="tel"
               placeholder="+91 99000 12345"
               value={accountPhone}
               onChange={(e) => setAccountPhone(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Academy Location *</label>
             <select
               value={accountCenter}
               onChange={(e) => setAccountCenter(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-bold bg-white border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 text-xs font-bold bg-[#F4F7F6] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
             >
               {commonLocations.map(loc => (
                 <option key={loc.id} value={loc.name}>{loc.name}</option>
@@ -460,12 +460,12 @@ export default function PeopleManagementModule() {
 
           {accountRole === 'parent' && (
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">
                 Link Children to this Parent Account
               </label>
-              <div className="max-h-32 overflow-y-auto border border-[#172B5018] rounded-xl p-2 space-y-1 bg-white">
+              <div className="max-h-32 overflow-y-auto border border-[#493548]/20 rounded-xl p-2 space-y-1 bg-[#F4F7F6]">
                 {data.students.map(stu => (
-                  <label key={stu.id} className="flex items-center gap-2 text-xs text-[#172B50] cursor-pointer hover:bg-[#FFF4E8] p-1 rounded-lg">
+                  <label key={stu.id} className="flex items-center gap-2 text-xs text-[#080B0C] cursor-pointer hover:bg-[#55CDB3]/15 p-1 rounded-lg">
                     <input
                       type="checkbox"
                       checked={selectedChildren.includes(stu.name)}
@@ -476,7 +476,7 @@ export default function PeopleManagementModule() {
                           setSelectedChildren(selectedChildren.filter(n => n !== stu.name));
                         }
                       }}
-                      className="rounded border-[#172B5030] text-[#F4510B] focus:ring-[#F4510B]"
+                      className="rounded border-[#493548]/20 text-[#55CDB3] focus:ring-[#55CDB3]"
                     />
                     <span>{stu.name} ({stu.program})</span>
                   </label>
@@ -487,12 +487,12 @@ export default function PeopleManagementModule() {
 
           {accountRole === 'coach' && (
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">
                 Assign Sports Disciplines
               </label>
-              <div className="max-h-32 overflow-y-auto border border-[#172B5018] rounded-xl p-2 space-y-1 bg-white">
+              <div className="max-h-32 overflow-y-auto border border-[#493548]/20 rounded-xl p-2 space-y-1 bg-[#F4F7F6]">
                 {data.programs.map(prog => (
-                  <label key={prog.id} className="flex items-center gap-2 text-xs text-[#172B50] cursor-pointer hover:bg-[#FFF4E8] p-1 rounded-lg">
+                  <label key={prog.id} className="flex items-center gap-2 text-xs text-[#080B0C] cursor-pointer hover:bg-[#55CDB3]/15 p-1 rounded-lg">
                     <input
                       type="checkbox"
                       checked={selectedPrograms.includes(prog.name)}
@@ -503,7 +503,7 @@ export default function PeopleManagementModule() {
                           setSelectedPrograms(selectedPrograms.filter(n => n !== prog.name));
                         }
                       }}
-                      className="rounded border-[#172B5030] text-[#F4510B] focus:ring-[#F4510B]"
+                      className="rounded border-[#493548]/20 text-[#55CDB3] focus:ring-[#55CDB3]"
                     />
                     <span>{prog.name} ({prog.ageGroup})</span>
                   </label>
@@ -512,17 +512,17 @@ export default function PeopleManagementModule() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5015]">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
             <button
               type="button"
               onClick={() => setIsCreateAccountOpen(false)}
-              className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-xs hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-xs hover:bg-[#55CDB3]/90 active:scale-95 transition-all cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Issue Account Invitation</span>

@@ -86,10 +86,10 @@ export default function SupportPortalView() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
                 Customer Support & Admissions Desk
               </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+              <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
                 Priya Menon (Lead Relations Officer) • Managing Inquiries, Grievances & Parent Concierge
               </p>
             </div>
@@ -97,7 +97,7 @@ export default function SupportPortalView() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsCreateTicketOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all"
               >
                 <Plus className="w-4 h-4 text-white" />
                 <span>Create Support Ticket</span>
@@ -137,32 +137,32 @@ export default function SupportPortalView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Follow-up Queue */}
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <div className="flex items-center justify-between pb-3 border-b border-[#172B5012]">
-                <h3 className="text-sm font-extrabold text-[#172B50] flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-[#F4510B]" />
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+              <div className="flex items-center justify-between pb-3 border-b border-[#493548]/20">
+                <h3 className="text-sm font-extrabold text-[#080B0C] flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-[#55CDB3]" />
                   <span>Scheduled Parent Calls & Follow-ups</span>
                 </h3>
-                <span className="text-xs font-bold text-[#F4510B]">Today's Queue</span>
+                <span className="text-xs font-bold text-[#55CDB3]">Today's Queue</span>
               </div>
 
               <div className="space-y-3 mt-3.5">
                 {followupsList.map(flw => (
-                  <div key={flw.id} className="p-3.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
+                  <div key={flw.id} className="p-3.5 rounded-xl bg-[#493548]/15 border border-[#493548]/20 flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-extrabold text-[#172B50] block">{flw.leadName}</span>
-                      <p className="text-[11px] text-[#172B50] opacity-75 mt-0.5">{flw.type} • {flw.scheduledTime}</p>
-                      <p className="text-[10px] text-[#172B50] opacity-60 mt-1 italic">"{flw.notes}"</p>
+                      <span className="text-xs font-extrabold text-[#080B0C] block">{flw.leadName}</span>
+                      <p className="text-[11px] text-[#080B0C] opacity-75 mt-0.5">{flw.type} • {flw.scheduledTime}</p>
+                      <p className="text-[10px] text-[#493548] mt-1 italic">"{flw.notes}"</p>
                     </div>
 
                     {flw.status === 'Completed' ? (
-                      <span className="px-2 py-1 rounded-lg text-[10px] font-black bg-[#172B50] text-white">
+                      <span className="px-2 py-1 rounded-lg text-[10px] font-black bg-[#080B0C] text-[#F4F7F6]">
                         Done
                       </span>
                     ) : (
                       <button
                         onClick={() => handleMarkFollowupDone(flw.id)}
-                        className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg hover:brightness-110"
+                        className="px-3 py-1.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-lg hover:bg-[#55CDB3]/90"
                       >
                         Call Done
                       </button>
@@ -173,15 +173,15 @@ export default function SupportPortalView() {
             </div>
 
             {/* Active Tickets Quick View */}
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <div className="flex items-center justify-between pb-3 border-b border-[#172B5012]">
-                <h3 className="text-sm font-extrabold text-[#172B50] flex items-center gap-1.5">
-                  <LifeBuoy className="w-4 h-4 text-[#F4510B]" />
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+              <div className="flex items-center justify-between pb-3 border-b border-[#493548]/20">
+                <h3 className="text-sm font-extrabold text-[#080B0C] flex items-center gap-1.5">
+                  <LifeBuoy className="w-4 h-4 text-[#55CDB3]" />
                   <span>Recent Parent Support Requests</span>
                 </h3>
                 <button
                   onClick={() => setCurrentView('tickets')}
-                  className="text-xs font-bold text-[#F4510B] hover:underline"
+                  className="text-xs font-bold text-[#55CDB3] hover:underline"
                 >
                   View All
                 </button>
@@ -189,17 +189,17 @@ export default function SupportPortalView() {
 
               <div className="space-y-3 mt-3.5">
                 {data.supportTickets.slice(0, 3).map(ticket => (
-                  <div key={ticket.id} className="p-3.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
+                  <div key={ticket.id} className="p-3.5 rounded-xl bg-[#493548]/15 border border-[#493548]/20 flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-extrabold text-[#172B50]">{ticket.subject}</span>
+                        <span className="text-xs font-extrabold text-[#080B0C]">{ticket.subject}</span>
                         <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold ${
-                          ticket.priority === 'High' ? 'bg-[#F4510B] text-white' : 'bg-[#172B50] text-white'
+                          ticket.priority === 'High' ? 'bg-[#55CDB3] text-[#080B0C] font-bold' : 'bg-[#080B0C] text-[#F4F7F6]'
                         }`}>
                           {ticket.priority}
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#172B50] opacity-75 mt-0.5">
+                      <p className="text-[11px] text-[#080B0C] opacity-75 mt-0.5">
                         {ticket.customerName} • Updated {ticket.lastUpdate}
                       </p>
                     </div>
@@ -209,7 +209,7 @@ export default function SupportPortalView() {
                         setSelectedTicket(ticket);
                         setCurrentView('tickets');
                       }}
-                      className="px-3 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-lg hover:bg-[#F4510B]"
+                      className="px-3 py-1.5 text-xs font-bold bg-[#080B0C] text-[#F4F7F6] rounded-lg hover:bg-[#55CDB3]"
                     >
                       Reply
                     </button>
@@ -226,14 +226,14 @@ export default function SupportPortalView() {
       {currentView === 'enquiries' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
               Admissions Enquiry Pipeline
             </h1>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+          <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase text-[11px]">
+              <thead className="bg-[#493548]/15 text-[#080B0C] font-bold uppercase text-[11px]">
                 <tr>
                   <th className="p-3.5">Child & Age</th>
                   <th className="p-3.5">Parent Contact</th>
@@ -242,22 +242,22 @@ export default function SupportPortalView() {
                   <th className="p-3.5 text-right">Update Stage</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#172B5010]">
+              <tbody className="divide-y divide-[#493548]/15">
                 {data.enquiries.map(enq => (
                   <tr key={enq.id}>
                     <td className="p-3.5">
-                      <span className="font-extrabold text-[#172B50] block">{enq.childName}</span>
-                      <span className="text-[10px] text-[#172B50] opacity-60">{enq.childAge} yrs old</span>
+                      <span className="font-extrabold text-[#080B0C] block">{enq.childName}</span>
+                      <span className="text-[10px] text-[#493548]">{enq.childAge} yrs old</span>
                     </td>
                     <td className="p-3.5">
-                      <span className="font-bold text-[#172B50] block">{enq.parentName}</span>
-                      <span className="text-[10px] text-[#172B50] opacity-75">{enq.phone}</span>
+                      <span className="font-bold text-[#080B0C] block">{enq.parentName}</span>
+                      <span className="text-[10px] text-[#080B0C] opacity-75">{enq.phone}</span>
                     </td>
                     <td className="p-3.5">
-                      <span className="font-semibold text-[#172B50]">{enq.interestedProgram}</span>
+                      <span className="font-semibold text-[#080B0C]">{enq.interestedProgram}</span>
                     </td>
                     <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020]">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20">
                         {enq.stage}
                       </span>
                     </td>
@@ -265,7 +265,7 @@ export default function SupportPortalView() {
                       <select
                         value={enq.stage}
                         onChange={(e) => updateEnquiryStage(enq.id, e.target.value)}
-                        className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#172B5020] bg-white text-[#172B50] outline-none"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C] outline-none"
                       >
                         <option value="New">New</option>
                         <option value="Contacted">Contacted</option>
@@ -286,20 +286,20 @@ export default function SupportPortalView() {
       {currentView === 'directory' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
               Customer Directory (Quick Search)
             </h1>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card">
+          <div className="bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card">
             <div className="relative w-full max-w-md">
-              <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-[#493548] absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search parent by name, phone or address..."
-                className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl outline-none"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-[#493548]/15 text-[#080B0C] placeholder-[#493548] border border-[#493548]/20 rounded-xl outline-none"
               />
             </div>
           </div>
@@ -308,11 +308,11 @@ export default function SupportPortalView() {
             {data.parents
               .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.phone.includes(searchTerm))
               .map(p => (
-                <div key={p.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-                  <span className="text-[10px] font-bold uppercase text-[#F4510B]">{p.id} • {p.center}</span>
-                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{p.name}</h3>
-                  <p className="text-xs text-[#172B50] opacity-75 mt-1">Children: {p.children.join(', ')}</p>
-                  <div className="mt-3 pt-3 border-t border-[#172B5015] text-xs space-y-1 text-[#172B50]">
+                <div key={p.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+                  <span className="text-[10px] font-bold uppercase text-[#55CDB3]">{p.id} • {p.center}</span>
+                  <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{p.name}</h3>
+                  <p className="text-xs text-[#080B0C] opacity-75 mt-1">Children: {p.children.join(', ')}</p>
+                  <div className="mt-3 pt-3 border-t border-[#493548]/20 text-xs space-y-1 text-[#080B0C]">
                     <p><span className="font-bold">Phone:</span> {p.phone}</p>
                     <p><span className="font-bold">Email:</span> {p.email}</p>
                     <p><span className="font-bold">Address:</span> {p.address}</p>
@@ -327,12 +327,12 @@ export default function SupportPortalView() {
       {currentView === 'tickets' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
               Support Tickets & Grievance Desk
             </h1>
             <button
               onClick={() => setIsCreateTicketOpen(true)}
-              className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              className="px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90"
             >
               New Ticket
             </button>
@@ -348,33 +348,33 @@ export default function SupportPortalView() {
                   onClick={() => setSelectedTicket(ticket)}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                     selectedTicket?.id === ticket.id
-                      ? 'bg-white border-[#F4510B] shadow-dropdown ring-2 ring-[#F4510B]'
-                      : 'bg-white border-[#172B501A] hover:bg-[#FFF4E8]/50 shadow-card'
+                      ? 'bg-[#F4F7F6] border-[#55CDB3] shadow-dropdown ring-2 ring-[#55CDB3]'
+                      : 'bg-[#F4F7F6] border-[#493548]/20 hover:bg-[#55CDB3]/10 shadow-card'
                   }`}
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-bold uppercase text-[#F4510B]">{ticket.id}</span>
+                    <span className="text-[10px] font-bold uppercase text-[#55CDB3]">{ticket.id}</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                      ticket.status === 'Resolved' ? 'bg-[#172B50] text-white' : 'bg-[#F4510B] text-white'
+                      ticket.status === 'Resolved' ? 'bg-[#080B0C] text-[#F4F7F6]' : 'bg-[#55CDB3] text-[#080B0C] font-bold'
                     }`}>
                       {ticket.status}
                     </span>
                   </div>
-                  <h4 className="text-xs font-extrabold text-[#172B50] mt-1 line-clamp-1">{ticket.subject}</h4>
-                  <p className="text-[11px] text-[#172B50] opacity-75 mt-0.5">{ticket.customerName}</p>
+                  <h4 className="text-xs font-extrabold text-[#080B0C] mt-1 line-clamp-1">{ticket.subject}</h4>
+                  <p className="text-[11px] text-[#080B0C] opacity-75 mt-0.5">{ticket.customerName}</p>
                 </div>
               ))}
             </div>
 
             {/* Ticket Detail / Thread */}
-            <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card flex flex-col justify-between min-h-[400px]">
+            <div className="lg:col-span-2 bg-[#F4F7F6] rounded-2xl p-6 border border-[#493548]/20 shadow-card flex flex-col justify-between min-h-[400px]">
               {selectedTicket ? (
                 <div>
-                  <div className="flex justify-between items-start pb-4 border-b border-[#172B5015]">
+                  <div className="flex justify-between items-start pb-4 border-b border-[#493548]/20">
                     <div>
-                      <span className="text-[10px] font-bold uppercase text-[#F4510B]">{selectedTicket.category}</span>
-                      <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{selectedTicket.subject}</h3>
-                      <p className="text-xs text-[#172B50] opacity-75">
+                      <span className="text-[10px] font-bold uppercase text-[#55CDB3]">{selectedTicket.category}</span>
+                      <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{selectedTicket.subject}</h3>
+                      <p className="text-xs text-[#080B0C] opacity-75">
                         Customer: <span className="font-bold">{selectedTicket.customerName}</span> • Assigned to: {selectedTicket.assignedTo}
                       </p>
                     </div>
@@ -383,7 +383,7 @@ export default function SupportPortalView() {
                       <select
                         value={selectedTicket.status}
                         onChange={(e) => updateTicketStatus(selectedTicket.id, e.target.value)}
-                        className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#172B5020] bg-[#FFF4E8] text-[#172B50] outline-none"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C] outline-none"
                       >
                         <option value="Open">Open</option>
                         <option value="In Progress">In Progress</option>
@@ -401,8 +401,8 @@ export default function SupportPortalView() {
                           key={idx}
                           className={`p-3.5 rounded-2xl max-w-md ${
                             isSupport
-                              ? 'ml-auto bg-[#172B50] text-white'
-                              : 'mr-auto bg-[#FFF4E8] text-[#172B50] border border-[#172B5015]'
+                              ? 'ml-auto bg-[#080B0C] text-[#F4F7F6]'
+                              : 'mr-auto bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20'
                           }`}
                         >
                           <div className="flex justify-between items-center text-[10px] opacity-75 mb-1 font-bold">
@@ -416,18 +416,18 @@ export default function SupportPortalView() {
                   </div>
 
                   {/* Reply Input */}
-                  <div className="pt-3 border-t border-[#172B5015] flex gap-2">
+                  <div className="pt-3 border-t border-[#493548]/20 flex gap-2">
                     <input
                       type="text"
                       value={ticketReplyText}
                       onChange={(e) => setTicketReplyText(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendReply(selectedTicket.id)}
                       placeholder="Type response to parent..."
-                      className="flex-1 px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl outline-none"
+                      className="flex-1 px-3 py-2 text-xs bg-[#493548]/15 text-[#080B0C] placeholder-[#493548] border border-[#493548]/20 rounded-xl outline-none"
                     />
                     <button
                       onClick={() => handleSendReply(selectedTicket.id)}
-                      className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl hover:brightness-110 flex items-center gap-1.5"
+                      className="px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl hover:bg-[#55CDB3]/90 flex items-center gap-1.5"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Send</span>
@@ -436,8 +436,8 @@ export default function SupportPortalView() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center my-auto text-center py-12">
-                  <LifeBuoy className="w-12 h-12 text-[#172B50] opacity-30 mb-2" />
-                  <p className="text-sm font-bold text-[#172B50]">Select a support ticket to view conversation</p>
+                  <LifeBuoy className="w-12 h-12 text-[#080B0C] opacity-30 mb-2" />
+                  <p className="text-sm font-bold text-[#080B0C]">Select a support ticket to view conversation</p>
                 </div>
               )}
             </div>
@@ -449,22 +449,22 @@ export default function SupportPortalView() {
       {/* 5. COMMUNICATION LOG */}
       {currentView === 'communication' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Parent Communication Logs
           </h1>
           <div className="space-y-3">
             {data.announcements.length === 0 ? (
-              <div className="p-6 bg-white rounded-2xl border border-[#172B501A] shadow-card text-center text-xs text-[#172B50] opacity-65">
+              <div className="p-6 bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card text-center text-xs text-[#080B0C] opacity-65">
                 No communication logs recorded yet.
               </div>
             ) : (
               data.announcements.map((ann, i) => (
-                <div key={ann.id || i} className="p-4 bg-white rounded-2xl border border-[#172B501A] shadow-card flex items-start justify-between">
+                <div key={ann.id || i} className="p-4 bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card flex items-start justify-between">
                   <div>
-                    <span className="text-[10px] font-bold text-[#F4510B] uppercase">{ann.category || 'Broadcast'}</span>
-                    <p className="text-xs font-semibold text-[#172B50] mt-1">{ann.title || ann.content}</p>
+                    <span className="text-[10px] font-bold text-[#55CDB3] uppercase">{ann.category || 'Broadcast'}</span>
+                    <p className="text-xs font-semibold text-[#080B0C] mt-1">{ann.title || ann.content}</p>
                   </div>
-                  <span className="text-[10px] text-[#172B50] opacity-60 font-semibold">{ann.date || ''}</span>
+                  <span className="text-[10px] text-[#493548] font-semibold">{ann.date || ''}</span>
                 </div>
               ))
             )}
@@ -475,25 +475,25 @@ export default function SupportPortalView() {
       {/* 6. FOLLOW-UPS */}
       {currentView === 'followups' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Follow-up Call Register
           </h1>
           <div className="space-y-3">
             {followupsList.map(flw => (
-              <div key={flw.id} className="p-4 bg-white rounded-2xl border border-[#172B501A] shadow-card flex items-center justify-between">
+              <div key={flw.id} className="p-4 bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-extrabold text-[#172B50] block">{flw.leadName}</span>
-                  <p className="text-[11px] text-[#172B50] opacity-75">{flw.type} • {flw.scheduledTime}</p>
-                  <p className="text-[11px] text-[#172B50] opacity-80 mt-1 italic">"{flw.notes}"</p>
+                  <span className="text-xs font-extrabold text-[#080B0C] block">{flw.leadName}</span>
+                  <p className="text-[11px] text-[#080B0C] opacity-75">{flw.type} • {flw.scheduledTime}</p>
+                  <p className="text-[11px] text-[#080B0C] opacity-80 mt-1 italic">"{flw.notes}"</p>
                 </div>
                 {flw.status === 'Completed' ? (
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-[#172B50] text-white">
+                  <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-[#080B0C] text-[#F4F7F6]">
                     Completed
                   </span>
                 ) : (
                   <button
                     onClick={() => handleMarkFollowupDone(flw.id)}
-                    className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg hover:brightness-110"
+                    className="px-3 py-1.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-lg hover:bg-[#55CDB3]/90"
                   >
                     Mark Done
                   </button>
@@ -507,15 +507,15 @@ export default function SupportPortalView() {
       {/* 7. FEEDBACK MANAGEMENT */}
       {currentView === 'feedback' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Parent Grievances & Testimonials
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {data.feedback.map(fb => (
-              <div key={fb.id} className="p-5 bg-white rounded-2xl border border-[#172B501A] shadow-card">
-                <span className="text-[10px] font-bold text-[#F4510B] uppercase">{fb.category}</span>
-                <h4 className="text-sm font-extrabold text-[#172B50] mt-0.5">{fb.parentName}</h4>
-                <p className="text-xs text-[#172B50] opacity-80 mt-2 italic bg-[#FFF4E8] p-3 rounded-xl">
+              <div key={fb.id} className="p-5 bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card">
+                <span className="text-[10px] font-bold text-[#55CDB3] uppercase">{fb.category}</span>
+                <h4 className="text-sm font-extrabold text-[#080B0C] mt-0.5">{fb.parentName}</h4>
+                <p className="text-xs text-[#080B0C] opacity-80 mt-2 italic bg-[#493548]/15 p-3 rounded-xl">
                   "{fb.comment}"
                 </p>
               </div>
@@ -527,21 +527,21 @@ export default function SupportPortalView() {
       {/* 8. REPORTS */}
       {currentView === 'reports' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Support Desk Performance & SLA Reports
           </h1>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-5 bg-white rounded-2xl border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-bold text-[#172B50] opacity-60 uppercase">Average First Response</span>
-              <h3 className="text-2xl font-black text-[#172B50] mt-1">11.8 Mins</h3>
+            <div className="p-5 bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card">
+              <span className="text-[10px] font-bold text-[#493548] uppercase">Average First Response</span>
+              <h3 className="text-2xl font-black text-[#080B0C] mt-1">11.8 Mins</h3>
             </div>
-            <div className="p-5 bg-white rounded-2xl border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-bold text-[#172B50] opacity-60 uppercase">Ticket Resolution SLA</span>
-              <h3 className="text-2xl font-black text-[#F4510B] mt-1">98.5%</h3>
+            <div className="p-5 bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card">
+              <span className="text-[10px] font-bold text-[#493548] uppercase">Ticket Resolution SLA</span>
+              <h3 className="text-2xl font-black text-[#55CDB3] mt-1">98.5%</h3>
             </div>
-            <div className="p-5 bg-white rounded-2xl border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-bold text-[#172B50] opacity-60 uppercase">Trial Turnout Rate</span>
-              <h3 className="text-2xl font-black text-[#172B50] mt-1">89.2%</h3>
+            <div className="p-5 bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card">
+              <span className="text-[10px] font-bold text-[#493548] uppercase">Trial Turnout Rate</span>
+              <h3 className="text-2xl font-black text-[#080B0C] mt-1">89.2%</h3>
             </div>
           </div>
         </div>
@@ -556,35 +556,35 @@ export default function SupportPortalView() {
       >
         <form onSubmit={handleCreateTicket} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Customer Name *</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Parent Customer Name *</label>
             <input
               type="text"
               required
               value={ticketCustomer}
               onChange={(e) => setTicketCustomer(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Ticket Subject *</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Ticket Subject *</label>
             <input
               type="text"
               required
               value={ticketSubject}
               onChange={(e) => setTicketSubject(e.target.value)}
               placeholder="e.g. Request to change training batch slot"
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Category</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Category</label>
               <select
                 value={ticketCategory}
                 onChange={(e) => setTicketCategory(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 <option value="Batch Reschedule">Batch Reschedule</option>
                 <option value="Billing & Invoices">Billing & Invoices</option>
@@ -593,11 +593,11 @@ export default function SupportPortalView() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Priority</label>
+              <label className="text-xs font-bold text-[#080B0C] block mb-1">Priority</label>
               <select
                 value={ticketPriority}
                 onChange={(e) => setTicketPriority(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -607,28 +607,28 @@ export default function SupportPortalView() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Details & Description *</label>
+            <label className="text-xs font-bold text-[#080B0C] block mb-1">Details & Description *</label>
             <textarea
               rows="3"
               required
               value={ticketDescription}
               onChange={(e) => setTicketDescription(e.target.value)}
               placeholder="Describe customer's issue or inquiry..."
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
-          <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
+          <div className="pt-3 border-t border-[#493548]/20 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsCreateTicketOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90"
             >
               Log Ticket
             </button>

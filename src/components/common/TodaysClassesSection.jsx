@@ -42,8 +42,8 @@ function CapacityBadge({ enrolled, capacity, status }) {
 
   if (isFull) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#F4510B] text-white shadow-xs select-none">
-        <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#493548] text-[#F4F7F6] border border-[#493548] shadow-xs select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#55CDB3]"></span>
         <span>Full {enrolled}/{capacity}</span>
       </span>
     );
@@ -51,16 +51,16 @@ function CapacityBadge({ enrolled, capacity, status }) {
 
   if (isNearlyFull) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-xs select-none">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#55CDB3]/20 text-[#080B0C] border border-[#55CDB3]/40 shadow-xs select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#55CDB3]"></span>
         <span>{enrolled}/{capacity}</span>
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5014] shadow-xs select-none">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]"></span>
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 shadow-xs select-none">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#55CDB3]"></span>
       <span>{enrolled}/{capacity}</span>
     </span>
   );
@@ -147,19 +147,19 @@ export default function TodaysClassesSection({ className = '' }) {
 
   return (
     <div
-      className={`bg-white rounded-[22px] border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] p-5 sm:p-6 overflow-hidden transition-all ${className}`}
+      className={`bg-[#F4F7F6] text-[#080B0C] rounded-[22px] border border-[#493548]/20 shadow-[0_4px_25px_rgba(8,11,12,0.3)] p-5 sm:p-6 overflow-hidden transition-all ${className}`}
     >
       {/* Header with Title, Calendar Icon and View Schedule CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#172B5010]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#493548]/15">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center shrink-0 border border-[#F4510B22]">
-            <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+          <div className="w-9 h-9 rounded-xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0 border border-[#55CDB3]/30">
+            <CalendarDays className="w-4 h-4 text-[#55CDB3]" />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-[#080B0C] tracking-tight">
               Today's Classes
             </h2>
-            <p className="text-[11px] font-semibold text-[#172B50]/60">
+            <p className="text-[11px] font-semibold text-[#493548]">
               Live court sessions and attendance tracking for today
             </p>
           </div>
@@ -168,7 +168,7 @@ export default function TodaysClassesSection({ className = '' }) {
         <button
           type="button"
           onClick={() => setCurrentView('schedules')}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] hover:text-white bg-[#FFF4E8] hover:bg-[#F4510B] border border-[#F4510B25] rounded-xl transition-all active:scale-95 cursor-pointer shadow-xs self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold text-[#080B0C] bg-[#55CDB3] hover:bg-[#48bfa5] border border-[#55CDB3] rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm self-start sm:self-auto"
         >
           <span>View Schedule</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -179,7 +179,7 @@ export default function TodaysClassesSection({ className = '' }) {
       <div className="overflow-x-auto mt-2">
         <table className="w-full text-left text-xs whitespace-nowrap">
           <thead>
-            <tr className="border-b border-[#172B5012] text-[#172B50]/60 font-black uppercase tracking-wider text-[10.5px]">
+            <tr className="border-b border-[#493548]/15 text-[#493548] font-black uppercase tracking-wider text-[10.5px]">
               <th className="py-3 px-3">Time</th>
               <th className="py-3 px-3">Class / Program</th>
               <th className="py-3 px-3">Assigned Coach</th>
@@ -187,37 +187,37 @@ export default function TodaysClassesSection({ className = '' }) {
               <th className="py-3 px-3 text-right">Capacity</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#172B500C]">
+          <tbody className="divide-y divide-[#493548]/10">
             {classesList.map((cls) => (
               <tr
                 key={cls.id}
-                className="hover:bg-[#FFF4E8]/40 transition-colors group cursor-default"
+                className="hover:bg-[#55CDB3]/10 transition-colors group cursor-default"
               >
                 {/* Time */}
                 <td className="py-3.5 px-3">
-                  <div className="flex items-center gap-2 font-black text-[#172B50]">
-                    <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                  <div className="flex items-center gap-2 font-black text-[#080B0C]">
+                    <Clock className="w-3.5 h-3.5 text-[#55CDB3] shrink-0" />
                     <span className="tracking-tight">{cls.time}</span>
                   </div>
                 </td>
 
                 {/* Class / Program */}
-                <td className="py-3.5 px-3 font-extrabold text-[#172B50] text-xs sm:text-[13px]">
+                <td className="py-3.5 px-3 font-extrabold text-[#080B0C] text-xs sm:text-[13px]">
                   {cls.program}
                 </td>
 
                 {/* Assigned Coach */}
                 <td className="py-3.5 px-3">
-                  <div className="flex items-center gap-2 font-bold text-[#172B50]/85">
-                    <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
+                  <div className="flex items-center gap-2 font-bold text-[#080B0C]/85">
+                    <User className="w-3.5 h-3.5 text-[#493548] shrink-0" />
                     <span>{cls.coach}</span>
                   </div>
                 </td>
 
                 {/* Location */}
                 <td className="py-3.5 px-3">
-                  <div className="flex items-center gap-1.5 font-semibold text-[#172B50]/75">
-                    <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                  <div className="flex items-center gap-1.5 font-semibold text-[#080B0C]/85">
+                    <MapPin className="w-3.5 h-3.5 text-[#55CDB3] shrink-0" />
                     <span>{cls.location}</span>
                   </div>
                 </td>

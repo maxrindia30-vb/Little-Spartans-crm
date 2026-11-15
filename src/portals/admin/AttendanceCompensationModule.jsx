@@ -316,25 +316,25 @@ export default function AttendanceCompensationModule() {
   return (
     <div className="space-y-6">
       {/* Module Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#172B501A] pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#493548]/20 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Attendance & Compensation Classes
           </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
             Student & Coach session tracking, replacement slot scheduling and eligibility approvals
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#172B5018] shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1.5 p-1 bg-[#F4F7F6] rounded-xl border border-[#493548]/20 shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => setActiveSubTab('student_attendance')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'student_attendance'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
             <CalendarCheck className="w-4 h-4" />
@@ -346,8 +346,8 @@ export default function AttendanceCompensationModule() {
             onClick={() => setActiveSubTab('coach_attendance')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'coach_attendance'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
             <UserCheck className="w-4 h-4" />
@@ -359,11 +359,11 @@ export default function AttendanceCompensationModule() {
             onClick={() => setActiveSubTab('student_compensation')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'student_compensation'
-                ? 'bg-[#172B50] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#080B0C] text-[#F4F7F6] shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
-            <RotateCcw className="w-4 h-4 text-[#F4510B]" />
+            <RotateCcw className="w-4 h-4 text-[#55CDB3]" />
             <span>Student Compensation ({studentRequests.filter(r => r.status === 'Pending').length} Pending)</span>
           </button>
 
@@ -372,11 +372,11 @@ export default function AttendanceCompensationModule() {
             onClick={() => setActiveSubTab('coach_compensation')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'coach_compensation'
-                ? 'bg-[#172B50] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#080B0C] text-[#F4F7F6] shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
-            <Clock className="w-4 h-4 text-[#F4510B]" />
+            <Clock className="w-4 h-4 text-[#55CDB3]" />
             <span>Coach Compensation</span>
           </button>
 
@@ -385,8 +385,8 @@ export default function AttendanceCompensationModule() {
             onClick={() => setActiveSubTab('compensation_history')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'compensation_history'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
+                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
             }`}
           >
             <History className="w-4 h-4" />
@@ -403,11 +403,11 @@ export default function AttendanceCompensationModule() {
       {/* SUBTAB 2: Coach Attendance */}
       {currentTab === 'coach_attendance' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-            <h2 className="text-base font-extrabold text-[#172B50] mb-4">Coach Attendance & Session Turnout</h2>
+          <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+            <h2 className="text-base font-extrabold text-[#080B0C] mb-4">Coach Attendance & Session Turnout</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
+                <thead className="bg-[#493548]/15 text-[#080B0C] font-bold uppercase tracking-wider text-[11px] border-b border-[#493548]/20">
                   <tr>
                     <th className="px-5 py-3.5">Coach</th>
                     <th className="px-4 py-3.5">Center</th>
@@ -417,10 +417,10 @@ export default function AttendanceCompensationModule() {
                     <th className="px-4 py-3.5 text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#172B5012]">
+                <tbody className="divide-y divide-[#493548]/15">
                   {data.coaches.map(c => (
-                    <tr key={c.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                      <td className="px-5 py-3.5 font-bold text-[#172B50]">{c.name}</td>
+                    <tr key={c.id} className="hover:bg-[#55CDB3]/15/20 transition-colors">
+                      <td className="px-5 py-3.5 font-bold text-[#080B0C]">{c.name}</td>
                       <td className="px-4 py-3.5">{c.center}</td>
                       <td className="px-4 py-3.5">24 Sessions</td>
                       <td className="px-4 py-3.5 font-bold text-emerald-600">97.8%</td>
@@ -443,10 +443,10 @@ export default function AttendanceCompensationModule() {
       {currentTab === 'student_compensation' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Information Notice + Create Manual Request Action */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#172B50] to-[#20365F] text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-card">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#080B0C] to-[#493548]/50 border border-[#493548]/30 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-card">
             <div>
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-[#F4510B]" />
+                <ShieldAlert className="w-5 h-5 text-[#55CDB3]" />
                 <h2 className="text-base font-extrabold tracking-wide">
                   Admin Authority: Student Compensation Approvals &amp; Scheduling
                 </h2>
@@ -458,7 +458,7 @@ export default function AttendanceCompensationModule() {
             <button
               type="button"
               onClick={openManualCompModal}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all shrink-0 cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-md hover:bg-[#55CDB3]/90 active:scale-95 transition-all shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create Compensation Request</span>
@@ -466,23 +466,23 @@ export default function AttendanceCompensationModule() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-2.5">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-[#172B50]/50 absolute left-3 top-2.5" />
+                <Search className="w-3.5 h-3.5 text-[#080B0C]/50 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={compSearch}
                   onChange={(e) => setCompSearch(e.target.value)}
                   placeholder="Search student, parent, ID..."
-                  className="pl-8 pr-3 py-1.5 rounded-xl bg-[#FFF4E8]/50 border border-[#172B501F] text-xs font-medium text-[#172B50] focus:ring-2 focus:ring-[#F4510B] outline-none"
+                  className="pl-8 pr-3 py-1.5 rounded-xl bg-[#55CDB3]/10 border border-[#493548]/20 text-xs font-medium text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3] outline-none"
                 />
               </div>
 
               <select
                 value={compLocationFilter}
                 onChange={(e) => setCompLocationFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-[#FFF4E8]/50 border border-[#172B501F] font-bold text-[#172B50]"
+                className="px-3 py-1.5 rounded-xl bg-[#55CDB3]/10 border border-[#493548]/20 font-bold text-[#080B0C]"
               >
                 <option value="All">All Locations</option>
                 {activeLocations.map(loc => (
@@ -493,7 +493,7 @@ export default function AttendanceCompensationModule() {
               <select
                 value={compStatusFilter}
                 onChange={(e) => setCompStatusFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-[#FFF4E8]/50 border border-[#172B501F] font-bold text-[#172B50]"
+                className="px-3 py-1.5 rounded-xl bg-[#55CDB3]/10 border border-[#493548]/20 font-bold text-[#080B0C]"
               >
                 <option value="All">All Statuses</option>
                 {COMPENSATION_STATUSES.map(st => (
@@ -502,16 +502,16 @@ export default function AttendanceCompensationModule() {
               </select>
             </div>
 
-            <span className="text-xs font-bold text-[#172B50]/70">
+            <span className="text-xs font-bold text-[#080B0C]/70">
               Showing {filteredStudentRequests.length} of {studentRequests.length} requests
             </span>
           </div>
 
           {/* Requests Table */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-4 border-b border-[#172B5015] flex items-center justify-between">
-              <h3 className="font-extrabold text-sm text-[#172B50]">Centralized Student Compensation Queue</h3>
-              <div className="flex items-center gap-3 text-[11px] font-bold text-[#172B50]/70">
+          <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
+            <div className="p-4 border-b border-[#493548]/20 flex items-center justify-between">
+              <h3 className="font-extrabold text-sm text-[#080B0C]">Centralized Student Compensation Queue</h3>
+              <div className="flex items-center gap-3 text-[11px] font-bold text-[#080B0C]/70">
                 <span>Pending: {studentRequests.filter(r => r.status === 'Pending' || r.status === 'Under Review').length}</span>
                 <span>•</span>
                 <span>Scheduled: {studentRequests.filter(r => r.status === 'Scheduled').length}</span>
@@ -520,7 +520,7 @@ export default function AttendanceCompensationModule() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
+                <thead className="bg-[#493548]/15 text-[#080B0C] font-bold uppercase tracking-wider text-[11px] border-b border-[#493548]/20">
                   <tr>
                     <th className="px-4 py-3.5">Student &amp; Parent</th>
                     <th className="px-3 py-3.5">Academy Location</th>
@@ -532,10 +532,10 @@ export default function AttendanceCompensationModule() {
                     <th className="px-4 py-3.5 text-right">Admin Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#172B5012]">
+                <tbody className="divide-y divide-[#493548]/15">
                   {filteredStudentRequests.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="px-5 py-10 text-center text-xs text-[#172B50]/60">
+                      <td colSpan="8" className="px-5 py-10 text-center text-xs text-[#080B0C]/60">
                         No compensation requests match the active filters. Click <strong>Create Compensation Request</strong> to log one manually.
                       </td>
                     </tr>
@@ -543,28 +543,28 @@ export default function AttendanceCompensationModule() {
                     filteredStudentRequests.map(req => {
                       const canAct = !['Rejected', 'Cancelled', 'Completed', 'Expired'].includes(req.status);
                       return (
-                        <tr key={req.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                        <tr key={req.id} className="hover:bg-[#55CDB3]/15/20 transition-colors">
                           <td className="px-4 py-4">
-                            <span className="font-bold text-[#172B50] block text-[13px]">{req.studentName}</span>
-                            <span className="text-[11px] text-[#172B50]/75 block">{req.parentName || 'Parent on file'}</span>
-                            <span className="text-[10px] font-mono text-[#172B50]/50 block">{req.id} • {req.appliedOn}</span>
+                            <span className="font-bold text-[#080B0C] block text-[13px]">{req.studentName}</span>
+                            <span className="text-[11px] text-[#080B0C]/75 block">{req.parentName || 'Parent on file'}</span>
+                            <span className="text-[10px] font-mono text-[#080B0C]/50 block">{req.id} • {req.appliedOn}</span>
                           </td>
 
                           <td className="px-3 py-4">
-                            <span className="inline-flex items-center gap-1 font-bold text-[#172B50]">
-                              <MapPin className="w-3 h-3 text-[#F4510B]" />
+                            <span className="inline-flex items-center gap-1 font-bold text-[#080B0C]">
+                              <MapPin className="w-3 h-3 text-[#55CDB3]" />
                               {req.center || req.location || '-'}
                             </span>
-                            <span className="text-[10px] text-[#172B50]/65 block mt-0.5">{req.program}</span>
+                            <span className="text-[10px] text-[#080B0C]/65 block mt-0.5">{req.program}</span>
                           </td>
 
                           <td className="px-3 py-4">
-                            <span className="font-bold text-[#172B50] block">{req.missedClass}</span>
-                            <span className="text-[11px] text-[#F4510B] font-semibold block">{req.missedDate}</span>
+                            <span className="font-bold text-[#080B0C] block">{req.missedClass}</span>
+                            <span className="text-[11px] text-[#55CDB3] font-semibold block">{req.missedDate}</span>
                           </td>
 
                           <td className="px-3 py-4 max-w-[210px]">
-                            <p className="text-[11px] text-[#172B50] font-medium leading-snug line-clamp-2">{req.reason}</p>
+                            <p className="text-[11px] text-[#080B0C] font-medium leading-snug line-clamp-2">{req.reason}</p>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md inline-block mt-1 ${
                               (req.eligibility || '').toLowerCase().includes('expired')
                                 ? 'bg-amber-50 text-amber-800'
@@ -577,8 +577,8 @@ export default function AttendanceCompensationModule() {
                           <td className="px-3 py-4">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                               req.requestSource === 'Admin'
-                                ? 'bg-[#172B50] text-white'
-                                : 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30]'
+                                ? 'bg-[#080B0C] text-[#F4F7F6]'
+                                : 'bg-[#493548]/15 text-[#55CDB3] border border-[#55CDB3]/40'
                             }`}>
                               {req.requestSource || 'Parent'}
                             </span>
@@ -587,11 +587,11 @@ export default function AttendanceCompensationModule() {
                           <td className="px-3 py-4">
                             {req.replacementSlot ? (
                               <div className="space-y-0.5">
-                                <span className="text-[11px] font-bold text-[#172B50] block">{req.replacementSlot}</span>
-                                <span className="text-[10px] text-[#172B50]/70 block">Coach: {req.replacementCoach || 'Assigned'}</span>
+                                <span className="text-[11px] font-bold text-[#080B0C] block">{req.replacementSlot}</span>
+                                <span className="text-[10px] text-[#080B0C]/70 block">Coach: {req.replacementCoach || 'Assigned'}</span>
                               </div>
                             ) : (
-                              <span className="text-[11px] text-[#172B50]/50 italic">Not scheduled yet</span>
+                              <span className="text-[11px] text-[#080B0C]/50 italic">Not scheduled yet</span>
                             )}
                           </td>
 
@@ -612,7 +612,7 @@ export default function AttendanceCompensationModule() {
                                   setDetailAdminNotes(req.adminNotes || req.approvalNotes || '');
                                 }}
                                 title="View Details"
-                                className="px-2 py-1 text-[11px] font-bold bg-[#FFF4E8] text-[#172B50] rounded-lg hover:bg-[#172B50] hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
+                                className="px-2 py-1 text-[11px] font-bold bg-[#493548]/15 text-[#080B0C] rounded-lg hover:bg-[#080B0C] hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
                               >
                                 <Eye className="w-3 h-3" />
                                 <span>Details</span>
@@ -642,7 +642,7 @@ export default function AttendanceCompensationModule() {
                                 <button
                                   type="button"
                                   onClick={() => openScheduleModal(req)}
-                                  className="px-2.5 py-1 text-[11px] font-bold bg-[#F4510B] text-white rounded-lg hover:brightness-110 transition-all cursor-pointer"
+                                  className="px-2.5 py-1 text-[11px] font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-lg hover:bg-[#55CDB3]/90 transition-all cursor-pointer"
                                 >
                                   Schedule Replacement
                                 </button>
@@ -695,22 +695,22 @@ export default function AttendanceCompensationModule() {
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <h2 className="text-base font-extrabold text-[#172B50]">Coach Absence & Session Coverage</h2>
-              <p className="text-xs text-[#172B50]/70 mt-0.5">Manage missed coach classes, assign substitute coaches or schedule makeup drills</p>
+              <h2 className="text-base font-extrabold text-[#080B0C]">Coach Absence & Session Coverage</h2>
+              <p className="text-xs text-[#080B0C]/70 mt-0.5">Manage missed coach classes, assign substitute coaches or schedule makeup drills</p>
             </div>
             <button
               type="button"
               onClick={() => setIsCoachCompOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-xs hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-xs hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Assign Coach Coverage</span>
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+          <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
+              <thead className="bg-[#493548]/15 text-[#080B0C] font-bold uppercase tracking-wider text-[11px] border-b border-[#493548]/20">
                 <tr>
                   <th className="px-5 py-3.5">Coach & Reason</th>
                   <th className="px-4 py-3.5">Missed Session</th>
@@ -720,20 +720,20 @@ export default function AttendanceCompensationModule() {
                   <th className="px-4 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#172B5012]">
+              <tbody className="divide-y divide-[#493548]/15">
                 {coachComps.map(cc => (
-                  <tr key={cc.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                  <tr key={cc.id} className="hover:bg-[#55CDB3]/15/20 transition-colors">
                     <td className="px-5 py-3.5">
-                      <span className="font-bold text-[#172B50] block">{cc.coachName}</span>
-                      <span className="text-[11px] text-[#172B50]/70 block">{cc.reason}</span>
+                      <span className="font-bold text-[#080B0C] block">{cc.coachName}</span>
+                      <span className="text-[11px] text-[#080B0C]/70 block">{cc.reason}</span>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="font-bold text-[#172B50] block">{cc.missedSession}</span>
-                      <span className="text-[11px] text-[#F4510B] font-semibold block">{cc.missedDate}</span>
+                      <span className="font-bold text-[#080B0C] block">{cc.missedSession}</span>
+                      <span className="text-[11px] text-[#55CDB3] font-semibold block">{cc.missedDate}</span>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="font-bold text-[#172B50] block">{cc.coverageType}</span>
-                      <span className="text-[10px] text-[#172B50]/70 block">Assigned: {cc.substituteCoach}</span>
+                      <span className="font-bold text-[#080B0C] block">{cc.coverageType}</span>
+                      <span className="text-[10px] text-[#080B0C]/70 block">Assigned: {cc.substituteCoach}</span>
                     </td>
                     <td className="px-4 py-3.5 font-medium">{cc.scheduledDate}</td>
                     <td className="px-4 py-3.5">
@@ -765,16 +765,16 @@ export default function AttendanceCompensationModule() {
       {/* SUBTAB 5: Audit History */}
       {currentTab === 'compensation_history' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-            <h2 className="text-base font-extrabold text-[#172B50] mb-4">Completed Replacement Sessions Audit</h2>
+          <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+            <h2 className="text-base font-extrabold text-[#080B0C] mb-4">Completed Replacement Sessions Audit</h2>
             <div className="space-y-3">
               {[...studentRequests, ...coachComps].filter(x => x.status === 'Completed').map((comp, idx) => (
                 <div key={idx} className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <span className="font-bold text-sm text-[#172B50] block">
+                    <span className="font-bold text-sm text-[#080B0C] block">
                       {comp.studentName ? `Student: ${comp.studentName}` : `Coach Session: ${comp.coachName}`}
                     </span>
-                    <p className="text-xs text-[#172B50]/80 mt-0.5">
+                    <p className="text-xs text-[#080B0C]/80 mt-0.5">
                       Missed: {comp.missedClass || comp.missedSession} ({comp.missedDate}) &bull; Replaced on {comp.replacementSlot || comp.scheduledDate}
                     </p>
                   </div>
@@ -797,20 +797,20 @@ export default function AttendanceCompensationModule() {
           size="md"
         >
           <div className="space-y-4 text-xs">
-            <div className="p-3.5 rounded-xl bg-[#FFF4E8] border border-[#172B5018] space-y-1">
+            <div className="p-3.5 rounded-xl bg-[#493548]/15 border border-[#493548]/20 space-y-1">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-extrabold text-[#172B50] text-sm">{selectedRequest.studentName}</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#172B50] text-white">
+                <span className="font-extrabold text-[#080B0C] text-sm">{selectedRequest.studentName}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#080B0C] text-[#F4F7F6]">
                   {selectedRequest.requestSource || 'Parent'} Request
                 </span>
               </div>
-              <span className="text-[#172B50]/80 block">
+              <span className="text-[#080B0C]/80 block">
                 Parent: {selectedRequest.parentName} {selectedRequest.parentEmail ? `(${selectedRequest.parentEmail})` : ''}
               </span>
-              <span className="text-[#F4510B] font-bold block">
+              <span className="text-[#55CDB3] font-bold block">
                 Missed: {selectedRequest.missedClass} • {selectedRequest.missedDate} • {selectedRequest.center || selectedRequest.location}
               </span>
-              <p className="text-[#172B50] mt-1 pt-1 border-t border-[#172B5010]">
+              <p className="text-[#080B0C] mt-1 pt-1 border-t border-[#493548]/20">
                 <strong>Reason:</strong> {selectedRequest.reason}
               </p>
             </div>
@@ -824,20 +824,20 @@ export default function AttendanceCompensationModule() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Replacement Date *</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">Replacement Date *</label>
                 <input
                   type="date"
                   value={repDate}
                   onChange={(e) => setRepDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                  className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">Academy Location *</label>
                 <select
                   value={repLocation}
                   onChange={(e) => setRepLocation(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                  className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
                 >
                   {activeLocations.map(loc => (
                     <option key={loc.id} value={loc.name}>{loc.name}</option>
@@ -848,32 +848,32 @@ export default function AttendanceCompensationModule() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Start Time *</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">Start Time *</label>
                 <input
                   type="time"
                   value={repStartTime}
                   onChange={(e) => setRepStartTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                  className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">End Time *</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">End Time *</label>
                 <input
                   type="time"
                   value={repEndTime}
                   onChange={(e) => setRepEndTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                  className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Sports Program *</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">Sports Program *</label>
                 <select
                   value={repProgram}
                   onChange={(e) => setRepProgram(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                  className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
                 >
                   {(data.programs || []).map(p => (
                     <option key={p.id} value={p.name}>{p.name}</option>
@@ -881,11 +881,11 @@ export default function AttendanceCompensationModule() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">Batches</label>
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">Batches</label>
                 <select
                   value={repBatchId}
                   onChange={(e) => setRepBatchId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                  className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
                 >
                   <option value="">Dedicated Compensation Slot</option>
                   {repFilteredBatches.map(b => (
@@ -896,11 +896,11 @@ export default function AttendanceCompensationModule() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Assign Available Replacement Coach *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Assign Available Replacement Coach *</label>
               <select
                 value={repCoachId}
                 onChange={(e) => setRepCoachId(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               >
                 {(data.coaches || []).map(c => (
                   <option key={c.id} value={c.id}>{c.name} • {c.center} ({c.specialization})</option>
@@ -909,17 +909,17 @@ export default function AttendanceCompensationModule() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Admin Notes (Synced to Parent &amp; Coach)</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Admin Notes (Synced to Parent &amp; Coach)</label>
               <textarea
                 rows={2}
                 value={approvalNotes}
                 onChange={(e) => setApprovalNotes(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs text-[#080B0C]"
                 placeholder="Confirmation instructions for Parent and Coach..."
               />
             </div>
 
-            <div className="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-[#172B5015]">
+            <div className="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-[#493548]/20">
               <button
                 type="button"
                 onClick={handleReject}
@@ -932,7 +932,7 @@ export default function AttendanceCompensationModule() {
                 <button
                   type="button"
                   onClick={() => handleApproveOnly(selectedRequest.id, approvalNotes)}
-                  className="px-3.5 py-2 text-xs font-bold bg-[#172B50] text-white rounded-xl hover:brightness-110 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-bold bg-[#080B0C] text-[#F4F7F6] rounded-xl hover:bg-[#55CDB3]/90 cursor-pointer"
                 >
                   Approve Only
                 </button>
@@ -940,7 +940,7 @@ export default function AttendanceCompensationModule() {
                   type="button"
                   disabled={repConflict.hasConflict}
                   onClick={handleScheduleReplacementSubmit}
-                  className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-xs hover:brightness-110 disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-xs hover:bg-[#55CDB3]/90 disabled:opacity-50 cursor-pointer"
                 >
                   Confirm &amp; Schedule Replacement
                 </button>
@@ -961,7 +961,7 @@ export default function AttendanceCompensationModule() {
         <form onSubmit={handleManualCompSubmit} className="space-y-3.5 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Academy Location *</label>
               <select
                 required
                 value={manualLocation}
@@ -975,7 +975,7 @@ export default function AttendanceCompensationModule() {
                     setManualParentId('');
                   }
                 }}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               >
                 {activeLocations.map(loc => (
                   <option key={loc.id} value={loc.name}>{loc.name}</option>
@@ -984,12 +984,12 @@ export default function AttendanceCompensationModule() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Student *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Student *</label>
               <select
                 required
                 value={manualStudentId}
                 onChange={(e) => handleManualStudentChange(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               >
                 <option value="">Select Student</option>
                 {manualFilteredStudents.map(s => (
@@ -1001,11 +1001,11 @@ export default function AttendanceCompensationModule() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Parent / Guardian (Auto-linked)</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Parent / Guardian (Auto-linked)</label>
               <select
                 value={manualParentId}
                 onChange={(e) => setManualParentId(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FFF4E8]/40 border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#493548]/15/40 border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               >
                 <option value="">Auto-linked / Walk-in Parent</option>
                 {(data.parents || []).map(p => (
@@ -1015,12 +1015,12 @@ export default function AttendanceCompensationModule() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Sports Program *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Sports Program *</label>
               <select
                 required
                 value={manualProgram}
                 onChange={(e) => setManualProgram(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               >
                 {(data.programs || []).map(p => (
                   <option key={p.id} value={p.name}>{p.name}</option>
@@ -1031,7 +1031,7 @@ export default function AttendanceCompensationModule() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Batches</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Batches</label>
               <select
                 value={manualBatchId}
                 onChange={(e) => {
@@ -1040,7 +1040,7 @@ export default function AttendanceCompensationModule() {
                   const b = (data.classes || []).find(c => c.id === id);
                   if (b) setManualMissedSession(b.name);
                 }}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               >
                 <option value="">General Program Batch</option>
                 {manualFilteredBatches.map(b => (
@@ -1050,35 +1050,35 @@ export default function AttendanceCompensationModule() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Missed Class Date *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Missed Class Date *</label>
               <input
                 type="date"
                 required
                 value={manualMissedDate}
                 onChange={(e) => setManualMissedDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Missed Session Label *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Missed Session Label *</label>
               <input
                 type="text"
                 required
                 value={manualMissedSession}
                 onChange={(e) => setManualMissedSession(e.target.value)}
                 placeholder="e.g. Evening Batch A (5:00 PM)"
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs text-[#080B0C]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Reason Category *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Reason Category *</label>
               <select
                 value={manualReasonCategory}
                 onChange={(e) => setManualReasonCategory(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50]"
+                className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C]"
               >
                 {COMPENSATION_REASONS.map(r => (
                   <option key={r} value={r}>{r}</option>
@@ -1088,39 +1088,39 @@ export default function AttendanceCompensationModule() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Reason / Explanation *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Reason / Explanation *</label>
             <input
               type="text"
               required
               value={manualReasonDetails}
               onChange={(e) => setManualReasonDetails(e.target.value)}
               placeholder="Explain missed session reason..."
-              className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs text-[#172B50]"
+              className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs text-[#080B0C]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Admin Internal Notes</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Admin Internal Notes</label>
             <textarea
               rows={2}
               value={manualAdminNotes}
               onChange={(e) => setManualAdminNotes(e.target.value)}
               placeholder="Optional internal approval/eligibility remarks..."
-              className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs text-[#172B50]"
+              className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs text-[#080B0C]"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5015]">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
             <button
               type="button"
               onClick={() => setIsManualCompOpen(false)}
-              className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-xs hover:brightness-110 cursor-pointer"
+              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-xs hover:bg-[#55CDB3]/90 cursor-pointer"
             >
               Submit Request
             </button>
@@ -1137,55 +1137,55 @@ export default function AttendanceCompensationModule() {
           size="md"
         >
           <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-[#FFF4E8]/60 border border-[#172B5015]">
+            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-[#493548]/15/60 border border-[#493548]/20">
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Student</span>
-                <span className="font-extrabold text-[#172B50]">{detailRequest.studentName}</span>
+                <span className="text-[10px] font-bold uppercase text-[#080B0C]/60 block">Student</span>
+                <span className="font-extrabold text-[#080B0C]">{detailRequest.studentName}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Parent</span>
-                <span className="font-bold text-[#172B50]">{detailRequest.parentName || '-'}</span>
+                <span className="text-[10px] font-bold uppercase text-[#080B0C]/60 block">Parent</span>
+                <span className="font-bold text-[#080B0C]">{detailRequest.parentName || '-'}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Location &amp; Program</span>
-                <span className="font-bold text-[#172B50]">{detailRequest.center || detailRequest.location} • {detailRequest.program}</span>
+                <span className="text-[10px] font-bold uppercase text-[#080B0C]/60 block">Location &amp; Program</span>
+                <span className="font-bold text-[#080B0C]">{detailRequest.center || detailRequest.location} • {detailRequest.program}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Source &amp; Status</span>
-                <span className="font-extrabold text-[#F4510B]">{detailRequest.requestSource || 'Parent'} • {detailRequest.status}</span>
+                <span className="text-[10px] font-bold uppercase text-[#080B0C]/60 block">Source &amp; Status</span>
+                <span className="font-extrabold text-[#55CDB3]">{detailRequest.requestSource || 'Parent'} • {detailRequest.status}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Missed Session</span>
-                <span className="font-bold text-[#172B50]">{detailRequest.missedClass} ({detailRequest.missedDate})</span>
+                <span className="text-[10px] font-bold uppercase text-[#080B0C]/60 block">Missed Session</span>
+                <span className="font-bold text-[#080B0C]">{detailRequest.missedClass} ({detailRequest.missedDate})</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Replacement Slot</span>
-                <span className="font-bold text-[#172B50]">{detailRequest.replacementSlot || 'Pending Scheduling'}</span>
+                <span className="text-[10px] font-bold uppercase text-[#080B0C]/60 block">Replacement Slot</span>
+                <span className="font-bold text-[#080B0C]">{detailRequest.replacementSlot || 'Pending Scheduling'}</span>
               </div>
             </div>
 
             <div>
-              <span className="font-bold text-[#172B50] block mb-1">Reason &amp; Eligibility</span>
-              <p className="p-3 rounded-xl bg-slate-50 border border-[#172B5012] text-[#172B50]">
+              <span className="font-bold text-[#080B0C] block mb-1">Reason &amp; Eligibility</span>
+              <p className="p-3 rounded-xl bg-slate-50 border border-[#493548]/20 text-[#080B0C]">
                 {detailRequest.reason} <span className="ml-2 font-bold text-emerald-700">({detailRequest.eligibility})</span>
               </p>
             </div>
 
             <div>
-              <label className="font-bold text-[#172B50] block mb-1">Admin Notes</label>
+              <label className="font-bold text-[#080B0C] block mb-1">Admin Notes</label>
               <textarea
                 rows={2}
                 value={detailAdminNotes}
                 onChange={(e) => setDetailAdminNotes(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#172B5020] text-xs text-[#172B50]"
+                className="w-full px-3 py-2 rounded-xl border border-[#493548]/20 text-xs text-[#080B0C]"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5015]">
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
               <button
                 type="button"
                 onClick={() => setDetailRequest(null)}
-                className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl cursor-pointer"
               >
                 Close
               </button>
@@ -1198,7 +1198,7 @@ export default function AttendanceCompensationModule() {
                   });
                   setDetailRequest(null);
                 }}
-                className="px-4 py-2 text-xs font-bold bg-[#172B50] text-white rounded-xl cursor-pointer"
+                className="px-4 py-2 text-xs font-bold bg-[#080B0C] text-[#F4F7F6] rounded-xl cursor-pointer"
               >
                 Save Notes
               </button>
@@ -1216,11 +1216,11 @@ export default function AttendanceCompensationModule() {
       >
         <form onSubmit={handleCreateCoachCompSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Primary Absent Coach *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Primary Absent Coach *</label>
             <select
               value={compCoachId}
               onChange={(e) => setCompCoachId(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
             >
               {data.coaches.map(c => (
                 <option key={c.id} value={c.id}>{c.name} - {c.center}</option>
@@ -1229,33 +1229,33 @@ export default function AttendanceCompensationModule() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Missed Session / Batch *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Missed Session / Batch *</label>
             <input
               type="text"
               required
               value={missedSessionName}
               onChange={(e) => setMissedSessionName(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Date of Absence *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Date of Absence *</label>
             <input
               type="date"
               required
               value={missedDate}
               onChange={(e) => setMissedDate(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Substitute Coach Assigned *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Substitute Coach Assigned *</label>
             <select
               value={substituteCoachName}
               onChange={(e) => setSubstituteCoachName(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs font-semibold text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs font-semibold text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
             >
               {data.coaches.map(c => (
                 <option key={c.id} value={c.name}>{c.name} ({c.specialization})</option>
@@ -1264,27 +1264,27 @@ export default function AttendanceCompensationModule() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Replacement Class Timetable *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Replacement Class Timetable *</label>
             <input
               type="text"
               required
               value={compScheduledDate}
               onChange={(e) => setCompScheduledDate(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#172B5020] rounded-xl text-xs text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
+              className="w-full px-3 py-2 bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-xs text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5015]">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
             <button
               type="button"
               onClick={() => setIsCoachCompOpen(false)}
-              className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-xs hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-xs hover:bg-[#55CDB3]/90 active:scale-95 transition-all cursor-pointer"
             >
               Confirm Coach Coverage
             </button>

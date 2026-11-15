@@ -93,44 +93,44 @@ export default function FullLoginScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF4E8] text-[#172B50] flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#F4510B] selection:text-white">
+    <div className="min-h-screen bg-[#493548]/15] text-[#080B0C] flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#55CDB3] selection:text-white">
       
       {/* Top Header */}
       <header className="max-w-6xl w-full mx-auto flex items-center justify-between pb-6">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-[#172B50] flex items-center justify-center shadow-subtle border border-[#172B50]">
-            <Shield className="w-7 h-7 text-[#F4510B] fill-[#F4510B]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#080B0C] flex items-center justify-center shadow-subtle border border-[#080B0C]">
+            <Shield className="w-7 h-7 text-[#55CDB3] fill-[#55CDB3]" />
           </div>
           <div>
-            <span className="text-xl font-extrabold tracking-tight text-[#172B50] block leading-none font-sans">
-              LITTLE <span className="text-[#F4510B]">SPARTANS</span>
+            <span className="text-xl font-extrabold tracking-tight text-[#080B0C] block leading-none font-sans">
+              LITTLE <span className="text-[#55CDB3]">SPARTANS</span>
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#172B50] opacity-75">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#080B0C] opacity-75">
               Children's Sports Academy CRM
             </span>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-[#172B5015] shadow-xs text-xs font-bold text-[#172B50]">
-          <span className="w-2 h-2 rounded-full bg-[#F4510B] animate-pulse" />
+        <div className="hidden sm:flex items-center gap-2 bg-[#F4F7F6] px-3 py-1.5 rounded-full border border-[#080B0C15] shadow-xs text-xs font-bold text-[#080B0C]">
+          <span className="w-2 h-2 rounded-full bg-[#55CDB3] animate-pulse" />
           <span>Multi-Portal Authentication Gateway</span>
         </div>
       </header>
 
       {/* Main Login Card Area */}
       <main className="max-w-5xl w-full mx-auto my-auto py-4">
-        <div className="bg-white rounded-3xl shadow-dropdown border border-[#172B501A] overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+        <div className="bg-[#F4F7F6] rounded-3xl shadow-dropdown border border-[#080B0C1A] overflow-hidden grid grid-cols-1 lg:grid-cols-12">
           
           {/* Left Hero / Role Selector Sidebar (5 Cols) */}
-          <div className="lg:col-span-5 bg-[#FFF4E8] p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-[#172B5015] flex flex-col justify-between space-y-6">
+          <div className="lg:col-span-5 bg-[#493548]/15] p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-[#080B0C15] flex flex-col justify-between space-y-6">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#F4510B] block">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#55CDB3] block">
                 SELECT LOGIN PORTAL
               </span>
-              <h2 className="text-xl font-extrabold text-[#172B50] mt-1">
+              <h2 className="text-xl font-extrabold text-[#080B0C] mt-1">
                 Choose Academy Role
               </h2>
-              <p className="text-xs text-[#172B50] opacity-75 mt-1 leading-relaxed">
+              <p className="text-xs text-[#080B0C] opacity-75 mt-1 leading-relaxed">
                 Click any portal to load credentials and test its role permissions.
               </p>
 
@@ -146,20 +146,20 @@ export default function FullLoginScreen() {
                       onClick={() => handleRoleChange(role.id)}
                       className={`w-full p-3.5 rounded-2xl text-left transition-all flex items-center justify-between border ${
                         isSelected
-                          ? 'bg-[#172B50] text-white border-[#172B50] shadow-sm'
-                          : 'bg-white text-[#172B50] border-[#172B5015] hover:border-[#F4510B]'
+                          ? 'bg-[#080B0C] text-white border-[#080B0C] shadow-sm'
+                          : 'bg-[#F4F7F6] text-[#080B0C] border-[#080B0C15] hover:border-[#55CDB3]'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-[#F4510B] text-white' : 'bg-[#FFF4E8] text-[#F4510B]'
+                          isSelected ? 'bg-[#55CDB3] text-white' : 'bg-[#493548]/15] text-[#55CDB3]'
                         }`}>
                           <Icon className="w-4 h-4" />
                         </div>
                         <div>
                           <span className="text-xs font-black block leading-tight">{role.roleLabel}</span>
                           <span className={`text-[10px] block leading-tight mt-0.5 ${
-                            isSelected ? 'text-white opacity-80' : 'text-[#172B50] opacity-60'
+                            isSelected ? 'text-white opacity-80' : 'text-[#080B0C] opacity-60'
                           }`}>
                             {role.userTitle}
                           </span>
@@ -167,7 +167,7 @@ export default function FullLoginScreen() {
                       </div>
 
                       {isSelected && (
-                        <CheckCircle2 className="w-4 h-4 text-[#F4510B] shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-[#55CDB3] shrink-0" />
                       )}
                     </button>
                   );
@@ -176,11 +176,11 @@ export default function FullLoginScreen() {
             </div>
 
             {/* Role Highlight Pill */}
-            <div className="p-3.5 bg-white rounded-2xl border border-[#172B5015]">
-              <span className="text-[10px] font-extrabold text-[#172B50] block uppercase opacity-60">
+            <div className="p-3.5 bg-[#F4F7F6] rounded-2xl border border-[#080B0C15]">
+              <span className="text-[10px] font-extrabold text-[#080B0C] block uppercase opacity-60">
                 {currentConfig.roleLabel} Scope
               </span>
-              <p className="text-[11px] text-[#172B50] opacity-80 mt-1">
+              <p className="text-[11px] text-[#080B0C] opacity-80 mt-1">
                 {currentConfig.description}
               </p>
             </div>
@@ -190,62 +190,62 @@ export default function FullLoginScreen() {
           <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between space-y-6">
             <div>
               <div className="flex items-center justify-between">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#FFF4E8] text-[#F4510B] border border-[#172B5015]">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#493548]/15] text-[#55CDB3] border border-[#080B0C15]">
                   {currentConfig.badge}
                 </span>
-                <span className="text-xs font-mono font-bold text-[#172B50] opacity-60">
+                <span className="text-xs font-mono font-bold text-[#080B0C] opacity-60">
                   Chennai Hub
                 </span>
               </div>
 
-              <h1 className="text-2xl font-black text-[#172B50] mt-3 tracking-tight">
+              <h1 className="text-2xl font-black text-[#080B0C] mt-3 tracking-tight">
                 Sign In to {currentConfig.roleLabel}
               </h1>
-              <p className="text-xs text-[#172B50] opacity-75 mt-1">
-                Logging in as <span className="font-extrabold text-[#172B50]">{currentConfig.userTitle}</span> ({currentConfig.roleSubtitle})
+              <p className="text-xs text-[#080B0C] opacity-75 mt-1">
+                Logging in as <span className="font-extrabold text-[#080B0C]">{currentConfig.userTitle}</span> ({currentConfig.roleSubtitle})
               </p>
 
               {/* Login Form */}
               <form onSubmit={handleLogin} className="space-y-4 mt-6">
                 <div>
-                  <label className="text-xs font-bold text-[#172B50] block mb-1">
+                  <label className="text-xs font-bold text-[#080B0C] block mb-1">
                     Academy Email ID
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3.5 top-3" />
+                    <Mail className="w-4 h-4 text-[#080B0C] opacity-50 absolute left-3.5 top-3" />
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@littlespartans.co.in"
-                      className="w-full pl-10 pr-3 py-2.5 text-xs bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                      className="w-full pl-10 pr-3 py-2.5 text-xs bg-[#493548]/15] text-[#080B0C] border border-[#080B0C20] rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-[#172B50]">
+                    <label className="text-xs font-bold text-[#080B0C]">
                       Password
                     </label>
-                    <span className="text-[11px] font-bold text-[#F4510B] hover:underline cursor-pointer">
+                    <span className="text-[11px] font-bold text-[#55CDB3] hover:underline cursor-pointer">
                       Forgot Password?
                     </span>
                   </div>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3.5 top-3" />
+                    <Lock className="w-4 h-4 text-[#080B0C] opacity-50 absolute left-3.5 top-3" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 text-xs bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                      className="w-full pl-10 pr-10 py-2.5 text-xs bg-[#493548]/15] text-[#080B0C] border border-[#080B0C20] rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3 text-[#172B50] opacity-60 hover:opacity-100"
+                      className="absolute right-3.5 top-3 text-[#080B0C] opacity-60 hover:opacity-100"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -253,23 +253,23 @@ export default function FullLoginScreen() {
                 </div>
 
                 <div className="flex items-center justify-between text-xs pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer font-medium text-[#172B50]">
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-[#080B0C]">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="rounded accent-[#F4510B] text-[#F4510B]"
+                      className="rounded accent-[#55CDB3] text-[#55CDB3]"
                     />
                     <span>Remember this session</span>
                   </label>
-                  <span className="text-[10px] text-[#172B50] opacity-60 font-semibold">
+                  <span className="text-[10px] text-[#080B0C] opacity-60 font-semibold">
                     Encrypted TLS 256-bit
                   </span>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 text-xs font-black bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
+                  className="w-full py-3 text-xs font-black bg-[#55CDB3] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
                 >
                   <span>Authenticate & Enter {currentConfig.roleLabel.replace(' Portal', '')}</span>
                   <ArrowRight className="w-4 h-4 text-white" />
@@ -277,8 +277,8 @@ export default function FullLoginScreen() {
               </form>
 
               {/* 1-Click Fast Demo Launcher */}
-              <div className="mt-5 pt-4 border-t border-[#172B5015]">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-60 block mb-2">
+              <div className="mt-5 pt-4 border-t border-[#080B0C15]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#080B0C] opacity-60 block mb-2">
                   Instant Demo Shortcuts:
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -287,7 +287,7 @@ export default function FullLoginScreen() {
                       key={r.id}
                       type="button"
                       onClick={() => handleInstantDemoLogin(r.id)}
-                      className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-[#FFF4E8] hover:bg-[#172B50] hover:text-white text-[#172B50] border border-[#172B5015] transition-colors truncate"
+                      className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-[#493548]/15] hover:bg-[#080B0C] hover:text-white text-[#080B0C] border border-[#080B0C15] transition-colors truncate"
                     >
                       {r.roleLabel.replace(' Portal', '')}
                     </button>
@@ -296,7 +296,7 @@ export default function FullLoginScreen() {
               </div>
             </div>
 
-            <div className="text-[11px] text-[#172B50] opacity-60 text-center pt-2">
+            <div className="text-[11px] text-[#080B0C] opacity-60 text-center pt-2">
               Little Spartans Sports Academy CRM • Official Frontend Prototype
             </div>
           </div>
@@ -305,8 +305,8 @@ export default function FullLoginScreen() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-6xl w-full mx-auto text-center pt-4 text-xs text-[#172B50] opacity-75">
-        Official Brand Colors: Warm Cream (#FFF4E8) • Spartan Orange (#F4510B) • Navy Blue (#172B50) • Pure White (#FFFFFF)
+      <footer className="max-w-6xl w-full mx-auto text-center pt-4 text-xs text-[#080B0C] opacity-75">
+        Official Brand Colors: Warm Cream (#493548]/15) • Spartan Orange (#55CDB3) • Navy Blue (#080B0C) • Pure White (#FFFFFF)
       </footer>
 
     </div>

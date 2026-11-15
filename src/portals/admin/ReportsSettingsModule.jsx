@@ -226,30 +226,30 @@ export default function ReportsSettingsModule() {
     <div className="space-y-6">
       
       {/* Top Banner / Navigation Tabs */}
-      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card">
+      <div className="bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#F4510B]/10 text-[#F4510B]">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#55CDB3]/10 text-[#55CDB3]">
                 Module 9
               </span>
-              <h1 className="text-2xl font-black text-[#172B50] tracking-tight">
+              <h1 className="text-2xl font-black text-[#080B0C] tracking-tight">
                 Reports & Settings
               </h1>
             </div>
-            <p className="text-xs text-[#172B50] opacity-75 mt-0.5">
+            <p className="text-xs text-[#080B0C] opacity-75 mt-0.5">
               Academy performance analytics, multi-entity data export, automated cloud backups and security permissions
             </p>
           </div>
 
           {/* Sub-tab Pills */}
-          <div className="flex items-center flex-wrap gap-1.5 p-1 bg-[#FFF4E8] rounded-xl border border-[#172B5015]">
+          <div className="flex items-center flex-wrap gap-1.5 p-1 bg-[#493548]/15 rounded-xl border border-[#493548]/20">
             <button
               onClick={() => setActiveSubTab('analytics')}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                 currentTab === 'analytics'
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'text-[#172B50] hover:bg-white/60'
+                  ? 'bg-[#080B0C] text-[#F4F7F6] shadow-sm'
+                  : 'text-[#080B0C] hover:bg-[#F4F7F6]/60'
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5" />
@@ -260,8 +260,8 @@ export default function ReportsSettingsModule() {
               onClick={() => setActiveSubTab('export')}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                 currentTab === 'export'
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'text-[#172B50] hover:bg-white/60'
+                  ? 'bg-[#080B0C] text-[#F4F7F6] shadow-sm'
+                  : 'text-[#080B0C] hover:bg-[#F4F7F6]/60'
               }`}
             >
               <Download className="w-3.5 h-3.5" />
@@ -272,8 +272,8 @@ export default function ReportsSettingsModule() {
               onClick={() => setActiveSubTab('backup')}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                 currentTab === 'backup'
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'text-[#172B50] hover:bg-white/60'
+                  ? 'bg-[#080B0C] text-[#F4F7F6] shadow-sm'
+                  : 'text-[#080B0C] hover:bg-[#F4F7F6]/60'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
@@ -284,8 +284,8 @@ export default function ReportsSettingsModule() {
               onClick={() => setActiveSubTab('permissions')}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                 currentTab === 'permissions'
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'text-[#172B50] hover:bg-white/60'
+                  ? 'bg-[#080B0C] text-[#F4F7F6] shadow-sm'
+                  : 'text-[#080B0C] hover:bg-[#F4F7F6]/60'
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -296,8 +296,8 @@ export default function ReportsSettingsModule() {
               onClick={() => setActiveSubTab('settings')}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                 currentTab === 'settings'
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'text-[#172B50] hover:bg-white/60'
+                  ? 'bg-[#080B0C] text-[#F4F7F6] shadow-sm'
+                  : 'text-[#080B0C] hover:bg-[#F4F7F6]/60'
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -315,10 +315,10 @@ export default function ReportsSettingsModule() {
       {/* SUB-TAB 2: DATA EXPORT */}
       {currentTab === 'export' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
+          <div className="bg-[#F4F7F6] rounded-2xl p-6 border border-[#493548]/20 shadow-card">
             <div className="max-w-3xl">
-              <h2 className="text-lg font-black text-[#172B50]">Export Academy Data Assets</h2>
-              <p className="text-xs text-[#172B50] opacity-75 mt-1">
+              <h2 className="text-lg font-black text-[#080B0C]">Export Academy Data Assets</h2>
+              <p className="text-xs text-[#080B0C] opacity-75 mt-1">
                 Select target datasets, filter records, and generate verified exports in CSV, Microsoft Excel, or printable PDF summary.
               </p>
             </div>
@@ -326,13 +326,13 @@ export default function ReportsSettingsModule() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
               {/* Target Entity */}
               <div>
-                <label className="block text-[11px] font-bold text-[#172B50] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-bold text-[#080B0C] uppercase tracking-wider mb-1.5">
                   1. Dataset Entity
                 </label>
                 <select
                   value={exportEntity}
                   onChange={(e) => setExportEntity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#172B5025] bg-[#FFF4E8]/30 text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#493548]/20 bg-[#493548]/15/30 text-xs font-bold text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
                 >
                   <option value="students">Students Roster ({data.students.length})</option>
                   <option value="parents">Parents Directory ({data.parents.length})</option>
@@ -347,13 +347,13 @@ export default function ReportsSettingsModule() {
 
               {/* Format */}
               <div>
-                <label className="block text-[11px] font-bold text-[#172B50] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-bold text-[#080B0C] uppercase tracking-wider mb-1.5">
                   2. File Format
                 </label>
                 <select
                   value={exportFormat}
                   onChange={(e) => setExportFormat(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#172B5025] bg-[#FFF4E8]/30 text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#493548]/20 bg-[#493548]/15/30 text-xs font-bold text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
                 >
                   <option value="csv">CSV (Comma-Separated Values)</option>
                   <option value="excel">Microsoft Excel (.xls)</option>
@@ -363,13 +363,13 @@ export default function ReportsSettingsModule() {
 
               {/* Date Filter */}
               <div>
-                <label className="block text-[11px] font-bold text-[#172B50] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-bold text-[#080B0C] uppercase tracking-wider mb-1.5">
                   3. Date Range
                 </label>
                 <select
                   value={exportDateRange}
                   onChange={(e) => setExportDateRange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#172B5025] bg-[#FFF4E8]/30 text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#493548]/20 bg-[#493548]/15/30 text-xs font-bold text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
                 >
                   <option value="all">Full Historical Archive</option>
                   <option value="this_month">Current Term / Month</option>
@@ -380,13 +380,13 @@ export default function ReportsSettingsModule() {
 
               {/* Program Discipline */}
               <div>
-                <label className="block text-[11px] font-bold text-[#172B50] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-bold text-[#080B0C] uppercase tracking-wider mb-1.5">
                   4. Program Discipline
                 </label>
                 <select
                   value={exportProgram}
                   onChange={(e) => setExportProgram(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#172B5025] bg-[#FFF4E8]/30 text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#493548]/20 bg-[#493548]/15/30 text-xs font-bold text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
                 >
                   <option value="all">All Disciplines</option>
                   <option value="Gymnastics">Gymnastics</option>
@@ -397,16 +397,16 @@ export default function ReportsSettingsModule() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-[#172B5015]">
-              <div className="flex items-center gap-2 text-xs text-[#172B50] opacity-80">
-                <FileCheck className="w-4 h-4 text-[#F4510B]" />
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-[#493548]/20">
+              <div className="flex items-center gap-2 text-xs text-[#080B0C] opacity-80">
+                <FileCheck className="w-4 h-4 text-[#55CDB3]" />
                 <span>Exports are sanitized and comply with Little Spartans data privacy policy.</span>
               </div>
 
               <button
                 onClick={handleExportData}
                 disabled={isExporting}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#F4510B] text-white text-xs font-black shadow-md hover:brightness-110 active:scale-95 disabled:opacity-60 transition-all"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#55CDB3] text-[#080B0C] font-bold text-xs font-black shadow-md hover:bg-[#55CDB3]/90 active:scale-95 disabled:opacity-60 transition-all"
               >
                 {isExporting ? (
                   <>
@@ -425,57 +425,57 @@ export default function ReportsSettingsModule() {
 
           {/* Quick Preset Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5015] shadow-card">
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                   <FileSpreadsheet className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-[#172B50]">Financial Audit Pack</h4>
-                  <p className="text-[11px] text-[#172B50] opacity-70">Tuitions, invoices, receipts & dues</p>
+                  <h4 className="text-xs font-black text-[#080B0C]">Financial Audit Pack</h4>
+                  <p className="text-[11px] text-[#493548]">Tuitions, invoices, receipts & dues</p>
                 </div>
               </div>
               <button
                 onClick={() => { setExportEntity('fees'); setExportFormat('csv'); handleExportData(); }}
-                className="w-full mt-4 py-2 px-3 rounded-lg border border-[#172B5020] text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] flex items-center justify-between transition-colors"
+                className="w-full mt-4 py-2 px-3 rounded-lg border border-[#493548]/20 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 flex items-center justify-between transition-colors"
               >
                 <span>Export Ledger CSV</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5015] shadow-card">
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-[#172B50]">Active Academy Roster</h4>
-                  <p className="text-[11px] text-[#172B50] opacity-70">Students, emergency contacts & medicals</p>
+                  <h4 className="text-xs font-black text-[#080B0C]">Active Academy Roster</h4>
+                  <p className="text-[11px] text-[#493548]">Students, emergency contacts & medicals</p>
                 </div>
               </div>
               <button
                 onClick={() => { setExportEntity('students'); setExportFormat('csv'); handleExportData(); }}
-                className="w-full mt-4 py-2 px-3 rounded-lg border border-[#172B5020] text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] flex items-center justify-between transition-colors"
+                className="w-full mt-4 py-2 px-3 rounded-lg border border-[#493548]/20 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 flex items-center justify-between transition-colors"
               >
                 <span>Export Student Roster</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5015] shadow-card">
+            <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-[#172B50]">Monthly Attendance Audit</h4>
-                  <p className="text-[11px] text-[#172B50] opacity-70">Turnout rates, absences & makeup credits</p>
+                  <h4 className="text-xs font-black text-[#080B0C]">Monthly Attendance Audit</h4>
+                  <p className="text-[11px] text-[#493548]">Turnout rates, absences & makeup credits</p>
                 </div>
               </div>
               <button
                 onClick={() => { setExportEntity('attendance'); setExportFormat('csv'); handleExportData(); }}
-                className="w-full mt-4 py-2 px-3 rounded-lg border border-[#172B5020] text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] flex items-center justify-between transition-colors"
+                className="w-full mt-4 py-2 px-3 rounded-lg border border-[#493548]/20 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 flex items-center justify-between transition-colors"
               >
                 <span>Export Attendance CSV</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -490,7 +490,7 @@ export default function ReportsSettingsModule() {
         <div className="space-y-6">
           
           {/* Status Bar */}
-          <div className="bg-gradient-to-r from-[#172B50] to-[#253f73] rounded-2xl p-6 text-white shadow-card">
+          <div className="bg-gradient-to-r from-[#080B0C] to-[#493548]/50 border border-[#493548]/30 rounded-2xl p-6 text-white shadow-card">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -509,7 +509,7 @@ export default function ReportsSettingsModule() {
                 <button
                   onClick={handleTriggerBackup}
                   disabled={isBackingUp}
-                  className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#F4510B] text-white text-xs font-black hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-md"
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#55CDB3] text-[#080B0C] font-bold text-xs font-black hover:bg-[#55CDB3]/90 active:scale-95 disabled:opacity-50 transition-all shadow-md"
                 >
                   <RefreshCw className={`w-4 h-4 ${isBackingUp ? 'animate-spin' : ''}`} />
                   <span>{isBackingUp ? 'Backing Up...' : 'Create Backup Now'}</span>
@@ -538,13 +538,13 @@ export default function ReportsSettingsModule() {
           </div>
 
           {/* Backup History Table */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
+          <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
+            <div className="p-5 border-b border-[#493548]/20 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-black text-[#172B50]">Historical Backup Snapshots</h3>
-                <p className="text-xs text-[#172B50] opacity-70">Download offline copy or restore state</p>
+                <h3 className="text-sm font-black text-[#080B0C]">Historical Backup Snapshots</h3>
+                <p className="text-xs text-[#493548]">Download offline copy or restore state</p>
               </div>
-              <span className="text-xs font-bold text-[#F4510B]">
+              <span className="text-xs font-bold text-[#55CDB3]">
                 {(data.backups || []).length} Snapshots
               </span>
             </div>
@@ -552,7 +552,7 @@ export default function ReportsSettingsModule() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-[#FFF4E8]/50 border-b border-[#172B5010] text-[#172B50] text-[11px] font-black uppercase tracking-wider">
+                  <tr className="bg-[#55CDB3]/10 border-b border-[#493548]/20 text-[#080B0C] text-[11px] font-black uppercase tracking-wider">
                     <th className="py-3 px-4">Backup ID</th>
                     <th className="py-3 px-4">Type</th>
                     <th className="py-3 px-4">Created Timestamp</th>
@@ -562,25 +562,25 @@ export default function ReportsSettingsModule() {
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#172B500C]">
+                <tbody className="divide-y divide-[#493548]/15">
                   {(data.backups || []).map((backup) => (
-                    <tr key={backup.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#172B50]">
+                    <tr key={backup.id} className="hover:bg-[#55CDB3]/15/20 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#080B0C]">
                         {backup.id}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           backup.type.includes('Auto') 
                             ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-orange-100 text-[#F4510B]'
+                            : 'bg-orange-100 text-[#55CDB3]'
                         }`}>
                           {backup.type}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-[#172B50] font-medium">
+                      <td className="py-3.5 px-4 text-[#080B0C] font-medium">
                         {backup.timestamp}
                       </td>
-                      <td className="py-3.5 px-4 text-[#172B50] font-bold">
+                      <td className="py-3.5 px-4 text-[#080B0C] font-bold">
                         {backup.size}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-[10px] text-gray-500">
@@ -603,7 +603,7 @@ export default function ReportsSettingsModule() {
                               link.click();
                               addToast(`Downloaded snapshot file for ${backup.id}`);
                             }}
-                            className="p-1.5 rounded-lg border border-[#172B5020] text-[#172B50] hover:bg-[#FFF4E8] transition-colors"
+                            className="p-1.5 rounded-lg border border-[#493548]/20 text-[#080B0C] hover:bg-[#55CDB3]/15 transition-colors"
                             title="Download JSON snapshot"
                           >
                             <Download className="w-3.5 h-3.5" />
@@ -613,7 +613,7 @@ export default function ReportsSettingsModule() {
                               setSelectedBackupToRestore(backup);
                               setRestoreModalOpen(true);
                             }}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#172B50] text-white text-[11px] font-bold hover:bg-[#172B50]/90 transition-all"
+                            className="px-2.5 py-1.5 rounded-lg bg-[#080B0C] text-[#F4F7F6] text-[11px] font-bold hover:bg-[#080B0C]/90 transition-all"
                           >
                             Restore
                           </button>
@@ -631,10 +631,10 @@ export default function ReportsSettingsModule() {
       {/* SUB-TAB 4: USER PERMISSIONS (RBAC) */}
       {currentTab === 'permissions' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
+          <div className="bg-[#F4F7F6] rounded-2xl p-6 border border-[#493548]/20 shadow-card">
             <div className="max-w-2xl">
-              <h2 className="text-lg font-black text-[#172B50]">Role-Based Access Control (RBAC) Matrix</h2>
-              <p className="text-xs text-[#172B50] opacity-75 mt-1">
+              <h2 className="text-lg font-black text-[#080B0C]">Role-Based Access Control (RBAC) Matrix</h2>
+              <p className="text-xs text-[#080B0C] opacity-75 mt-1">
                 Security clearance and functional boundaries enforced across Admin, Coach, and Parent portals.
               </p>
             </div>
@@ -642,7 +642,7 @@ export default function ReportsSettingsModule() {
             <div className="overflow-x-auto mt-6">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-[#FFF4E8]/50 border-b border-[#172B5010] text-[#172B50] text-[11px] font-black uppercase tracking-wider">
+                  <tr className="bg-[#55CDB3]/10 border-b border-[#493548]/20 text-[#080B0C] text-[11px] font-black uppercase tracking-wider">
                     <th className="py-3 px-4">Academy Module</th>
                     <th className="py-3 px-4 text-center">Super Admin</th>
                     <th className="py-3 px-4 text-center">Branch Admin</th>
@@ -651,7 +651,7 @@ export default function ReportsSettingsModule() {
                     <th className="py-3 px-4 text-center">Parent Account</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#172B500C]">
+                <tbody className="divide-y divide-[#493548]/15">
                   {[
                     { module: 'Enquiry Management & Leads', sa: 'Full Access', ba: 'Full Access', hc: 'View Assigned', ac: 'No Access', pa: 'No Access' },
                     { module: 'Student & Parent Profiles', sa: 'Full Access', ba: 'Full Access', hc: 'View Roster', ac: 'View Roster', pa: 'Own Children Only' },
@@ -663,8 +663,8 @@ export default function ReportsSettingsModule() {
                     { module: 'Automated Backup & System Restore', sa: 'Exclusive Control', ba: 'No Access', hc: 'No Access', ac: 'No Access', pa: 'No Access' },
                     { module: 'Raw Data Export (CSV / Excel)', sa: 'Full Access', ba: 'Branch Only', hc: 'No Access', ac: 'No Access', pa: 'No Access' },
                   ].map((row, idx) => (
-                    <tr key={idx} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                      <td className="py-3 px-4 font-bold text-[#172B50]">{row.module}</td>
+                    <tr key={idx} className="hover:bg-[#55CDB3]/15/20 transition-colors">
+                      <td className="py-3 px-4 font-bold text-[#080B0C]">{row.module}</td>
                       <td className="py-3 px-4 text-center">
                         <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800">
                           {row.sa}
@@ -707,31 +707,31 @@ export default function ReportsSettingsModule() {
       {/* RESTORE MODAL */}
       {restoreModalOpen && selectedBackupToRestore && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#172B501A] space-y-4">
+          <div className="bg-[#F4F7F6] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#493548]/20 space-y-4">
             <div className="flex items-center gap-3 text-amber-600">
               <div className="p-2.5 rounded-xl bg-amber-100">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-black text-[#172B50]">Confirm System Restore</h3>
-                <p className="text-xs text-[#172B50] opacity-70">Little Spartans ZenConnect Database</p>
+                <h3 className="text-base font-black text-[#080B0C]">Confirm System Restore</h3>
+                <p className="text-xs text-[#493548]">Little Spartans ZenConnect Database</p>
               </div>
             </div>
 
-            <p className="text-xs text-[#172B50] leading-relaxed">
+            <p className="text-xs text-[#080B0C] leading-relaxed">
               You are about to restore the academy database from snapshot <strong>{selectedBackupToRestore.id}</strong> ({selectedBackupToRestore.timestamp}). Current active state will be safely synchronized to this snapshot.
             </p>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#172B5015]">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#493548]/20">
               <button
                 onClick={() => setRestoreModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl transition-colors"
+                className="px-4 py-2 text-xs font-bold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmRestore}
-                className="px-5 py-2 text-xs font-black text-white bg-[#F4510B] hover:brightness-110 rounded-xl transition-all shadow-sm"
+                className="px-5 py-2 text-xs font-black text-white bg-[#55CDB3] hover:bg-[#55CDB3]/90 rounded-xl transition-all shadow-sm"
               >
                 Confirm & Restore
               </button>

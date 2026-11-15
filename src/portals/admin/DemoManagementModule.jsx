@@ -309,17 +309,17 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#172B50] text-white tracking-wider">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#080B0C] text-[#F4F7F6] tracking-wider">
               Admission Pipeline
             </span>
-            <span className="text-xs font-semibold text-[#172B50] opacity-60">
+            <span className="text-xs font-semibold text-[#493548]">
               Demo Bookings &amp; Student Conversion
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
             Demo Class Management
           </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
             Convert enquiries into trial sessions, track attendance &amp; coach evaluation, and enroll verified athletes seamlessly.
           </p>
         </div>
@@ -327,7 +327,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         <button
           type="button"
           onClick={() => handleOpenAddModal()}
-          className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 text-white" />
           <span>Book Demo Session</span>
@@ -370,11 +370,11 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-[#172B5014] shadow-card space-y-3">
+      <div className="bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#172B50] opacity-40" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#080B0C] opacity-40" />
             <input
               type="text"
               value={searchTerm}
@@ -383,7 +383,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 setCurrentPage(1);
               }}
               placeholder="Search by Child Name, Parent Name, Phone, Demo ID, Enquiry ID..."
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[#172B5020] text-[#172B50] focus:ring-2 focus:ring-[#F4510B] outline-none"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3] outline-none"
             />
           </div>
 
@@ -396,13 +396,13 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 setFilterDate(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 text-xs rounded-xl border border-[#172B5020] text-[#172B50] bg-white"
+              className="px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] bg-[#F4F7F6]"
             />
             {filterDate && (
               <button
                 type="button"
                 onClick={() => setFilterDate('')}
-                className="text-[11px] font-bold text-[#F4510B] hover:underline"
+                className="text-[11px] font-bold text-[#55CDB3] hover:underline"
               >
                 Clear Date
               </button>
@@ -411,9 +411,9 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         </div>
 
         {/* Filter Dropdowns Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 border-t border-[#172B5010]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 border-t border-[#493548]/20">
           <div>
-            <label className="block text-[10px] font-extrabold text-[#172B50] uppercase opacity-60 mb-1">
+            <label className="block text-[10px] font-extrabold text-[#080B0C] uppercase opacity-60 mb-1">
               Location
             </label>
             <select
@@ -422,7 +422,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 setFilterLocation(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5020] bg-white font-semibold text-[#172B50]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] font-semibold text-[#080B0C]"
             >
               <option value="All">All Locations</option>
               {activeLocations.map((loc) => (
@@ -434,7 +434,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
           </div>
 
           <div>
-            <label className="block text-[10px] font-extrabold text-[#172B50] uppercase opacity-60 mb-1">
+            <label className="block text-[10px] font-extrabold text-[#080B0C] uppercase opacity-60 mb-1">
               Status
             </label>
             <select
@@ -443,7 +443,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5020] bg-white font-semibold text-[#172B50]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] font-semibold text-[#080B0C]"
             >
               <option value="All">All Statuses</option>
               {Object.values(DEMO_STATUSES).map((st) => (
@@ -455,7 +455,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
           </div>
 
           <div>
-            <label className="block text-[10px] font-extrabold text-[#172B50] uppercase opacity-60 mb-1">
+            <label className="block text-[10px] font-extrabold text-[#080B0C] uppercase opacity-60 mb-1">
               Program
             </label>
             <select
@@ -464,7 +464,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 setFilterProgram(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5020] bg-white font-semibold text-[#172B50]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] font-semibold text-[#080B0C]"
             >
               <option value="All">All Programs</option>
               {(data.programs || []).map((p) => (
@@ -476,7 +476,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
           </div>
 
           <div>
-            <label className="block text-[10px] font-extrabold text-[#172B50] uppercase opacity-60 mb-1">
+            <label className="block text-[10px] font-extrabold text-[#080B0C] uppercase opacity-60 mb-1">
               Assigned Coach
             </label>
             <select
@@ -485,7 +485,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 setFilterCoach(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5020] bg-white font-semibold text-[#172B50]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#493548]/20 bg-[#F4F7F6] font-semibold text-[#080B0C]"
             >
               <option value="All">All Coaches</option>
               {(data.coaches || []).map((c) => (
@@ -499,30 +499,30 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       </div>
 
       {/* Demo List Table */}
-      <div className="bg-white rounded-2xl border border-[#172B5014] shadow-card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-[#172B5012] flex items-center justify-between">
+      <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 shadow-card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-[#493548]/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-extrabold text-[#172B50]">Demo Class Register</h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#FFF4E8] text-[#F4510B]">
+            <h2 className="text-sm font-extrabold text-[#080B0C]">Demo Class Register</h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#493548]/15 text-[#55CDB3]">
               {filteredDemos.length} Bookings
             </span>
           </div>
-          <span className="text-[11px] text-[#172B50] opacity-60">
+          <span className="text-[11px] text-[#493548]">
             Page {currentPage} of {totalPages}
           </span>
         </div>
 
         {filteredDemos.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <Calendar className="w-10 h-10 text-[#172B50] opacity-30 mx-auto" />
-            <h3 className="text-sm font-extrabold text-[#172B50]">No Demo Classes Found</h3>
-            <p className="text-xs text-[#172B50] opacity-60 max-w-md mx-auto">
+            <Calendar className="w-10 h-10 text-[#080B0C] opacity-30 mx-auto" />
+            <h3 className="text-sm font-extrabold text-[#080B0C]">No Demo Classes Found</h3>
+            <p className="text-xs text-[#493548] max-w-md mx-auto">
               No demo bookings match your current filter selections. Book a new demo or adjust your filters.
             </p>
             <button
               type="button"
               onClick={() => handleOpenAddModal()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Book First Demo</span>
@@ -530,8 +530,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-[#172B50]">
-              <thead className="bg-[#FFF4E8]/60 text-[10px] font-extrabold uppercase tracking-wider text-[#172B50] border-b border-[#172B5014]">
+            <table className="w-full text-left text-xs text-[#080B0C]">
+              <thead className="bg-[#493548]/15/60 text-[10px] font-extrabold uppercase tracking-wider text-[#080B0C] border-b border-[#493548]/20">
                 <tr>
                   <th className="py-3 px-4">Demo ID &amp; Time</th>
                   <th className="py-3 px-4">Athlete / Child</th>
@@ -543,31 +543,31 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#172B500C]">
+              <tbody className="divide-y divide-[#493548]/15">
                 {paginatedDemos.map((demo) => {
                   const cfg = DEMO_STATUS_CONFIG[demo.status] || DEMO_STATUS_CONFIG[DEMO_STATUSES.SCHEDULED];
                   const isCompleted = demo.status === DEMO_STATUSES.COMPLETED;
                   const isConverted = Boolean(demo.convertedToStudent);
 
                   return (
-                    <tr key={demo.id} className="hover:bg-[#FFF4E8]/30 transition-colors">
+                    <tr key={demo.id} className="hover:bg-[#55CDB3]/15/30 transition-colors">
                       {/* Demo ID & Date */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setDetailDemo(demo)}
-                          className="font-extrabold text-[#172B50] hover:text-[#F4510B] cursor-pointer block"
+                          className="font-extrabold text-[#080B0C] hover:text-[#55CDB3] cursor-pointer block"
                         >
                           {demo.id}
                         </button>
-                        <div className="flex items-center gap-1.5 text-[11px] text-[#172B50] opacity-70 mt-0.5">
-                          <CalendarDays className="w-3 h-3 text-[#F4510B]" />
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#493548] mt-0.5">
+                          <CalendarDays className="w-3 h-3 text-[#55CDB3]" />
                           <span>{demo.demoDate}</span>
                           <span>•</span>
                           <span>{demo.demoTime}</span>
                         </div>
                         {demo.enquiryId && (
-                          <span className="text-[10px] font-mono text-[#172B50] opacity-50 block mt-0.5">
+                          <span className="text-[10px] font-mono text-[#493548] block mt-0.5">
                             Ref: {demo.enquiryId}
                           </span>
                         )}
@@ -575,20 +575,20 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
                       {/* Child */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="font-extrabold text-[#172B50] text-sm block">
+                        <span className="font-extrabold text-[#080B0C] text-sm block">
                           {demo.childName}
                         </span>
-                        <span className="text-[11px] text-[#172B50] opacity-65">
+                        <span className="text-[11px] text-[#080B0C] opacity-65">
                           {demo.childAge ? `${demo.childAge} yrs` : ''} {demo.gender ? `• ${demo.gender}` : ''}
                         </span>
                       </td>
 
                       {/* Parent */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className="font-bold text-[#172B50]">{demo.parentName}</div>
-                        <div className="text-[11px] text-[#172B50] opacity-75">{demo.phone}</div>
+                        <div className="font-bold text-[#080B0C]">{demo.parentName}</div>
+                        <div className="text-[11px] text-[#080B0C] opacity-75">{demo.phone}</div>
                         {demo.email && (
-                          <div className="text-[10px] text-[#172B50] opacity-55 truncate max-w-[150px]">
+                          <div className="text-[10px] text-[#080B0C] opacity-55 truncate max-w-[150px]">
                             {demo.email}
                           </div>
                         )}
@@ -596,19 +596,19 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
                       {/* Location & Program */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#F4510B] uppercase">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#55CDB3] uppercase">
                           <MapPin className="w-3 h-3" />
                           {demo.location}
                         </span>
-                        <div className="text-xs font-semibold text-[#172B50] opacity-85 truncate max-w-[170px] mt-0.5">
+                        <div className="text-xs font-semibold text-[#080B0C] opacity-85 truncate max-w-[170px] mt-0.5">
                           {demo.program}
                         </div>
                       </td>
 
                       {/* Coach */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#172B50]">
-                          <UserCheck className="w-3.5 h-3.5 text-[#172B50] opacity-60" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#080B0C]">
+                          <UserCheck className="w-3.5 h-3.5 text-[#493548]" />
                           {demo.coachName || 'Unassigned'}
                         </span>
                       </td>
@@ -634,11 +634,11 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                             <span>Enrolled ({demo.studentId})</span>
                           </span>
                         ) : isCompleted ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30]">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#493548]/15 text-[#55CDB3] border border-[#55CDB3]/40">
                             Ready for Admission
                           </span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-[#172B50] opacity-50">
+                          <span className="text-[10px] font-semibold text-[#493548]">
                             Pending Demo
                           </span>
                         )}
@@ -649,7 +649,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                         <button
                           type="button"
                           onClick={() => setDetailDemo(demo)}
-                          className="p-1.5 rounded-lg text-[#172B50] hover:bg-slate-100 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-[#080B0C] hover:bg-slate-100 transition-colors cursor-pointer"
                           title="View Details & History"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -670,8 +670,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                             onClick={() => handleOpenConvertModal(demo)}
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-xs transition-all cursor-pointer ${
                               isCompleted
-                                ? 'bg-[#F4510B] text-white hover:brightness-110 active:scale-95'
-                                : 'bg-[#172B50] text-white hover:bg-[#F4510B]'
+                                ? 'bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 active:scale-95'
+                                : 'bg-[#080B0C] text-[#F4F7F6] hover:bg-[#55CDB3]'
                             }`}
                             title="Convert into registered Student"
                           >
@@ -686,7 +686,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                                 navigateToPersonRecord('student', demo.studentId);
                               }
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-[#172B50] hover:bg-slate-200 cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-[#080B0C] hover:bg-slate-200 cursor-pointer"
                           >
                             <span>View Athlete</span>
                           </button>
@@ -702,12 +702,12 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
         {/* Pagination Bar */}
         {totalPages > 1 && (
-          <div className="px-5 py-3 border-t border-[#172B5012] flex items-center justify-between">
+          <div className="px-5 py-3 border-t border-[#493548]/20 flex items-center justify-between">
             <button
               type="button"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-1 text-xs font-bold rounded-lg border border-[#172B5020] text-[#172B50] disabled:opacity-40 cursor-pointer"
+              className="px-3 py-1 text-xs font-bold rounded-lg border border-[#493548]/20 text-[#080B0C] disabled:opacity-40 cursor-pointer"
             >
               Previous
             </button>
@@ -719,8 +719,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   onClick={() => setCurrentPage(i + 1)}
                   className={`w-7 h-7 rounded-lg text-xs font-bold cursor-pointer ${
                     currentPage === i + 1
-                      ? 'bg-[#172B50] text-white'
-                      : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                      ? 'bg-[#080B0C] text-[#F4F7F6]'
+                      : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
                   }`}
                 >
                   {i + 1}
@@ -731,7 +731,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               type="button"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="px-3 py-1 text-xs font-bold rounded-lg border border-[#172B5020] text-[#172B50] disabled:opacity-40 cursor-pointer"
+              className="px-3 py-1 text-xs font-bold rounded-lg border border-[#493548]/20 text-[#080B0C] disabled:opacity-40 cursor-pointer"
             >
               Next
             </button>
@@ -752,12 +752,12 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         <form onSubmit={handleSaveAddDemo} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Academy Location *</label>
               <select
                 required
                 value={addForm.location}
                 onChange={(e) => setAddForm({ ...addForm, location: e.target.value, coachId: '' })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] font-semibold"
               >
                 {activeLocations.map((loc) => (
                   <option key={loc.id} value={loc.name}>
@@ -768,12 +768,12 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Sports Program *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Sports Program *</label>
               <select
                 required
                 value={addForm.program}
                 onChange={(e) => setAddForm({ ...addForm, program: e.target.value, coachId: '' })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] font-semibold"
               >
                 {(data.programs || []).map((p) => (
                   <option key={p.id} value={p.name}>
@@ -786,18 +786,18 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Child / Athlete Name *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Child / Athlete Name *</label>
               <input
                 type="text"
                 required
                 value={addForm.childName}
                 onChange={(e) => setAddForm({ ...addForm, childName: e.target.value })}
                 placeholder="e.g. Aarav Sharma"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Age / Gender</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Age / Gender</label>
               <div className="grid grid-cols-2 gap-1.5">
                 <input
                   type="number"
@@ -806,12 +806,12 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   value={addForm.childAge}
                   onChange={(e) => setAddForm({ ...addForm, childAge: e.target.value })}
                   placeholder="Age"
-                  className="w-full px-2 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                  className="w-full px-2 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
                 />
                 <select
                   value={addForm.gender}
                   onChange={(e) => setAddForm({ ...addForm, gender: e.target.value })}
-                  className="w-full px-2 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                  className="w-full px-2 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -822,52 +822,52 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Parent / Guardian Name *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Parent / Guardian Name *</label>
               <input
                 type="text"
                 required
                 value={addForm.parentName}
                 onChange={(e) => setAddForm({ ...addForm, parentName: e.target.value })}
                 placeholder="e.g. Vikram Sharma"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Parent Mobile Number *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Parent Mobile Number *</label>
               <input
                 type="tel"
                 required
                 value={addForm.phone}
                 onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
                 placeholder="e.g. +91 98401 23456"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Demo Date *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Demo Date *</label>
               <input
                 type="date"
                 required
                 value={addForm.demoDate}
                 onChange={(e) => setAddForm({ ...addForm, demoDate: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Demo Time *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Demo Time *</label>
               <input
                 type="time"
                 required
                 value={addForm.demoTime}
                 onChange={(e) => setAddForm({ ...addForm, demoTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Assigned Coach</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Assigned Coach</label>
               <select
                 value={addForm.coachId}
                 onChange={(e) => {
@@ -875,7 +875,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   const c = data.coaches.find((x) => x.id === id);
                   setAddForm({ ...addForm, coachId: id, coachName: c ? c.name : '' });
                 }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               >
                 <option value="">Select Coach</option>
                 {eligibleCoachesForAdd.map((c) => (
@@ -888,27 +888,27 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Special Notes / Goals</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Special Notes / Goals</label>
             <textarea
               rows={2}
               value={addForm.notes}
               onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
               placeholder="e.g. Focus on balance beam safety, first time in gymnastics academy..."
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
             <button
               type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 active:scale-95 cursor-pointer shadow-sm"
+              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 active:scale-95 cursor-pointer shadow-sm"
             >
               Confirm Demo Booking
             </button>
@@ -929,14 +929,14 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         <form onSubmit={handleSaveReschedule} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Academy Location *</label>
               <select
                 required
                 value={rescheduleForm.location}
                 onChange={(e) =>
                   setRescheduleForm({ ...rescheduleForm, location: e.target.value, coachId: '' })
                 }
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               >
                 {activeLocations.map((loc) => (
                   <option key={loc.id} value={loc.name}>
@@ -947,7 +947,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Assigned Coach</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">Assigned Coach</label>
               <select
                 value={rescheduleForm.coachId}
                 onChange={(e) => {
@@ -959,7 +959,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                     coachName: c ? c.name : '',
                   });
                 }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               >
                 <option value="">Select Coach</option>
                 {eligibleCoachesForReschedule.map((c) => (
@@ -973,29 +973,29 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">New Demo Date *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">New Demo Date *</label>
               <input
                 type="date"
                 required
                 value={rescheduleForm.demoDate}
                 onChange={(e) => setRescheduleForm({ ...rescheduleForm, demoDate: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">New Demo Time *</label>
+              <label className="block text-xs font-bold text-[#080B0C] mb-1">New Demo Time *</label>
               <input
                 type="time"
                 required
                 value={rescheduleForm.demoTime}
                 onChange={(e) => setRescheduleForm({ ...rescheduleForm, demoTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Reason for Rescheduling *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Reason for Rescheduling *</label>
             <input
               type="text"
               required
@@ -1004,21 +1004,21 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 setRescheduleForm({ ...rescheduleForm, rescheduleReason: e.target.value })
               }
               placeholder="e.g. Parent requested weekend morning session due to school exam"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
             <button
               type="button"
               onClick={() => setRescheduleTarget(null)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 cursor-pointer shadow-sm"
+              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 cursor-pointer shadow-sm"
             >
               Confirm Reschedule
             </button>
@@ -1038,11 +1038,11 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       >
         <form onSubmit={handleSaveStatusChange} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Select New Status *</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Select New Status *</label>
             <select
               value={newStatusValue}
               onChange={(e) => setNewStatusValue(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-bold"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] font-bold"
             >
               {Object.values(DEMO_STATUSES).map((st) => (
                 <option key={st} value={st}>
@@ -1053,27 +1053,27 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">Audit Note / Outcome</label>
+            <label className="block text-xs font-bold text-[#080B0C] mb-1">Audit Note / Outcome</label>
             <textarea
               rows={3}
               value={statusNote}
               onChange={(e) => setStatusNote(e.target.value)}
               placeholder="e.g. Attended session on time. Coach notes high enthusiasm and motor readiness."
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
             <button
               type="button"
               onClick={() => setStatusChangeTarget(null)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 cursor-pointer shadow-sm"
+              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 cursor-pointer shadow-sm"
             >
               Save Status
             </button>
@@ -1094,24 +1094,24 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         {detailDemo && (
           <div className="space-y-5">
             {/* Summary Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-2xl bg-[#FFF4E8]/60 border border-[#172B5015]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-2xl bg-[#493548]/15/60 border border-[#493548]/20">
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60">Status</span>
-                <p className="text-xs font-extrabold text-[#172B50] mt-0.5">{detailDemo.status}</p>
+                <span className="text-[10px] font-bold uppercase text-[#493548]">Status</span>
+                <p className="text-xs font-extrabold text-[#080B0C] mt-0.5">{detailDemo.status}</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60">Date &amp; Time</span>
-                <p className="text-xs font-extrabold text-[#172B50] mt-0.5">
+                <span className="text-[10px] font-bold uppercase text-[#493548]">Date &amp; Time</span>
+                <p className="text-xs font-extrabold text-[#080B0C] mt-0.5">
                   {detailDemo.demoDate} • {detailDemo.demoTime}
                 </p>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60">Location</span>
-                <p className="text-xs font-extrabold text-[#F4510B] mt-0.5">{detailDemo.location}</p>
+                <span className="text-[10px] font-bold uppercase text-[#493548]">Location</span>
+                <p className="text-xs font-extrabold text-[#55CDB3] mt-0.5">{detailDemo.location}</p>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60">Coach</span>
-                <p className="text-xs font-extrabold text-[#172B50] mt-0.5">
+                <span className="text-[10px] font-bold uppercase text-[#493548]">Coach</span>
+                <p className="text-xs font-extrabold text-[#080B0C] mt-0.5">
                   {detailDemo.coachName || 'Unassigned'}
                 </p>
               </div>
@@ -1119,32 +1119,32 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
             {/* Child & Parent Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-3.5 rounded-xl border border-[#172B5012] bg-white space-y-1.5">
-                <span className="text-[10px] font-extrabold text-[#172B50] uppercase tracking-wider block">
+              <div className="p-3.5 rounded-xl border border-[#493548]/20 bg-[#F4F7F6] space-y-1.5">
+                <span className="text-[10px] font-extrabold text-[#080B0C] uppercase tracking-wider block">
                   Athlete Details
                 </span>
-                <p className="text-sm font-extrabold text-[#172B50]">{detailDemo.childName}</p>
-                <p className="text-xs text-[#172B50] opacity-75">
+                <p className="text-sm font-extrabold text-[#080B0C]">{detailDemo.childName}</p>
+                <p className="text-xs text-[#080B0C] opacity-75">
                   Age: {detailDemo.childAge || 'N/A'} yrs • Gender: {detailDemo.gender || 'N/A'}
                 </p>
-                <p className="text-xs text-[#172B50] opacity-75">Program: {detailDemo.program}</p>
+                <p className="text-xs text-[#080B0C] opacity-75">Program: {detailDemo.program}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-[#172B5012] bg-white space-y-1.5">
-                <span className="text-[10px] font-extrabold text-[#172B50] uppercase tracking-wider block">
+              <div className="p-3.5 rounded-xl border border-[#493548]/20 bg-[#F4F7F6] space-y-1.5">
+                <span className="text-[10px] font-extrabold text-[#080B0C] uppercase tracking-wider block">
                   Parent / Guardian
                 </span>
-                <p className="text-sm font-extrabold text-[#172B50]">{detailDemo.parentName}</p>
-                <p className="text-xs text-[#172B50] opacity-75">Phone: {detailDemo.phone}</p>
+                <p className="text-sm font-extrabold text-[#080B0C]">{detailDemo.parentName}</p>
+                <p className="text-xs text-[#080B0C] opacity-75">Phone: {detailDemo.phone}</p>
                 {detailDemo.email && (
-                  <p className="text-xs text-[#172B50] opacity-75">Email: {detailDemo.email}</p>
+                  <p className="text-xs text-[#080B0C] opacity-75">Email: {detailDemo.email}</p>
                 )}
               </div>
             </div>
 
             {/* Notes */}
             {detailDemo.notes && (
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-[#172B50]">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-[#080B0C]">
                 <span className="font-bold block mb-0.5">Notes &amp; Session Brief:</span>
                 <p className="opacity-80">{detailDemo.notes}</p>
               </div>
@@ -1152,23 +1152,23 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
             {/* Timeline Audit History */}
             <div className="space-y-2.5">
-              <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#172B50] uppercase tracking-wider">
-                <History className="w-4 h-4 text-[#F4510B]" />
+              <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#080B0C] uppercase tracking-wider">
+                <History className="w-4 h-4 text-[#55CDB3]" />
                 <span>Demo Audit History &amp; Transitions</span>
               </div>
 
-              <div className="relative pl-6 space-y-4 border-l-2 border-[#172B5015] ml-2">
+              <div className="relative pl-6 space-y-4 border-l-2 border-[#493548]/20 ml-2">
                 {(detailDemo.history || []).map((h, idx) => (
                   <div key={h.id || idx} className="relative">
-                    <span className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-[#F4510B] ring-4 ring-white" />
+                    <span className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-[#55CDB3] ring-4 ring-white" />
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-bold text-[#172B50]">{h.action}</span>
-                      <span className="text-[#172B50] opacity-50">
+                      <span className="font-bold text-[#080B0C]">{h.action}</span>
+                      <span className="text-[#493548]">
                         {h.timestamp ? new Date(h.timestamp).toLocaleString() : ''}
                       </span>
                     </div>
-                    <p className="text-xs text-[#172B50] opacity-80 mt-0.5">{h.note}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-[#172B50] opacity-60 mt-1">
+                    <p className="text-xs text-[#080B0C] opacity-80 mt-0.5">{h.note}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-[#493548] mt-1">
                       <span>Updated by: {h.updatedBy || 'Admin'}</span>
                       {h.coachName && <span>• Coach: {h.coachName}</span>}
                       {h.location && <span>• Location: {h.location}</span>}
@@ -1179,7 +1179,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
             </div>
 
             {/* Modal Actions */}
-            <div className="flex justify-between items-center pt-3 border-t border-[#172B5014]">
+            <div className="flex justify-between items-center pt-3 border-t border-[#493548]/20">
               <div className="flex items-center gap-2">
                 {!detailDemo.convertedToStudent && (
                   <button
@@ -1189,7 +1189,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                       setDetailDemo(null);
                       handleOpenConvertModal(tgt);
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#F4510B] text-white hover:brightness-110 cursor-pointer shadow-sm"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 cursor-pointer shadow-sm"
                   >
                     <UserPlus className="w-4 h-4" />
                     <span>Convert to Student</span>
@@ -1199,7 +1199,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               <button
                 type="button"
                 onClick={() => setDetailDemo(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
               >
                 Close
               </button>
@@ -1242,36 +1242,36 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs p-3 rounded-xl bg-[#FFF4E8]/60 border border-[#172B5014]">
+            <div className="grid grid-cols-2 gap-3 text-xs p-3 rounded-xl bg-[#493548]/15/60 border border-[#493548]/20">
               <div>
-                <span className="font-bold text-[#172B50] opacity-60 block text-[10px] uppercase">
+                <span className="font-bold text-[#493548] block text-[10px] uppercase">
                   Student ID
                 </span>
-                <span className="font-extrabold text-[#172B50] text-sm">
+                <span className="font-extrabold text-[#080B0C] text-sm">
                   {convertResult.student.id}
                 </span>
               </div>
               <div>
-                <span className="font-bold text-[#172B50] opacity-60 block text-[10px] uppercase">
+                <span className="font-bold text-[#493548] block text-[10px] uppercase">
                   Parent ID
                 </span>
-                <span className="font-extrabold text-[#172B50] text-sm">
+                <span className="font-extrabold text-[#080B0C] text-sm">
                   {convertResult.parent.id}
                 </span>
               </div>
               <div>
-                <span className="font-bold text-[#172B50] opacity-60 block text-[10px] uppercase">
+                <span className="font-bold text-[#493548] block text-[10px] uppercase">
                   Location
                 </span>
-                <span className="font-extrabold text-[#F4510B]">
+                <span className="font-extrabold text-[#55CDB3]">
                   {convertResult.student.center}
                 </span>
               </div>
               <div>
-                <span className="font-bold text-[#172B50] opacity-60 block text-[10px] uppercase">
+                <span className="font-bold text-[#493548] block text-[10px] uppercase">
                   Program
                 </span>
-                <span className="font-bold text-[#172B50]">
+                <span className="font-bold text-[#080B0C]">
                   {convertResult.student.program}
                 </span>
               </div>
@@ -1284,7 +1284,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   setConvertTarget(null);
                   setConvertResult(null);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-extrabold bg-[#172B50] text-white hover:bg-[#F4510B] cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-extrabold bg-[#080B0C] text-[#F4F7F6] hover:bg-[#55CDB3] cursor-pointer"
               >
                 Done
               </button>
@@ -1302,36 +1302,36 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               </div>
 
               {/* Readonly Summary */}
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#FFF4E8]/50 border border-[#172B5014] text-xs">
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#55CDB3]/10 border border-[#493548]/20 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+                  <span className="text-[10px] font-bold uppercase text-[#493548] block">
                     Athlete Name
                   </span>
-                  <span className="font-extrabold text-[#172B50]">{convertTarget.childName}</span>
+                  <span className="font-extrabold text-[#080B0C]">{convertTarget.childName}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+                  <span className="text-[10px] font-bold uppercase text-[#493548] block">
                     Parent / Guardian
                   </span>
-                  <span className="font-extrabold text-[#172B50]">{convertTarget.parentName}</span>
+                  <span className="font-extrabold text-[#080B0C]">{convertTarget.parentName}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+                  <span className="text-[10px] font-bold uppercase text-[#493548] block">
                     Mandatory Location
                   </span>
-                  <span className="font-extrabold text-[#F4510B]">{convertTarget.location}</span>
+                  <span className="font-extrabold text-[#55CDB3]">{convertTarget.location}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">
+                  <span className="text-[10px] font-bold uppercase text-[#493548] block">
                     Sports Program
                   </span>
-                  <span className="font-bold text-[#172B50]">{convertTarget.program}</span>
+                  <span className="font-bold text-[#080B0C]">{convertTarget.program}</span>
                 </div>
               </div>
 
               {/* Assign Batch */}
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">
                   Assign Training Batch (Optional)
                 </label>
                 {matchingBatchesForConvert.length > 0 ? (
@@ -1343,7 +1343,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                         preferredBatchId: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
                   >
                     <option value="">No Batch Assigned Yet (Assign Later)</option>
                     {matchingBatchesForConvert.map((b) => (
@@ -1353,7 +1353,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                     ))}
                   </select>
                 ) : (
-                  <p className="text-[11px] text-[#172B50] opacity-60 italic">
+                  <p className="text-[11px] text-[#493548] italic">
                     No active batches found at {convertTarget.location} for {convertTarget.program}.
                     Batch can be assigned later under Programs &amp; Batches.
                   </p>
@@ -1362,7 +1362,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
               {/* Notes */}
               <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">
+                <label className="block text-xs font-bold text-[#080B0C] mb-1">
                   Admission Notes / Medical Record
                 </label>
                 <input
@@ -1371,15 +1371,15 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   onChange={(e) =>
                     setConvertOverrides({ ...convertOverrides, notes: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
                 <button
                   type="button"
                   onClick={() => setConvertTarget(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1387,7 +1387,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   type="button"
                   disabled={isConverting}
                   onClick={handleExecuteConversion}
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#55CDB3]/90 active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   <UserPlus className="w-4 h-4" />
                   <span>{isConverting ? 'Enrolling...' : 'Confirm Student Enrollment'}</span>

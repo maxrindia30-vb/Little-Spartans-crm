@@ -34,15 +34,15 @@ export default function AdmissionPipelineStepper({ activeStep = 'enrolled', onSt
 
   return (
     <div
-      className={`bg-white/95 backdrop-blur-md rounded-[22px] px-4 py-3.5 border border-[#172B5014] shadow-xs flex flex-wrap items-center justify-between gap-3 transition-all ${className}`}
+      className={`bg-[#F4F7F6]/95 backdrop-blur-md rounded-[22px] px-4 py-3.5 border border-[#080B0C14] shadow-xs flex flex-wrap items-center justify-between gap-3 transition-all ${className}`}
     >
       {/* Title / Badge */}
       <div className="flex items-center gap-2 shrink-0">
         <span className="flex h-2 w-2 relative">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F4510B] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F4510B]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#55CDB3] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#55CDB3]"></span>
         </span>
-        <span className="text-[11px] font-black uppercase text-[#F4510B] tracking-wider select-none">
+        <span className="text-[11px] font-black uppercase text-[#55CDB3] tracking-wider select-none">
           ADMISSION PIPELINE:
         </span>
       </div>
@@ -67,21 +67,21 @@ export default function AdmissionPipelineStepper({ activeStep = 'enrolled', onSt
                   }
                 }}
                 title={step.desc}
-                className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5012] hover:bg-[#F4510B] hover:text-white hover:border-[#F4510B] hover:shadow-sm active:scale-95 transition-all cursor-pointer select-none"
+                className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#493548]/15] text-[#080B0C] border border-[#080B0C12] hover:bg-[#55CDB3] hover:text-white hover:border-[#55CDB3] hover:shadow-sm active:scale-95 transition-all cursor-pointer select-none"
               >
-                <span className="text-[#172B50]/60 group-hover:text-white/80 text-[10px] font-black">
+                <span className="text-[#080B0C]/60 group-hover:text-white/80 text-[10px] font-black">
                   {idx + 1}.
                 </span>
                 <span>{step.label}</span>
                 {count !== null && (
-                  <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9.5px] font-black bg-white/80 group-hover:bg-white group-hover:text-[#F4510B] text-[#172B50]/70 border border-[#172B5010]">
+                  <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9.5px] font-black bg-[#F4F7F6]/80 group-hover:bg-[#F4F7F6] group-hover:text-[#55CDB3] text-[#080B0C]/70 border border-[#080B0C10]">
                     {count}
                   </span>
                 )}
               </button>
 
               {!isLast && (
-                <ArrowRight className="w-3.5 h-3.5 text-[#F4510B] shrink-0 opacity-80" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#55CDB3] shrink-0 opacity-80" />
               )}
             </React.Fragment>
           );
@@ -89,7 +89,7 @@ export default function AdmissionPipelineStepper({ activeStep = 'enrolled', onSt
       </div>
 
       {/* Conversion summary pill on the right */}
-      <div className="hidden xl:flex items-center gap-2 pl-3 border-l border-[#172B5012] shrink-0 text-[11px] font-bold text-[#172B50]">
+      <div className="hidden xl:flex items-center gap-2 pl-3 border-l border-[#080B0C12] shrink-0 text-[11px] font-bold text-[#080B0C]">
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
         <span>Automated Ingestion</span>
       </div>
