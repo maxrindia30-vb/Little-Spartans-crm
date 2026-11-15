@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Users,
   GraduationCap,
+  X,
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -33,6 +34,22 @@ import {
   filterCoachesForDemo,
   calculateDemoMetrics,
 } from '../../services/demoService';
+
+const formatDateLabel = (ymdStr) => {
+  if (!ymdStr) return '';
+  try {
+    const [y, m, d] = ymdStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    return dateObj.toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  } catch (err) {
+    return ymdStr;
+  }
+};
 
 export default function DemoManagementModule({ initialFilterLocation = 'All' }) {
   const {
@@ -136,7 +153,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       const matchProg = filterProgram === 'All' || d.program === filterProgram;
       const matchCoach =
         filterCoach === 'All' || d.coachId === filterCoach || d.coachName === filterCoach;
-      const matchDate = !filterDate || d.demoDate === filterDate;
+      const scheduledDate = (d.demoDate || d.date || '').split('T')[0];
+      const matchDate = !filterDate || scheduledDate === filterDate;
       const matchQuery =
         !query ||
         d.id.toLowerCase().includes(query) ||
@@ -387,24 +405,54 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
             />
           </div>
 
-          {/* Quick Date Filter */}
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => {
-                setFilterDate(e.target.value);
+          {/* Quick Date Filter & Presets */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                setFilterDate(todayYmd);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 text-xs rounded-xl border border-[#172B5020] text-[#172B50] bg-white"
-            />
+              className={`px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                filterDate === todayYmd
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'bg-[#FFF4E8] text-[#172B50] hover:bg-white border border-[#172B5018]'
+              }`}
+              title="View Today's Scheduled Demos"
+            >
+              Today
+            </button>
+
+            <div className="relative">
+              <Calendar className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute left-3 top-2.5 pointer-events-none" />
+              <input
+                type="date"
+                aria-label="Filter demos by scheduled date"
+                value={filterDate}
+                onChange={(e) => {
+                  setFilterDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`pl-8 pr-2.5 py-1.5 text-xs font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B] transition-all ${
+                  filterDate
+                    ? 'bg-[#FFF5ED] border border-[#F4510B] text-[#172B50] font-bold'
+                    : 'bg-[#FFF4E8] text-[#172B50] border border-[#172B5020]'
+                }`}
+              />
+            </div>
+
             {filterDate && (
               <button
                 type="button"
-                onClick={() => setFilterDate('')}
-                className="text-[11px] font-bold text-[#F4510B] hover:underline"
+                onClick={() => {
+                  setFilterDate('');
+                  setCurrentPage(1);
+                }}
+                className="px-2.5 py-1.5 text-xs font-bold text-[#F4510B] bg-[#FFF4E8] border border-[#F4510B30] rounded-xl hover:bg-white transition-all cursor-pointer flex items-center gap-1"
+                title="Clear Date Filter (Show All Dates)"
               >
-                Clear Date
+                <X className="w-3.5 h-3.5" />
+                <span>Clear Filter</span>
               </button>
             )}
           </div>
@@ -498,6 +546,51 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         </div>
       </div>
 
+      {/* Date Filter Active Banner */}
+      {filterDate && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-[#FFF4E8] border border-[#F4510B40] rounded-2xl shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#F4510B] text-white flex items-center justify-center shrink-0">
+              <CalendarDays className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-extrabold text-[#F4510B] uppercase tracking-wider">
+                  Demo Sessions for Date:
+                </span>
+                <span className="text-sm font-extrabold text-[#172B50]">
+                  {formatDateLabel(filterDate)}
+                </span>
+                {filterDate === todayYmd && (
+                  <span className="px-2 py-0.5 text-[10px] font-extrabold bg-[#F4510B] text-white rounded-full">
+                    Today
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-[#172B50] opacity-70">
+                Displaying only trial sessions scheduled on {filterDate}. Total scheduled: <strong className="text-[#172B50] font-extrabold">{filteredDemos.length} demo session{filteredDemos.length === 1 ? '' : 's'}</strong>.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            <span className="px-3 py-1 rounded-full text-xs font-black bg-white text-[#F4510B] border border-[#F4510B30] shadow-2xs">
+              {filteredDemos.length} {filteredDemos.length === 1 ? 'Demo' : 'Demos'} Scheduled
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setFilterDate('');
+                setCurrentPage(1);
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-[#172B50] bg-white hover:bg-[#FFF5ED] border border-[#172B5020] rounded-xl transition-all cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5 text-[#F4510B]" />
+              <span>Clear Filter</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Demo List Table */}
       <div className="bg-white rounded-2xl border border-[#172B5014] shadow-card overflow-hidden">
         <div className="px-5 py-3.5 border-b border-[#172B5012] flex items-center justify-between">
@@ -514,19 +607,70 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
         {filteredDemos.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <Calendar className="w-10 h-10 text-[#172B50] opacity-30 mx-auto" />
-            <h3 className="text-sm font-extrabold text-[#172B50]">No Demo Classes Found</h3>
-            <p className="text-xs text-[#172B50] opacity-60 max-w-md mx-auto">
-              No demo bookings match your current filter selections. Book a new demo or adjust your filters.
-            </p>
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Book First Demo</span>
-            </button>
+            <div className="w-12 h-12 rounded-2xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center mx-auto border border-[#F4510B25]">
+              <Calendar className="w-6 h-6" />
+            </div>
+            {filterDate ? (
+              <>
+                <h3 className="text-sm font-black text-[#172B50]">
+                  No demos scheduled for this date
+                </h3>
+                <p className="text-xs text-[#172B50] opacity-70 max-w-md mx-auto leading-relaxed">
+                  No demo classes or trial assessment sessions are scheduled on{' '}
+                  <strong className="text-[#172B50]">{formatDateLabel(filterDate) || filterDate}</strong>.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddForm((prev) => ({ ...prev, demoDate: filterDate }));
+                      handleOpenAddModal();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-xs hover:bg-[#D94103] cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Book Demo for {filterDate}</span>
+                  </button>
+                  {filterDate !== todayYmd && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFilterDate(todayYmd);
+                        setCurrentPage(1);
+                      }}
+                      className="px-3.5 py-1.5 text-xs font-bold text-[#172B50] bg-[#FFF4E8] hover:bg-white border border-[#172B5020] rounded-xl transition-all cursor-pointer"
+                    >
+                      View Today's Demos
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilterDate('');
+                      setCurrentPage(1);
+                    }}
+                    className="px-3.5 py-1.5 text-xs font-bold text-[#172B50] bg-[#FFF4E8] hover:bg-white border border-[#172B5020] rounded-xl transition-all cursor-pointer"
+                  >
+                    Clear Filter (View All)
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-sm font-extrabold text-[#172B50]">No Demo Classes Found</h3>
+                <p className="text-xs text-[#172B50] opacity-60 max-w-md mx-auto">
+                  No demo bookings match your current filter selections. Book a new demo or adjust your filters.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddModal()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Book First Demo</span>
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

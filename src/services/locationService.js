@@ -48,8 +48,8 @@ export function filterEnquiries(
     const matchesStage = stage === 'All' || enq.stage === stage;
     const matchesSource =
       source === 'All' || (enq.source || '').toLowerCase() === source.toLowerCase();
-    const matchesDate =
-      !date || enq.createdAt === date || enq.enquiryDate === date || enq.trialDate === date;
+    const enqCreatedDate = (enq.createdAt || enq.enquiryDate || '').split('T')[0];
+    const matchesDate = !date || enqCreatedDate === date;
     const matchesSearch =
       !query ||
       enq.childName?.toLowerCase().includes(query) ||

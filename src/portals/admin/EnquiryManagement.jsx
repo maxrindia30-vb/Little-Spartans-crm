@@ -21,6 +21,7 @@ import {
   Sparkles,
   TrendingUp,
   GraduationCap,
+  X,
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -48,6 +49,22 @@ const WORKFLOW_STAGES = [
   'Trial Completed',
   'Enrolled',
 ];
+
+const formatDateLabel = (ymdStr) => {
+  if (!ymdStr) return '';
+  try {
+    const [y, m, d] = ymdStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    return dateObj.toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  } catch (err) {
+    return ymdStr;
+  }
+};
 
 export default function EnquiryManagement() {
   const {
@@ -300,6 +317,7 @@ export default function EnquiryManagement() {
       center: formState.center,
       preferredBatchId: pickedBatch?.id || '',
       preferredBatchName: pickedBatch?.name || '',
+      source: formState.source || ENQUIRY_SOURCES.MANUAL,
       enquiryDate: formState.enquiryDate || todayYmd,
       notes: formState.notes.trim() || 'Enquiry received via admissions desk.',
       stage: formState.stage || 'New',
@@ -312,7 +330,6 @@ export default function EnquiryManagement() {
         ...payload,
         trialDate: '-',
         assignedTo: 'Support Agent Priya',
-        source: 'Direct Phone / Walk-in',
       });
     }
 
@@ -469,21 +486,42 @@ export default function EnquiryManagement() {
               />
             </div>
 
-            {/* Date Filter */}
-            <div className="flex items-center gap-1.5">
+            {/* Date Filter & Quick Presets */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate(todayYmd);
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  selectedDate === todayYmd
+                    ? 'bg-[#F4510B] text-white shadow-xs'
+                    : 'bg-[#FFF4E8] text-[#172B50] hover:bg-white border border-[#172B5018]'
+                }`}
+                title="View Today's Enquiries"
+              >
+                Today
+              </button>
+
               <div className="relative">
                 <Calendar className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute left-3 top-2.5 pointer-events-none" />
                 <input
                   type="date"
-                  aria-label="Filter enquiries by created or enquiry date"
+                  aria-label="Filter enquiries by created date"
                   value={selectedDate}
                   onChange={(e) => {
                     setSelectedDate(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-8 pr-2.5 py-2 text-xs font-semibold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+                  className={`pl-8 pr-2.5 py-1.5 text-xs font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B] transition-all ${
+                    selectedDate
+                      ? 'bg-[#FFF5ED] border border-[#F4510B] text-[#172B50] font-bold'
+                      : 'bg-[#FFF4E8] text-[#172B50] border border-[#172B5020]'
+                  }`}
                 />
               </div>
+
               {selectedDate && (
                 <button
                   type="button"
@@ -491,9 +529,11 @@ export default function EnquiryManagement() {
                     setSelectedDate('');
                     setCurrentPage(1);
                   }}
-                  className="px-2.5 py-2 text-[11px] font-bold text-[#F4510B] bg-[#FFF4E8] border border-[#F4510B30] rounded-xl hover:bg-white transition-all cursor-pointer"
+                  className="px-2.5 py-1.5 text-xs font-bold text-[#F4510B] bg-[#FFF4E8] border border-[#F4510B30] rounded-xl hover:bg-white transition-all cursor-pointer flex items-center gap-1"
+                  title="Clear Date Filter (Show All Dates)"
                 >
-                  Clear Date
+                  <X className="w-3.5 h-3.5" />
+                  <span>Clear Filter</span>
                 </button>
               )}
             </div>
@@ -580,6 +620,51 @@ export default function EnquiryManagement() {
         </div>
       </div>
 
+      {/* Date Filter Active Banner */}
+      {selectedDate && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-[#FFF4E8] border border-[#F4510B40] rounded-2xl shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#F4510B] text-white flex items-center justify-center shrink-0">
+              <CalendarDays className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-extrabold text-[#F4510B] uppercase tracking-wider">
+                  Enquiries for Date:
+                </span>
+                <span className="text-sm font-extrabold text-[#172B50]">
+                  {formatDateLabel(selectedDate)}
+                </span>
+                {selectedDate === todayYmd && (
+                  <span className="px-2 py-0.5 text-[10px] font-extrabold bg-[#F4510B] text-white rounded-full">
+                    Today
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-[#172B50] opacity-70">
+                Displaying only enquiries created on {selectedDate}. Total received: <strong className="text-[#172B50] font-extrabold">{filteredEnquiries.length} enquiry{filteredEnquiries.length === 1 ? '' : 'ies'}</strong>.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            <span className="px-3 py-1 rounded-full text-xs font-black bg-white text-[#F4510B] border border-[#F4510B30] shadow-2xs">
+              {filteredEnquiries.length} {filteredEnquiries.length === 1 ? 'Enquiry' : 'Enquiries'} Found
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedDate('');
+                setCurrentPage(1);
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-[#172B50] bg-white hover:bg-[#FFF5ED] border border-[#172B5020] rounded-xl transition-all cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5 text-[#F4510B]" />
+              <span>Clear Filter</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Enquiries Table */}
       <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
         <div className="overflow-x-auto">
@@ -598,8 +683,49 @@ export default function EnquiryManagement() {
             <tbody className="divide-y divide-[#172B5010]">
               {paginatedEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-[#172B50] opacity-60">
-                    No enquiries match the selected location, stage, source, date, or search filter.
+                  <td colSpan="7" className="py-12 px-4 text-center">
+                    {selectedDate ? (
+                      <div className="max-w-md mx-auto space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center mx-auto border border-[#F4510B25]">
+                          <Calendar className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-sm font-black text-[#172B50]">
+                          No enquiries found for this date
+                        </h4>
+                        <p className="text-xs text-[#172B50] opacity-70 leading-relaxed">
+                          No student admission leads or enquiries were logged on{' '}
+                          <strong className="text-[#172B50]">{formatDateLabel(selectedDate) || selectedDate}</strong>.
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                          {selectedDate !== todayYmd && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedDate(todayYmd);
+                                setCurrentPage(1);
+                              }}
+                              className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#F4510B] hover:bg-[#D94103] rounded-xl transition-all cursor-pointer shadow-xs"
+                            >
+                              View Today's Enquiries
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedDate('');
+                              setCurrentPage(1);
+                            }}
+                            className="px-3.5 py-1.5 text-xs font-bold text-[#172B50] bg-[#FFF4E8] hover:bg-white border border-[#172B5020] rounded-xl transition-all cursor-pointer"
+                          >
+                            Clear Filter (View All)
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-[#172B50] opacity-60">
+                        No enquiries match the selected location, stage, source, or search filter.
+                      </span>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -793,15 +919,7 @@ export default function EnquiryManagement() {
         </div>
       </div>
 
-      {/* Backend API / Persistence Transparency Notice */}
-      <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-[11px] text-[#172B50]">
-        <Info className="w-4 h-4 text-[#F4510B] shrink-0 mt-0.5" />
-        <span>
-          Atomic Enquiry → Student → Parent enrollment currently executes in browser state (no live server API connected). Backend database persistence requires transactional endpoint{' '}
-          <code className="font-bold">POST /api/v1/enquiries/:id/enroll</code> enforcing unique{' '}
-          <code className="font-bold">enquiry_id</code> and parent deduplication constraints.
-        </span>
-      </div>
+
 
       {/* Add / Edit Enquiry Lead Modal */}
       <Modal
@@ -1084,7 +1202,7 @@ export default function EnquiryManagement() {
                     active:
                       detailEnquiry.stage === 'Demo Completed' || detailEnquiry.stage === 'Enrolled',
                   },
-                  { name: 'Student Conrolled', active: detailEnquiry.stage === 'Enrolled' },
+                  { name: 'Student Enrolled', active: detailEnquiry.stage === 'Enrolled' },
                 ].map((step, idx, arr) => (
                   <React.Fragment key={step.name}>
                     <span
