@@ -2,13 +2,13 @@ import React from 'react';
 import { CalendarDays, ArrowRight, Clock, MapPin, User, AlertCircle } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
-// Default authentic Little Spartans academy classes matching Chennai locations & faculty
+// Default authentic Little Spartans academy classes matching Chennai locations & curriculum
 const DEFAULT_TODAY_CLASSES = [
   {
     id: 'TC-1',
     time: '09:00 AM',
     program: 'Junior Football Champions',
-    coach: 'Coach Kapil',
+    coach: 'Assigned Coach',
     location: 'KK NAGAR',
     enrolled: 18,
     capacity: 20,
@@ -18,7 +18,7 @@ const DEFAULT_TODAY_CLASSES = [
     id: 'TC-2',
     time: '10:30 AM',
     program: 'Spartan Gymnastics & Agility',
-    coach: 'Coach Dibi',
+    coach: 'Assigned Coach',
     location: 'KILPAUK',
     enrolled: 18,
     capacity: 18,
@@ -28,7 +28,7 @@ const DEFAULT_TODAY_CLASSES = [
     id: 'TC-3',
     time: '02:00 PM',
     program: 'Basketball Rising Stars',
-    coach: 'Coach Hanif',
+    coach: 'Assigned Coach',
     location: 'MAHALINGAPURAM',
     enrolled: 11,
     capacity: 14,
@@ -81,9 +81,9 @@ export default function TodaysClassesSection({ className = '' }) {
       return c.name.toLowerCase().startsWith('coach') ? c.name : `Coach ${c.name}`;
     };
 
-    const coach1 = formatCoach(0, 'Coach Kapil');
-    const coach2 = formatCoach(1, 'Coach Dibi');
-    const coach3 = formatCoach(2, 'Coach Hanif');
+    const coach1 = formatCoach(0, 'Assigned Coach');
+    const coach2 = formatCoach(1, 'Assigned Coach');
+    const coach3 = formatCoach(2, 'Assigned Coach');
 
     const prog1 = data.programs?.[1]?.name || 'Junior Football Champions';
     const prog2 = data.programs?.[0]?.name || 'Spartan Gymnastics & Agility';

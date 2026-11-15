@@ -40,17 +40,24 @@ export function CrmProvider({ children }) {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Ensure canonical coaches (Kapil, Dibi, Hanif, Teja), canonical locations, and required arrays exist
+        // Purge dummy/legacy coach records so fresh academy accounts start at 0
         const legacyCoachNames = new Set([
           'coach vikram singh', 
           'sensei rajesh kumar', 
           'coach priya nair', 
-          'coach david miller'
+          'coach david miller',
+          'kapil',
+          'coach kapil',
+          'dibi',
+          'coach dibi',
+          'hanif',
+          'coach hanif',
+          'teja',
+          'coach teja'
         ]);
         const storedCoaches = (Array.isArray(parsed.coaches) ? parsed.coaches : [])
           .filter((c) => !legacyCoachNames.has((c.name || '').toLowerCase().trim()));
 
-        const existingCoachNames = new Set(storedCoaches.map((c) => (c.name || '').toLowerCase().trim()));
         const mergedCoaches = [
           ...initialAcademyData.coaches,
           ...storedCoaches.filter((c) => !new Set(initialAcademyData.coaches.map(ic => ic.name.toLowerCase().trim())).has((c.name || '').toLowerCase().trim())),

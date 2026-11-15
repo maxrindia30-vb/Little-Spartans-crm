@@ -98,7 +98,7 @@ export default function AttendanceCompensationModule() {
   const [missedSessionName, setMissedSessionName] = useState('Gymnastics Batch A');
   const [missedDate, setMissedDate] = useState('2026-11-20');
   const [coverageType, setCoverageType] = useState('Substitute Coach Assigned');
-  const [substituteCoachName, setSubstituteCoachName] = useState((data.coaches || [])[0]?.name || 'Kapil');
+  const [substituteCoachName, setSubstituteCoachName] = useState((data.coaches || [])[0]?.name || 'Unassigned Coach');
   const [compScheduledDate, setCompScheduledDate] = useState('2026-11-22 (9:00 AM)');
 
   const openScheduleModal = (req) => {

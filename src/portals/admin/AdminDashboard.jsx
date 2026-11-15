@@ -283,17 +283,17 @@ export default function AdminDashboard() {
           onClick={() => setCurrentView('people')}
           className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0">
             <div className="w-13 h-13 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
               <Users className="w-6 h-6 text-[#F4510B]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-80 block">
                 Certified Faculty
               </span>
               <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight"><AnimatedCounter value={totalCoaches} /> Coaches</p>
-              <span className="text-xs font-medium text-[#172B50] opacity-70 block mt-0.5">
-                {data.coaches.map(c => c.name).join(', ') || 'No coaches assigned'}
+              <span className="text-xs font-medium text-[#172B50] opacity-70 block mt-0.5 truncate">
+                {totalCoaches > 0 ? data.coaches.map(c => c.name).join(', ') : 'No coaches registered'}
               </span>
             </div>
           </div>
