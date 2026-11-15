@@ -69,61 +69,7 @@ function CapacityBadge({ enrolled, capacity, status }) {
 export default function TodaysClassesSection({ className = '' }) {
   const { data, setCurrentView } = useCrm();
 
-  // Dynamically resolve locations and faculty from active academy data (KK NAGAR, KILPAUK, MAHALINGAPURAM, etc.)
-  const dynamicFallbackClasses = React.useMemo(() => {
-    const loc1 = data.locations?.[0]?.name || data.academy?.centers?.[0] || 'KK NAGAR';
-    const loc2 = data.locations?.[1]?.name || data.academy?.centers?.[1] || 'KILPAUK';
-    const loc3 = data.locations?.[2]?.name || data.academy?.centers?.[2] || 'MAHALINGAPURAM';
-
-    const formatCoach = (idx, fallback) => {
-      const c = data.coaches?.[idx];
-      if (!c?.name) return fallback;
-      return c.name.toLowerCase().startsWith('coach') ? c.name : `Coach ${c.name}`;
-    };
-
-    const coach1 = formatCoach(0, 'Assigned Coach');
-    const coach2 = formatCoach(1, 'Assigned Coach');
-    const coach3 = formatCoach(2, 'Assigned Coach');
-
-    const prog1 = data.programs?.[1]?.name || 'Junior Football Champions';
-    const prog2 = data.programs?.[0]?.name || 'Spartan Gymnastics & Agility';
-    const prog3 = data.programs?.[3]?.name || 'Basketball Rising Stars';
-
-    return [
-      {
-        id: 'TC-1',
-        time: '09:00 AM',
-        program: prog1,
-        coach: coach1,
-        location: loc1,
-        enrolled: 18,
-        capacity: 20,
-        status: 'nearly_full'
-      },
-      {
-        id: 'TC-2',
-        time: '10:30 AM',
-        program: prog2,
-        coach: coach2,
-        location: loc2,
-        enrolled: 18,
-        capacity: 18,
-        status: 'full'
-      },
-      {
-        id: 'TC-3',
-        time: '02:00 PM',
-        program: prog3,
-        coach: coach3,
-        location: loc3,
-        enrolled: 11,
-        capacity: 14,
-        status: 'available'
-      }
-    ];
-  }, [data.locations, data.academy?.centers, data.coaches, data.programs]);
-
-  // If live class schedules are added by admin, map them, otherwise display the authentic academy rows
+  // Dynamically map live class schedules created by academy admin
   const classesList = (data.classSchedules && data.classSchedules.length > 0)
     ? data.classSchedules.slice(0, 5).map((s, idx) => {
         const enrolled = s.enrolledCount ?? (s.enrolledStudents ? s.enrolledStudents.length : 0);
@@ -136,14 +82,14 @@ export default function TodaysClassesSection({ className = '' }) {
           id: s.id || `LIVE-${idx}`,
           time: s.startTime || s.time || '09:00 AM',
           program: s.className || s.program || 'Junior Football Champions',
-          coach: s.coachName || s.coach || 'Coach Kapil',
+          coach: s.coachName || s.coach || 'Unassigned Coach',
           location: s.location || s.center || 'KK NAGAR',
           enrolled,
           capacity,
           status
         };
       })
-    : dynamicFallbackClasses;
+    : [];
 
   return (
     <div
@@ -175,66 +121,73 @@ export default function TodaysClassesSection({ className = '' }) {
         </button>
       </div>
 
-      {/* Classes Table */}
-      <div className="overflow-x-auto mt-1">
-        <table className="w-full text-left text-xs whitespace-nowrap">
-          <thead>
-            <tr className="border-b border-[#172B5012] text-[#172B50]/60 font-black uppercase tracking-wider text-[10.5px]">
-              <th className="py-2.5 px-3">Time</th>
-              <th className="py-2.5 px-3">Class / Program</th>
-              <th className="py-2.5 px-3">Assigned Coach</th>
-              <th className="py-2.5 px-3">Location</th>
-              <th className="py-2.5 px-3 text-right">Capacity</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#172B500C]">
-            {classesList.map((cls) => (
-              <tr
-                key={cls.id}
-                className="hover:bg-[#FFF4E8]/40 transition-colors group cursor-default"
-              >
-                {/* Time */}
-                <td className="py-2.5 px-3">
-                  <div className="flex items-center gap-2 font-black text-[#172B50]">
-                    <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                    <span className="tracking-tight">{cls.time}</span>
-                  </div>
-                </td>
-
-                {/* Class / Program */}
-                <td className="py-2.5 px-3 font-extrabold text-[#172B50] text-xs sm:text-[13px]">
-                  {cls.program}
-                </td>
-
-                {/* Assigned Coach */}
-                <td className="py-2.5 px-3">
-                  <div className="flex items-center gap-2 font-bold text-[#172B50]/85">
-                    <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
-                    <span>{cls.coach}</span>
-                  </div>
-                </td>
-
-                {/* Location */}
-                <td className="py-2.5 px-3">
-                  <div className="flex items-center gap-1.5 font-semibold text-[#172B50]/75">
-                    <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                    <span>{cls.location}</span>
-                  </div>
-                </td>
-
-                {/* Capacity */}
-                <td className="py-2.5 px-3 text-right">
-                  <CapacityBadge
-                    enrolled={cls.enrolled}
-                    capacity={cls.capacity}
-                    status={cls.status}
-                  />
-                </td>
+      {/* Classes Table or Clean Zero State */}
+      {classesList.length === 0 ? (
+        <div className="py-8 text-center flex flex-col items-center justify-center">
+          <p className="text-xs font-bold text-[#172B50]/60">No classes scheduled for today</p>
+          <p className="text-[11px] text-[#172B50]/40 mt-0.5">Classes created in Class Schedules will appear here live</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto mt-1">
+          <table className="w-full text-left text-xs whitespace-nowrap">
+            <thead>
+              <tr className="border-b border-[#172B5012] text-[#172B50]/60 font-black uppercase tracking-wider text-[10.5px]">
+                <th className="py-2.5 px-3">Time</th>
+                <th className="py-2.5 px-3">Class / Program</th>
+                <th className="py-2.5 px-3">Assigned Coach</th>
+                <th className="py-2.5 px-3">Location</th>
+                <th className="py-2.5 px-3 text-right">Capacity</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-[#172B500C]">
+              {classesList.map((cls) => (
+                <tr
+                  key={cls.id}
+                  className="hover:bg-[#FFF4E8]/40 transition-colors group cursor-default"
+                >
+                  {/* Time */}
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center gap-2 font-black text-[#172B50]">
+                      <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                      <span className="tracking-tight">{cls.time}</span>
+                    </div>
+                  </td>
+
+                  {/* Class / Program */}
+                  <td className="py-2.5 px-3 font-extrabold text-[#172B50] text-xs sm:text-[13px]">
+                    {cls.program}
+                  </td>
+
+                  {/* Assigned Coach */}
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center gap-2 font-bold text-[#172B50]/85">
+                      <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
+                      <span>{cls.coach}</span>
+                    </div>
+                  </td>
+
+                  {/* Location */}
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center gap-1.5 font-semibold text-[#172B50]/75">
+                      <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                      <span>{cls.location}</span>
+                    </div>
+                  </td>
+
+                  {/* Capacity */}
+                  <td className="py-2.5 px-3 text-right">
+                    <CapacityBadge
+                      enrolled={cls.enrolled}
+                      capacity={cls.capacity}
+                      status={cls.status}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

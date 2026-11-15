@@ -28,6 +28,7 @@ import {
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
+import { calculateDemoMetrics } from '../../services/demoService';
 
 export default function AdminDashboard() {
   const { data, setCurrentView, addStudent, addEnquiry, addPayment, addToast } = useCrm();
@@ -52,6 +53,20 @@ export default function AdminDashboard() {
   const [payStudent, setPayStudent] = useState(data.students?.[0]?.name || '');
   const [payAmount, setPayAmount] = useState('4500');
 
+  // Live dynamic CRM metrics (NO hardcoded fake numbers)
+  const demoMetrics = calculateDemoMetrics(data.enquiries || [], data.demos || [], data.students || []);
+  const totalEnquiries = demoMetrics.totalEnquiries || 0;
+  const websiteCount = demoMetrics.websiteEnquiries || 0;
+  const manualCount = demoMetrics.manualEnquiries || 0;
+  const websitePct = totalEnquiries > 0 ? Math.round((websiteCount / totalEnquiries) * 100) : 0;
+  const manualPct = totalEnquiries > 0 ? Math.round((manualCount / totalEnquiries) * 100) : 0;
+
+  // Live lists
+  const activeEnquiries = (data.enquiries || []).filter(e => e.stage === 'New' || e.stage === 'Follow-up' || e.stage === 'Interested');
+  const activeDemos = (data.demos || []).filter(d => d.status !== 'Cancelled');
+  const activeStudents = (data.students || []).slice(-3).reverse();
+  const liveClasses = data.classSchedules || [];
+
   const handleCreateStudent = (e) => {
     e.preventDefault();
     if (!newStudentName.trim() || !newStudentParent.trim()) return;
@@ -64,7 +79,7 @@ export default function AdminDashboard() {
       parentEmail: `${newStudentParent.toLowerCase().replace(/\s+/g, '.')}@example.com`,
       program: newStudentProgram || 'Junior Football Champions',
       center: data.academy?.centers?.[0] || 'KK NAGAR',
-      coachName: data.coaches?.[0]?.name || 'Coach Arjun Rao',
+      coachName: data.coaches?.[0]?.name || 'Unassigned Coach',
       rank: 'Little Spartan Recruit',
       medicalNote: 'Routine fitness check passed'
     });
@@ -209,7 +224,7 @@ export default function AdminDashboard() {
           {/* ---------------------------------------------------- */}
           {/* Card 1: Enquiry Intake (Lead Capture)                 */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#FFF9F5] rounded-[24px] p-4.5 sm:p-5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] flex flex-col justify-between">
+          <div className="relative bg-[#FFF9F5] rounded-[24px] p-4.5 sm:p-5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] flex flex-col justify-between min-h-[290px]">
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-4">
@@ -226,60 +241,52 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Rows */}
-              <div className="space-y-2.5">
-                {/* Row 1 */}
-                <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Rajesh Kumar</p>
-                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Football • KK Nagar</p>
+              {/* Dynamic Enquiries or Clean Zero State */}
+              {activeEnquiries.length === 0 ? (
+                <div className="py-7 text-center flex flex-col items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-2 shadow-2xs">
+                    <Inbox className="w-5 h-5 text-[#F4510B]" />
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Rajesh Kumar enquiry verified')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Verify"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('demos')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
-                      title="Schedule Trial"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <p className="text-xs font-black text-[#172B50]">No enquiries logged yet</p>
+                  <p className="text-[10.5px] font-medium text-[#172B50]/55 mt-0.5">Capture new leads to start pipeline</p>
+                  <button
+                    type="button"
+                    onClick={() => setModalType('enquiry')}
+                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    + Add Enquiry
+                  </button>
                 </div>
-
-                {/* Row 2 */}
-                <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Ananya R</p>
-                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Gymnastics • Kilpauk</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Ananya R enquiry verified')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Verify"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('demos')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
-                      title="Schedule Trial"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {activeEnquiries.slice(0, 3).map((enq) => (
+                    <div key={enq.id} className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-[#172B50] truncate">{enq.childName}</p>
+                        <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">{enq.interestedProgram || 'Sports'} • {enq.center || 'KK NAGAR'}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => addToast(`${enq.childName} enquiry verified`)}
+                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          title="Verify"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentView('demos')}
+                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
+                          title="Schedule Trial"
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Bottom Label */}
@@ -288,36 +295,38 @@ export default function AdminDashboard() {
             </p>
 
             {/* Desktop Connector 1 to Card 2: Cyan/Blue Bracket Curve */}
-            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                <path 
-                  d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 14,52 L 24,52" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-              </svg>
-            </div>
+            {activeEnquiries.length > 0 && (
+              <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                  <path 
+                    d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" 
+                    stroke="#0284C7" 
+                    strokeWidth="1.8" 
+                    fill="none" 
+                    strokeLinecap="round" 
+                  />
+                  <path 
+                    d="M 14,52 L 24,52" 
+                    stroke="#0284C7" 
+                    strokeWidth="1.8" 
+                    strokeLinecap="round" 
+                  />
+                  <path 
+                    d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" 
+                    stroke="#0284C7" 
+                    strokeWidth="1.8" 
+                    fill="none" 
+                    strokeLinecap="round" 
+                  />
+                </svg>
+              </div>
+            )}
           </div>
 
           {/* ---------------------------------------------------- */}
           {/* Card 2: Demo & Assessment (Demo Management)           */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#F4FAFF] rounded-[24px] p-4.5 sm:p-5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] flex flex-col justify-between">
+          <div className="relative bg-[#F4FAFF] rounded-[24px] p-4.5 sm:p-5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] flex flex-col justify-between min-h-[290px]">
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-4">
@@ -334,86 +343,52 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Rows */}
-              <div className="space-y-2.5">
-                {/* Row 1 */}
-                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Adithya S</p>
-                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Football Demo</p>
+              {/* Dynamic Demos or Clean Zero State */}
+              {activeDemos.length === 0 ? (
+                <div className="py-7 text-center flex flex-col items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-2 shadow-2xs">
+                    <Mail className="w-5 h-5 text-[#0284C7]" />
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Adithya S demo attendance confirmed')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Verify Demo"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('demos')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
-                      title="View Slot"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <p className="text-xs font-black text-[#172B50]">No demos scheduled</p>
+                  <p className="text-[10.5px] font-medium text-[#172B50]/55 mt-0.5">Trials will appear here once booked</p>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('demos')}
+                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#0284C7] bg-white border border-[#0284C730] hover:bg-[#0284C7] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    Demo Register
+                  </button>
                 </div>
-
-                {/* Row 2 */}
-                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Ishika M</p>
-                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Gymnastics Demo</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Ishika M demo attendance confirmed')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Verify Demo"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('demos')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
-                      title="View Slot"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {activeDemos.slice(0, 3).map((demo) => (
+                    <div key={demo.id} className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-[#172B50] truncate">{demo.childName}</p>
+                        <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">{demo.program || 'Trial'} Demo</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => addToast(`${demo.childName} demo verified`)}
+                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          title="Verify Demo"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentView('demos')}
+                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
+                          title="View Slot"
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Row 3 */}
-                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Vikram P</p>
-                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Basketball Demo</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Vikram P demo completed')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Verify Demo"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('demos')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
-                      title="View Slot"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Bottom Label */}
@@ -422,36 +397,38 @@ export default function AdminDashboard() {
             </p>
 
             {/* Desktop Connector 2 to Card 3: Orange Bracket Curve */}
-            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                <path 
-                  d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" 
-                  stroke="#F4510B" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 0,52 L 24,52" 
-                  stroke="#F4510B" 
-                  strokeWidth="1.8" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" 
-                  stroke="#F4510B" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-              </svg>
-            </div>
+            {activeDemos.length > 0 && (
+              <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                  <path 
+                    d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" 
+                    stroke="#F4510B" 
+                    strokeWidth="1.8" 
+                    fill="none" 
+                    strokeLinecap="round" 
+                  />
+                  <path 
+                    d="M 0,52 L 24,52" 
+                    stroke="#F4510B" 
+                    strokeWidth="1.8" 
+                    strokeLinecap="round" 
+                  />
+                  <path 
+                    d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" 
+                    stroke="#F4510B" 
+                    strokeWidth="1.8" 
+                    fill="none" 
+                    strokeLinecap="round" 
+                  />
+                </svg>
+              </div>
+            )}
           </div>
 
           {/* ---------------------------------------------------- */}
           {/* Card 3: Admission & Enrollment (Enrollment)          */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-[#F4FDF7] rounded-[24px] p-4.5 sm:p-5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] flex flex-col justify-between">
+          <div className="relative bg-[#F4FDF7] rounded-[24px] p-4.5 sm:p-5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] flex flex-col justify-between min-h-[290px]">
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-4">
@@ -468,92 +445,54 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Rows */}
-              <div className="space-y-2.5">
-                {/* Row 1 */}
-                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Adithya S</p>
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] mt-0.5">
-                      Enrolled
-                    </span>
+              {/* Dynamic Students or Clean Zero State */}
+              {activeStudents.length === 0 ? (
+                <div className="py-7 text-center flex flex-col items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-2 shadow-2xs">
+                    <GraduationCap className="w-5 h-5 text-[#16A34A]" />
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Adithya S enrollment active')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Enrolled"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addToast('Fee paid and invoice confirmed')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Fee Paid"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <p className="text-xs font-black text-[#172B50]">No enrolled students yet</p>
+                  <p className="text-[10.5px] font-medium text-[#172B50]/55 mt-0.5">Enrolled recruits will appear here</p>
+                  <button
+                    type="button"
+                    onClick={() => setModalType('student')}
+                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#16A34A] bg-white border border-[#16A34A30] hover:bg-[#16A34A] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    + Enroll Student
+                  </button>
                 </div>
-
-                {/* Row 2 */}
-                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Ishika M</p>
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] mt-0.5">
-                      Enrolled
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Ishika M enrollment active')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Enrolled"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addToast('Fee paid and invoice confirmed')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Fee Paid"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {activeStudents.map((stu) => (
+                    <div key={stu.id} className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-[#172B50] truncate">{stu.name}</p>
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] mt-0.5">
+                          Enrolled
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => addToast(`${stu.name} roster active`)}
+                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          title="Enrolled"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentView('people')}
+                          className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                          title="View Profile"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Row 3 */}
-                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">Vikram P</p>
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF0E6] text-[#F4510B] border border-[#FED7AA] mt-0.5">
-                      Admission
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => addToast('Vikram P admission verified')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Admission Document Checked"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addToast('Vikram P enrolled into batch')}
-                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                      title="Batch Assigned"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Bottom Label */}
@@ -561,26 +500,28 @@ export default function AdminDashboard() {
               Enrollment
             </p>
 
-            {/* Desktop Connector 3 to Card 4: S-curve line from Vikram P directly to Class Schedule tile */}
-            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                <path 
-                  d="M 0,82 C 10,82 12,30 24,30" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-                <circle cx="2" cy="82" r="2" fill="#0284C7" />
-                <circle cx="22" cy="30" r="2" fill="#0284C7" />
-              </svg>
-            </div>
+            {/* Desktop Connector 3 to Card 4: S-curve line directly to Class Schedule tile */}
+            {activeStudents.length > 0 && (
+              <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                  <path 
+                    d="M 0,82 C 10,82 12,30 24,30" 
+                    stroke="#0284C7" 
+                    strokeWidth="1.8" 
+                    fill="none" 
+                    strokeLinecap="round" 
+                  />
+                  <circle cx="2" cy="82" r="2" fill="#0284C7" />
+                  <circle cx="22" cy="30" r="2" fill="#0284C7" />
+                </svg>
+              </div>
+            )}
           </div>
 
           {/* ---------------------------------------------------- */}
           {/* Card 4: Student Engagement (After Enrollment)        */}
           {/* ---------------------------------------------------- */}
-          <div className="relative bg-white rounded-[24px] p-4.5 sm:p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+          <div className="relative bg-white rounded-[24px] p-4.5 sm:p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between min-h-[290px]">
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-4">
@@ -678,114 +619,90 @@ export default function AdminDashboard() {
               </h2>
             </div>
 
-            {/* Classes Table */}
-            <div className="overflow-x-auto mt-1">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead>
-                  <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
-                    <th className="py-2.5 px-3">TIME</th>
-                    <th className="py-2.5 px-3">CLASS / PROGRAM</th>
-                    <th className="py-2.5 px-3">COACH</th>
-                    <th className="py-2.5 px-3">LOCATION</th>
-                    <th className="py-2.5 px-3 text-right">CAPACITY</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#172B500C]">
-                  {/* Class 1 */}
-                  <tr className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2 font-black text-[#172B50]">
-                        <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                        <span>09:00 AM</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 font-extrabold text-[#172B50]">
-                      Junior Football Champions
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
-                        <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
-                        <span>Arjun Rao</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
-                        <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                        <span>KK NAGAR</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        <span>18/20</span>
-                      </span>
-                    </td>
-                  </tr>
+            {/* Live Classes Table or Clean Zero State */}
+            {liveClasses.length === 0 ? (
+              <div className="py-10 text-center flex flex-col items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-2">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-black text-[#172B50]">No classes scheduled for today</p>
+                <p className="text-[11px] text-[#172B50]/60 mt-0.5">Scheduled training sessions will appear here live</p>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('schedules')}
+                  className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-[#FFF5ED] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all cursor-pointer"
+                >
+                  <span>Open Class Schedules</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto mt-1">
+                <table className="w-full text-left text-xs whitespace-nowrap">
+                  <thead>
+                    <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
+                      <th className="py-2.5 px-3">TIME</th>
+                      <th className="py-2.5 px-3">CLASS / PROGRAM</th>
+                      <th className="py-2.5 px-3">COACH</th>
+                      <th className="py-2.5 px-3">LOCATION</th>
+                      <th className="py-2.5 px-3 text-right">CAPACITY</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#172B500C]">
+                    {liveClasses.slice(0, 5).map((cls) => {
+                      const enrolled = cls.enrolledCount ?? (cls.enrolledStudents ? cls.enrolledStudents.length : 0);
+                      const capacity = cls.capacity || 20;
+                      const isFull = enrolled >= capacity;
+                      const isNearlyFull = !isFull && (enrolled / capacity >= 0.8);
 
-                  {/* Class 2 */}
-                  <tr className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2 font-black text-[#172B50]">
-                        <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                        <span>10:30 AM</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 font-extrabold text-[#172B50]">
-                      Spartan Gymnastics &amp; Agility
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
-                        <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
-                        <span>Priya Nair</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
-                        <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                        <span>KILPAUK</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#F4510B] text-white shadow-2xs">
-                        <Check className="w-3 h-3 text-white" />
-                        <span>Full 18/18</span>
-                      </span>
-                    </td>
-                  </tr>
-
-                  {/* Class 3 */}
-                  <tr className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2 font-black text-[#172B50]">
-                        <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                        <span>02:00 PM</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 font-extrabold text-[#172B50]">
-                      Basketball Rising Stars
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
-                        <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
-                        <span>Daniel Fernandes</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
-                        <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                        <span>MAHALINGAPURAM</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <span>11/14</span>
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                      return (
+                        <tr key={cls.id} className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2 font-black text-[#172B50]">
+                              <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                              <span>{cls.startTime || cls.time || '09:00 AM'}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 font-extrabold text-[#172B50]">
+                            {cls.className || cls.program || 'Sports Session'}
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
+                              <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
+                              <span>{cls.coachName || cls.coach || 'Assigned Coach'}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
+                              <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                              <span>{cls.location || cls.center || 'KK NAGAR'}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            {isFull ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#F4510B] text-white shadow-2xs">
+                                <Check className="w-3 h-3 text-white" />
+                                <span>Full {enrolled}/{capacity}</span>
+                              </span>
+                            ) : isNearlyFull ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                <span>{enrolled}/{capacity}</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>{enrolled}/{capacity}</span>
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
@@ -812,33 +729,49 @@ export default function AdminDashboard() {
               {/* SVG Donut */}
               <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
                 <svg className="w-36 h-36" viewBox="0 0 160 160">
-                  {/* Website Segment: 52% = ~163.3 out of 314.16 */}
+                  {/* Background track circle */}
                   <circle
                     cx="80"
                     cy="80"
                     r="50"
                     fill="transparent"
-                    stroke="#F4510B"
+                    stroke="#172B50"
                     strokeWidth="20"
-                    strokeDasharray="163.36 314.16"
-                    strokeDashoffset="0"
-                    transform="rotate(-90 80 80)"
+                    opacity={totalEnquiries > 0 ? "0.08" : "0.12"}
                   />
-                  {/* Manual / Walk-in Segment: 48% = ~150.8 out of 314.16 */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="50"
-                    fill="transparent"
-                    stroke="#0284C7"
-                    strokeWidth="20"
-                    strokeDasharray="150.8 314.16"
-                    strokeDashoffset="-163.36"
-                    transform="rotate(-90 80 80)"
-                  />
-                  {/* Inner text matching reference */}
+
+                  {totalEnquiries > 0 && (
+                    <>
+                      {/* Website Segment */}
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="50"
+                        fill="transparent"
+                        stroke="#F4510B"
+                        strokeWidth="20"
+                        strokeDasharray={`${(websiteCount / totalEnquiries) * 314.16} 314.16`}
+                        strokeDashoffset="0"
+                        transform="rotate(-90 80 80)"
+                      />
+                      {/* Manual / Walk-in Segment */}
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="50"
+                        fill="transparent"
+                        stroke="#0284C7"
+                        strokeWidth="20"
+                        strokeDasharray={`${(manualCount / totalEnquiries) * 314.16} 314.16`}
+                        strokeDashoffset={`-${(websiteCount / totalEnquiries) * 314.16}`}
+                        transform="rotate(-90 80 80)"
+                      />
+                    </>
+                  )}
+
+                  {/* Inner text matching live metrics */}
                   <text x="80" y="74" textAnchor="middle" className="text-3xl font-black fill-[#172B50] font-sans">
-                    118
+                    {totalEnquiries}
                   </text>
                   <text x="80" y="90" textAnchor="middle" className="text-[10px] font-bold fill-[#172B50] opacity-65 font-sans tracking-wider uppercase">
                     Total
@@ -849,14 +782,14 @@ export default function AdminDashboard() {
                 </svg>
               </div>
 
-              {/* Legend matching reference numbers */}
+              {/* Dynamic Legend */}
               <div className="space-y-3 text-xs w-full max-w-[150px]">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#F4510B] shrink-0" />
                     <span className="font-extrabold text-[#172B50]">Website</span>
                   </div>
-                  <span className="font-black text-[#172B50]">52% (61)</span>
+                  <span className="font-black text-[#172B50]">{websitePct}% ({websiteCount})</span>
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
@@ -864,7 +797,7 @@ export default function AdminDashboard() {
                     <span className="w-2.5 h-2.5 rounded-full bg-[#0284C7] shrink-0" />
                     <span className="font-extrabold text-[#172B50]">Manual / Walk-in</span>
                   </div>
-                  <span className="font-black text-[#172B50]">48% (57)</span>
+                  <span className="font-black text-[#172B50]">{manualPct}% ({manualCount})</span>
                 </div>
               </div>
             </div>
@@ -887,9 +820,9 @@ export default function AdminDashboard() {
           </h2>
         </div>
 
-        {/* 4 Metric Cards */}
+        {/* 4 Metric Cards Bound to Real Live CRM Data */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {/* Card 1: Total Demos (36) */}
+          {/* Card 1: Total Demos */}
           <div 
             onClick={() => setCurrentView('demos')}
             className="bg-gradient-to-br from-[#F0F7FF] via-[#F8FBFF] to-white rounded-2xl p-4 sm:p-5 border border-[#BAE6FD]/60 flex items-center gap-4 shadow-2xs hover:border-[#0284C7] transition-all cursor-pointer"
@@ -899,7 +832,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                36
+                {demoMetrics.totalDemos || 0}
               </p>
               <p className="text-xs font-bold text-[#172B50]/70 mt-1">
                 Total Demos
@@ -907,7 +840,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Card 2: Upcoming (12) */}
+          {/* Card 2: Upcoming */}
           <div 
             onClick={() => setCurrentView('demos')}
             className="bg-gradient-to-br from-[#FAF5FF] via-[#FCF9FF] to-white rounded-2xl p-4 sm:p-5 border border-[#E9D5FF]/60 flex items-center gap-4 shadow-2xs hover:border-[#9333EA] transition-all cursor-pointer"
@@ -917,7 +850,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                12
+                {demoMetrics.upcomingDemos || 0}
               </p>
               <p className="text-xs font-bold text-[#172B50]/70 mt-1">
                 Upcoming
@@ -925,7 +858,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Card 3: Completed (24) */}
+          {/* Card 3: Completed */}
           <div 
             onClick={() => setCurrentView('demos')}
             className="bg-gradient-to-br from-[#F0FDF4] via-[#F8FDF9] to-white rounded-2xl p-4 sm:p-5 border border-[#BBF7D0]/60 flex items-center gap-4 shadow-2xs hover:border-[#16A34A] transition-all cursor-pointer"
@@ -935,7 +868,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                24
+                {demoMetrics.completedDemos || 0}
               </p>
               <p className="text-xs font-bold text-[#172B50]/70 mt-1">
                 Completed
@@ -943,7 +876,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Card 4: Conversions (96) */}
+          {/* Card 4: Conversions */}
           <div 
             onClick={() => setCurrentView('demos')}
             className="bg-gradient-to-br from-[#FFF5ED] via-[#FFF9F5] to-white rounded-2xl p-4 sm:p-5 border border-[#FED7AA]/60 flex items-center gap-4 shadow-2xs hover:border-[#F4510B] transition-all cursor-pointer"
@@ -953,7 +886,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                96
+                {demoMetrics.studentConversions || 0}
               </p>
               <p className="text-xs font-bold text-[#172B50]/70 mt-1">
                 Conversions
