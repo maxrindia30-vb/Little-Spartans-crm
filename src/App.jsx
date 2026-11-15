@@ -17,6 +17,7 @@ import FeesPaymentsModule from './portals/admin/FeesPaymentsModule';
 import SportsEventsModule from './portals/admin/SportsEventsModule';
 import CommunicationModule from './portals/admin/CommunicationModule';
 import ReportsSettingsModule from './portals/admin/ReportsSettingsModule';
+import AccessManagementModule from './portals/admin/AccessManagementModule';
 
 // Other Portals
 import ParentPortalView from './portals/parent/ParentPortalView';
@@ -95,7 +96,12 @@ export default function App() {
       case 'announcements':
         return <CommunicationModule />;
 
-      // 9. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
+      // 9. Access Management (User Governance, Location Access, Roles & Permissions, Activity History)
+      case 'access_management':
+      case 'access':
+        return <AccessManagementModule />;
+
+      // 10. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
       case 'reports_settings':
       case 'reports':
       case 'settings':
@@ -104,7 +110,7 @@ export default function App() {
       case 'permissions':
         return <ReportsSettingsModule />;
 
-      // 10. Sports Equipment Management (Academy-Wide Inventory & Sanctions)
+      // 11. Sports Equipment Management (Academy-Wide Inventory & Sanctions)
       case 'equipment':
         return <EquipmentManagementModule role="admin" />;
 

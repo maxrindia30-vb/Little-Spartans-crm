@@ -154,7 +154,19 @@ const submenuConfig = {
     ]
   },
 
-  // 9. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
+  // 9. Access Management (User Governance, Location Access, Roles & Permissions, Activity History)
+  access_management: {
+    title: 'Access Management',
+    items: [
+      { parentId: 'access_management', subTab: 'overview', label: 'Access Overview', desc: 'KPI summaries & active account directory', icon: ShieldCheck },
+      { parentId: 'access_management', subTab: 'users', label: 'User Accounts', desc: 'Manage Admin, Coach & Parent accounts', icon: Users },
+      { parentId: 'access_management', subTab: 'locations', label: 'Location Access', desc: 'Multi-center clearances & linked entities', icon: MapPin },
+      { parentId: 'access_management', subTab: 'permissions', label: 'Roles & Permissions', desc: '13-module RBAC clearance matrix', icon: CheckSquare },
+      { parentId: 'access_management', subTab: 'activity', label: 'Activity History', desc: 'Audit log of logins, role updates & actions', icon: History },
+    ]
+  },
+
+  // 10. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
   reports_settings: {
     title: 'Reports & Settings',
     items: [
@@ -235,6 +247,7 @@ export default function Sidebar() {
     { id: 'fees_payments', label: 'Fees & Payments', icon: CreditCard },
     { id: 'sports_events', label: 'Sports & Events', icon: Trophy },
     { id: 'communication', label: 'Communication', icon: MessageSquare },
+    { id: 'access_management', label: 'Access Management', icon: ShieldCheck },
     { id: 'reports_settings', label: 'Reports & Settings', icon: BarChart2 },
   ];
 
