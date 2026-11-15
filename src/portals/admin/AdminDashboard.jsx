@@ -4,45 +4,40 @@ import {
   GraduationCap, 
   UserCheck, 
   User,
-  PhoneCall, 
-  CreditCard, 
-  AlertCircle, 
-  Trophy, 
-  Calendar, 
   Plus, 
   Download, 
   ArrowRight,
-  Sparkles,
-  ShieldAlert,
+  Check,
   CheckCircle2,
   Clock,
+  Calendar,
   CalendarDays,
   Globe,
   TrendingUp,
-  Coins,
-  ChevronDown
+  Search,
+  Bell,
+  Upload,
+  Star,
+  BarChart2,
+  MapPin,
+  Inbox,
+  Mail,
+  Trophy,
+  Share2
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
-import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
-import FloatingCard from '../../components/common/FloatingCard';
-import TodaysClassesSection from '../../components/common/TodaysClassesSection';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
-import { calculateDemoMetrics } from '../../services/demoService';
 
-const InstagramIcon = ({ className = 'w-5 h-5' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-  </svg>
-);
-
-const WhatsAppIcon = ({ className = 'w-5 h-5' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-  </svg>
-);
+// Real coach avatar portraits matching reference image
+const COACH_AVATARS = [
+  { name: 'Arjun Rao', src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80', fallback: 'AR' },
+  { name: 'Priya Nair', src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80', fallback: 'PN' },
+  { name: 'Daniel Fernandes', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80', fallback: 'DF' },
+  { name: 'Sneha Patel', src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80', fallback: 'SP' },
+  { name: 'Vikram Singh', src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80', fallback: 'VS' },
+  { name: 'Rajesh Sharma', src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80', fallback: 'RS' },
+];
 
 export default function AdminDashboard() {
   const { data, setCurrentView, addStudent, addEnquiry, addPayment, addToast } = useCrm();
@@ -53,7 +48,7 @@ export default function AdminDashboard() {
   // Quick form states
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentAge, setNewStudentAge] = useState('7');
-  const [newStudentProgram, setNewStudentProgram] = useState(data.programs[0]?.name || '');
+  const [newStudentProgram, setNewStudentProgram] = useState(data.programs?.[0]?.name || '');
   const [newStudentParent, setNewStudentParent] = useState('');
   const [newStudentPhone, setNewStudentPhone] = useState('');
 
@@ -62,25 +57,10 @@ export default function AdminDashboard() {
   const [enqPhone, setEnqPhone] = useState('');
   const [enqEmail, setEnqEmail] = useState('');
   const [enqLocation, setEnqLocation] = useState(commonLocations[0]?.name || 'KK NAGAR');
-  const [enqProgram, setEnqProgram] = useState(data.programs[0]?.name || '');
+  const [enqProgram, setEnqProgram] = useState(data.programs?.[0]?.name || '');
 
-  const [payStudent, setPayStudent] = useState(data.students[0]?.name || '');
+  const [payStudent, setPayStudent] = useState(data.students?.[0]?.name || '');
   const [payAmount, setPayAmount] = useState('4500');
-
-  // KPI Computations
-  const totalStudents = data.students.length;
-  const totalParents = data.parents.length;
-  const totalCoaches = data.coaches.length;
-  const newEnquiries = data.enquiries.filter(e => e.stage === 'New' || e.stage === 'Trial Scheduled').length;
-  const paidRevenue = data.payments
-    .filter(p => p.status === 'Paid')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const pendingPayments = data.payments.filter(p => p.status === 'Pending').length;
-  const pendingAmount = data.payments
-    .filter(p => p.status === 'Pending')
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  const demoMetrics = calculateDemoMetrics(data.enquiries || [], data.demos || [], data.students || []);
 
   const handleCreateStudent = (e) => {
     e.preventDefault();
@@ -92,9 +72,9 @@ export default function AdminDashboard() {
       parentName: newStudentParent,
       parentPhone: newStudentPhone || '+91 98000 00000',
       parentEmail: `${newStudentParent.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-      program: newStudentProgram,
-      center: data.academy.centers[0] || 'KK NAGAR',
-      coachName: data.coaches[0]?.name || 'Unassigned Coach',
+      program: newStudentProgram || 'Junior Football Champions',
+      center: data.academy?.centers?.[0] || 'KK NAGAR',
+      coachName: data.coaches?.[0]?.name || 'Coach Arjun Rao',
       rank: 'Little Spartan Recruit',
       medicalNote: 'Routine fitness check passed'
     });
@@ -113,7 +93,7 @@ export default function AdminDashboard() {
       parentName: enqParent,
       phone: enqPhone || '+91 98765 00000',
       email: enqEmail.trim() || `${enqParent.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-      interestedProgram: enqProgram,
+      interestedProgram: enqProgram || 'Junior Football Champions',
       center: enqLocation || commonLocations[0]?.name || 'KK NAGAR',
       notes: 'Parent submitted quick walk-in lead at academy reception desk.',
       stage: 'New'
@@ -145,771 +125,898 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-6 sm:space-y-7 animate-slide-up pb-8">
       
-      {/* Top Header & Quick Action Buttons matching reference image */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
-            Dashboard
-          </h1>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] shadow-xs select-none">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#16A34A]"></span>
-            </span>
-            <span className="tracking-wider">LIVE SYNC</span>
-          </div>
-        </div>
-
-        {/* Quick Action CTAs */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={() => setModalType('student')}
-            className="flex items-center gap-1.5 px-4 sm:px-5 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-2xl shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-white" />
-            <span>Enroll Student</span>
-          </button>
-
-          <button
-            onClick={() => setModalType('enquiry')}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-white text-[#172B50] border border-[#172B5020] rounded-2xl hover:bg-[#FFF4E8] hover:border-[#F4510B55] active:scale-95 transition-all cursor-pointer shadow-xs"
-          >
-            <PhoneCall className="w-4 h-4 text-[#F4510B]" />
-            <span>Add Enquiry</span>
-          </button>
-
-          <button
-            onClick={() => setModalType('payment')}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-white text-[#172B50] border border-[#172B5020] rounded-2xl hover:bg-[#FFF4E8] hover:border-[#F4510B55] active:scale-95 transition-all cursor-pointer shadow-xs"
-          >
-            <CreditCard className="w-4 h-4 text-[#172B50]" />
-            <span>Record Fee</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 4 Hero KPI Cards matching reference user design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        <KpiCard
-          title="Total Enquiries"
-          value={demoMetrics.totalEnquiries || 0}
-          icon={Users}
-          color="orange"
-          onClick={() => setCurrentView('enquiries')}
-        />
-
-        <KpiCard
-          title="Demo Scheduled"
-          value={String(demoMetrics.upcomingDemos || 0).padStart(2, '0')}
-          icon={Calendar}
-          color="blue"
-          onClick={() => setCurrentView('demos')}
-        />
-
-        <KpiCard
-          title="Enrolled Students"
-          value={totalStudents || 0}
-          icon={GraduationCap}
-          color="green"
-          onClick={() => setCurrentView('people')}
-        />
-
-        <KpiCard
-          title="Conversion Rate"
-          value={`${demoMetrics.conversionRate || 0}%`}
-          icon={TrendingUp}
-          color="purple"
-          onClick={() => setCurrentView('demos')}
-        />
-      </div>
-
-      {/* Today's Classes Section matching reference UI/UX design */}
-      <TodaysClassesSection />
-
-      {/* Enquiry Sources – 3 Equal Cards (Total Enquiries | Website | Manual / Walk-in) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-        {/* Total Enquiries */}
-        <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-white border border-[#172B5012] rounded-[22px] p-4.5 sm:p-5 flex items-center gap-4 shadow-[0_4px_25px_rgba(23,43,80,0.03)] hover:border-[#F4510B40] transition-all cursor-pointer min-h-[92px]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-            <Users className="w-6 h-6 text-[#F4510B]" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#172B50] opacity-75 block">
-              Total Enquiries
-            </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">
-              <AnimatedCounter value={demoMetrics.totalEnquiries || 0} />
-            </p>
-            <span className="text-xs font-semibold text-[#172B50]/60 block mt-0.5 truncate">
-              All lead channels
-            </span>
-          </div>
-        </FloatingCard>
-
-        {/* Website Enquiries */}
-        <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-white border border-[#172B5012] rounded-[22px] p-4.5 sm:p-5 flex items-center gap-4 shadow-[0_4px_25px_rgba(23,43,80,0.03)] hover:border-[#0284C740] transition-all cursor-pointer min-h-[92px]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#F0F7FF] text-[#0284C7] flex items-center justify-center shrink-0">
-            <Globe className="w-6 h-6 text-[#0284C7]" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-800 block">
-              Website Enquiries
-            </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">
-              <AnimatedCounter value={demoMetrics.websiteEnquiries || 0} />
-            </p>
-            <span className="text-xs font-semibold text-blue-700/70 block mt-0.5 truncate">
-              Online Web Ingestion
-            </span>
-          </div>
-        </FloatingCard>
-
-        {/* Manual / Walk-in */}
-        <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-white border border-[#172B5012] rounded-[22px] p-4.5 sm:p-5 flex items-center gap-4 shadow-[0_4px_25px_rgba(23,43,80,0.03)] hover:border-[#F4510B40] transition-all cursor-pointer min-h-[92px]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-            <UserCheck className="w-6 h-6 text-[#F4510B]" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900 block">
-              Manual / Walk-in
-            </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">
-              <AnimatedCounter value={demoMetrics.manualEnquiries || 0} />
-            </p>
-            <span className="text-xs font-semibold text-amber-800/70 block mt-0.5 truncate">
-              Reception Desk
-            </span>
-          </div>
-        </FloatingCard>
-      </div>
-
-      {/* Demo Performance – 4 Equal Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {/* Total Demos */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-white border border-[#172B5012] rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-[0_4px_25px_rgba(23,43,80,0.03)] hover:border-[#0284C740] transition-all cursor-pointer"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#F0F7FF] text-[#0284C7] flex items-center justify-center shrink-0">
-            <Calendar className="w-5 h-5 text-[#0284C7]" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-blue-800 block">
-              Total Demos
-            </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">
-              <AnimatedCounter value={demoMetrics.totalDemos || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-blue-700/70 block truncate">
-              Trials Scheduled
-            </span>
-          </div>
-        </FloatingCard>
-
-        {/* Upcoming Demos */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-white border border-[#172B5012] rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-[0_4px_25px_rgba(23,43,80,0.03)] hover:border-[#9333EA40] transition-all cursor-pointer"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#FAF5FF] text-[#9333EA] flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5 text-[#9333EA]" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-purple-800 block">
-              Upcoming Demos
-            </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">
-              <AnimatedCounter value={demoMetrics.upcomingDemos || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-purple-700/70 block truncate">
-              Scheduled This Week
-            </span>
-          </div>
-        </FloatingCard>
-
-        {/* Completed Demos */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-white border border-[#172B5012] rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-[0_4px_25px_rgba(23,43,80,0.03)] hover:border-[#16A34A40] transition-all cursor-pointer"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#F0FDF4] text-[#16A34A] flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-emerald-800 block">
-              Completed Demos
-            </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">
-              <AnimatedCounter value={demoMetrics.completedDemos || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-emerald-700/70 block truncate">
-              Evaluated On-court
-            </span>
-          </div>
-        </FloatingCard>
-
-        {/* Student Conversions */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-white border border-[#172B5012] rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-[0_4px_25px_rgba(23,43,80,0.03)] hover:border-[#F4510B40] transition-all cursor-pointer"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-[#F4510B]" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#F4510B] block">
-              Student Conversions
-            </span>
-            <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">
-              <AnimatedCounter value={demoMetrics.convertedDemos || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#F4510B]/80 block truncate">
-              {demoMetrics.conversionRate || 0}% Conversion Rate
-            </span>
-          </div>
-        </FloatingCard>
-      </div>
-
-      {/* Row 3: Two Big Analytics Panels (Donut + Funnel on left, Enquiries Trend on right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Left Panel: Enquiry Sources & Demo Conversion Performance (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+      {/* ============================================================ */}
+      {/* 1. TOP HEADER: Good Morning, Admin!, Coaches & Action Icons   */}
+      {/* ============================================================ */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Left: Heading, Subtitle & Coach Avatars */}
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
           <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <span className="w-1.5 h-5 rounded-full bg-[#F4510B]" />
-              <h3 className="text-base font-extrabold text-[#172B50] tracking-tight">
-                Enquiry Sources &amp; Demo Conversion Performance
-              </h3>
-            </div>
-            <p className="text-xs text-[#172B50] opacity-65 ml-4">
-              Live funnel from multichannel leads to demo bookings and verified student admissions
+            <h1 className="text-2xl sm:text-[28px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
+              <span>Good Morning, Admin!</span>
+              <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default">👋</span>
+            </h1>
+            <p className="text-xs sm:text-[13px] font-semibold text-[#172B50]/60 mt-0.5 tracking-tight">
+              Dashboard
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mt-5 pt-2">
-            {/* Donut Chart & Legend */}
-            <div className="md:col-span-6 flex items-center gap-4">
+          {/* Coach Profile Avatars + Add Button */}
+          <div className="flex items-center -space-x-1 sm:-space-x-1.5 pl-2">
+            {COACH_AVATARS.map((coach, idx) => (
+              <div 
+                key={idx}
+                className="relative group cursor-pointer"
+                title={`Coach ${coach.name}`}
+                onClick={() => setCurrentView('people')}
+              >
+                <img
+                  src={coach.src}
+                  alt={coach.name}
+                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white object-cover shadow-2xs group-hover:scale-105 group-hover:z-10 transition-transform"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextSibling) {
+                      e.currentTarget.nextSibling.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div 
+                  style={{ display: 'none' }}
+                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white bg-[#172B50] text-white font-bold text-[10px] items-center justify-center shadow-2xs"
+                >
+                  {coach.fallback}
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => setCurrentView('people')}
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-[#172B5020] bg-white text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B55] flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer transition-all active:scale-95 ml-2.5 shrink-0"
+              title="Add New Coach"
+            >
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#172B50]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Right: Quick Action Round Buttons (Search, Bell, Profile, Plus, Export, Calendar) */}
+        <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2.5 self-start sm:self-auto shrink-0">
+          {/* Top Row: Search, Bell with Orange Dot, Admin Profile */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => addToast('Search active roster and records')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+              title="Search"
+            >
+              <Search className="w-4 h-4 text-[#172B50]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => addToast('No unread notifications')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4 text-[#172B50]" />
+              <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
+            </button>
+
+            <div 
+              onClick={() => setCurrentView('people')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer" 
+              title="Admin Profile"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"
+                alt="Admin"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Bottom Row: Plus, Share/Export, Calendar */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setModalType('student')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+              title="Enroll Student"
+            >
+              <Plus className="w-4 h-4 text-[#172B50]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCurrentView('export')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+              title="Export Academy Data"
+            >
+              <Upload className="w-4 h-4 text-[#172B50]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCurrentView('schedules')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+              title="Class Schedules"
+            >
+              <Calendar className="w-4 h-4 text-[#172B50]" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 2. FOUR PIPELINE SECTIONS WITH SVG FORK / BRACKET CONNECTORS  */}
+      {/* ============================================================ */}
+      <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+          
+          {/* ---------------------------------------------------- */}
+          {/* Card 1: Enquiry Intake (Lead Capture)                 */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative bg-[#FFF9F5] rounded-[24px] p-4.5 sm:p-5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] flex flex-col justify-between">
+            <div>
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                  <Inbox className="w-4.5 h-4.5 text-[#F4510B]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                    Enquiry Intake
+                  </h3>
+                  <p className="text-[11px] font-medium text-[#172B50]/60">
+                    Capture and qualify new leads
+                  </p>
+                </div>
+              </div>
+
+              {/* Rows */}
+              <div className="space-y-2.5">
+                {/* Row 1 */}
+                <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Rajesh Kumar</p>
+                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Football • KK Nagar</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Rajesh Kumar enquiry verified')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Verify"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('demos')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
+                      title="Schedule Trial"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Ananya R</p>
+                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Gymnastics • Kilpauk</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Ananya R enquiry verified')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Verify"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('demos')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
+                      title="Schedule Trial"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Label */}
+            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
+              Lead Capture
+            </p>
+
+            {/* Desktop Connector 1 to Card 2: Cyan/Blue Bracket Curve */}
+            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                <path 
+                  d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 14,52 L 24,52" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* Card 2: Demo & Assessment (Demo Management)           */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative bg-[#F4FAFF] rounded-[24px] p-4.5 sm:p-5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] flex flex-col justify-between">
+            <div>
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
+                  <Mail className="w-4.5 h-4.5 text-[#0284C7]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                    Demo &amp; Assessment
+                  </h3>
+                  <p className="text-[11px] font-medium text-[#172B50]/60">
+                    Schedule and track demo sessions
+                  </p>
+                </div>
+              </div>
+
+              {/* Rows */}
+              <div className="space-y-2.5">
+                {/* Row 1 */}
+                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Adithya S</p>
+                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Football Demo</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Adithya S demo attendance confirmed')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Verify Demo"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('demos')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
+                      title="View Slot"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Ishika M</p>
+                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Gymnastics Demo</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Ishika M demo attendance confirmed')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Verify Demo"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('demos')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
+                      title="View Slot"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Row 3 */}
+                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Vikram P</p>
+                    <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5 truncate">Basketball Demo</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Vikram P demo completed')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Verify Demo"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('demos')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
+                      title="View Slot"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Label */}
+            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
+              Demo Management
+            </p>
+
+            {/* Desktop Connector 2 to Card 3: Orange Bracket Curve */}
+            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                <path 
+                  d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" 
+                  stroke="#F4510B" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 0,52 L 24,52" 
+                  stroke="#F4510B" 
+                  strokeWidth="1.8" 
+                  strokeLinecap="round" 
+                />
+                <path 
+                  d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" 
+                  stroke="#F4510B" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* Card 3: Admission & Enrollment (Enrollment)          */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative bg-[#F4FDF7] rounded-[24px] p-4.5 sm:p-5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] flex flex-col justify-between">
+            <div>
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-4.5 h-4.5 text-[#16A34A]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                    Admission &amp; Enrollment
+                  </h3>
+                  <p className="text-[11px] font-medium text-[#172B50]/60">
+                    Convert demo to enrollment
+                  </p>
+                </div>
+              </div>
+
+              {/* Rows */}
+              <div className="space-y-2.5">
+                {/* Row 1 */}
+                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Adithya S</p>
+                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] mt-0.5">
+                      Enrolled
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Adithya S enrollment active')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Enrolled"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addToast('Fee paid and invoice confirmed')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Fee Paid"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Ishika M</p>
+                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] mt-0.5">
+                      Enrolled
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Ishika M enrollment active')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Enrolled"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addToast('Fee paid and invoice confirmed')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Fee Paid"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Row 3 */}
+                <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#172B50] truncate">Vikram P</p>
+                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF0E6] text-[#F4510B] border border-[#FED7AA] mt-0.5">
+                      Admission
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => addToast('Vikram P admission verified')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Admission Document Checked"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addToast('Vikram P enrolled into batch')}
+                      className="w-7 h-7 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                      title="Batch Assigned"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Label */}
+            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
+              Enrollment
+            </p>
+
+            {/* Desktop Connector 3 to Card 4: S-curve line from Vikram P directly to Class Schedule tile */}
+            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                <path 
+                  d="M 0,82 C 10,82 12,30 24,30" 
+                  stroke="#0284C7" 
+                  strokeWidth="1.8" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                />
+                <circle cx="2" cy="82" r="2" fill="#0284C7" />
+                <circle cx="22" cy="30" r="2" fill="#0284C7" />
+              </svg>
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* Card 4: Student Engagement (After Enrollment)        */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative bg-white rounded-[24px] p-4.5 sm:p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+            <div>
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                  <Calendar className="w-4.5 h-4.5 text-[#F4510B]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                    Student Engagement
+                  </h3>
+                  <p className="text-[11px] font-medium text-[#172B50]/60">
+                    Ongoing student lifecycle
+                  </p>
+                </div>
+              </div>
+
+              {/* 4 Action Tiles: 2x2 grid */}
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* Tile 1: Class Schedule (Active dark blue) */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('schedules')}
+                  className="bg-[#0B3B60] text-white rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[72px]"
+                >
+                  <Calendar className="w-4.5 h-4.5 text-white mb-1.5" />
+                  <span className="text-[11px] font-black text-white leading-tight">
+                    Class Schedule
+                  </span>
+                </button>
+
+                {/* Tile 2: Attendance */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('attendance_compensation')}
+                  className="bg-white text-[#172B50] rounded-2xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[72px]"
+                >
+                  <BarChart2 className="w-4.5 h-4.5 text-[#172B50] mb-1.5" />
+                  <span className="text-[11px] font-black text-[#172B50] leading-tight">
+                    Attendance
+                  </span>
+                </button>
+
+                {/* Tile 3: Performance */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('sports_events')}
+                  className="bg-white text-[#172B50] rounded-2xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[72px]"
+                >
+                  <Star className="w-4.5 h-4.5 text-[#172B50] mb-1.5" />
+                  <span className="text-[11px] font-black text-[#172B50] leading-tight">
+                    Performance
+                  </span>
+                </button>
+
+                {/* Tile 4: Parent Updates */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('communication')}
+                  className="bg-white text-[#172B50] rounded-2xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[72px]"
+                >
+                  <Users className="w-4.5 h-4.5 text-[#172B50] mb-1.5" />
+                  <span className="text-[11px] font-black text-[#172B50] leading-tight">
+                    Parent Updates
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Label */}
+            <p className="text-[11.5px] font-bold text-[#172B50] text-center pt-4 tracking-tight">
+              After Enrollment
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 3. MIDDLE ROW: Today's Classes & Enquiry Sources (Side-by-Side) */}
+      {/* ============================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        
+        {/* ---------------------------------------------------- */}
+        {/* Left: Today's Classes Table (~60% / 7-8 cols)         */}
+        {/* ---------------------------------------------------- */}
+        <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+          <div>
+            {/* Header */}
+            <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
+              <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
+                <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                Today's Classes
+              </h2>
+            </div>
+
+            {/* Classes Table */}
+            <div className="overflow-x-auto mt-1">
+              <table className="w-full text-left text-xs whitespace-nowrap">
+                <thead>
+                  <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
+                    <th className="py-2.5 px-3">TIME</th>
+                    <th className="py-2.5 px-3">CLASS / PROGRAM</th>
+                    <th className="py-2.5 px-3">COACH</th>
+                    <th className="py-2.5 px-3">LOCATION</th>
+                    <th className="py-2.5 px-3 text-right">CAPACITY</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#172B500C]">
+                  {/* Class 1 */}
+                  <tr className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2 font-black text-[#172B50]">
+                        <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                        <span>09:00 AM</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 font-extrabold text-[#172B50]">
+                      Junior Football Champions
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
+                        <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
+                        <span>Arjun Rao</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
+                        <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                        <span>KK NAGAR</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        <span>18/20</span>
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Class 2 */}
+                  <tr className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2 font-black text-[#172B50]">
+                        <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                        <span>10:30 AM</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 font-extrabold text-[#172B50]">
+                      Spartan Gymnastics &amp; Agility
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
+                        <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
+                        <span>Priya Nair</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
+                        <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                        <span>KILPAUK</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#F4510B] text-white shadow-2xs">
+                        <Check className="w-3 h-3 text-white" />
+                        <span>Full 18/18</span>
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Class 3 */}
+                  <tr className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2 font-black text-[#172B50]">
+                        <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                        <span>02:00 PM</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 font-extrabold text-[#172B50]">
+                      Basketball Rising Stars
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
+                        <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
+                        <span>Daniel Fernandes</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
+                        <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                        <span>MAHALINGAPURAM</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>11/14</span>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ---------------------------------------------------- */}
+        {/* Right: Enquiry Sources Donut Chart (~40% / 4-5 cols)  */}
+        {/* ---------------------------------------------------- */}
+        <div 
+          onClick={() => setCurrentView('enquiries')}
+          className="lg:col-span-5 xl:col-span-4 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between cursor-pointer hover:border-[#F4510B35] transition-all"
+        >
+          <div>
+            {/* Header */}
+            <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
+              <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                Enquiry Sources
+              </h2>
+            </div>
+
+            {/* Donut and Legend */}
+            <div className="flex items-center justify-center sm:justify-start gap-5 sm:gap-7 mt-4 pt-1">
               {/* SVG Donut */}
               <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
                 <svg className="w-36 h-36" viewBox="0 0 160 160">
-                  {/* Background track */}
+                  {/* Website Segment: 52% = ~163.3 out of 314.16 */}
                   <circle
                     cx="80"
                     cy="80"
                     r="50"
                     fill="transparent"
-                    stroke="#172B50"
-                    strokeWidth="18"
-                    opacity={demoMetrics.totalEnquiries > 0 ? "0.08" : "0.15"}
+                    stroke="#F4510B"
+                    strokeWidth="20"
+                    strokeDasharray="163.36 314.16"
+                    strokeDashoffset="0"
+                    transform="rotate(-90 80 80)"
                   />
-                  {demoMetrics.totalEnquiries > 0 && (
-                    <>
-                      {/* Segment 1: Manual / Walk-in */}
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="50"
-                        fill="transparent"
-                        stroke="#F4510B"
-                        strokeWidth="18"
-                        strokeDasharray={`${(demoMetrics.manualEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
-                        strokeDashoffset="0"
-                        transform="rotate(-90 80 80)"
-                      />
-                      {/* Segment 2: Website */}
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="50"
-                        fill="transparent"
-                        stroke="#0284C7"
-                        strokeWidth="18"
-                        strokeDasharray={`${(demoMetrics.websiteEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
-                        strokeDashoffset={`-${(demoMetrics.manualEnquiries / demoMetrics.totalEnquiries) * 314.16}`}
-                        transform="rotate(-90 80 80)"
-                      />
-                      {/* Segment 3: Instagram */}
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="50"
-                        fill="transparent"
-                        stroke="#EC4899"
-                        strokeWidth="18"
-                        strokeDasharray={`${(demoMetrics.instagramEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
-                        strokeDashoffset={`-${((demoMetrics.manualEnquiries + demoMetrics.websiteEnquiries) / demoMetrics.totalEnquiries) * 314.16}`}
-                        transform="rotate(-90 80 80)"
-                      />
-                      {/* Segment 4: WhatsApp */}
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="50"
-                        fill="transparent"
-                        stroke="#10B981"
-                        strokeWidth="18"
-                        strokeDasharray={`${(demoMetrics.whatsappEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
-                        strokeDashoffset={`-${((demoMetrics.manualEnquiries + demoMetrics.websiteEnquiries + demoMetrics.instagramEnquiries) / demoMetrics.totalEnquiries) * 314.16}`}
-                        transform="rotate(-90 80 80)"
-                      />
-                    </>
-                  )}
-                  {/* Inner text */}
+                  {/* Manual / Walk-in Segment: 48% = ~150.8 out of 314.16 */}
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="50"
+                    fill="transparent"
+                    stroke="#0284C7"
+                    strokeWidth="20"
+                    strokeDasharray="150.8 314.16"
+                    strokeDashoffset="-163.36"
+                    transform="rotate(-90 80 80)"
+                  />
+                  {/* Inner text matching reference */}
                   <text x="80" y="74" textAnchor="middle" className="text-3xl font-black fill-[#172B50] font-sans">
-                    {demoMetrics.totalEnquiries || 0}
+                    118
                   </text>
-                  <text x="80" y="91" textAnchor="middle" className="text-[10px] font-bold fill-[#172B50] opacity-65 font-sans tracking-wider uppercase">
+                  <text x="80" y="90" textAnchor="middle" className="text-[10px] font-bold fill-[#172B50] opacity-65 font-sans tracking-wider uppercase">
                     Total
                   </text>
-                  <text x="80" y="103" textAnchor="middle" className="text-[10px] font-bold fill-[#172B50] opacity-65 font-sans tracking-wider uppercase">
+                  <text x="80" y="102" textAnchor="middle" className="text-[10px] font-bold fill-[#172B50] opacity-65 font-sans tracking-wider uppercase">
                     Enquiries
                   </text>
                 </svg>
               </div>
 
-              {/* Legend */}
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between gap-4">
+              {/* Legend matching reference numbers */}
+              <div className="space-y-3 text-xs w-full max-w-[150px]">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#F4510B] shrink-0" />
-                    <span className="font-semibold text-[#172B50]">Manual / Walk-in</span>
+                    <span className="font-extrabold text-[#172B50]">Website</span>
                   </div>
-                  <span className="font-bold text-[#172B50]">
-                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.manualEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.manualEnquiries || 0})
-                  </span>
+                  <span className="font-black text-[#172B50]">52% (61)</span>
                 </div>
-                <div className="flex items-center justify-between gap-4">
+
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#0284C7] shrink-0" />
-                    <span className="font-semibold text-[#172B50]">Website</span>
+                    <span className="font-extrabold text-[#172B50]">Manual / Walk-in</span>
                   </div>
-                  <span className="font-bold text-[#172B50]">
-                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.websiteEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.websiteEnquiries || 0})
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#EC4899] shrink-0" />
-                    <span className="font-semibold text-[#172B50]">Instagram</span>
-                  </div>
-                  <span className="font-bold text-[#172B50]">
-                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.instagramEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.instagramEnquiries || 0})
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shrink-0" />
-                    <span className="font-semibold text-[#172B50]">WhatsApp</span>
-                  </div>
-                  <span className="font-bold text-[#172B50]">
-                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.whatsappEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.whatsappEnquiries || 0})
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Conversion Funnel */}
-            <div className="md:col-span-6 flex flex-col justify-between h-full pl-0 md:pl-5 border-t md:border-t-0 md:border-l border-[#172B5010] pt-4 md:pt-0">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#172B50]">Conversion Funnel</span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#DCFCE7] text-[#16A34A] shadow-xs">
-                  {demoMetrics.conversionRate || 0}% Conversion Rate
-                </span>
-              </div>
-
-              {/* 4 Pillars with chevrons */}
-              <div className="flex items-end justify-between gap-1.5 sm:gap-2 mt-4 pt-2">
-                {/* 1: Enquiries */}
-                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('enquiries')}>
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={demoMetrics.totalEnquiries || 0} />
-                  </span>
-                  <div className="w-11 sm:w-13 h-24 bg-[#D6ECFF] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#BAE6FD]" />
-                  <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Enquiries</span>
-                </div>
-
-                <span className="text-[#172B50] opacity-40 font-bold mb-8 select-none">&gt;</span>
-
-                {/* 2: Demos */}
-                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('demos')}>
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={demoMetrics.upcomingDemos || 0} padZero />
-                  </span>
-                  <div className="w-11 sm:w-13 h-18 bg-[#F3E8FF] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#E9D5FF]" />
-                  <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Demos</span>
-                </div>
-
-                <span className="text-[#172B50] opacity-40 font-bold mb-8 select-none">&gt;</span>
-
-                {/* 3: Completed Demos */}
-                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('demos')}>
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={demoMetrics.completedDemos || 0} padZero />
-                  </span>
-                  <div className="w-11 sm:w-13 h-13 bg-[#DCFCE7] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#BBF7D0]" />
-                  <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center leading-tight">
-                    Completed<br />Demos
-                  </span>
-                </div>
-
-                <span className="text-[#172B50] opacity-40 font-bold mb-8 select-none">&gt;</span>
-
-                {/* 4: Enrolled */}
-                <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('people')}>
-                  <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={totalStudents || 0} />
-                  </span>
-                  <div className="w-11 sm:w-13 h-20 bg-[#FFE2D1] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#FED7AA]" />
-                  <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Enrolled</span>
+                  <span className="font-black text-[#172B50]">48% (57)</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Panel: Enquiries Trend (5 cols) */}
-        <div className="lg:col-span-5 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="w-1.5 h-5 rounded-full bg-[#F4510B]" />
-              <h3 className="text-base font-extrabold text-[#172B50] tracking-tight">Enquiries Trend</h3>
-            </div>
+      </div>
 
-            <div className="relative">
-              <select 
-                aria-label="Enquiries trend time period"
-                className="appearance-none pl-3 pr-8 py-1.5 rounded-xl text-xs font-bold bg-white text-[#172B50] border border-[#172B5018] shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
-                defaultValue="30d"
-              >
-                <option value="30d">Last 30 Days</option>
-                <option value="7d">Last 7 Days</option>
-                <option value="90d">Last 90 Days</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute right-2.5 top-2.5 pointer-events-none" />
-            </div>
+      {/* ============================================================ */}
+      {/* 4. BOTTOM SECTION: Demo Performance (4 Cards in a Strip)      */}
+      {/* ============================================================ */}
+      <div className="bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)]">
+        {/* Header */}
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
+            <BarChart2 className="w-4 h-4 text-[#F4510B]" />
           </div>
-
-          {/* SVG Area Chart or Empty State */}
-          <div className="mt-4 pt-1 w-full">
-            {demoMetrics.totalEnquiries === 0 ? (
-              <div className="h-48 flex flex-col items-center justify-center text-center p-4">
-                <TrendingUp className="w-8 h-8 text-[#172B50]/20 mb-2" />
-                <p className="text-xs font-bold text-[#172B50]/60">No enquiry trends recorded yet</p>
-                <p className="text-[11px] text-[#172B50]/40 mt-0.5">Enquiry progression curve will appear here once leads are logged</p>
-              </div>
-            ) : (
-              <svg className="w-full h-48 overflow-visible" viewBox="0 0 380 180">
-                <defs>
-                  <linearGradient id="orangeTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F4510B" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#F4510B" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-
-                {/* Grid Lines & Y-ticks */}
-                {[
-                  { y: 22, val: 25 },
-                  { y: 50, val: 20 },
-                  { y: 78, val: 15 },
-                  { y: 106, val: 10 },
-                  { y: 134, val: 5 },
-                  { y: 160, val: 0 },
-                ].map((tick) => (
-                  <g key={tick.val}>
-                    <line
-                      x1="35"
-                      y1={tick.y}
-                      x2="370"
-                      y2={tick.y}
-                      stroke="#172B50"
-                      strokeOpacity="0.08"
-                      strokeDasharray="3 3"
-                    />
-                    <text
-                      x="25"
-                      y={tick.y + 4}
-                      textAnchor="end"
-                      className="text-[10px] font-semibold fill-[#172B50] opacity-50 font-sans"
-                    >
-                      {tick.val}
-                    </text>
-                  </g>
-                ))}
-
-                {/* Shaded Area */}
-                <path
-                  d="M 50,140 C 75,140 80,115 100,115 C 120,115 130,132 150,132 C 170,132 180,115 200,115 C 220,115 230,95 250,95 C 270,95 280,80 300,80 C 320,80 335,38 355,38 L 355,160 L 50,160 Z"
-                  fill="url(#orangeTrendGrad)"
-                />
-
-                {/* Line Curve */}
-                <path
-                  d="M 50,140 C 75,140 80,115 100,115 C 120,115 130,132 150,132 C 170,132 180,115 200,115 C 220,115 230,95 250,95 C 270,95 280,80 300,80 C 320,80 335,38 355,38"
-                  fill="none"
-                  stroke="#F4510B"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-
-                {/* Data Node Circles with Live Ping on Latest Node */}
-                {[
-                  { x: 50, y: 140 },
-                  { x: 100, y: 115 },
-                  { x: 150, y: 132 },
-                  { x: 200, y: 115 },
-                  { x: 250, y: 95 },
-                  { x: 300, y: 80 },
-                  { x: 355, y: 38 },
-                ].map((pt, i) => (
-                  <g key={i}>
-                    {i === 6 && (
-                      <circle cx={pt.x} cy={pt.y} r="10" fill="#F4510B" opacity="0.4" className="animate-ping" />
-                    )}
-                    <circle cx={pt.x} cy={pt.y} r="5.5" fill="#F4510B" opacity="0.25" />
-                    <circle cx={pt.x} cy={pt.y} r="4" fill="#FFFFFF" stroke="#F4510B" strokeWidth="2.5" />
-                  </g>
-                ))}
-
-                {/* X-axis labels */}
-                {[
-                  { x: 50, label: '1 Jan' },
-                  { x: 100, label: '5 Jan' },
-                  { x: 150, label: '10 Jan' },
-                  { x: 200, label: '15 Jan' },
-                  { x: 250, label: '20 Jan' },
-                  { x: 300, label: '25 Jan' },
-                  { x: 355, label: '30 Jan' },
-                ].map((lbl) => (
-                  <text
-                    key={lbl.label}
-                    x={lbl.x}
-                    y="176"
-                    textAnchor="middle"
-                    className="text-[10px] font-semibold fill-[#172B50] opacity-60 font-sans"
-                  >
-                    {lbl.label}
-                  </text>
-                ))}
-              </svg>
-            )}
-          </div>
+          <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+            Demo Performance
+          </h2>
         </div>
-      </div>
 
-      {/* Secondary Academy Financial & Staff Operations Strip with Floating Physics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-        {/* Tuition Collected */}
-        <FloatingCard 
-          onClick={() => setCurrentView('fees_payments')}
-          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-13 h-13 rounded-2xl bg-[#FFF5ED] text-[#F59E0B] flex items-center justify-center shrink-0">
-              <Coins className="w-6 h-6 text-[#F59E0B]" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-80 block">
-                Tuition Collected
-              </span>
-              <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight">₹<AnimatedCounter value={paidRevenue} /></p>
-              <span className="text-xs font-bold text-emerald-600 block mt-0.5">
-                {data.payments.filter((p) => p.status === 'Paid').length} paid invoices
-              </span>
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#F0FDF4] text-emerald-600 flex items-center justify-center shrink-0">
-            <CreditCard className="w-5 h-5 text-emerald-600" />
-          </div>
-        </FloatingCard>
-
-        {/* Pending Dues */}
-        <FloatingCard 
-          onClick={() => setCurrentView('fees_payments')}
-          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-13 h-13 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-              <Clock className="w-6 h-6 text-rose-500" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-80 block">
-                Pending Dues
-              </span>
-              <p className="text-2xl font-black text-rose-600 mt-0.5 tracking-tight">₹<AnimatedCounter value={pendingAmount} /></p>
-              <span className="text-xs font-bold text-rose-500 block mt-0.5">
-                {pendingPayments} outstanding invoices
-              </span>
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-            <AlertCircle className="w-5 h-5 text-rose-500" />
-          </div>
-        </FloatingCard>
-
-        {/* Certified Faculty */}
-        <FloatingCard 
-          onClick={() => setCurrentView('people')}
-          className="bg-white rounded-[24px] p-5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex items-center justify-between"
-        >
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-13 h-13 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-              <Users className="w-6 h-6 text-[#F4510B]" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-80 block">
-                Certified Faculty
-              </span>
-              <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight"><AnimatedCounter value={totalCoaches} /> Coaches</p>
-              <span className="text-xs font-medium text-[#172B50] opacity-70 block mt-0.5 truncate">
-                {totalCoaches > 0 ? data.coaches.map(c => c.name).join(', ') : 'No coaches registered'}
-              </span>
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-            <User className="w-5 h-5 text-[#F4510B]" />
-          </div>
-        </FloatingCard>
-      </div>
-
-      {/* Live Enquiry Pipeline */}
-      <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-        <div className="flex items-center justify-between pb-3 border-b border-[#172B5012]">
-          <div>
-            <h4 className="text-sm font-extrabold text-[#172B50]">Recent Admission Enquiries</h4>
-            <p className="text-xs text-[#172B50] opacity-70">Prospective young athletes awaiting trial or counseling</p>
-          </div>
-          <button
-            onClick={() => setCurrentView('enquiries')}
-            className="text-xs font-bold text-[#F4510B] hover:underline flex items-center gap-1"
+        {/* 4 Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {/* Card 1: Total Demos (36) */}
+          <div 
+            onClick={() => setCurrentView('demos')}
+            className="bg-gradient-to-br from-[#F0F7FF] via-[#F8FBFF] to-white rounded-2xl p-4 sm:p-5 border border-[#BAE6FD]/60 flex items-center gap-4 shadow-2xs hover:border-[#0284C7] transition-all cursor-pointer"
           >
-            <span>View All ({data.enquiries.length})</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {data.enquiries.length === 0 ? (
-          <div className="py-8 text-center text-xs text-[#172B50]/50 font-medium">
-            No recent enquiries logged yet. Click "Add Enquiry" above to create your first lead.
-          </div>
-        ) : (
-          <div className="overflow-x-auto mt-3">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-[#172B5015] text-[#172B50] opacity-75 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="pb-2">Child & Age</th>
-                  <th className="pb-2">Parent Contact</th>
-                  <th className="pb-2">Program</th>
-                  <th className="pb-2">Stage</th>
-                  <th className="pb-2 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#172B5010]">
-                {data.enquiries.slice(0, 4).map(enq => (
-                  <tr key={enq.id} className="hover:bg-[#FFF4E8]/50 transition-colors">
-                    <td className="py-2.5 font-bold text-[#172B50]">
-                      <div>{enq.childName}</div>
-                      <span className="text-[10px] text-[#172B50] opacity-60">{enq.childAge} yrs • {enq.center}</span>
-                    </td>
-                    <td className="py-2.5">
-                      <div className="font-semibold text-[#172B50]">{enq.parentName}</div>
-                      <span className="text-[10px] text-[#172B50] opacity-60">{enq.phone}</span>
-                    </td>
-                    <td className="py-2.5">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020]">
-                        {enq.interestedProgram.replace('Spartan ', '')}
-                      </span>
-                    </td>
-                    <td className="py-2.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                        enq.stage === 'Enrolled' 
-                          ? 'bg-[#172B50] text-white' 
-                          : enq.stage === 'Trial Scheduled'
-                          ? 'bg-[#F4510B] text-white'
-                          : 'bg-[#FFF4E8] text-[#172B50] border border-[#172B5020]'
-                      }`}>
-                        {enq.stage}
-                      </span>
-                    </td>
-                    <td className="py-2.5 text-right">
-                      <button
-                        onClick={() => setCurrentView('enquiries')}
-                        className="px-2.5 py-1 text-[11px] font-bold text-white bg-[#172B50] hover:bg-[#F4510B] rounded-lg transition-colors"
-                      >
-                        Follow up
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Upcoming Competitions & Academy Notices Banner */}
-      <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#172B5012] gap-2">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-[#F4510B]" />
+            <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
+              <Calendar className="w-5.5 h-5.5 text-[#0284C7]" />
+            </div>
             <div>
-              <h4 className="text-sm font-extrabold text-[#172B50]">Upcoming Academy Tournaments & Fixtures</h4>
-              <p className="text-xs text-[#172B50] opacity-70">Inter-center championships, grading evaluations and external cups</p>
+              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                36
+              </p>
+              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
+                Total Demos
+              </p>
             </div>
           </div>
-          <button
-            onClick={() => setCurrentView('competitions')}
-            className="text-xs font-bold text-[#F4510B] hover:underline flex items-center gap-1"
+
+          {/* Card 2: Upcoming (12) */}
+          <div 
+            onClick={() => setCurrentView('demos')}
+            className="bg-gradient-to-br from-[#FAF5FF] via-[#FCF9FF] to-white rounded-2xl p-4 sm:p-5 border border-[#E9D5FF]/60 flex items-center gap-4 shadow-2xs hover:border-[#9333EA] transition-all cursor-pointer"
           >
-            <span>Competition Hub</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+            <div className="w-12 h-12 rounded-xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+              <Clock className="w-5.5 h-5.5 text-[#9333EA]" />
+            </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                12
+              </p>
+              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
+                Upcoming
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3: Completed (24) */}
+          <div 
+            onClick={() => setCurrentView('demos')}
+            className="bg-gradient-to-br from-[#F0FDF4] via-[#F8FDF9] to-white rounded-2xl p-4 sm:p-5 border border-[#BBF7D0]/60 flex items-center gap-4 shadow-2xs hover:border-[#16A34A] transition-all cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5.5 h-5.5 text-[#16A34A]" />
+            </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                24
+              </p>
+              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
+                Completed
+              </p>
+            </div>
+          </div>
+
+          {/* Card 4: Conversions (96) */}
+          <div 
+            onClick={() => setCurrentView('demos')}
+            className="bg-gradient-to-br from-[#FFF5ED] via-[#FFF9F5] to-white rounded-2xl p-4 sm:p-5 border border-[#FED7AA]/60 flex items-center gap-4 shadow-2xs hover:border-[#F4510B] transition-all cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
+              <Trophy className="w-5.5 h-5.5 text-[#F4510B]" />
+            </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                96
+              </p>
+              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
+                Conversions
+              </p>
+            </div>
+          </div>
         </div>
-
-        {data.competitions.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#172B50]/50 font-medium">
-            No upcoming academy tournaments or fixtures scheduled yet.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            {data.competitions.map(comp => (
-              <div key={comp.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B501A] flex flex-col justify-between">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#F4510B] block">
-                    {comp.sport}
-                  </span>
-                  <h5 className="text-xs font-bold text-[#172B50] mt-1 leading-snug">{comp.title}</h5>
-                  <p className="text-[11px] text-[#172B50] opacity-75 mt-1.5 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-[#172B50]" />
-                    <span>{comp.date} • {comp.venue.split(',')[0]}</span>
-                  </p>
-                </div>
-
-                <div className="mt-3 pt-3 border-t border-[#172B5015] flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#172B50]">
-                    {comp.registeredCount}/{comp.maxParticipants} Registered
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#F4510B] text-white">
-                    {comp.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* QUICK MODALS */}
+      {/* ============================================================ */}
+      {/* 5. MODALS (Enroll Student, Add Enquiry, Quick Payment)         */}
+      {/* ============================================================ */}
       {/* 1. Enroll Student Modal */}
       <Modal
         isOpen={modalType === 'student'}
@@ -925,7 +1032,7 @@ export default function AdminDashboard() {
               required
               value={newStudentName}
               onChange={(e) => setNewStudentName(e.target.value)}
-              placeholder="e.g. Advait Rao"
+              placeholder="e.g. Aarav Sharma"
               className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
@@ -944,7 +1051,7 @@ export default function AdminDashboard() {
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Training Program *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Assigned Program</label>
               <select
                 value={newStudentProgram}
                 onChange={(e) => setNewStudentProgram(e.target.value)}

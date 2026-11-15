@@ -148,11 +148,6 @@ export default function App() {
           >
             <Menu className="w-5 h-5 text-[#172B50]" />
           </button>
-          <img 
-            src="/assets/zenconnect-navbar-logo.png" 
-            alt="Little Spartans ZenConnect" 
-            className="h-8 w-auto object-contain"
-          />
         </div>
 
         {/* Right Main Dashboard Content: independently scrollable */}

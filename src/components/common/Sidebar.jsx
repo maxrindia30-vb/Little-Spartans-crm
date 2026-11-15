@@ -414,26 +414,11 @@ export default function Sidebar() {
           isFullView ? 'w-64' : 'w-[72px]'
         } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        {/* Top Header: Full Brand Logo + ZenConnect Badge when full, Compact LS Emblem when closed */}
-        <div className="px-3.5 py-3.5 flex items-center justify-between border-b border-white/10 shrink-0 h-16 overflow-hidden">
+        {/* Top Header: Clean and empty branding area per design requirements */}
+        <div className="px-3.5 py-3.5 flex items-center justify-end border-b border-white/10 shrink-0 h-16 overflow-hidden">
           {isFullView ? (
-            <div className="flex items-center justify-between w-full animate-in fade-in duration-200">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <img 
-                  src="/assets/little-spartans-logo-4k.png" 
-                  alt="Little Spartans" 
-                  className="h-8 sm:h-9 w-auto object-contain pointer-events-none select-none drop-shadow-xs"
-                  style={{ 
-                    imageRendering: '-webkit-optimize-contrast',
-                    transform: 'translateZ(0)'
-                  }}
-                />
-              </div>
-
+            <div className="flex items-center justify-end w-full animate-in fade-in duration-200">
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="px-2 py-0.5 rounded-full border border-[#F4510B] text-white text-[10.5px] font-semibold tracking-wide bg-transparent shadow-xs select-none">
-                  ZenConnect
-                </span>
                 {/* Pin toggle to lock full view permanently if desired */}
                 <button
                   type="button"
@@ -458,11 +443,7 @@ export default function Sidebar() {
               </div>
             </div>
           ) : (
-            <div className="w-full flex items-center justify-center animate-in fade-in duration-200">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1A2234] to-[#0E131F] border border-[#F4510B]/40 flex items-center justify-center shadow-sm hover:border-[#F4510B] transition-colors">
-                <span className="text-[#F4510B] font-black text-sm tracking-tighter">LS</span>
-              </div>
-            </div>
+            <div className="w-full h-8" />
           )}
         </div>
 
