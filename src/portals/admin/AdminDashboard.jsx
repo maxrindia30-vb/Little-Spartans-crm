@@ -25,7 +25,7 @@ import {
 import { useCrm } from '../../context/CrmContext';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
-import AdmissionPipelineStepper from '../../components/common/AdmissionPipelineStepper';
+import TodaysClassesSection from '../../components/common/TodaysClassesSection';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
 import { calculateDemoMetrics } from '../../services/demoService';
@@ -225,8 +225,8 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Admission Pipeline Interactive Progression Stepper matching Image 2 */}
-      <AdmissionPipelineStepper />
+      {/* Today's Classes Section matching reference UI/UX design */}
+      <TodaysClassesSection />
 
       {/* Row 2: Secondary Academy Financial & Staff Operations Strip with Floating Physics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
