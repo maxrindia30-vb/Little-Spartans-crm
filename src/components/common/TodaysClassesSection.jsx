@@ -2,14 +2,14 @@ import React from 'react';
 import { CalendarDays, ArrowRight, Clock, MapPin, User, AlertCircle } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
-// Default realistic sample classes specified in requirements
+// Default authentic Little Spartans academy classes matching Chennai locations & faculty
 const DEFAULT_TODAY_CLASSES = [
   {
     id: 'TC-1',
     time: '09:00 AM',
-    program: 'Junior Soccer',
-    coach: 'Coach Arjun Rao',
-    location: 'Downtown',
+    program: 'Junior Football Champions',
+    coach: 'Coach Kapil',
+    location: 'KK NAGAR',
     enrolled: 18,
     capacity: 20,
     status: 'nearly_full'
@@ -17,9 +17,9 @@ const DEFAULT_TODAY_CLASSES = [
   {
     id: 'TC-2',
     time: '10:30 AM',
-    program: 'Gymnastics',
-    coach: 'Coach Priya Nair',
-    location: 'Westside',
+    program: 'Spartan Gymnastics & Agility',
+    coach: 'Coach Dibi',
+    location: 'KILPAUK',
     enrolled: 18,
     capacity: 18,
     status: 'full'
@@ -27,9 +27,9 @@ const DEFAULT_TODAY_CLASSES = [
   {
     id: 'TC-3',
     time: '02:00 PM',
-    program: 'Elite Basketball',
-    coach: 'Coach Daniel Fernandes',
-    location: 'North Hub',
+    program: 'Basketball Rising Stars',
+    coach: 'Coach Hanif',
+    location: 'MAHALINGAPURAM',
     enrolled: 11,
     capacity: 14,
     status: 'available'
@@ -69,7 +69,61 @@ function CapacityBadge({ enrolled, capacity, status }) {
 export default function TodaysClassesSection({ className = '' }) {
   const { data, setCurrentView } = useCrm();
 
-  // If live class schedules are added by admin, map them, otherwise display the realistic sample rows
+  // Dynamically resolve locations and faculty from active academy data (KK NAGAR, KILPAUK, MAHALINGAPURAM, etc.)
+  const dynamicFallbackClasses = React.useMemo(() => {
+    const loc1 = data.locations?.[0]?.name || data.academy?.centers?.[0] || 'KK NAGAR';
+    const loc2 = data.locations?.[1]?.name || data.academy?.centers?.[1] || 'KILPAUK';
+    const loc3 = data.locations?.[2]?.name || data.academy?.centers?.[2] || 'MAHALINGAPURAM';
+
+    const formatCoach = (idx, fallback) => {
+      const c = data.coaches?.[idx];
+      if (!c?.name) return fallback;
+      return c.name.toLowerCase().startsWith('coach') ? c.name : `Coach ${c.name}`;
+    };
+
+    const coach1 = formatCoach(0, 'Coach Kapil');
+    const coach2 = formatCoach(1, 'Coach Dibi');
+    const coach3 = formatCoach(2, 'Coach Hanif');
+
+    const prog1 = data.programs?.[1]?.name || 'Junior Football Champions';
+    const prog2 = data.programs?.[0]?.name || 'Spartan Gymnastics & Agility';
+    const prog3 = data.programs?.[3]?.name || 'Basketball Rising Stars';
+
+    return [
+      {
+        id: 'TC-1',
+        time: '09:00 AM',
+        program: prog1,
+        coach: coach1,
+        location: loc1,
+        enrolled: 18,
+        capacity: 20,
+        status: 'nearly_full'
+      },
+      {
+        id: 'TC-2',
+        time: '10:30 AM',
+        program: prog2,
+        coach: coach2,
+        location: loc2,
+        enrolled: 18,
+        capacity: 18,
+        status: 'full'
+      },
+      {
+        id: 'TC-3',
+        time: '02:00 PM',
+        program: prog3,
+        coach: coach3,
+        location: loc3,
+        enrolled: 11,
+        capacity: 14,
+        status: 'available'
+      }
+    ];
+  }, [data.locations, data.academy?.centers, data.coaches, data.programs]);
+
+  // If live class schedules are added by admin, map them, otherwise display the authentic academy rows
   const classesList = (data.classSchedules && data.classSchedules.length > 0)
     ? data.classSchedules.slice(0, 5).map((s, idx) => {
         const enrolled = s.enrolledCount ?? (s.enrolledStudents ? s.enrolledStudents.length : 0);
@@ -81,15 +135,15 @@ export default function TodaysClassesSection({ className = '' }) {
         return {
           id: s.id || `LIVE-${idx}`,
           time: s.startTime || s.time || '09:00 AM',
-          program: s.className || s.program || 'Junior Multi-Sport',
-          coach: s.coachName || s.coach || 'Assigned Coach',
+          program: s.className || s.program || 'Junior Football Champions',
+          coach: s.coachName || s.coach || 'Coach Kapil',
           location: s.location || s.center || 'KK NAGAR',
           enrolled,
           capacity,
           status
         };
       })
-    : DEFAULT_TODAY_CLASSES;
+    : dynamicFallbackClasses;
 
   return (
     <div
