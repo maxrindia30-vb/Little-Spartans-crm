@@ -147,16 +147,16 @@ export default function TodaysClassesSection({ className = '' }) {
 
   return (
     <div
-      className={`bg-[#F4F7F6] text-[#080B0C] rounded-[22px] border border-[#493548]/20 shadow-[0_4px_25px_rgba(8,11,12,0.3)] p-5 sm:p-6 overflow-hidden transition-all ${className}`}
+      className={`bg-[#F4F7F6] text-[#080B0C] rounded-[22px] border border-[#493548]/20 shadow-[0_4px_25px_rgba(8,11,12,0.3)] p-4 sm:p-4.5 overflow-hidden transition-all ${className}`}
     >
       {/* Header with Title, Calendar Icon and View Schedule CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#493548]/15">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#493548]/15">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0 border border-[#55CDB3]/30">
+          <div className="w-8.5 h-8.5 rounded-xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0 border border-[#55CDB3]/30">
             <CalendarDays className="w-4 h-4 text-[#55CDB3]" />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-black text-[#080B0C] tracking-tight">
+            <h2 className="text-base sm:text-[17px] font-black text-[#080B0C] tracking-tight">
               Today's Classes
             </h2>
             <p className="text-[11px] font-semibold text-[#493548]">
@@ -176,15 +176,15 @@ export default function TodaysClassesSection({ className = '' }) {
       </div>
 
       {/* Classes Table */}
-      <div className="overflow-x-auto mt-2">
+      <div className="overflow-x-auto mt-1">
         <table className="w-full text-left text-xs whitespace-nowrap">
           <thead>
             <tr className="border-b border-[#493548]/15 text-[#493548] font-black uppercase tracking-wider text-[10.5px]">
-              <th className="py-3 px-3">Time</th>
-              <th className="py-3 px-3">Class / Program</th>
-              <th className="py-3 px-3">Assigned Coach</th>
-              <th className="py-3 px-3">Location</th>
-              <th className="py-3 px-3 text-right">Capacity</th>
+              <th className="py-2.5 px-3">Time</th>
+              <th className="py-2.5 px-3">Class / Program</th>
+              <th className="py-2.5 px-3">Assigned Coach</th>
+              <th className="py-2.5 px-3">Location</th>
+              <th className="py-2.5 px-3 text-right">Capacity</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#493548]/10">
@@ -194,7 +194,7 @@ export default function TodaysClassesSection({ className = '' }) {
                 className="hover:bg-[#55CDB3]/10 transition-colors group cursor-default"
               >
                 {/* Time */}
-                <td className="py-3.5 px-3">
+                <td className="py-2.5 px-3">
                   <div className="flex items-center gap-2 font-black text-[#080B0C]">
                     <Clock className="w-3.5 h-3.5 text-[#55CDB3] shrink-0" />
                     <span className="tracking-tight">{cls.time}</span>
@@ -202,12 +202,12 @@ export default function TodaysClassesSection({ className = '' }) {
                 </td>
 
                 {/* Class / Program */}
-                <td className="py-3.5 px-3 font-extrabold text-[#080B0C] text-xs sm:text-[13px]">
+                <td className="py-2.5 px-3 font-extrabold text-[#080B0C] text-xs sm:text-[13px]">
                   {cls.program}
                 </td>
 
                 {/* Assigned Coach */}
-                <td className="py-3.5 px-3">
+                <td className="py-2.5 px-3">
                   <div className="flex items-center gap-2 font-bold text-[#080B0C]/85">
                     <User className="w-3.5 h-3.5 text-[#493548] shrink-0" />
                     <span>{cls.coach}</span>
@@ -215,7 +215,7 @@ export default function TodaysClassesSection({ className = '' }) {
                 </td>
 
                 {/* Location */}
-                <td className="py-3.5 px-3">
+                <td className="py-2.5 px-3">
                   <div className="flex items-center gap-1.5 font-semibold text-[#080B0C]/85">
                     <MapPin className="w-3.5 h-3.5 text-[#55CDB3] shrink-0" />
                     <span>{cls.location}</span>
@@ -223,7 +223,7 @@ export default function TodaysClassesSection({ className = '' }) {
                 </td>
 
                 {/* Capacity */}
-                <td className="py-3.5 px-3 text-right">
+                <td className="py-2.5 px-3 text-right">
                   <CapacityBadge
                     enrolled={cls.enrolled}
                     capacity={cls.capacity}

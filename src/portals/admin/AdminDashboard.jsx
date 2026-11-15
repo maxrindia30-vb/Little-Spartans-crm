@@ -228,77 +228,155 @@ export default function AdminDashboard() {
       {/* Today's Classes Section matching reference UI/UX design */}
       <TodaysClassesSection />
 
-      {/* Row 2: Secondary Academy Financial & Staff Operations Strip with Floating Physics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-        {/* Tuition Collected */}
+      {/* Enquiry Sources – 3 Equal Cards (Total Enquiries | Website | Manual / Walk-in) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+        {/* Total Enquiries */}
         <FloatingCard 
-          onClick={() => setCurrentView('fees_payments')}
-          className="bg-[#F4F7F6] rounded-[24px] p-5 border border-[#493548]/20 shadow-sm flex items-center justify-between"
+          onClick={() => setCurrentView('enquiries')}
+          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4.5 sm:p-5 flex items-center gap-4 shadow-sm hover:border-[#55CDB3] transition-all cursor-pointer min-h-[92px]"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-13 h-13 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-              <Coins className="w-6 h-6 text-[#55CDB3]" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#080B0C] opacity-80 block">
-                Tuition Collected
-              </span>
-              <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">₹<AnimatedCounter value={paidRevenue} /></p>
-              <span className="text-xs font-bold text-[#493548] block mt-0.5">
-                {data.payments.filter((p) => p.status === 'Paid').length} paid invoices
-              </span>
-            </div>
+          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+            <Users className="w-6 h-6 text-[#55CDB3]" />
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-            <CreditCard className="w-5 h-5 text-[#55CDB3]" />
+          <div className="min-w-0">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#493548] block">
+              Total Enquiries
+            </span>
+            <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">
+              <AnimatedCounter value={demoMetrics.totalEnquiries || 0} />
+            </p>
+            <span className="text-xs font-semibold text-[#493548] block mt-0.5 truncate">
+              All lead channels
+            </span>
           </div>
         </FloatingCard>
 
-        {/* Pending Dues */}
+        {/* Website Enquiries */}
         <FloatingCard 
-          onClick={() => setCurrentView('fees_payments')}
-          className="bg-[#F4F7F6] rounded-[24px] p-5 border border-[#493548]/20 shadow-sm flex items-center justify-between"
+          onClick={() => setCurrentView('enquiries')}
+          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4.5 sm:p-5 flex items-center gap-4 shadow-sm hover:border-[#55CDB3] transition-all cursor-pointer min-h-[92px]"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-13 h-13 rounded-2xl bg-[#493548]/20 text-[#493548] flex items-center justify-center shrink-0">
-              <Clock className="w-6 h-6 text-[#493548]" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#080B0C] opacity-80 block">
-                Pending Dues
-              </span>
-              <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">₹<AnimatedCounter value={pendingAmount} /></p>
-              <span className="text-xs font-bold text-[#493548] block mt-0.5">
-                {pendingPayments} outstanding invoices
-              </span>
-            </div>
+          <div className="w-12 h-12 rounded-2xl bg-[#493548]/15 text-[#493548] flex items-center justify-center shrink-0">
+            <Globe className="w-6 h-6 text-[#493548]" />
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#493548]/20 text-[#493548] flex items-center justify-center shrink-0">
-            <AlertCircle className="w-5 h-5 text-[#493548]" />
+          <div className="min-w-0">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#493548] block">
+              Website Enquiries
+            </span>
+            <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">
+              <AnimatedCounter value={demoMetrics.websiteEnquiries || 0} />
+            </p>
+            <span className="text-xs font-semibold text-[#493548] block mt-0.5 truncate">
+              Online Web Ingestion
+            </span>
           </div>
         </FloatingCard>
 
-        {/* Certified Faculty */}
+        {/* Manual / Walk-in */}
         <FloatingCard 
-          onClick={() => setCurrentView('people')}
-          className="bg-[#F4F7F6] rounded-[24px] p-5 border border-[#493548]/20 shadow-sm flex items-center justify-between"
+          onClick={() => setCurrentView('enquiries')}
+          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4.5 sm:p-5 flex items-center gap-4 shadow-sm hover:border-[#55CDB3] transition-all cursor-pointer min-h-[92px]"
         >
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-13 h-13 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-              <Users className="w-6 h-6 text-[#55CDB3]" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#080B0C] opacity-80 block">
-                Certified Faculty
-              </span>
-              <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight"><AnimatedCounter value={totalCoaches} /> Coaches</p>
-              <span className="text-xs font-medium text-[#080B0C] opacity-70 block mt-0.5 truncate">
-                {totalCoaches > 0 ? data.coaches.map(c => c.name).join(', ') : 'No coaches registered'}
-              </span>
-            </div>
+          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+            <UserCheck className="w-6 h-6 text-[#55CDB3]" />
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-            <User className="w-5 h-5 text-[#55CDB3]" />
+          <div className="min-w-0">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#493548] block">
+              Manual / Walk-in
+            </span>
+            <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">
+              <AnimatedCounter value={demoMetrics.manualEnquiries || 0} />
+            </p>
+            <span className="text-xs font-semibold text-[#493548] block mt-0.5 truncate">
+              Reception Desk
+            </span>
+          </div>
+        </FloatingCard>
+      </div>
+
+      {/* Demo Performance – 4 Equal Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Total Demos */}
+        <FloatingCard 
+          onClick={() => setCurrentView('demos')}
+          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3] transition-all cursor-pointer"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-[#493548]/15 text-[#493548] flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5 text-[#493548]" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#493548] block">
+              Total Demos
+            </span>
+            <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">
+              <AnimatedCounter value={demoMetrics.totalDemos || 0} />
+            </p>
+            <span className="text-[11px] font-semibold text-[#493548] block truncate">
+              Trials Scheduled
+            </span>
+          </div>
+        </FloatingCard>
+
+        {/* Upcoming Demos */}
+        <FloatingCard 
+          onClick={() => setCurrentView('demos')}
+          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3] transition-all cursor-pointer"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5 text-[#55CDB3]" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#493548] block">
+              Upcoming Demos
+            </span>
+            <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">
+              <AnimatedCounter value={demoMetrics.upcomingDemos || 0} />
+            </p>
+            <span className="text-[11px] font-semibold text-[#493548] block truncate">
+              Active Bookings
+            </span>
+          </div>
+        </FloatingCard>
+
+        {/* Completed Demos */}
+        <FloatingCard 
+          onClick={() => setCurrentView('demos')}
+          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3] transition-all cursor-pointer"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-[#493548]/15 text-[#493548] flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5 text-[#493548]" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#493548] block">
+              Completed Demos
+            </span>
+            <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">
+              <AnimatedCounter value={demoMetrics.completedDemos || 0} />
+            </p>
+            <span className="text-[11px] font-semibold text-[#493548] block truncate">
+              Sessions Finished
+            </span>
+          </div>
+        </FloatingCard>
+
+        {/* Student Conversions */}
+        <FloatingCard 
+          onClick={() => setCurrentView('demos')}
+          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 sm:p-4.5 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3] transition-all cursor-pointer"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+            <Trophy className="w-5 h-5 text-[#55CDB3]" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#55CDB3] block">
+              Student Conversions
+            </span>
+            <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">
+              <AnimatedCounter value={demoMetrics.studentConversions || 0} />
+            </p>
+            <span className="text-[11px] font-bold text-[#55CDB3] block truncate">
+              {demoMetrics.conversionRate || 0}% Conversion Rate
+            </span>
           </div>
         </FloatingCard>
       </div>
@@ -629,181 +707,77 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Row 4: Five Source Breakdown Cards with Floating Physics */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
-        {/* Total Enquiries */}
+      {/* Secondary Academy Financial & Staff Operations Strip with Floating Physics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        {/* Tuition Collected */}
         <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
+          onClick={() => setCurrentView('fees_payments')}
+          className="bg-[#F4F7F6] rounded-[24px] p-5 border border-[#493548]/20 shadow-sm flex items-center justify-between"
         >
-          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-[#55CDB3]" />
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+              <Coins className="w-6 h-6 text-[#55CDB3]" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#080B0C] opacity-80 block">
+                Tuition Collected
+              </span>
+              <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">₹<AnimatedCounter value={paidRevenue} /></p>
+              <span className="text-xs font-bold text-[#493548] block mt-0.5">
+                {data.payments.filter((p) => p.status === 'Paid').length} paid invoices
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#080B0C] opacity-70 block">
-              Total Enquiries
-            </span>
-            <p className="text-2xl font-black text-[#080B0C] mt-0.5">
-              <AnimatedCounter value={demoMetrics.totalEnquiries || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#080B0C] opacity-60 block">All lead channels</span>
+          <div className="w-10 h-10 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+            <CreditCard className="w-5 h-5 text-[#55CDB3]" />
           </div>
         </FloatingCard>
 
-        {/* Website Enquiries */}
+        {/* Pending Dues */}
         <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
+          onClick={() => setCurrentView('fees_payments')}
+          className="bg-[#F4F7F6] rounded-[24px] p-5 border border-[#493548]/20 shadow-sm flex items-center justify-between"
         >
-          <div className="w-12 h-12 rounded-2xl bg-[#493548]/15 text-[#493548] flex items-center justify-center shrink-0">
-            <Globe className="w-5 h-5 text-[#0284C7]" />
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 rounded-2xl bg-[#493548]/20 text-[#493548] flex items-center justify-center shrink-0">
+              <Clock className="w-6 h-6 text-[#493548]" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#080B0C] opacity-80 block">
+                Pending Dues
+              </span>
+              <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight">₹<AnimatedCounter value={pendingAmount} /></p>
+              <span className="text-xs font-bold text-[#493548] block mt-0.5">
+                {pendingPayments} outstanding invoices
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] block">
-              Website Enquiries
-            </span>
-            <p className="text-2xl font-black text-[#080B0C] mt-0.5">
-              <AnimatedCounter value={demoMetrics.websiteEnquiries || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#493548] block">Online Web Ingestion</span>
+          <div className="w-10 h-10 rounded-2xl bg-[#493548]/20 text-[#493548] flex items-center justify-center shrink-0">
+            <AlertCircle className="w-5 h-5 text-[#493548]" />
           </div>
         </FloatingCard>
 
-        {/* Instagram Enquiries */}
+        {/* Certified Faculty */}
         <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
+          onClick={() => setCurrentView('people')}
+          className="bg-[#F4F7F6] rounded-[24px] p-5 border border-[#493548]/20 shadow-sm flex items-center justify-between"
         >
-          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-            <InstagramIcon className="w-5 h-5 text-[#EC4899]" />
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-13 h-13 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+              <Users className="w-6 h-6 text-[#55CDB3]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#080B0C] opacity-80 block">
+                Certified Faculty
+              </span>
+              <p className="text-2xl font-black text-[#080B0C] mt-0.5 tracking-tight"><AnimatedCounter value={totalCoaches} /> Coaches</p>
+              <span className="text-xs font-medium text-[#080B0C] opacity-70 block mt-0.5 truncate">
+                {totalCoaches > 0 ? data.coaches.map(c => c.name).join(', ') : 'No coaches registered'}
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] block">
-              Instagram Enquiries
-            </span>
-            <p className="text-2xl font-black text-[#080B0C] mt-0.5">
-              <AnimatedCounter value={demoMetrics.instagramEnquiries || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#493548] block">Social Media Leads</span>
-          </div>
-        </FloatingCard>
-
-        {/* WhatsApp Enquiries */}
-        <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#493548]/15 text-[#493548] flex items-center justify-center shrink-0">
-            <WhatsAppIcon className="w-5 h-5 text-[#16A34A]" />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] block">
-              WhatsApp Enquiries
-            </span>
-            <p className="text-2xl font-black text-[#080B0C] mt-0.5">
-              <AnimatedCounter value={demoMetrics.whatsappEnquiries || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#493548] block">Direct Inquiries</span>
-          </div>
-        </FloatingCard>
-
-        {/* Manual / Walk-in */}
-        <FloatingCard 
-          onClick={() => setCurrentView('enquiries')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3] col-span-2 sm:col-span-1"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-            <UserCheck className="w-5 h-5 text-[#55CDB3]" />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] block">
-              Manual / Walk-in
-            </span>
-            <p className="text-2xl font-black text-[#55CDB3] mt-0.5">
-              <AnimatedCounter value={demoMetrics.manualEnquiries || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#493548] block">Reception Desk</span>
-          </div>
-        </FloatingCard>
-      </div>
-
-      {/* Row 5: Four Demo & Admission Funnel Cards with Floating Physics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {/* Total Demos */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#493548]/15 text-[#493548] flex items-center justify-center shrink-0">
-            <Calendar className="w-5 h-5 text-[#0284C7]" />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] block">
-              Total Demos
-            </span>
-            <p className="text-2xl font-black text-[#080B0C] mt-0.5">
-              <AnimatedCounter value={demoMetrics.totalDemos || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#493548] block">Trials Scheduled</span>
-          </div>
-        </FloatingCard>
-
-        {/* Upcoming Demos */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5 text-[#9333EA]" />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] block">
-              Upcoming Demos
-            </span>
-            <p className="text-2xl font-black text-[#080B0C] mt-0.5">
-              <AnimatedCounter value={demoMetrics.upcomingDemos || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#493548] block">Active Bookings</span>
-          </div>
-        </FloatingCard>
-
-        {/* Completed Demos */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#493548]/15 text-[#493548] flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#493548] block">
-              Completed Demos
-            </span>
-            <p className="text-2xl font-black text-[#080B0C] mt-0.5">
-              <AnimatedCounter value={demoMetrics.completedDemos || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#493548] block">Sessions Finished</span>
-          </div>
-        </FloatingCard>
-
-        {/* Student Conversions */}
-        <FloatingCard 
-          onClick={() => setCurrentView('demos')}
-          className="bg-[#F4F7F6] border border-[#493548]/20 rounded-[22px] p-4 flex items-center gap-3.5 shadow-sm hover:border-[#55CDB3]"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
-            <Trophy className="w-5 h-5 text-[#55CDB3]" />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#55CDB3] block">
-              Student Conversions
-            </span>
-            <p className="text-2xl font-black text-[#55CDB3] mt-0.5">
-              <AnimatedCounter value={demoMetrics.studentConversions || 0} />
-            </p>
-            <span className="text-[11px] font-semibold text-[#55CDB3] block">
-              {demoMetrics.conversionRate || 0}% Conversion Rate
-            </span>
+          <div className="w-10 h-10 rounded-2xl bg-[#55CDB3]/15 text-[#55CDB3] flex items-center justify-center shrink-0">
+            <User className="w-5 h-5 text-[#55CDB3]" />
           </div>
         </FloatingCard>
       </div>
