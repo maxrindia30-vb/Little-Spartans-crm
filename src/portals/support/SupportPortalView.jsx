@@ -112,9 +112,6 @@ export default function SupportPortalView() {
               value={data.enquiries.length}
               subtitle="Prospective Leads"
               icon={PhoneCall}
-              trend={15.0}
-              trendLabel="this week"
-              highlight={true}
             />
             <KpiCard
               title="Open Tickets"
@@ -124,13 +121,13 @@ export default function SupportPortalView() {
             />
             <KpiCard
               title="Avg Response Time"
-              value="12 Mins"
+              value={data.supportTickets?.length ? "12 Mins" : "0 Mins"}
               subtitle="Target SLA < 30 mins"
               icon={Clock}
             />
             <KpiCard
               title="Resolution Rate"
-              value="97.4%"
+              value={data.supportTickets?.length ? `${Math.round(((data.supportTickets.filter(t => t.status === 'Resolved').length) / data.supportTickets.length) * 100)}%` : "0%"}
               subtitle="Parent satisfaction index"
               icon={CheckCircle2}
             />

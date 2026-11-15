@@ -462,7 +462,6 @@ export default function ParentPortalView() {
               subtitle={parentProfile.center || 'Active Academy'}
               icon={GraduationCap}
               color="orange"
-              trend={100}
               onClick={() => setCurrentView('children')}
             />
 
@@ -472,7 +471,6 @@ export default function ParentPortalView() {
               subtitle={`${mySchedulesCount} Total Synced`}
               icon={CalendarDays}
               color="blue"
-              trend={12}
               onClick={() => setCurrentView('classes')}
             />
 
@@ -482,7 +480,6 @@ export default function ParentPortalView() {
               subtitle="Verified coach check-ins"
               icon={ClipboardCheck}
               color="green"
-              trend={96}
               onClick={() => setCurrentView('attendance')}
             />
 
@@ -492,7 +489,6 @@ export default function ParentPortalView() {
               subtitle={`${parentCompRequests.filter(r => r.status === 'Scheduled').length} Scheduled Makeup(s)`}
               icon={RefreshCw}
               color="purple"
-              trend={8}
               onClick={() => setCurrentView('compensation')}
             />
           </div>

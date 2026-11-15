@@ -338,38 +338,34 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <KpiCard
           title="Total Demos"
-          value={metrics.totalDemos}
+          value={metrics.totalDemos || 0}
           subtitle={`Across ${activeLocations.length} locations`}
           icon={Calendar}
           color="orange"
-          trend={15}
         />
 
         <KpiCard
           title="Demo Scheduled"
-          value={String(metrics.upcomingDemos).padStart(2, '0')}
+          value={String(metrics.upcomingDemos || 0).padStart(2, '0')}
           subtitle="Upcoming Trial Sessions"
           icon={Clock}
           color="blue"
-          trend={8}
         />
 
         <KpiCard
           title="Completed Demos"
-          value={metrics.completedDemos}
+          value={metrics.completedDemos || 0}
           subtitle="Trials Finished"
           icon={CheckCircle2}
           color="green"
-          trend={20}
         />
 
         <KpiCard
           title="Conversion Rate"
-          value={`${metrics.conversionRate}%`}
-          subtitle={`${metrics.studentConversions} enrolled athletes`}
+          value={`${metrics.conversionRate || 0}%`}
+          subtitle={`${metrics.studentConversions || 0} enrolled athletes`}
           icon={TrendingUp}
           color="purple"
-          trend={10}
         />
       </div>
 

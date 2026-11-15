@@ -402,38 +402,34 @@ export default function EnquiryManagement() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <KpiCard
           title="Total Enquiries"
-          value={pipelineMetrics.totalEnquiries || (data.enquiries || []).length || 25}
+          value={pipelineMetrics.totalEnquiries || (data.enquiries || []).length || 0}
           subtitle={`Across ${commonLocations.length} locations`}
           icon={Users}
           color="orange"
-          trend={12}
         />
 
         <KpiCard
           title="Demo Scheduled"
-          value={String(pipelineMetrics.upcomingDemos || 8).padStart(2, '0')}
+          value={String(pipelineMetrics.upcomingDemos || 0).padStart(2, '0')}
           subtitle="Trial sessions in progress"
           icon={Calendar}
           color="blue"
-          trend={8}
         />
 
         <KpiCard
           title="Enrolled Students"
-          value={(data.students || []).length || 12}
+          value={(data.students || []).length || 0}
           subtitle="Enrolled from enquiries"
           icon={GraduationCap}
           color="green"
-          trend={20}
         />
 
         <KpiCard
           title="Conversion Rate"
-          value={`${pipelineMetrics.conversionRate || 48}%`}
-          subtitle={`${pipelineMetrics.studentConversions} enrolled athletes`}
+          value={`${pipelineMetrics.conversionRate || 0}%`}
+          subtitle={`${pipelineMetrics.studentConversions || 0} enrolled athletes`}
           icon={TrendingUp}
           color="purple"
-          trend={10}
         />
       </div>
 

@@ -459,7 +459,6 @@ export default function CoachPortalView() {
               subtitle="Synced from Admin"
               icon={CalendarDays}
               color="orange"
-              trend={12}
               onClick={() => setCurrentView('schedules')}
             />
 
@@ -469,7 +468,6 @@ export default function CoachPortalView() {
               subtitle={`Across ${coachAssignedBatches.length} Batches`}
               icon={GraduationCap}
               color="blue"
-              trend={18}
               onClick={() => setCurrentView('batches')}
             />
 
@@ -479,17 +477,15 @@ export default function CoachPortalView() {
               subtitle={`${assignedStudentReplacements.filter(r => r.status === 'Scheduled').length} Upcoming Replacements`}
               icon={RefreshCw}
               color="green"
-              trend={8}
               onClick={() => setCurrentView('compensation')}
             />
 
             <KpiCard
               title="Faculty Rating"
-              value={`${coachProfile.rating || '4.9'}`}
-              subtitle={`${coachProfile.experience || 'Experienced'} • 5.0 Star`}
+              value={`${coachProfile.rating || '0.0'}`}
+              subtitle={`${coachProfile.experience || 'Faculty'} • 5.0 Scale`}
               icon={Star}
               color="purple"
-              trend={10}
               onClick={() => setCurrentView('evaluations')}
             />
           </div>

@@ -30,7 +30,7 @@ import {
 
 const CrmContext = createContext();
 
-const LOCAL_STORAGE_KEY = 'little_spartans_crm_v3_chennai';
+const LOCAL_STORAGE_KEY = 'little_spartans_crm_v4_clean';
 const CURRENT_ROLE_KEY = 'little_spartans_current_portal';
 
 export function CrmProvider({ children }) {

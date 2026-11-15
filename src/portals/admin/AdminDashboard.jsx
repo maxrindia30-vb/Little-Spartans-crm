@@ -26,7 +26,6 @@ import { useCrm } from '../../context/CrmContext';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
 import AdmissionPipelineStepper from '../../components/common/AdmissionPipelineStepper';
-import { RevenueTrendChart, AttendanceDonutChart, ProgramDistributionChart } from '../../components/common/Charts';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
 import { calculateDemoMetrics } from '../../services/demoService';
@@ -195,37 +194,33 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <KpiCard
           title="Total Enquiries"
-          value={demoMetrics.totalEnquiries || 25}
+          value={demoMetrics.totalEnquiries || 0}
           icon={Users}
           color="orange"
-          trend={12}
           onClick={() => setCurrentView('enquiries')}
         />
 
         <KpiCard
           title="Demo Scheduled"
-          value={String(demoMetrics.upcomingDemos || 8).padStart(2, '0')}
+          value={String(demoMetrics.upcomingDemos || 0).padStart(2, '0')}
           icon={Calendar}
           color="blue"
-          trend={8}
           onClick={() => setCurrentView('demos')}
         />
 
         <KpiCard
           title="Enrolled Students"
-          value={totalStudents || 12}
+          value={totalStudents || 0}
           icon={GraduationCap}
           color="green"
-          trend={20}
           onClick={() => setCurrentView('people')}
         />
 
         <KpiCard
           title="Conversion Rate"
-          value={`${demoMetrics.conversionRate || 48}%`}
+          value={`${demoMetrics.conversionRate || 0}%`}
           icon={TrendingUp}
           color="purple"
-          trend={10}
           onClick={() => setCurrentView('demos')}
         />
       </div>
@@ -298,7 +293,7 @@ export default function AdminDashboard() {
               </span>
               <p className="text-2xl font-black text-[#172B50] mt-0.5 tracking-tight"><AnimatedCounter value={totalCoaches} /> Coaches</p>
               <span className="text-xs font-medium text-[#172B50] opacity-70 block mt-0.5">
-                Kapil, Dibi, Hanif, Teja
+                {data.coaches.map(c => c.name).join(', ') || 'No coaches assigned'}
               </span>
             </div>
           </div>
@@ -330,57 +325,71 @@ export default function AdminDashboard() {
               {/* SVG Donut */}
               <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
                 <svg className="w-36 h-36" viewBox="0 0 160 160">
-                  {/* Segment 1: Manual / Walk-in (40% - Orange #F4510B) */}
+                  {/* Background track */}
                   <circle
                     cx="80"
                     cy="80"
                     r="50"
                     fill="transparent"
-                    stroke="#F4510B"
+                    stroke="#172B50"
                     strokeWidth="18"
-                    strokeDasharray="125.66 188.5"
-                    strokeDashoffset="0"
-                    transform="rotate(-90 80 80)"
+                    opacity={demoMetrics.totalEnquiries > 0 ? "0.08" : "0.15"}
                   />
-                  {/* Segment 2: Website (20% - Blue #0284C7) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="50"
-                    fill="transparent"
-                    stroke="#0284C7"
-                    strokeWidth="18"
-                    strokeDasharray="62.83 251.33"
-                    strokeDashoffset="-125.66"
-                    transform="rotate(-90 80 80)"
-                  />
-                  {/* Segment 3: Instagram (20% - Pink #EC4899) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="50"
-                    fill="transparent"
-                    stroke="#EC4899"
-                    strokeWidth="18"
-                    strokeDasharray="62.83 251.33"
-                    strokeDashoffset="-188.49"
-                    transform="rotate(-90 80 80)"
-                  />
-                  {/* Segment 4: WhatsApp (20% - Green #10B981) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="50"
-                    fill="transparent"
-                    stroke="#10B981"
-                    strokeWidth="18"
-                    strokeDasharray="62.83 251.33"
-                    strokeDashoffset="-251.32"
-                    transform="rotate(-90 80 80)"
-                  />
+                  {demoMetrics.totalEnquiries > 0 && (
+                    <>
+                      {/* Segment 1: Manual / Walk-in */}
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="50"
+                        fill="transparent"
+                        stroke="#F4510B"
+                        strokeWidth="18"
+                        strokeDasharray={`${(demoMetrics.manualEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
+                        strokeDashoffset="0"
+                        transform="rotate(-90 80 80)"
+                      />
+                      {/* Segment 2: Website */}
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="50"
+                        fill="transparent"
+                        stroke="#0284C7"
+                        strokeWidth="18"
+                        strokeDasharray={`${(demoMetrics.websiteEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
+                        strokeDashoffset={`-${(demoMetrics.manualEnquiries / demoMetrics.totalEnquiries) * 314.16}`}
+                        transform="rotate(-90 80 80)"
+                      />
+                      {/* Segment 3: Instagram */}
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="50"
+                        fill="transparent"
+                        stroke="#EC4899"
+                        strokeWidth="18"
+                        strokeDasharray={`${(demoMetrics.instagramEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
+                        strokeDashoffset={`-${((demoMetrics.manualEnquiries + demoMetrics.websiteEnquiries) / demoMetrics.totalEnquiries) * 314.16}`}
+                        transform="rotate(-90 80 80)"
+                      />
+                      {/* Segment 4: WhatsApp */}
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="50"
+                        fill="transparent"
+                        stroke="#10B981"
+                        strokeWidth="18"
+                        strokeDasharray={`${(demoMetrics.whatsappEnquiries / demoMetrics.totalEnquiries) * 314.16} 314.16`}
+                        strokeDashoffset={`-${((demoMetrics.manualEnquiries + demoMetrics.websiteEnquiries + demoMetrics.instagramEnquiries) / demoMetrics.totalEnquiries) * 314.16}`}
+                        transform="rotate(-90 80 80)"
+                      />
+                    </>
+                  )}
                   {/* Inner text */}
                   <text x="80" y="74" textAnchor="middle" className="text-3xl font-black fill-[#172B50] font-sans">
-                    {demoMetrics.totalEnquiries || 5}
+                    {demoMetrics.totalEnquiries || 0}
                   </text>
                   <text x="80" y="91" textAnchor="middle" className="text-[10px] font-bold fill-[#172B50] opacity-65 font-sans tracking-wider uppercase">
                     Total
@@ -398,28 +407,36 @@ export default function AdminDashboard() {
                     <span className="w-2.5 h-2.5 rounded-full bg-[#F4510B] shrink-0" />
                     <span className="font-semibold text-[#172B50]">Manual / Walk-in</span>
                   </div>
-                  <span className="font-bold text-[#172B50]">40% ({demoMetrics.manualEnquiries || 2})</span>
+                  <span className="font-bold text-[#172B50]">
+                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.manualEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.manualEnquiries || 0})
+                  </span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#0284C7] shrink-0" />
                     <span className="font-semibold text-[#172B50]">Website</span>
                   </div>
-                  <span className="font-bold text-[#172B50]">20% ({demoMetrics.websiteEnquiries || 1})</span>
+                  <span className="font-bold text-[#172B50]">
+                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.websiteEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.websiteEnquiries || 0})
+                  </span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#EC4899] shrink-0" />
                     <span className="font-semibold text-[#172B50]">Instagram</span>
                   </div>
-                  <span className="font-bold text-[#172B50]">20% ({demoMetrics.instagramEnquiries || 1})</span>
+                  <span className="font-bold text-[#172B50]">
+                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.instagramEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.instagramEnquiries || 0})
+                  </span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shrink-0" />
                     <span className="font-semibold text-[#172B50]">WhatsApp</span>
                   </div>
-                  <span className="font-bold text-[#172B50]">20% ({demoMetrics.whatsappEnquiries || 1})</span>
+                  <span className="font-bold text-[#172B50]">
+                    {demoMetrics.totalEnquiries > 0 ? Math.round((demoMetrics.whatsappEnquiries / demoMetrics.totalEnquiries) * 100) : 0}% ({demoMetrics.whatsappEnquiries || 0})
+                  </span>
                 </div>
               </div>
             </div>
@@ -429,7 +446,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#172B50]">Conversion Funnel</span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#DCFCE7] text-[#16A34A] shadow-xs">
-                  {demoMetrics.conversionRate || 48}% Conversion Rate
+                  {demoMetrics.conversionRate || 0}% Conversion Rate
                 </span>
               </div>
 
@@ -438,7 +455,7 @@ export default function AdminDashboard() {
                 {/* 1: Enquiries */}
                 <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('enquiries')}>
                   <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={demoMetrics.totalEnquiries || 25} />
+                    <AnimatedCounter value={demoMetrics.totalEnquiries || 0} />
                   </span>
                   <div className="w-11 sm:w-13 h-24 bg-[#D6ECFF] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#BAE6FD]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Enquiries</span>
@@ -449,7 +466,7 @@ export default function AdminDashboard() {
                 {/* 2: Demos */}
                 <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('demos')}>
                   <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={demoMetrics.upcomingDemos || 8} padZero />
+                    <AnimatedCounter value={demoMetrics.upcomingDemos || 0} padZero />
                   </span>
                   <div className="w-11 sm:w-13 h-18 bg-[#F3E8FF] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#E9D5FF]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Demos</span>
@@ -460,7 +477,7 @@ export default function AdminDashboard() {
                 {/* 3: Completed Demos */}
                 <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('demos')}>
                   <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={demoMetrics.completedDemos || 4} padZero />
+                    <AnimatedCounter value={demoMetrics.completedDemos || 0} padZero />
                   </span>
                   <div className="w-11 sm:w-13 h-13 bg-[#DCFCE7] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#BBF7D0]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center leading-tight">
@@ -473,7 +490,7 @@ export default function AdminDashboard() {
                 {/* 4: Enrolled */}
                 <div className="flex flex-col items-center group cursor-pointer" onClick={() => setCurrentView('people')}>
                   <span className="text-xs font-black text-[#172B50] mb-1.5">
-                    <AnimatedCounter value={totalStudents || 12} />
+                    <AnimatedCounter value={totalStudents || 0} />
                   </span>
                   <div className="w-11 sm:w-13 h-20 bg-[#FFE2D1] rounded-2xl shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:bg-[#FED7AA]" />
                   <span className="text-[10px] font-bold text-[#172B50] opacity-75 mt-2 text-center">Enrolled</span>
@@ -505,101 +522,109 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* SVG Area Chart */}
+          {/* SVG Area Chart or Empty State */}
           <div className="mt-4 pt-1 w-full">
-            <svg className="w-full h-48 overflow-visible" viewBox="0 0 380 180">
-              <defs>
-                <linearGradient id="orangeTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#F4510B" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#F4510B" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
+            {demoMetrics.totalEnquiries === 0 ? (
+              <div className="h-48 flex flex-col items-center justify-center text-center p-4">
+                <TrendingUp className="w-8 h-8 text-[#172B50]/20 mb-2" />
+                <p className="text-xs font-bold text-[#172B50]/60">No enquiry trends recorded yet</p>
+                <p className="text-[11px] text-[#172B50]/40 mt-0.5">Enquiry progression curve will appear here once leads are logged</p>
+              </div>
+            ) : (
+              <svg className="w-full h-48 overflow-visible" viewBox="0 0 380 180">
+                <defs>
+                  <linearGradient id="orangeTrendGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F4510B" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#F4510B" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
 
-              {/* Grid Lines & Y-ticks */}
-              {[
-                { y: 22, val: 25 },
-                { y: 50, val: 20 },
-                { y: 78, val: 15 },
-                { y: 106, val: 10 },
-                { y: 134, val: 5 },
-                { y: 160, val: 0 },
-              ].map((tick) => (
-                <g key={tick.val}>
-                  <line
-                    x1="35"
-                    y1={tick.y}
-                    x2="370"
-                    y2={tick.y}
-                    stroke="#172B50"
-                    strokeOpacity="0.08"
-                    strokeDasharray="3 3"
-                  />
+                {/* Grid Lines & Y-ticks */}
+                {[
+                  { y: 22, val: 25 },
+                  { y: 50, val: 20 },
+                  { y: 78, val: 15 },
+                  { y: 106, val: 10 },
+                  { y: 134, val: 5 },
+                  { y: 160, val: 0 },
+                ].map((tick) => (
+                  <g key={tick.val}>
+                    <line
+                      x1="35"
+                      y1={tick.y}
+                      x2="370"
+                      y2={tick.y}
+                      stroke="#172B50"
+                      strokeOpacity="0.08"
+                      strokeDasharray="3 3"
+                    />
+                    <text
+                      x="25"
+                      y={tick.y + 4}
+                      textAnchor="end"
+                      className="text-[10px] font-semibold fill-[#172B50] opacity-50 font-sans"
+                    >
+                      {tick.val}
+                    </text>
+                  </g>
+                ))}
+
+                {/* Shaded Area */}
+                <path
+                  d="M 50,140 C 75,140 80,115 100,115 C 120,115 130,132 150,132 C 170,132 180,115 200,115 C 220,115 230,95 250,95 C 270,95 280,80 300,80 C 320,80 335,38 355,38 L 355,160 L 50,160 Z"
+                  fill="url(#orangeTrendGrad)"
+                />
+
+                {/* Line Curve */}
+                <path
+                  d="M 50,140 C 75,140 80,115 100,115 C 120,115 130,132 150,132 C 170,132 180,115 200,115 C 220,115 230,95 250,95 C 270,95 280,80 300,80 C 320,80 335,38 355,38"
+                  fill="none"
+                  stroke="#F4510B"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+
+                {/* Data Node Circles with Live Ping on Latest Node */}
+                {[
+                  { x: 50, y: 140 },
+                  { x: 100, y: 115 },
+                  { x: 150, y: 132 },
+                  { x: 200, y: 115 },
+                  { x: 250, y: 95 },
+                  { x: 300, y: 80 },
+                  { x: 355, y: 38 },
+                ].map((pt, i) => (
+                  <g key={i}>
+                    {i === 6 && (
+                      <circle cx={pt.x} cy={pt.y} r="10" fill="#F4510B" opacity="0.4" className="animate-ping" />
+                    )}
+                    <circle cx={pt.x} cy={pt.y} r="5.5" fill="#F4510B" opacity="0.25" />
+                    <circle cx={pt.x} cy={pt.y} r="4" fill="#FFFFFF" stroke="#F4510B" strokeWidth="2.5" />
+                  </g>
+                ))}
+
+                {/* X-axis labels */}
+                {[
+                  { x: 50, label: '1 Jan' },
+                  { x: 100, label: '5 Jan' },
+                  { x: 150, label: '10 Jan' },
+                  { x: 200, label: '15 Jan' },
+                  { x: 250, label: '20 Jan' },
+                  { x: 300, label: '25 Jan' },
+                  { x: 355, label: '30 Jan' },
+                ].map((lbl) => (
                   <text
-                    x="25"
-                    y={tick.y + 4}
-                    textAnchor="end"
-                    className="text-[10px] font-semibold fill-[#172B50] opacity-50 font-sans"
+                    key={lbl.label}
+                    x={lbl.x}
+                    y="176"
+                    textAnchor="middle"
+                    className="text-[10px] font-semibold fill-[#172B50] opacity-60 font-sans"
                   >
-                    {tick.val}
+                    {lbl.label}
                   </text>
-                </g>
-              ))}
-
-              {/* Shaded Area */}
-              <path
-                d="M 50,140 C 75,140 80,115 100,115 C 120,115 130,132 150,132 C 170,132 180,115 200,115 C 220,115 230,95 250,95 C 270,95 280,80 300,80 C 320,80 335,38 355,38 L 355,160 L 50,160 Z"
-                fill="url(#orangeTrendGrad)"
-              />
-
-              {/* Line Curve */}
-              <path
-                d="M 50,140 C 75,140 80,115 100,115 C 120,115 130,132 150,132 C 170,132 180,115 200,115 C 220,115 230,95 250,95 C 270,95 280,80 300,80 C 320,80 335,38 355,38"
-                fill="none"
-                stroke="#F4510B"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-
-              {/* Data Node Circles with Live Ping on Latest Node */}
-              {[
-                { x: 50, y: 140 },
-                { x: 100, y: 115 },
-                { x: 150, y: 132 },
-                { x: 200, y: 115 },
-                { x: 250, y: 95 },
-                { x: 300, y: 80 },
-                { x: 355, y: 38 },
-              ].map((pt, i) => (
-                <g key={i}>
-                  {i === 6 && (
-                    <circle cx={pt.x} cy={pt.y} r="10" fill="#F4510B" opacity="0.4" className="animate-ping" />
-                  )}
-                  <circle cx={pt.x} cy={pt.y} r="5.5" fill="#F4510B" opacity="0.25" />
-                  <circle cx={pt.x} cy={pt.y} r="4" fill="#FFFFFF" stroke="#F4510B" strokeWidth="2.5" />
-                </g>
-              ))}
-
-              {/* X-axis labels */}
-              {[
-                { x: 50, label: '1 Jan' },
-                { x: 100, label: '5 Jan' },
-                { x: 150, label: '10 Jan' },
-                { x: 200, label: '15 Jan' },
-                { x: 250, label: '20 Jan' },
-                { x: 300, label: '25 Jan' },
-                { x: 355, label: '30 Jan' },
-              ].map((lbl) => (
-                <text
-                  key={lbl.label}
-                  x={lbl.x}
-                  y="176"
-                  textAnchor="middle"
-                  className="text-[10px] font-semibold fill-[#172B50] opacity-60 font-sans"
-                >
-                  {lbl.label}
-                </text>
-              ))}
-            </svg>
+                ))}
+              </svg>
+            )}
           </div>
         </div>
       </div>
@@ -619,7 +644,7 @@ export default function AdminDashboard() {
               Total Enquiries
             </span>
             <p className="text-2xl font-black text-[#172B50] mt-0.5">
-              <AnimatedCounter value={demoMetrics.totalEnquiries || 5} />
+              <AnimatedCounter value={demoMetrics.totalEnquiries || 0} />
             </p>
             <span className="text-[11px] font-semibold text-[#172B50] opacity-60 block">All lead channels</span>
           </div>
@@ -638,7 +663,7 @@ export default function AdminDashboard() {
               Website Enquiries
             </span>
             <p className="text-2xl font-black text-blue-900 mt-0.5">
-              <AnimatedCounter value={demoMetrics.websiteEnquiries || 1} />
+              <AnimatedCounter value={demoMetrics.websiteEnquiries || 0} />
             </p>
             <span className="text-[11px] font-semibold text-blue-700 block">Online Web Ingestion</span>
           </div>
@@ -657,7 +682,7 @@ export default function AdminDashboard() {
               Instagram Enquiries
             </span>
             <p className="text-2xl font-black text-fuchsia-900 mt-0.5">
-              <AnimatedCounter value={demoMetrics.instagramEnquiries || 1} />
+              <AnimatedCounter value={demoMetrics.instagramEnquiries || 0} />
             </p>
             <span className="text-[11px] font-semibold text-fuchsia-700 block">Social Media Leads</span>
           </div>
@@ -676,7 +701,7 @@ export default function AdminDashboard() {
               WhatsApp Enquiries
             </span>
             <p className="text-2xl font-black text-emerald-900 mt-0.5">
-              <AnimatedCounter value={demoMetrics.whatsappEnquiries || 1} />
+              <AnimatedCounter value={demoMetrics.whatsappEnquiries || 0} />
             </p>
             <span className="text-[11px] font-semibold text-emerald-700 block">Direct Inquiries</span>
           </div>
@@ -695,7 +720,7 @@ export default function AdminDashboard() {
               Manual / Walk-in
             </span>
             <p className="text-2xl font-black text-[#F4510B] mt-0.5">
-              <AnimatedCounter value={demoMetrics.manualEnquiries || 2} />
+              <AnimatedCounter value={demoMetrics.manualEnquiries || 0} />
             </p>
             <span className="text-[11px] font-semibold text-amber-800 block">Reception Desk</span>
           </div>
@@ -717,7 +742,7 @@ export default function AdminDashboard() {
               Total Demos
             </span>
             <p className="text-2xl font-black text-blue-900 mt-0.5">
-              <AnimatedCounter value={demoMetrics.totalDemos || 3} />
+              <AnimatedCounter value={demoMetrics.totalDemos || 0} />
             </p>
             <span className="text-[11px] font-semibold text-blue-700 block">Trials Scheduled</span>
           </div>
@@ -736,7 +761,7 @@ export default function AdminDashboard() {
               Upcoming Demos
             </span>
             <p className="text-2xl font-black text-purple-900 mt-0.5">
-              <AnimatedCounter value={demoMetrics.upcomingDemos || 1} />
+              <AnimatedCounter value={demoMetrics.upcomingDemos || 0} />
             </p>
             <span className="text-[11px] font-semibold text-purple-700 block">Active Bookings</span>
           </div>
@@ -755,7 +780,7 @@ export default function AdminDashboard() {
               Completed Demos
             </span>
             <p className="text-2xl font-black text-emerald-900 mt-0.5">
-              <AnimatedCounter value={demoMetrics.completedDemos || 2} />
+              <AnimatedCounter value={demoMetrics.completedDemos || 0} />
             </p>
             <span className="text-[11px] font-semibold text-emerald-700 block">Sessions Finished</span>
           </div>
@@ -774,49 +799,36 @@ export default function AdminDashboard() {
               Student Conversions
             </span>
             <p className="text-2xl font-black text-[#F4510B] mt-0.5">
-              <AnimatedCounter value={demoMetrics.studentConversions || 4} />
+              <AnimatedCounter value={demoMetrics.studentConversions || 0} />
             </p>
             <span className="text-[11px] font-semibold text-[#F4510B] block">
-              {demoMetrics.conversionRate || 80}% Conversion Rate
+              {demoMetrics.conversionRate || 0}% Conversion Rate
             </span>
           </div>
         </FloatingCard>
       </div>
 
-      {/* Visual Analytics & Attendance Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <RevenueTrendChart />
-        </div>
-        <div>
-          <AttendanceDonutChart presentRate={92} />
-        </div>
-      </div>
-
-      {/* Program Distribution & Recent Leads */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Program Capacity Bar */}
-        <div className="lg:col-span-1">
-          <ProgramDistributionChart />
-        </div>
-
-        {/* Live Enquiry Pipeline */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-          <div className="flex items-center justify-between pb-3 border-b border-[#172B5012]">
-            <div>
-              <h4 className="text-sm font-extrabold text-[#172B50]">Recent Admission Enquiries</h4>
-              <p className="text-xs text-[#172B50] opacity-70">Prospective young athletes awaiting trial or counseling</p>
-            </div>
-            <button
-              onClick={() => setCurrentView('enquiries')}
-              className="text-xs font-bold text-[#F4510B] hover:underline flex items-center gap-1"
-            >
-              <span>View All ({data.enquiries.length})</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+      {/* Live Enquiry Pipeline */}
+      <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
+        <div className="flex items-center justify-between pb-3 border-b border-[#172B5012]">
+          <div>
+            <h4 className="text-sm font-extrabold text-[#172B50]">Recent Admission Enquiries</h4>
+            <p className="text-xs text-[#172B50] opacity-70">Prospective young athletes awaiting trial or counseling</p>
           </div>
+          <button
+            onClick={() => setCurrentView('enquiries')}
+            className="text-xs font-bold text-[#F4510B] hover:underline flex items-center gap-1"
+          >
+            <span>View All ({data.enquiries.length})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
+        {data.enquiries.length === 0 ? (
+          <div className="py-8 text-center text-xs text-[#172B50]/50 font-medium">
+            No recent enquiries logged yet. Click "Add Enquiry" above to create your first lead.
+          </div>
+        ) : (
           <div className="overflow-x-auto mt-3">
             <table className="w-full text-left text-xs">
               <thead>
@@ -868,8 +880,7 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
-        </div>
-
+        )}
       </div>
 
       {/* Upcoming Competitions & Academy Notices Banner */}
@@ -891,31 +902,37 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          {data.competitions.map(comp => (
-            <div key={comp.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B501A] flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F4510B] block">
-                  {comp.sport}
-                </span>
-                <h5 className="text-xs font-bold text-[#172B50] mt-1 leading-snug">{comp.title}</h5>
-                <p className="text-[11px] text-[#172B50] opacity-75 mt-1.5 flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-[#172B50]" />
-                  <span>{comp.date} • {comp.venue.split(',')[0]}</span>
-                </p>
-              </div>
+        {data.competitions.length === 0 ? (
+          <div className="py-6 text-center text-xs text-[#172B50]/50 font-medium">
+            No upcoming academy tournaments or fixtures scheduled yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            {data.competitions.map(comp => (
+              <div key={comp.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B501A] flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#F4510B] block">
+                    {comp.sport}
+                  </span>
+                  <h5 className="text-xs font-bold text-[#172B50] mt-1 leading-snug">{comp.title}</h5>
+                  <p className="text-[11px] text-[#172B50] opacity-75 mt-1.5 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-[#172B50]" />
+                    <span>{comp.date} • {comp.venue.split(',')[0]}</span>
+                  </p>
+                </div>
 
-              <div className="mt-3 pt-3 border-t border-[#172B5015] flex items-center justify-between">
-                <span className="text-[11px] font-bold text-[#172B50]">
-                  {comp.registeredCount}/{comp.maxParticipants} Registered
-                </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#F4510B] text-white">
-                  {comp.status}
-                </span>
+                <div className="mt-3 pt-3 border-t border-[#172B5015] flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#172B50]">
+                    {comp.registeredCount}/{comp.maxParticipants} Registered
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#F4510B] text-white">
+                    {comp.status}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* QUICK MODALS */}

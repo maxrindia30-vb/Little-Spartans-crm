@@ -24,7 +24,6 @@ import CoachPortalView from './portals/coach/CoachPortalView';
 import SuperCoachPortalView from './portals/supercoach/SuperCoachPortalView';
 import SupportPortalView from './portals/support/SupportPortalView';
 import EquipmentManagementModule from './portals/common/EquipmentManagementModule';
-import LiveActivityTicker from './components/common/LiveActivityTicker';
 
 export default function App() {
   const { currentPortal, currentView, setCurrentPortal, isLoggedIn, sidebarOpen, setSidebarOpen } = useCrm();
@@ -160,9 +159,6 @@ export default function App() {
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
             
-            {/* Live Operational Ticker Across All Portals */}
-            <LiveActivityTicker />
-
             {/* Active Portal Content */}
             {currentPortal === 'admin' && renderAdminView()}
             {currentPortal === 'super_coach' && <SuperCoachPortalView />}

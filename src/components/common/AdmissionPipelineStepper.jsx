@@ -22,13 +22,13 @@ export default function AdmissionPipelineStepper({ activeStep = 'enrolled', onSt
   const getStepCount = (index) => {
     switch (index) {
       case 0: return enquiriesCount;
-      case 1: return Math.round(enquiriesCount * 0.7);
-      case 2: return Math.round(enquiriesCount * 0.5);
-      case 3: return demosCount || 8;
-      case 4: return Math.round((demosCount || 8) * 0.6);
-      case 5: return Math.round((demosCount || 8) * 0.6);
-      case 6: return studentsCount || 12;
-      default: return null;
+      case 1: return (data.enquiries || []).filter(e => e.stage === 'Follow-up').length;
+      case 2: return (data.enquiries || []).filter(e => e.stage === 'Interested').length;
+      case 3: return demosCount;
+      case 4: return (data.demos || []).filter(d => d.status === 'Completed').length;
+      case 5: return (data.students || []).filter(s => s.parentName).length;
+      case 6: return studentsCount;
+      default: return 0;
     }
   };
 
