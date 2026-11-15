@@ -45,6 +45,22 @@ export default function Navbar() {
           >
             {sidebarOpen ? <X className="w-5 h-5 text-[#172B50]" /> : <Menu className="w-5 h-5 text-[#172B50]" />}
           </button>
+
+          <div 
+            className="lg:hidden flex items-center gap-2 cursor-pointer select-none group py-0.5" 
+            onClick={() => window.location.reload()}
+            title="Little Spartans ZenConnect CRM"
+          >
+            <img 
+              src="/assets/zenconnect-navbar-logo.png" 
+              alt="Little Spartans ZenConnect" 
+              className="h-8 sm:h-9 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              style={{ 
+                imageRendering: '-webkit-optimize-contrast',
+                transform: 'translateZ(0)'
+              }}
+            />
+          </div>
         </div>
 
         {/* Center: Global Search bar matching senior UI/UX spec */}
