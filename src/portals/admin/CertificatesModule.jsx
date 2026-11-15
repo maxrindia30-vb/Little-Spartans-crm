@@ -48,17 +48,17 @@ export default function CertificatesModule() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
             Certificates & Spartan Honors
           </h1>
-          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
             Issue verified milestone awards, tournament medals and course graduation certificates
           </p>
         </div>
 
         <button
           onClick={() => setIsIssueOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-white" />
           <span>Issue New Certificate</span>
@@ -68,36 +68,36 @@ export default function CertificatesModule() {
       {/* Certificates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {data.certificates.map(cert => (
-          <div key={cert.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
+          <div key={cert.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
             <div>
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#55CDB3]">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
                     {cert.category}
                   </span>
-                  <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{cert.title}</h3>
+                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{cert.title}</h3>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-[#493548]/15 flex items-center justify-center shrink-0 border border-[#493548]/20">
-                  <Trophy className="w-5 h-5 text-[#55CDB3]" />
+                <div className="w-10 h-10 rounded-xl bg-[#FFF4E8] flex items-center justify-center shrink-0 border border-[#172B5015]">
+                  <Trophy className="w-5 h-5 text-[#F4510B]" />
                 </div>
               </div>
 
-              <div className="mt-4 p-3 rounded-xl bg-[#493548]/15 border border-[#493548]/20">
-                <span className="text-[10px] font-bold uppercase text-[#493548] block">Awarded To</span>
-                <p className="text-sm font-black text-[#080B0C] mt-0.5">{cert.studentName}</p>
-                <p className="text-[11px] text-[#080B0C] opacity-75 mt-1">Issued: {cert.issuedDate}</p>
+              <div className="mt-4 p-3 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
+                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">Awarded To</span>
+                <p className="text-sm font-black text-[#172B50] mt-0.5">{cert.studentName}</p>
+                <p className="text-[11px] text-[#172B50] opacity-75 mt-1">Issued: {cert.issuedDate}</p>
               </div>
 
-              <p className="mt-3 text-[11px] text-[#493548]">
+              <p className="mt-3 text-[11px] text-[#172B50] opacity-70">
                 Authorized By: <span className="font-bold">{cert.issuer}</span>
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-[#493548]/20 flex items-center justify-between">
-              <span className="text-[10px] text-[#493548]">{cert.id}</span>
+            <div className="mt-4 pt-3 border-t border-[#172B5015] flex items-center justify-between">
+              <span className="text-[10px] text-[#172B50] opacity-50">{cert.id}</span>
               <button
                 onClick={() => setPreviewCert(cert)}
-                className="px-3 py-1.5 text-xs font-bold bg-[#080B0C] text-[#F4F7F6] hover:bg-[#55CDB3] rounded-lg transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 text-xs font-bold bg-[#172B50] text-white hover:bg-[#F4510B] rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <Award className="w-3.5 h-3.5 text-white" />
                 <span>View Certificate</span>
@@ -116,11 +116,11 @@ export default function CertificatesModule() {
       >
         <form onSubmit={handleIssue} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-[#080B0C] block mb-1">Select Athlete *</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Select Athlete *</label>
             <select
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             >
               {data.students.map(s => (
                 <option key={s.id} value={s.id}>{s.name} ({s.program})</option>
@@ -129,24 +129,24 @@ export default function CertificatesModule() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#080B0C] block mb-1">Certificate Title *</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Certificate Title *</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Spartan Sprint Gold Medalist"
-              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Award Category</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Award Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
                 <option value="Milestone Achievement">Milestone Achievement</option>
                 <option value="Tournament Medal">Tournament Medal</option>
@@ -155,27 +155,27 @@ export default function CertificatesModule() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Signing Authority</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Signing Authority</label>
               <input
                 type="text"
                 value={issuer}
                 onChange={(e) => setIssuer(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#493548]/20 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsIssueOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all"
+              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
             >
               Generate Certificate
             </button>
@@ -192,48 +192,48 @@ export default function CertificatesModule() {
           subtitle={`Credential ID: ${previewCert.id}`}
           maxWidth="max-w-2xl"
         >
-          <div className="p-8 rounded-2xl bg-[#493548]/15 border-4 border-[#493548]/20 text-center space-y-4 relative overflow-hidden">
-            <div className="absolute top-2 left-2 text-[#080B0C] opacity-20 font-serif text-3xl">❖</div>
-            <div className="absolute top-2 right-2 text-[#080B0C] opacity-20 font-serif text-3xl">❖</div>
-            <div className="absolute bottom-2 left-2 text-[#080B0C] opacity-20 font-serif text-3xl">❖</div>
-            <div className="absolute bottom-2 right-2 text-[#080B0C] opacity-20 font-serif text-3xl">❖</div>
+          <div className="p-8 rounded-2xl bg-[#FFF4E8] border-4 border-[#172B50] text-center space-y-4 relative overflow-hidden">
+            <div className="absolute top-2 left-2 text-[#172B50] opacity-20 font-serif text-3xl">❖</div>
+            <div className="absolute top-2 right-2 text-[#172B50] opacity-20 font-serif text-3xl">❖</div>
+            <div className="absolute bottom-2 left-2 text-[#172B50] opacity-20 font-serif text-3xl">❖</div>
+            <div className="absolute bottom-2 right-2 text-[#172B50] opacity-20 font-serif text-3xl">❖</div>
 
-            <div className="mx-auto w-14 h-14 rounded-2xl bg-[#080B0C] flex items-center justify-center shadow-card border-2 border-[#55CDB3]">
-              <Shield className="w-8 h-8 text-[#55CDB3] fill-[#55CDB3]" />
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-[#172B50] flex items-center justify-center shadow-card border-2 border-[#F4510B]">
+              <Shield className="w-8 h-8 text-[#F4510B] fill-[#F4510B]" />
             </div>
 
-            <div className="uppercase tracking-widest text-xs font-extrabold text-[#55CDB3]">
+            <div className="uppercase tracking-widest text-xs font-extrabold text-[#F4510B]">
               LITTLE SPARTANS SPORTS ACADEMY
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-black text-[#080B0C] tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-black text-[#172B50] tracking-tight">
               CERTIFICATE OF EXCELLENCE
             </h2>
 
-            <p className="text-xs text-[#080B0C] opacity-75">
+            <p className="text-xs text-[#172B50] opacity-75">
               This official honors certificate is proudly awarded to:
             </p>
 
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] border-b-2 border-[#55CDB3] inline-block pb-1 px-8">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] border-b-2 border-[#F4510B] inline-block pb-1 px-8">
               {previewCert.studentName}
             </h3>
 
-            <p className="text-xs text-[#080B0C] max-w-md mx-auto leading-relaxed pt-2">
+            <p className="text-xs text-[#172B50] max-w-md mx-auto leading-relaxed pt-2">
               For exemplary sportsmanship, discipline, motor agility and heroic effort in:
             </p>
 
-            <p className="text-sm font-extrabold text-[#55CDB3]">
+            <p className="text-sm font-extrabold text-[#F4510B]">
               {previewCert.title}
             </p>
 
-            <div className="pt-6 flex items-center justify-between border-t border-[#493548]/20 text-xs">
+            <div className="pt-6 flex items-center justify-between border-t border-[#172B5020] text-xs">
               <div className="text-left">
-                <span className="text-[10px] text-[#493548] block">Date of Conferral</span>
-                <span className="font-bold text-[#080B0C]">{previewCert.issuedDate}</span>
+                <span className="text-[10px] text-[#172B50] opacity-60 block">Date of Conferral</span>
+                <span className="font-bold text-[#172B50]">{previewCert.issuedDate}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-[#493548] block">Authorized Signatory</span>
-                <span className="font-bold text-[#080B0C]">{previewCert.issuer}</span>
+                <span className="text-[10px] text-[#172B50] opacity-60 block">Authorized Signatory</span>
+                <span className="font-bold text-[#172B50]">{previewCert.issuer}</span>
               </div>
             </div>
 
@@ -243,7 +243,7 @@ export default function CertificatesModule() {
                   addToast('Certificate downloaded in high-res PDF format.');
                   setPreviewCert(null);
                 }}
-                className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl hover:bg-[#55CDB3]/90 flex items-center gap-1.5 shadow-sm"
+                className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl hover:brightness-110 flex items-center gap-1.5 shadow-sm"
               >
                 <Download className="w-4 h-4 text-white" />
                 <span>Download Printable PDF</span>

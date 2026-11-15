@@ -223,15 +223,15 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#F4F7F6] p-5 rounded-2xl border border-[#493548]/20 shadow-card">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#172B5012] shadow-card">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#55CDB3]">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F4510B]">
             <Layers className="w-3.5 h-3.5" /> Module 2 • Location → Program → Training Batch
           </div>
-          <h2 className="text-xl font-extrabold text-[#080B0C] tracking-tight mt-0.5">
+          <h2 className="text-xl font-extrabold text-[#172B50] tracking-tight mt-0.5">
             Training Batches, Capacities & Waitlists
           </h2>
-          <p className="text-xs text-[#493548] mt-0.5">
+          <p className="text-xs text-[#172B50] opacity-70 mt-0.5">
             Create location-scoped batches under each Sports Program, monitor available slots, enroll students, and manage waiting lists.
           </p>
         </div>
@@ -239,7 +239,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
         <button
           type="button"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#55CDB3] text-[#080B0C] font-bold text-xs font-extrabold shadow-sm hover:bg-[#d84306] transition-all cursor-pointer self-start lg:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F4510B] text-white text-xs font-extrabold shadow-sm hover:bg-[#d84306] transition-all cursor-pointer self-start lg:self-auto"
         >
           <Plus className="w-4 h-4" />
           Create Training Batch
@@ -248,41 +248,41 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
 
       {/* KPI Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Matching Batches</p>
-          <p className="text-2xl font-extrabold text-[#080B0C] mt-1">{filteredBatches.length}</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Matching Batches</p>
+          <p className="text-2xl font-extrabold text-[#172B50] mt-1">{filteredBatches.length}</p>
         </div>
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Enrolled Students</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Enrolled Students</p>
           <p className="text-2xl font-extrabold text-emerald-700 mt-1">{totalEnrolled}</p>
         </div>
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Available Slots</p>
-          <p className="text-2xl font-extrabold text-[#55CDB3] mt-1">{Math.max(0, totalSlots - totalEnrolled)}</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Available Slots</p>
+          <p className="text-2xl font-extrabold text-[#F4510B] mt-1">{Math.max(0, totalSlots - totalEnrolled)}</p>
         </div>
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Waitlisted Athletes</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Waitlisted Athletes</p>
           <p className="text-2xl font-extrabold text-amber-600 mt-1">{totalWaitlist}</p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card flex flex-wrap items-center gap-3">
+      <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[210px]">
-          <Search className="w-4 h-4 text-[#080B0C] opacity-40 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#172B50] opacity-40 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search batch name, program, or coach..."
-            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#493548]/20 bg-[#493548]/15/40 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#172B501A] bg-[#FFF4E8]/40 text-[#172B50] focus:outline-none focus:border-[#F4510B]"
           />
         </div>
 
         <select
           value={locationFilter}
           onChange={(e) => setLocationFilter(e.target.value)}
-          className="px-3 py-2 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C]"
+          className="px-3 py-2 text-xs font-bold rounded-xl border border-[#172B501A] bg-[#FFF4E8] text-[#172B50]"
         >
           <option value="All">All Locations</option>
           {activeLocations.map((loc) => (
@@ -295,7 +295,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
         <select
           value={programFilter}
           onChange={(e) => setProgramFilter(e.target.value)}
-          className="px-3 py-2 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C]"
+          className="px-3 py-2 text-xs font-bold rounded-xl border border-[#172B501A] bg-[#FFF4E8] text-[#172B50]"
         >
           <option value="All">All Sports Programs</option>
           {(data.programs || []).map((p) => (
@@ -305,14 +305,14 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
           ))}
         </select>
 
-        <div className="flex items-center gap-1 bg-[#493548]/15 p-1 rounded-xl border border-[#493548]/20">
+        <div className="flex items-center gap-1 bg-[#FFF4E8] p-1 rounded-xl border border-[#172B5014]">
           {['All', 'Active', 'Paused', 'Inactive'].map((st) => (
             <button
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
               className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                statusFilter === st ? 'bg-[#080B0C] text-[#F4F7F6]' : 'text-[#080B0C] opacity-75'
+                statusFilter === st ? 'bg-[#172B50] text-white' : 'text-[#172B50] opacity-75'
               }`}
             >
               {st}
@@ -323,10 +323,10 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
 
       {/* Batches List */}
       {filteredBatches.length === 0 ? (
-        <div className="bg-[#F4F7F6] rounded-2xl border border-dashed border-[#493548]/20 p-10 text-center">
-          <Users className="w-10 h-10 text-[#55CDB3] opacity-60 mx-auto mb-2" />
-          <h3 className="text-sm font-extrabold text-[#080B0C]">No Training Batches Created Yet</h3>
-          <p className="text-xs text-[#080B0C] opacity-65 mt-1">
+        <div className="bg-white rounded-2xl border border-dashed border-[#172B5026] p-10 text-center">
+          <Users className="w-10 h-10 text-[#F4510B] opacity-60 mx-auto mb-2" />
+          <h3 className="text-sm font-extrabold text-[#172B50]">No Training Batches Created Yet</h3>
+          <p className="text-xs text-[#172B50] opacity-65 mt-1">
             Click &ldquo;Create Training Batch&rdquo; to establish a batch under a Location & Sports Program, then assign students and schedules.
           </p>
         </div>
@@ -342,28 +342,28 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
             return (
               <div
                 key={batch.id}
-                className={`bg-[#F4F7F6] rounded-2xl border p-5 shadow-card space-y-4 ${
-                  bStatus === 'Inactive' ? 'border-slate-200 opacity-70' : 'border-[#493548]/20'
+                className={`bg-white rounded-2xl border p-5 shadow-card space-y-4 ${
+                  bStatus === 'Inactive' ? 'border-slate-200 opacity-70' : 'border-[#172B5014]'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-[#493548]/15 text-[#55CDB3] border border-[#55CDB3]/40">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B25]">
                         <MapPin className="w-2.5 h-2.5" /> {batch.center}
                       </span>
-                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#493548]/15 text-[#080B0C]">
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#172B500D] text-[#172B50]">
                         {batch.program}
                       </span>
                       {batch.ageGroup && (
-                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-100 text-[#080B0C]">
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-100 text-[#172B50]">
                           {batch.ageGroup}
                         </span>
                       )}
                     </div>
-                    <h3 className="text-base font-extrabold text-[#080B0C] mt-2">{batch.name}</h3>
-                    <p className="text-xs text-[#493548] mt-0.5">
-                      Lead Coach: <strong className="text-[#080B0C]">{batch.coach || 'Unassigned'}</strong> • Level: {batch.level || 'Beginner'}
+                    <h3 className="text-base font-extrabold text-[#172B50] mt-2">{batch.name}</h3>
+                    <p className="text-xs text-[#172B50] opacity-70 mt-0.5">
+                      Lead Coach: <strong className="text-[#172B50]">{batch.coach || 'Unassigned'}</strong> • Level: {batch.level || 'Beginner'}
                     </p>
                   </div>
 
@@ -381,8 +381,8 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                 </div>
 
                 {/* Slot & Waitlist Bar */}
-                <div className="bg-[#493548]/15/60 p-3.5 rounded-xl border border-[#493548]/20 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-[#080B0C]">
+                <div className="bg-[#FFF4E8]/60 p-3.5 rounded-xl border border-[#172B500D] space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-[#172B50]">
                     <span>
                       Enrolled: {roster.enrolledIds.length} / {capacity}
                     </span>
@@ -391,10 +391,10 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                       {roster.waitlistIds.length > 0 && ` • ${roster.waitlistIds.length} waiting`}
                     </span>
                   </div>
-                  <div className="h-2 w-full bg-[#F4F7F6] rounded-full overflow-hidden border border-[#493548]/20">
+                  <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-[#172B5010]">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        fillPct >= 100 ? 'bg-rose-500' : fillPct >= 75 ? 'bg-amber-500' : 'bg-[#55CDB3]'
+                        fillPct >= 100 ? 'bg-rose-500' : fillPct >= 75 ? 'bg-amber-500' : 'bg-[#F4510B]'
                       }`}
                       style={{ width: `${fillPct}%` }}
                     />
@@ -404,13 +404,13 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                       {roster.enrolledStudents.slice(0, 5).map((st) => (
                         <span
                           key={st.id}
-                          className="px-2 py-0.5 rounded-md bg-[#F4F7F6] text-[10px] font-semibold text-[#080B0C] border border-[#493548]/20"
+                          className="px-2 py-0.5 rounded-md bg-white text-[10px] font-semibold text-[#172B50] border border-[#172B5014]"
                         >
                           {st.name}
                         </span>
                       ))}
                       {roster.enrolledStudents.length > 5 && (
-                        <span className="px-2 py-0.5 text-[10px] font-bold text-[#55CDB3]">
+                        <span className="px-2 py-0.5 text-[10px] font-bold text-[#F4510B]">
                           +{roster.enrolledStudents.length - 5} more
                         </span>
                       )}
@@ -419,7 +419,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#493548]/20">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#172B5010]">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <button
                       type="button"
@@ -427,14 +427,14 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                         setStudentSearch('');
                         setManagingBatchId(batch.id);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-[#080B0C] text-[#F4F7F6] hover:bg-[#55CDB3] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-[#172B50] text-white hover:bg-[#F4510B] transition-colors cursor-pointer"
                     >
                       <Users className="w-3.5 h-3.5" /> Students & Waitlist
                     </button>
                     <button
                       type="button"
                       onClick={() => openEditModal(batch)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-[#493548]/15 text-[#080B0C] hover:bg-slate-200 cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-[#FFF4E8] text-[#172B50] hover:bg-slate-200 cursor-pointer"
                     >
                       <Edit3 className="w-3 h-3" /> Edit
                     </button>
@@ -451,7 +451,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                     <button
                       type="button"
                       onClick={() => onNavigateModule('schedules')}
-                      className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#55CDB3] hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#F4510B] hover:underline cursor-pointer"
                     >
                       Schedules <ArrowRight className="w-3 h-3" />
                     </button>
@@ -474,12 +474,12 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
         <form onSubmit={handleSaveBatch} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Academy Location *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
               <select
                 required
                 value={batchForm.center}
                 onChange={(e) => setBatchForm({ ...batchForm, center: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="">Select Location</option>
                 {activeLocations.map((loc) => (
@@ -490,12 +490,12 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Sports Program *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Sports Program *</label>
               <select
                 required
                 value={batchForm.program}
                 onChange={(e) => handleProgramChangeInForm(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="">Select Sports Program</option>
                 {(data.programs || []).map((p) => (
@@ -509,46 +509,46 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Batch Name *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Batch Name *</label>
               <input
                 type="text"
                 required
                 value={batchForm.name}
                 onChange={(e) => setBatchForm({ ...batchForm, name: e.target.value })}
                 placeholder="e.g., KK Nagar Movers Evening A"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Age Group</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Age Group</label>
               <input
                 type="text"
                 value={batchForm.ageGroup}
                 onChange={(e) => setBatchForm({ ...batchForm, ageGroup: e.target.value })}
                 placeholder="e.g., 4 - 6 Yrs"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Max Capacity *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Max Capacity *</label>
               <input
                 type="number"
                 min="1"
                 required
                 value={batchForm.capacity}
                 onChange={(e) => setBatchForm({ ...batchForm, capacity: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Skill Level</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Skill Level</label>
               <select
                 value={batchForm.level}
                 onChange={(e) => setBatchForm({ ...batchForm, level: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="Beginner">Beginner</option>
                 <option value="Intermediate">Intermediate</option>
@@ -557,11 +557,11 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Status</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Status</label>
               <select
                 value={batchForm.status}
                 onChange={(e) => setBatchForm({ ...batchForm, status: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="Active">Active</option>
                 <option value="Paused">Paused</option>
@@ -571,11 +571,11 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#080B0C] mb-1">Lead Coach (optional — can manage in Coach Assignments)</label>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">Lead Coach (optional — can manage in Coach Assignments)</label>
             <select
               value={batchForm.coachId}
               onChange={(e) => setBatchForm({ ...batchForm, coachId: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
             >
               <option value="">Assign later</option>
               {(data.coaches || []).map((c) => (
@@ -586,17 +586,17 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
             </select>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
             <button
               type="button"
               onClick={() => setIsBatchModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#d84306] cursor-pointer"
+              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:bg-[#d84306] cursor-pointer"
             >
               {editingBatch ? 'Save Batch' : 'Create Batch'}
             </button>
@@ -629,15 +629,15 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
             <div className="space-y-5">
               {/* Enrolled & Waitlisted Columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-[#493548]/15/70 p-4 rounded-2xl border border-[#493548]/20 space-y-2.5">
+                <div className="bg-[#FFF4E8]/70 p-4 rounded-2xl border border-[#172B5014] space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-extrabold text-[#080B0C] flex items-center gap-1.5">
+                    <h4 className="text-xs font-extrabold text-[#172B50] flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       Enrolled Athletes ({roster.enrolledStudents.length} / {managingBatch.capacity})
                     </h4>
                   </div>
                   {roster.enrolledStudents.length === 0 ? (
-                    <p className="text-xs text-[#493548] py-4 text-center">
+                    <p className="text-xs text-[#172B50] opacity-60 py-4 text-center">
                       No students enrolled in this batch yet.
                     </p>
                   ) : (
@@ -645,11 +645,11 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                       {roster.enrolledStudents.map((st) => (
                         <div
                           key={st.id}
-                          className="flex items-center justify-between bg-[#F4F7F6] px-3 py-2 rounded-xl border border-[#493548]/20"
+                          className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-[#172B5012]"
                         >
                           <div>
-                            <p className="text-xs font-bold text-[#080B0C]">{st.name}</p>
-                            <p className="text-[10px] text-[#493548]">{st.id} • Age {st.age || '-'}</p>
+                            <p className="text-xs font-bold text-[#172B50]">{st.name}</p>
+                            <p className="text-[10px] text-[#172B50] opacity-60">{st.id} • Age {st.age || '-'}</p>
                           </div>
                           <button
                             type="button"
@@ -678,11 +678,11 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                       {roster.waitlistStudents.map((st) => (
                         <div
                           key={st.id}
-                          className="flex items-center justify-between bg-[#F4F7F6] px-3 py-2 rounded-xl border border-amber-200"
+                          className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-amber-200"
                         >
                           <div>
-                            <p className="text-xs font-bold text-[#080B0C]">{st.name}</p>
-                            <p className="text-[10px] text-[#493548]">{st.id}</p>
+                            <p className="text-xs font-bold text-[#172B50]">{st.name}</p>
+                            <p className="text-[10px] text-[#172B50] opacity-60">{st.id}</p>
                           </div>
                           <div className="flex items-center gap-1">
                             {!isFull && (
@@ -710,9 +710,9 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
               </div>
 
               {/* Add Students from Same Location */}
-              <div className="space-y-2.5 pt-2 border-t border-[#493548]/20">
+              <div className="space-y-2.5 pt-2 border-t border-[#172B5014]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h4 className="text-xs font-extrabold text-[#080B0C]">
+                  <h4 className="text-xs font-extrabold text-[#172B50]">
                     Eligible Students at {managingBatch.center}
                   </h4>
                   <input
@@ -720,11 +720,11 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
                     placeholder="Filter students..."
-                    className="px-3 py-1.5 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                    className="px-3 py-1.5 text-xs rounded-xl border border-[#172B5020] text-[#172B50]"
                   />
                 </div>
                 {availableStudents.length === 0 ? (
-                  <p className="text-xs text-[#080B0C] opacity-65 py-3 bg-slate-50 rounded-xl text-center">
+                  <p className="text-xs text-[#172B50] opacity-65 py-3 bg-slate-50 rounded-xl text-center">
                     No unassigned students found at {managingBatch.center}. Add students under Student Directory for {managingBatch.center} first.
                   </p>
                 ) : (
@@ -732,11 +732,11 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                     {availableStudents.map((st) => (
                       <div
                         key={st.id}
-                        className="flex items-center justify-between p-2.5 rounded-xl border border-[#493548]/20 bg-[#F4F7F6]"
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-[#172B5014] bg-white"
                       >
                         <div>
-                          <p className="text-xs font-bold text-[#080B0C]">{st.name}</p>
-                          <p className="text-[10px] text-[#080B0C] opacity-65">
+                          <p className="text-xs font-bold text-[#172B50]">{st.name}</p>
+                          <p className="text-[10px] text-[#172B50] opacity-65">
                             {st.program || 'Unassigned'} • {st.center}
                           </p>
                         </div>
@@ -746,7 +746,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer ${
                             isFull
                               ? 'bg-amber-50 text-amber-800 hover:bg-amber-100'
-                              : 'bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#d84306]'
+                              : 'bg-[#F4510B] text-white hover:bg-[#d84306]'
                           }`}
                         >
                           <UserPlus className="w-3 h-3" />

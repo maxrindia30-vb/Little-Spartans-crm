@@ -51,17 +51,17 @@ export default function CoachManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
             Coach Management & Faculty
           </h1>
-          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
             Faculty credentials, national certifications, assigned training batches and performance ratings
           </p>
         </div>
 
         <button
           onClick={() => setIsAddOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-white" />
           <span>Add New Coach</span>
@@ -71,61 +71,61 @@ export default function CoachManagement() {
       {/* Coaches Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {data.coaches.map(coach => (
-          <div key={coach.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
+          <div key={coach.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
             <div>
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#55CDB3]">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
                     {coach.id} • {coach.center}
                   </span>
-                  <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{coach.name}</h3>
-                  <p className="text-xs font-semibold text-[#080B0C] opacity-80 mt-0.5">
+                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{coach.name}</h3>
+                  <p className="text-xs font-semibold text-[#172B50] opacity-80 mt-0.5">
                     {coach.specialization}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1 bg-[#493548]/15 px-2 py-1 rounded-lg border border-[#493548]/20">
-                  <Star className="w-3.5 h-3.5 text-[#55CDB3] fill-[#55CDB3]" />
-                  <span className="text-xs font-black text-[#080B0C]">{coach.rating}</span>
+                <div className="flex items-center gap-1 bg-[#FFF4E8] px-2 py-1 rounded-lg border border-[#172B5015]">
+                  <Star className="w-3.5 h-3.5 text-[#F4510B] fill-[#F4510B]" />
+                  <span className="text-xs font-black text-[#172B50]">{coach.rating}</span>
                 </div>
               </div>
 
               {/* Certification Badge */}
-              <div className="mt-3.5 p-2.5 rounded-xl bg-[#493548]/15 border border-[#493548]/20 flex items-center gap-2">
-                <Award className="w-4 h-4 text-[#55CDB3] shrink-0" />
-                <span className="text-[11px] font-bold text-[#080B0C]">
+              <div className="mt-3.5 p-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center gap-2">
+                <Award className="w-4 h-4 text-[#F4510B] shrink-0" />
+                <span className="text-[11px] font-bold text-[#172B50]">
                   {coach.certification}
                 </span>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#493548]/20 text-xs">
-                <div className="p-2 rounded-lg bg-[#F4F7F6] border border-[#493548]/20">
-                  <span className="text-[10px] text-[#493548] block">Active Batches</span>
-                  <span className="font-extrabold text-[#080B0C] text-sm">{coach.activeBatches} Batches</span>
+              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#172B5012] text-xs">
+                <div className="p-2 rounded-lg bg-white border border-[#172B5015]">
+                  <span className="text-[10px] text-[#172B50] opacity-60 block">Active Batches</span>
+                  <span className="font-extrabold text-[#172B50] text-sm">{coach.activeBatches} Batches</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#F4F7F6] border border-[#493548]/20">
-                  <span className="text-[10px] text-[#493548] block">Trained Athletes</span>
-                  <span className="font-extrabold text-[#55CDB3] text-sm">{coach.studentsCount} Kids</span>
+                <div className="p-2 rounded-lg bg-white border border-[#172B5015]">
+                  <span className="text-[10px] text-[#172B50] opacity-60 block">Trained Athletes</span>
+                  <span className="font-extrabold text-[#F4510B] text-sm">{coach.studentsCount} Kids</span>
                 </div>
               </div>
 
               {/* Contact info */}
-              <div className="mt-3 space-y-1 text-xs text-[#080B0C]">
+              <div className="mt-3 space-y-1 text-xs text-[#172B50]">
                 <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-[#55CDB3]" />
+                  <Phone className="w-3.5 h-3.5 text-[#F4510B]" />
                   <span className="font-semibold">{coach.phone}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-[#55CDB3]" />
+                  <Mail className="w-3.5 h-3.5 text-[#F4510B]" />
                   <span className="opacity-80 truncate">{coach.email}</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-[#493548]/20 flex items-center justify-between">
-              <span className="text-[11px] font-bold text-[#080B0C]">Experience: {coach.experience}</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#080B0C] text-[#F4F7F6]">
+            <div className="mt-4 pt-3 border-t border-[#172B5015] flex items-center justify-between">
+              <span className="text-[11px] font-bold text-[#172B50]">Experience: {coach.experience}</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#172B50] text-white">
                 {coach.status}
               </span>
             </div>
@@ -142,69 +142,69 @@ export default function CoachManagement() {
       >
         <form onSubmit={handleAddCoach} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-[#080B0C] block mb-1">Coach Full Name *</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Coach Full Name *</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Coach Siddharth Rao"
-              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Specialization</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Specialization</label>
               <input
                 type="text"
                 required
                 value={specialization}
                 onChange={(e) => setSpecialization(e.target.value)}
                 placeholder="e.g. Sprinting & Hurdles"
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Coaching Experience</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Coaching Experience</label>
               <input
                 type="text"
                 value={experience}
                 onChange={(e) => setExperience(e.target.value)}
                 placeholder="e.g. 6 years"
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#080B0C] block mb-1">Certifications & Licenses</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Certifications & Licenses</label>
             <input
               type="text"
               value={certification}
               onChange={(e) => setCertification(e.target.value)}
               placeholder="e.g. FIG Level 1 / AFC Diploma"
-              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Phone Number</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Phone Number</label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+91 98..."
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Base Academy Center</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Base Academy Center</label>
               <select
                 value={center}
                 onChange={(e) => setCenter(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
                 {data.academy.centers.map(c => (
                   <option key={c} value={c}>{c}</option>
@@ -213,17 +213,17 @@ export default function CoachManagement() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#493548]/20 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsAddOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all"
+              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
             >
               Save Coach Record
             </button>

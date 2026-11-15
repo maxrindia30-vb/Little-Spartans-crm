@@ -114,7 +114,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#080B0C] text-[#F4F7F6] flex overflow-hidden font-sans selection:bg-[#55CDB3] selection:text-[#080B0C]">
+    <div className="h-screen w-full bg-[#FFF4E8] text-[#172B50] flex overflow-hidden font-sans selection:bg-[#F4510B] selection:text-white">
       
       {/* ============================================================ */}
       {/* 1. LEFT SIDEBAR: Independent Navigation (100vh, fixed width) */}
@@ -126,7 +126,7 @@ export default function App() {
       {/* ============================================================ */}
       <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden relative">
         
-        {/* Subtle Branded Background Watermark */}
+        {/* Subtle Branded Background Watermark (img2) */}
         <div 
           aria-hidden="true"
           className="absolute inset-0 top-16 pointer-events-none select-none flex items-center justify-center z-0 overflow-hidden"
@@ -134,19 +134,19 @@ export default function App() {
           <img 
             src="/assets/zenconnect-bg-watermark.png" 
             alt="" 
-            className="w-[320px] sm:w-[480px] lg:w-[600px] max-w-[85%] h-auto object-contain opacity-[0.06] mix-blend-screen"
+            className="w-[320px] sm:w-[480px] lg:w-[600px] max-w-[85%] h-auto object-contain opacity-[0.12] mix-blend-multiply"
           />
         </div>
 
         {/* Mobile Header Menu (Only visible on screens < 1024px) */}
-        <div className="lg:hidden p-3 flex items-center justify-between bg-[#080B0C] border-b border-[#493548]/30 shrink-0 z-20">
+        <div className="lg:hidden p-3 flex items-center justify-between bg-[#FFF4E8] border-b border-[#172B501A] shrink-0 z-20">
           <button 
             type="button"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg text-[#F4F7F6] hover:bg-[#493548]/30 transition-colors cursor-pointer"
+            className="p-2 rounded-lg text-[#172B50] hover:bg-white transition-colors cursor-pointer"
             aria-label="Toggle Navigation Menu"
           >
-            <Menu className="w-5 h-5 text-[#55CDB3]" />
+            <Menu className="w-5 h-5 text-[#172B50]" />
           </button>
           <img 
             src="/assets/zenconnect-navbar-logo.png" 

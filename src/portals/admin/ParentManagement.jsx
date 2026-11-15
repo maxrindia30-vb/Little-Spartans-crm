@@ -127,10 +127,10 @@ export default function ParentManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
             Parent Directory &amp; Billing
           </h1>
-          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
             Add parents by academy location, link their children &amp; issue Parent Portal access
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function ParentManagement() {
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-white" />
           <span>Add Parent</span>
@@ -146,29 +146,29 @@ export default function ParentManagement() {
       </div>
 
       {/* Search & Location Filter Bar */}
-      <div className="bg-[#F4F7F6] rounded-2xl p-4 border border-[#493548]/20 shadow-card flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-[#493548] absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search parent by name, phone or email..."
-              className="w-full pl-9 pr-3 py-2 text-xs bg-[#493548]/15 text-[#080B0C] placeholder-[#493548] border border-[#493548]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#55CDB3]"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-[#080B0C] whitespace-nowrap inline-flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-[#55CDB3]" />
+            <label className="text-xs font-bold text-[#172B50] whitespace-nowrap inline-flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
               <span>Location:</span>
             </label>
             <select
               aria-label="Filter parents by academy location"
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20 outline-none cursor-pointer focus:ring-2 focus:ring-[#55CDB3]"
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none cursor-pointer focus:ring-2 focus:ring-[#F4510B]"
             >
               <option value="All">All Locations ({(data.parents || []).length})</option>
               {commonLocations.map(loc => (
@@ -180,27 +180,27 @@ export default function ParentManagement() {
           </div>
         </div>
 
-        <span className="text-xs font-bold text-[#080B0C] whitespace-nowrap">
+        <span className="text-xs font-bold text-[#172B50] whitespace-nowrap">
           Total Guardians: {filteredParents.length}
         </span>
       </div>
 
       {/* Parents Grid or Empty State */}
       {filteredParents.length === 0 ? (
-        <div className="bg-[#F4F7F6] rounded-2xl p-10 border border-[#493548]/20 shadow-card text-center space-y-3">
-          <Users className="w-10 h-10 text-[#55CDB3] opacity-75 mx-auto" />
-          <h3 className="text-sm font-extrabold text-[#080B0C]">
+        <div className="bg-white rounded-2xl p-10 border border-[#172B501A] shadow-card text-center space-y-3">
+          <Users className="w-10 h-10 text-[#F4510B] opacity-75 mx-auto" />
+          <h3 className="text-sm font-extrabold text-[#172B50]">
             {selectedLocation === 'All'
               ? 'No Parents Added Yet'
               : `No Parents Registered Under ${selectedLocation}`}
           </h3>
-          <p className="text-xs text-[#493548] max-w-md mx-auto">
+          <p className="text-xs text-[#172B50] opacity-70 max-w-md mx-auto">
             Click <strong>Add Parent</strong> to register a guardian under a Chennai branch location, link their children, and grant immediate Parent Portal login access.
           </p>
           <button
             type="button"
             onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 transition-all"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>Add First Parent</span>
@@ -216,31 +216,31 @@ export default function ParentManagement() {
             return (
               <div
                 key={parent.id}
-                className={`bg-[#F4F7F6] rounded-2xl p-5 border shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow ${
-                  highlightedParentId === parent.id ? 'border-[#55CDB3] ring-2 ring-[#55CDB3]/40' : 'border-[#493548]/20'
+                className={`bg-white rounded-2xl p-5 border shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow ${
+                  highlightedParentId === parent.id ? 'border-[#F4510B] ring-2 ring-[#F4510B]/30' : 'border-[#172B501A]'
                 }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#55CDB3]">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
                         {parent.id} • {parent.center}
                       </span>
-                      <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{parent.name}</h3>
+                      <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{parent.name}</h3>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => setEditingParent({ ...parent })}
                         title="Edit Parent Record"
-                        className="p-1.5 rounded-lg bg-[#493548]/15 text-[#080B0C] hover:text-[#55CDB3] cursor-pointer"
+                        className="p-1.5 rounded-lg bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${
                         parent.pendingDue === '₹0'
-                          ? 'bg-[#080B0C] text-[#F4F7F6]'
-                          : 'bg-[#55CDB3] text-[#080B0C] font-bold'
+                          ? 'bg-[#172B50] text-white'
+                          : 'bg-[#F4510B] text-white'
                       }`}>
                         {parent.pendingDue === '₹0' ? 'No Dues' : `Due ${parent.pendingDue}`}
                       </span>
@@ -255,29 +255,29 @@ export default function ParentManagement() {
                         <span>Parent Portal: {linkedAccount.status}</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-[#493548]">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-[#172B50] opacity-70">
                         Directory Record
                       </span>
                     )}
                     {linkedAccount?.tempPasswordDisplay && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20">
-                        <Key className="w-2.5 h-2.5 text-[#55CDB3]" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5015]">
+                        <Key className="w-2.5 h-2.5 text-[#F4510B]" />
                         {linkedAccount.tempPasswordDisplay}
                       </span>
                     )}
                   </div>
 
                   {/* Children enrolled */}
-                  <div className="mt-3 p-2.5 rounded-xl bg-[#493548]/15 border border-[#493548]/20">
-                    <span className="text-[10px] font-bold uppercase text-[#080B0C] opacity-65 block mb-1">
+                  <div className="mt-3 p-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
+                    <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-65 block mb-1">
                       Enrolled Spartan Children:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {(parent.children || []).length === 0 ? (
-                        <span className="text-[11px] text-[#493548]">No children linked yet</span>
+                        <span className="text-[11px] text-[#172B50] opacity-60">No children linked yet</span>
                       ) : (
                         parent.children.map((c, i) => (
-                          <span key={i} className="px-2 py-0.5 rounded-md text-xs font-extrabold bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20">
+                          <span key={i} className="px-2 py-0.5 rounded-md text-xs font-extrabold bg-white text-[#172B50] border border-[#172B5020]">
                             {c}
                           </span>
                         ))
@@ -286,39 +286,39 @@ export default function ParentManagement() {
                   </div>
 
                   {/* Contact info */}
-                  <div className="mt-3 space-y-1.5 text-xs text-[#080B0C]">
+                  <div className="mt-3 space-y-1.5 text-xs text-[#172B50]">
                     <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-[#55CDB3]" />
+                      <Phone className="w-3.5 h-3.5 text-[#F4510B]" />
                       <span className="font-semibold">{parent.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Mail className="w-3.5 h-3.5 text-[#55CDB3]" />
+                      <Mail className="w-3.5 h-3.5 text-[#F4510B]" />
                       <span className="opacity-80 truncate">{parent.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-[#55CDB3]" />
+                      <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
                       <span className="opacity-75 truncate">{parent.address}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#493548]/20 flex items-center justify-between">
+                <div className="mt-4 pt-3 border-t border-[#172B5015] flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-[#493548] block">Lifetime Tuition</span>
-                    <span className="text-xs font-extrabold text-[#080B0C]">{parent.totalFeesPaid}</span>
+                    <span className="text-[10px] text-[#172B50] opacity-60 block">Lifetime Tuition</span>
+                    <span className="text-xs font-extrabold text-[#172B50]">{parent.totalFeesPaid}</span>
                   </div>
 
                   {parent.pendingDue !== '₹0' ? (
                     <button
                       onClick={() => handleSendReminder(parent.name)}
-                      className="px-3 py-1.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-lg shadow-sm hover:bg-[#55CDB3]/90 transition-all flex items-center gap-1"
+                      className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg shadow-sm hover:brightness-110 transition-all flex items-center gap-1"
                     >
                       <Send className="w-3 h-3 text-white" />
                       <span>Send Reminder</span>
                     </button>
                   ) : (
-                    <span className="text-[11px] font-bold text-[#080B0C] flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4 text-[#55CDB3]" />
+                    <span className="text-[11px] font-bold text-[#172B50] flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4 text-[#F4510B]" />
                       <span>All Clear</span>
                     </span>
                   )}
@@ -339,23 +339,23 @@ export default function ParentManagement() {
         <form onSubmit={handleAddParentSubmit} className="space-y-3.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Parent / Guardian Name *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent / Guardian Name *</label>
               <input
                 type="text"
                 required
                 value={parentName}
                 onChange={(e) => setParentName(e.target.value)}
                 placeholder="e.g. Karthik Subramanian"
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Academy Location *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Academy Location *</label>
               <select
                 value={center}
                 onChange={(e) => handleLocationFormChange(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-bold bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
                 {commonLocations.map(loc => (
                   <option key={loc.id} value={loc.name}>{loc.name}</option>
@@ -366,49 +366,49 @@ export default function ParentManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Phone Number *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Phone Number *</label>
               <input
                 type="tel"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+91 98..."
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Parent Email ID *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Email ID *</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="parent@example.com"
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#080B0C] block mb-1">Residential Address</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Residential Address</label>
             <input
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder={`e.g. ${center}, Chennai`}
-              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
 
           {locationStudents.length > 0 && (
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">
+              <label className="text-xs font-bold text-[#172B50] block mb-1">
                 Link Enrolled Children ({center})
               </label>
-              <div className="max-h-28 overflow-y-auto border border-[#493548]/20 rounded-xl p-2 space-y-1 bg-[#493548]/15/40">
+              <div className="max-h-28 overflow-y-auto border border-[#172B5020] rounded-xl p-2 space-y-1 bg-[#FFF4E8]/40">
                 {locationStudents.map(stu => (
-                  <label key={stu.id} className="flex items-center gap-2 text-xs text-[#080B0C] cursor-pointer hover:bg-[#F4F7F6] p-1.5 rounded-lg">
+                  <label key={stu.id} className="flex items-center gap-2 text-xs text-[#172B50] cursor-pointer hover:bg-white p-1.5 rounded-lg">
                     <input
                       type="checkbox"
                       checked={selectedStudentIds.includes(stu.id)}
@@ -419,7 +419,7 @@ export default function ParentManagement() {
                           setSelectedStudentIds(selectedStudentIds.filter(id => id !== stu.id));
                         }
                       }}
-                      className="rounded border-[#493548]/20 text-[#55CDB3] focus:ring-[#55CDB3]"
+                      className="rounded border-[#172B5030] text-[#F4510B] focus:ring-[#F4510B]"
                     />
                     <span className="font-bold">{stu.name}</span>
                     <span className="opacity-65">({stu.program})</span>
@@ -430,7 +430,7 @@ export default function ParentManagement() {
           )}
 
           <div>
-            <label className="text-xs font-bold text-[#080B0C] block mb-1">
+            <label className="text-xs font-bold text-[#172B50] block mb-1">
               Child Name(s) {locationStudents.length > 0 ? '(Optional / Additional)' : ''}
             </label>
             <input
@@ -438,38 +438,38 @@ export default function ParentManagement() {
               value={customChildName}
               onChange={(e) => setCustomChildName(e.target.value)}
               placeholder="e.g. Pranav Karthik (comma-separated for siblings)"
-              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
 
-          <label className="flex items-center gap-2.5 p-3 rounded-xl bg-[#493548]/15 border border-[#493548]/20 cursor-pointer">
+          <label className="flex items-center gap-2.5 p-3 rounded-xl bg-[#FFF4E8] border border-[#172B5015] cursor-pointer">
             <input
               type="checkbox"
               checked={grantPortalAccess}
               onChange={(e) => setGrantPortalAccess(e.target.checked)}
-              className="rounded border-[#493548]/20 text-[#55CDB3] focus:ring-[#55CDB3]"
+              className="rounded border-[#172B5030] text-[#F4510B] focus:ring-[#F4510B]"
             />
             <div>
-              <span className="text-xs font-extrabold text-[#080B0C] block">
+              <span className="text-xs font-extrabold text-[#172B50] block">
                 Grant Parent Portal Login Access Immediately
               </span>
-              <span className="text-[10px] text-[#493548]">
+              <span className="text-[10px] text-[#172B50] opacity-70">
                 Issues a Parent account in Account Management with a temporary login password
               </span>
             </div>
           </label>
 
-          <div className="pt-3 border-t border-[#493548]/20 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsAddOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all"
+              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
             >
               Save Parent &amp; Grant Access
             </button>
@@ -500,21 +500,21 @@ export default function ParentManagement() {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-[#080B0C] block mb-1">Parent Name *</label>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Name *</label>
                 <input
                   type="text"
                   required
                   value={editingParent.name || ''}
                   onChange={(e) => setEditingParent({ ...editingParent, name: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl"
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#080B0C] block mb-1">Academy Location *</label>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Academy Location *</label>
                 <select
                   value={editingParent.center || ''}
                   onChange={(e) => setEditingParent({ ...editingParent, center: e.target.value })}
-                  className="w-full px-3 py-2 text-xs font-bold bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl"
+                  className="w-full px-3 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
                 >
                   {commonLocations.map((loc) => (
                     <option key={loc.id} value={loc.name}>
@@ -527,48 +527,48 @@ export default function ParentManagement() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-[#080B0C] block mb-1">Phone *</label>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Phone *</label>
                 <input
                   type="tel"
                   required
                   value={editingParent.phone || ''}
                   onChange={(e) => setEditingParent({ ...editingParent, phone: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl"
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#080B0C] block mb-1">Email *</label>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Email *</label>
                 <input
                   type="email"
                   required
                   value={editingParent.email || ''}
                   onChange={(e) => setEditingParent({ ...editingParent, email: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl"
+                  className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Address</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Address</label>
               <input
                 type="text"
                 value={editingParent.address || ''}
                 onChange={(e) => setEditingParent({ ...editingParent, address: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl"
               />
             </div>
 
-            <div className="pt-3 border-t border-[#493548]/20 flex justify-end gap-2">
+            <div className="pt-3 border-t border-[#172B5015] flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setEditingParent(null)}
-                className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl cursor-pointer"
+                className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl cursor-pointer"
               >
                 Save Parent
               </button>

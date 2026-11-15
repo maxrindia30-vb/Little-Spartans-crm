@@ -59,40 +59,40 @@ export function AnimatedCounter({ value, duration = 1100, padZero = false }) {
 
 const COLOR_THEMES = {
   orange: {
-    bgGradient: 'bg-[#F4F7F6]',
-    border: 'border-[#493548]/20',
-    iconBg: 'bg-[#55CDB3]/15',
-    iconColor: 'text-[#55CDB3]',
-    waveColor: '#55CDB3',
-    hoverRing: 'group-hover:border-[#55CDB3]',
-    shadow: 'shadow-[0_8px_25px_rgba(8,11,12,0.35)]',
+    bgGradient: 'bg-gradient-to-br from-[#FFF5ED] via-[#FFF9F5] to-white',
+    border: 'border-[#FED7AA]/70',
+    iconBg: 'bg-[#FFE2D1]',
+    iconColor: 'text-[#F4510B]',
+    waveColor: '#F4510B',
+    hoverRing: 'group-hover:border-[#F4510B]/50',
+    shadow: 'shadow-[0_8px_25px_rgba(244,81,11,0.06)]',
   },
   blue: {
-    bgGradient: 'bg-[#F4F7F6]',
-    border: 'border-[#493548]/20',
-    iconBg: 'bg-[#493548]/15',
-    iconColor: 'text-[#493548]',
-    waveColor: '#493548',
-    hoverRing: 'group-hover:border-[#493548]',
-    shadow: 'shadow-[0_8px_25px_rgba(8,11,12,0.35)]',
+    bgGradient: 'bg-gradient-to-br from-[#F0F7FF] via-[#F8FBFF] to-white',
+    border: 'border-[#BAE6FD]/70',
+    iconBg: 'bg-[#D6ECFF]',
+    iconColor: 'text-[#0284C7]',
+    waveColor: '#0284C7',
+    hoverRing: 'group-hover:border-[#0284C7]/50',
+    shadow: 'shadow-[0_8px_25px_rgba(2,132,199,0.06)]',
   },
   green: {
-    bgGradient: 'bg-[#F4F7F6]',
-    border: 'border-[#493548]/20',
-    iconBg: 'bg-[#55CDB3]/15',
-    iconColor: 'text-[#55CDB3]',
-    waveColor: '#55CDB3',
-    hoverRing: 'group-hover:border-[#55CDB3]',
-    shadow: 'shadow-[0_8px_25px_rgba(8,11,12,0.35)]',
+    bgGradient: 'bg-gradient-to-br from-[#F0FDF4] via-[#F8FDF9] to-white',
+    border: 'border-[#BBF7D0]/70',
+    iconBg: 'bg-[#DCFCE7]',
+    iconColor: 'text-[#16A34A]',
+    waveColor: '#16A34A',
+    hoverRing: 'group-hover:border-[#16A34A]/50',
+    shadow: 'shadow-[0_8px_25px_rgba(22,163,74,0.06)]',
   },
   purple: {
-    bgGradient: 'bg-[#F4F7F6]',
-    border: 'border-[#493548]/20',
-    iconBg: 'bg-[#493548]/15',
-    iconColor: 'text-[#493548]',
-    waveColor: '#493548',
-    hoverRing: 'group-hover:border-[#493548]',
-    shadow: 'shadow-[0_8px_25px_rgba(8,11,12,0.35)]',
+    bgGradient: 'bg-gradient-to-br from-[#FAF5FF] via-[#FCF9FF] to-white',
+    border: 'border-[#E9D5FF]/70',
+    iconBg: 'bg-[#F3E8FF]',
+    iconColor: 'text-[#9333EA]',
+    waveColor: '#9333EA',
+    hoverRing: 'group-hover:border-[#9333EA]/50',
+    shadow: 'shadow-[0_8px_25px_rgba(147,51,234,0.06)]',
   },
 };
 
@@ -169,7 +169,7 @@ export default function KpiCard({
         theme.hoverRing
       } select-none will-change-transform ${
         onClick ? 'cursor-pointer' : ''
-      } ${highlight ? 'ring-2 ring-[#55CDB3]' : ''}`}
+      } ${highlight ? 'ring-2 ring-[#F4510B]' : ''}`}
       style={{
         transform: transformStyle,
         transition: tilt.isHovered
@@ -184,7 +184,7 @@ export default function KpiCard({
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 rounded-[24px] z-20 transition-opacity duration-200"
           style={{
-            background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255, 255, 255, 0.5) 0%, rgba(85, 205, 179, 0.12) 50%, transparent 80%)`,
+            background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255, 255, 255, 0.4) 0%, rgba(244, 81, 11, 0.06) 50%, transparent 80%)`,
           }}
         />
       )}
@@ -208,14 +208,14 @@ export default function KpiCard({
         {/* Right: Numbers, Trend & Title */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-2xl sm:text-3xl font-black text-[#080B0C] tracking-tight leading-none">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight leading-none">
               <AnimatedCounter value={value} />
             </h3>
 
             {trendText && (
               <span
                 className={`inline-flex items-center text-xs sm:text-[13px] font-extrabold shrink-0 ${
-                  isPositiveTrend ? 'text-[#55CDB3]' : 'text-[#493548]'
+                  isPositiveTrend ? 'text-emerald-600' : 'text-rose-600'
                 }`}
               >
                 {trendText}
@@ -223,19 +223,19 @@ export default function KpiCard({
             )}
 
             {!trendText && highlight && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-[#55CDB3] text-[#080B0C] animate-pulse">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-[#F4510B] text-white animate-pulse">
                 <Sparkles className="w-2.5 h-2.5" />
                 LIVE
               </span>
             )}
           </div>
 
-          <p className="text-xs sm:text-[13px] font-bold text-[#080B0C] tracking-tight mt-1 truncate">
+          <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/80 tracking-tight mt-1 truncate">
             {title}
           </p>
 
           {subtitle && (
-            <p className="text-[10.5px] font-semibold text-[#493548] truncate mt-0.5">
+            <p className="text-[10.5px] font-semibold text-[#172B50]/55 truncate mt-0.5">
               {subtitle}
             </p>
           )}

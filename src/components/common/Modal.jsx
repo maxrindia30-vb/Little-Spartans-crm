@@ -8,22 +8,22 @@ export default function Modal({ isOpen, onClose, title, subtitle, children, maxW
   const modalContent = (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#080B0C]/85 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#172B5070] backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
     >
       <div 
-        className={`w-full ${maxWidth} my-auto bg-[#F4F7F6] text-[#080B0C] rounded-2xl shadow-dropdown border border-[#493548]/30 overflow-hidden flex flex-col max-h-[90vh]`}
+        className={`w-full ${maxWidth} my-auto bg-white rounded-2xl shadow-dropdown border border-[#172B501A] overflow-hidden flex flex-col max-h-[90vh]`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#493548]/20 bg-[#F4F7F6]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#172B5015] bg-[#FFF4E8]">
           <div>
-            <h3 className="text-base font-extrabold text-[#080B0C] tracking-tight">{title}</h3>
-            {subtitle && <p className="text-xs text-[#493548] mt-0.5">{subtitle}</p>}
+            <h3 className="text-base font-extrabold text-[#172B50] tracking-tight">{title}</h3>
+            {subtitle && <p className="text-xs text-[#172B50] opacity-75 mt-0.5">{subtitle}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-[#493548] hover:bg-[#55CDB3]/20 hover:text-[#080B0C] transition-colors"
+            className="p-1.5 rounded-xl text-[#172B50] hover:bg-white hover:text-[#F4510B] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

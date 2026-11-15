@@ -33,11 +33,11 @@ export default function ProgramsClassesModule() {
   return (
     <div className="space-y-5">
       {/* Compact Breadcrumb / Module Indicator Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#080B0C] text-[#F4F7F6] px-4 py-2.5 rounded-2xl shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#172B50] text-white px-4 py-2.5 rounded-2xl shadow-sm">
         <div className="flex items-center gap-2 text-xs">
           <span className="font-bold text-white/70">Programs & Classes</span>
           <span className="text-white/40">/</span>
-          <span className="font-extrabold text-[#55CDB3]">
+          <span className="font-extrabold text-[#F4510B]">
             {MODULE_TABS.find((t) => t.id === resolvedTab)?.label}
           </span>
         </div>
@@ -53,8 +53,8 @@ export default function ProgramsClassesModule() {
                 onClick={() => setActiveSubTab(tab.id)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
-                    : 'text-white/75 hover:text-white hover:bg-[#F4F7F6]/10'
+                    ? 'bg-[#F4510B] text-white shadow-xs'
+                    : 'text-white/75 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />

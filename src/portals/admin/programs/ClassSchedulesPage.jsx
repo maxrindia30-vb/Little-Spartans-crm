@@ -324,15 +324,15 @@ export default function ClassSchedulesPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#F4F7F6] p-5 rounded-2xl border border-[#493548]/20 shadow-card">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#172B5012] shadow-card">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#55CDB3]">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F4510B]">
             <Clock className="w-3.5 h-3.5" /> Module 3 • Timetable, Venues & Conflict Guard
           </div>
-          <h2 className="text-xl font-extrabold text-[#080B0C] tracking-tight mt-0.5">
+          <h2 className="text-xl font-extrabold text-[#172B50] tracking-tight mt-0.5">
             Class Schedules (Daily, Weekly & Calendar)
           </h2>
-          <p className="text-xs text-[#493548] mt-0.5">
+          <p className="text-xs text-[#172B50] opacity-70 mt-0.5">
             Schedule location-specific sessions by batch, weekday, date, time & court. Every change automatically syncs to Coach Portal.
           </p>
         </div>
@@ -340,7 +340,7 @@ export default function ClassSchedulesPage() {
         <button
           type="button"
           onClick={() => openCreateModal(focusDate)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#55CDB3] text-[#080B0C] font-bold text-xs font-extrabold shadow-sm hover:bg-[#d84306] transition-all cursor-pointer self-start lg:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F4510B] text-white text-xs font-extrabold shadow-sm hover:bg-[#d84306] transition-all cursor-pointer self-start lg:self-auto"
         >
           <Plus className="w-4 h-4" />
           Schedule Class Session
@@ -348,10 +348,10 @@ export default function ClassSchedulesPage() {
       </div>
 
       {/* Filters + View Switcher */}
-      <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card space-y-3">
+      <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* View Mode Pills */}
-          <div className="flex items-center gap-1 bg-[#493548]/15 p-1 rounded-xl border border-[#493548]/20">
+          <div className="flex items-center gap-1 bg-[#FFF4E8] p-1 rounded-xl border border-[#172B5014]">
             {[
               { id: 'daily', label: 'Daily View', icon: List },
               { id: 'weekly', label: 'Weekly View', icon: Columns },
@@ -365,8 +365,8 @@ export default function ClassSchedulesPage() {
                   onClick={() => setViewMode(mode.id)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     viewMode === mode.id
-                      ? 'bg-[#080B0C] text-[#F4F7F6] shadow-xs'
-                      : 'text-[#080B0C] opacity-75 hover:opacity-100'
+                      ? 'bg-[#172B50] text-white shadow-xs'
+                      : 'text-[#172B50] opacity-75 hover:opacity-100'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -381,7 +381,7 @@ export default function ClassSchedulesPage() {
             <button
               type="button"
               onClick={() => shiftFocusDate(viewMode === 'daily' ? -1 : viewMode === 'weekly' ? -7 : -30)}
-              className="p-2 rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C] hover:border-[#55CDB3] cursor-pointer"
+              className="p-2 rounded-xl border border-[#172B5018] bg-[#FFF4E8] text-[#172B50] hover:border-[#F4510B] cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -389,19 +389,19 @@ export default function ClassSchedulesPage() {
               type="date"
               value={focusDate}
               onChange={(e) => setFocusDate(e.target.value || todayYmd)}
-              className="px-3 py-1.5 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
+              className="px-3 py-1.5 text-xs font-bold rounded-xl border border-[#172B501A] bg-white text-[#172B50]"
             />
             <button
               type="button"
               onClick={() => shiftFocusDate(viewMode === 'daily' ? 1 : viewMode === 'weekly' ? 7 : 30)}
-              className="p-2 rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C] hover:border-[#55CDB3] cursor-pointer"
+              className="p-2 rounded-xl border border-[#172B5018] bg-[#FFF4E8] text-[#172B50] hover:border-[#F4510B] cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={() => setFocusDate(todayYmd)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold text-[#55CDB3] bg-[#493548]/15 border border-[#55CDB3]/40 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-[#F4510B] bg-[#FFF4E8] border border-[#F4510B25] cursor-pointer"
             >
               Today
             </button>
@@ -409,11 +409,11 @@ export default function ClassSchedulesPage() {
         </div>
 
         {/* Filter Selects */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-[#493548]/20">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-[#172B5010]">
           <select
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C]"
+            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#172B501A] bg-[#FFF4E8] text-[#172B50]"
           >
             <option value="All">All Locations</option>
             {activeLocations.map((loc) => (
@@ -426,7 +426,7 @@ export default function ClassSchedulesPage() {
           <select
             value={programFilter}
             onChange={(e) => setProgramFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C]"
+            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#172B501A] bg-[#FFF4E8] text-[#172B50]"
           >
             <option value="All">All Sports Programs</option>
             {(data.programs || []).map((p) => (
@@ -439,7 +439,7 @@ export default function ClassSchedulesPage() {
           <select
             value={coachFilter}
             onChange={(e) => setCoachFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C]"
+            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#172B501A] bg-[#FFF4E8] text-[#172B50]"
           >
             <option value="All">All Coaches</option>
             {(data.coaches || []).map((c) => (
@@ -452,7 +452,7 @@ export default function ClassSchedulesPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C]"
+            className="px-3 py-2 text-xs font-bold rounded-xl border border-[#172B501A] bg-[#FFF4E8] text-[#172B50]"
           >
             <option value="All">All Statuses</option>
             <option value="Scheduled">Scheduled</option>
@@ -465,17 +465,17 @@ export default function ClassSchedulesPage() {
 
       {/* View 1: DAILY VIEW */}
       {viewMode === 'daily' && (
-        <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 p-5 shadow-card space-y-4">
+        <div className="bg-white rounded-2xl border border-[#172B5014] p-5 shadow-card space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-[#080B0C]">
+            <h3 className="text-sm font-extrabold text-[#172B50]">
               Daily Timetable — {WEEKDAYS[new Date(`${focusDate}T00:00:00`).getDay()]} ({focusDate})
             </h3>
-            <span className="text-xs font-bold text-[#55CDB3]">{dailySchedules.length} sessions</span>
+            <span className="text-xs font-bold text-[#F4510B]">{dailySchedules.length} sessions</span>
           </div>
 
           {dailySchedules.length === 0 ? (
-            <div className="p-8 rounded-2xl border border-dashed border-[#493548]/20 text-center">
-              <p className="text-xs font-bold text-[#493548]">
+            <div className="p-8 rounded-2xl border border-dashed border-[#172B5020] text-center">
+              <p className="text-xs font-bold text-[#172B50] opacity-70">
                 No class sessions scheduled on {focusDate}.
               </p>
             </div>
@@ -484,19 +484,19 @@ export default function ClassSchedulesPage() {
               {dailySchedules.map((sch) => (
                 <div
                   key={sch.id}
-                  className="p-4 rounded-2xl border border-[#493548]/20 bg-[#493548]/15/40 space-y-3"
+                  className="p-4 rounded-2xl border border-[#172B5015] bg-[#FFF4E8]/40 space-y-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-[#080B0C] text-[#F4F7F6]">
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-[#172B50] text-white">
                           {sch.location}
                         </span>
-                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#F4F7F6] text-[#55CDB3] border border-[#55CDB3]/40">
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white text-[#F4510B] border border-[#F4510B25]">
                           {sch.program}
                         </span>
                       </div>
-                      <h4 className="text-sm font-extrabold text-[#080B0C] mt-1.5">{sch.batch}</h4>
+                      <h4 className="text-sm font-extrabold text-[#172B50] mt-1.5">{sch.batch}</h4>
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${renderStatusBadge(
@@ -507,28 +507,28 @@ export default function ClassSchedulesPage() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs text-[#080B0C]">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-[#172B50]">
                     <span className="flex items-center gap-1.5 font-semibold">
-                      <Clock className="w-3.5 h-3.5 text-[#55CDB3]" />
+                      <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
                       {sch.startTime} - {sch.endTime}
                     </span>
                     <span className="flex items-center gap-1.5 font-semibold">
-                      <MapPin className="w-3.5 h-3.5 text-[#55CDB3]" />
+                      <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
                       {sch.location}
                     </span>
                     <span className="flex items-center gap-1.5 font-semibold col-span-2">
-                      <UserCheck className="w-3.5 h-3.5 text-[#080B0C]" />
+                      <UserCheck className="w-3.5 h-3.5 text-[#172B50]" />
                       Coach 1: {sch.coachName}
                       {sch.additionalCoaches?.length > 0 &&
                         ` • Coach 2: ${sch.additionalCoaches.map((c) => c.coachName).join(', ')}`}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#493548]/20">
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#172B5010]">
                     <button
                       type="button"
                       onClick={() => openEditModal(sch)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 hover:border-[#55CDB3] cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-[#172B50] border border-[#172B501A] hover:border-[#F4510B] cursor-pointer"
                     >
                       <Edit3 className="w-3 h-3" /> Edit
                     </button>
@@ -571,29 +571,29 @@ export default function ClassSchedulesPage() {
             return (
               <div
                 key={col.ymd}
-                className={`bg-[#F4F7F6] rounded-2xl border p-3 shadow-card flex flex-col min-h-[260px] ${
-                  isToday ? 'border-[#55CDB3]' : 'border-[#493548]/20'
+                className={`bg-white rounded-2xl border p-3 shadow-card flex flex-col min-h-[260px] ${
+                  isToday ? 'border-[#F4510B]' : 'border-[#172B5014]'
                 }`}
               >
-                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#493548]/20">
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#172B5010]">
                   <div>
-                    <p className={`text-xs font-extrabold ${isToday ? 'text-[#55CDB3]' : 'text-[#080B0C]'}`}>
+                    <p className={`text-xs font-extrabold ${isToday ? 'text-[#F4510B]' : 'text-[#172B50]'}`}>
                       {col.dayName}
                     </p>
-                    <p className="text-[10px] font-semibold text-[#493548]">{col.label}</p>
+                    <p className="text-[10px] font-semibold text-[#172B50] opacity-60">{col.label}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => openCreateModal(col.ymd)}
                     title={`Add class on ${col.ymd}`}
-                    className="p-1 rounded-lg bg-[#493548]/15 text-[#55CDB3] hover:bg-[#55CDB3] hover:text-[#080B0C] transition-colors cursor-pointer"
+                    className="p-1 rounded-lg bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {colItems.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center text-[11px] text-[#080B0C] opacity-40 text-center px-2">
+                  <div className="flex-1 flex items-center justify-center text-[11px] text-[#172B50] opacity-40 text-center px-2">
                     No sessions
                   </div>
                 ) : (
@@ -601,10 +601,10 @@ export default function ClassSchedulesPage() {
                     {colItems.map((sch) => (
                       <div
                         key={sch.id}
-                        className="p-2.5 rounded-xl bg-[#493548]/15/75 border border-[#493548]/20 space-y-1 text-[11px]"
+                        className="p-2.5 rounded-xl bg-[#FFF4E8]/75 border border-[#172B5012] space-y-1 text-[11px]"
                       >
                         <div className="flex items-center justify-between gap-1">
-                          <span className="font-extrabold text-[#55CDB3]">
+                          <span className="font-extrabold text-[#F4510B]">
                             {sch.startTime}-{sch.endTime}
                           </span>
                           <span
@@ -615,11 +615,11 @@ export default function ClassSchedulesPage() {
                             {sch.status}
                           </span>
                         </div>
-                        <p className="font-extrabold text-[#080B0C] leading-tight">{sch.batch}</p>
-                        <p className="text-[10px] text-[#080B0C] opacity-75">
+                        <p className="font-extrabold text-[#172B50] leading-tight">{sch.batch}</p>
+                        <p className="text-[10px] text-[#172B50] opacity-75">
                           {sch.location}
                         </p>
-                        <p className="text-[10px] font-semibold text-[#080B0C]">
+                        <p className="text-[10px] font-semibold text-[#172B50]">
                           Coach 1: {sch.coachName}
                           {sch.additionalCoaches?.length > 0 &&
                             ` • Coach 2: ${sch.additionalCoaches.map((c) => c.coachName).join(', ')}`}
@@ -628,7 +628,7 @@ export default function ClassSchedulesPage() {
                           <button
                             type="button"
                             onClick={() => openEditModal(sch)}
-                            className="text-[10px] font-bold text-[#080B0C] hover:text-[#55CDB3] cursor-pointer"
+                            className="text-[10px] font-bold text-[#172B50] hover:text-[#F4510B] cursor-pointer"
                           >
                             Edit
                           </button>
@@ -668,18 +668,18 @@ export default function ClassSchedulesPage() {
 
       {/* View 3: MONTHLY CALENDAR VIEW */}
       {viewMode === 'calendar' && (
-        <div className="bg-[#F4F7F6] rounded-2xl border border-[#493548]/20 p-5 shadow-card space-y-4">
+        <div className="bg-white rounded-2xl border border-[#172B5014] p-5 shadow-card space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-[#080B0C] flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-[#55CDB3]" />
+            <h3 className="text-sm font-extrabold text-[#172B50] flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-[#F4510B]" />
               {calendarDays.monthLabel}
             </h3>
-            <span className="text-[11px] font-semibold text-[#080B0C] opacity-65">
+            <span className="text-[11px] font-semibold text-[#172B50] opacity-65">
               Click any date to inspect or add sessions
             </span>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-extrabold text-[#493548]">
+          <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-extrabold text-[#172B50] opacity-70">
             {MON_FIRST_DAYS.map((d) => (
               <div key={d} className="py-1">
                 {d.slice(0, 3)}
@@ -701,14 +701,14 @@ export default function ClassSchedulesPage() {
                   onClick={() => setFocusDate(cell.ymd)}
                   className={`min-h-[86px] p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected
-                      ? 'border-[#55CDB3] bg-[#493548]/15'
-                      : 'border-[#493548]/20 bg-[#F4F7F6] hover:border-[#55CDB3]/40'
+                      ? 'border-[#F4510B] bg-[#FFF4E8]'
+                      : 'border-[#172B5012] bg-white hover:border-[#F4510B55]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-[#080B0C]">{cell.dayNum}</span>
+                    <span className="text-xs font-extrabold text-[#172B50]">{cell.dayNum}</span>
                     {dayItems.length > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold">
+                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#F4510B] text-white">
                         {dayItems.length}
                       </span>
                     )}
@@ -717,14 +717,14 @@ export default function ClassSchedulesPage() {
                     {dayItems.slice(0, 2).map((sch) => (
                       <div
                         key={sch.id}
-                        className="truncate px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#080B0C] text-[#F4F7F6]"
+                        className="truncate px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#172B50] text-white"
                         title={`${sch.startTime} ${sch.batch} (${sch.location})`}
                       >
                         {sch.startTime} {sch.batch}
                       </div>
                     ))}
                     {dayItems.length > 2 && (
-                      <div className="text-[9px] font-bold text-[#55CDB3]">
+                      <div className="text-[9px] font-bold text-[#F4510B]">
                         +{dayItems.length - 2} more
                       </div>
                     )}
@@ -754,7 +754,7 @@ export default function ClassSchedulesPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Academy Location *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
               <select
                 required
                 value={scheduleForm.location}
@@ -767,7 +767,7 @@ export default function ClassSchedulesPage() {
                     batch: '',
                   }));
                 }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="">Select Location</option>
                 {activeLocations.map((loc) => (
@@ -778,7 +778,7 @@ export default function ClassSchedulesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Sports Program *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Sports Program *</label>
               <select
                 required
                 value={scheduleForm.program}
@@ -790,7 +790,7 @@ export default function ClassSchedulesPage() {
                     batch: '',
                   }))
                 }
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="">Select Program</option>
                 {(data.programs || []).map((p) => (
@@ -804,23 +804,23 @@ export default function ClassSchedulesPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Class Title / Name</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Class Title / Name</label>
               <input
                 type="text"
                 value={scheduleForm.className}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, className: e.target.value })}
                 placeholder="e.g. Little Strikers Morning Drills"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Batches *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Batches *</label>
               {matchingBatchesForForm.length > 0 ? (
                 <select
                   value={scheduleForm.batchId}
                   onChange={(e) => handleBatchSelection(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
                 >
                   <option value="">Select Batch</option>
                   {matchingBatchesForForm.map((b) => (
@@ -836,24 +836,24 @@ export default function ClassSchedulesPage() {
                   value={scheduleForm.batch}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, batch: e.target.value })}
                   placeholder="Enter batch name or create under Batches"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
                 />
               )}
             </div>
           </div>
 
           {!editingSchedule && (
-            <div className="p-3 rounded-xl bg-[#493548]/15/70 border border-[#493548]/20 space-y-2.5">
+            <div className="p-3 rounded-xl bg-[#FFF4E8]/70 border border-[#172B5015] space-y-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-[#080B0C]">Schedule Mode</span>
-                <div className="inline-flex rounded-lg bg-[#F4F7F6] border border-[#493548]/20 p-0.5">
+                <span className="text-xs font-extrabold text-[#172B50]">Schedule Mode</span>
+                <div className="inline-flex rounded-lg bg-white border border-[#172B501A] p-0.5">
                   <button
                     type="button"
                     onClick={() => setScheduleForm((prev) => ({ ...prev, scheduleMode: 'one-time' }))}
                     className={`px-3 py-1 text-[11px] font-bold rounded-md cursor-pointer ${
                       scheduleForm.scheduleMode === 'one-time'
-                        ? 'bg-[#080B0C] text-[#F4F7F6]'
-                        : 'text-[#080B0C]'
+                        ? 'bg-[#172B50] text-white'
+                        : 'text-[#172B50]'
                     }`}
                   >
                     One-Time Class
@@ -863,8 +863,8 @@ export default function ClassSchedulesPage() {
                     onClick={() => setScheduleForm((prev) => ({ ...prev, scheduleMode: 'recurring' }))}
                     className={`px-3 py-1 text-[11px] font-bold rounded-md cursor-pointer ${
                       scheduleForm.scheduleMode === 'recurring'
-                        ? 'bg-[#55CDB3] text-[#080B0C] font-bold'
-                        : 'text-[#080B0C]'
+                        ? 'bg-[#F4510B] text-white'
+                        : 'text-[#172B50]'
                     }`}
                   >
                     Weekly Recurring Timetable
@@ -875,13 +875,13 @@ export default function ClassSchedulesPage() {
               {scheduleForm.scheduleMode === 'recurring' && (
                 <div className="space-y-2 pt-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold text-[#080B0C]">Recurring Days *</span>
+                    <span className="text-[11px] font-bold text-[#172B50]">Recurring Days *</span>
                     <div className="flex items-center gap-1.5 text-[11px]">
-                      <span className="font-bold text-[#080B0C]">Repeat For:</span>
+                      <span className="font-bold text-[#172B50]">Repeat For:</span>
                       <select
                         value={scheduleForm.recurringWeeks}
                         onChange={(e) => setScheduleForm((prev) => ({ ...prev, recurringWeeks: e.target.value }))}
-                        className="px-2 py-1 rounded-lg bg-[#F4F7F6] border border-[#493548]/20 font-bold text-[#080B0C]"
+                        className="px-2 py-1 rounded-lg bg-white border border-[#172B5020] font-bold text-[#172B50]"
                       >
                         <option value="2">2 Weeks</option>
                         <option value="4">4 Weeks</option>
@@ -900,8 +900,8 @@ export default function ClassSchedulesPage() {
                           onClick={() => toggleRecurringDay(dayName)}
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
                             active
-                              ? 'bg-[#55CDB3] text-[#080B0C] font-bold border-[#55CDB3]'
-                              : 'bg-[#F4F7F6] text-[#080B0C] border-[#493548]/20 hover:bg-[#55CDB3]/15'
+                              ? 'bg-[#F4510B] text-white border-[#F4510B]'
+                              : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-[#FFF4E8]'
                           }`}
                         >
                           {dayName.slice(0, 3)}
@@ -916,7 +916,7 @@ export default function ClassSchedulesPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
                 {scheduleForm.scheduleMode === 'recurring' && !editingSchedule ? 'Start Date *' : 'Class Date *'}
               </label>
               <input
@@ -930,15 +930,15 @@ export default function ClassSchedulesPage() {
                     : scheduleForm.weekday;
                   setScheduleForm({ ...scheduleForm, date: nextDate, weekday: nextWeekday });
                 }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Weekday</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Weekday</label>
               <select
                 value={scheduleForm.weekday}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, weekday: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 {MON_FIRST_DAYS.map((day) => (
                   <option key={day} value={day}>
@@ -948,30 +948,30 @@ export default function ClassSchedulesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Start Time *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Start Time *</label>
               <input
                 type="time"
                 required
                 value={scheduleForm.startTime}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, startTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">End Time *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">End Time *</label>
               <input
                 type="time"
                 required
                 value={scheduleForm.endTime}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, endTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Coach 1</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Coach 1</label>
               <select
                 value={scheduleForm.coachId}
                 onChange={(e) => {
@@ -982,7 +982,7 @@ export default function ClassSchedulesPage() {
                     coach2Id: prev.coach2Id === nextCoach1 ? '' : prev.coach2Id,
                   }));
                 }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="">Select Coach 1</option>
                 {(data.coaches || []).map((c) => (
@@ -993,11 +993,11 @@ export default function ClassSchedulesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Coach 2</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Coach 2</label>
               <select
                 value={scheduleForm.coach2Id}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, coach2Id: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
               >
                 <option value="">Select Coach 2 (Optional)</option>
                 {(data.coaches || [])
@@ -1012,28 +1012,28 @@ export default function ClassSchedulesPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#080B0C] mb-1">Session Notes / Drills</label>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">Session Notes / Drills</label>
             <input
               type="text"
               value={scheduleForm.notes}
               onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
               placeholder="Equipment setup or drill instructions..."
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
             <button
               type="button"
               onClick={() => setIsScheduleModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={formConflict.hasConflict}
-              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#d84306] disabled:opacity-50 cursor-pointer"
+              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:bg-[#d84306] disabled:opacity-50 cursor-pointer"
             >
               {editingSchedule ? 'Update Schedule' : 'Publish Schedule'}
             </button>
@@ -1054,13 +1054,13 @@ export default function ClassSchedulesPage() {
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Reason for cancellation (notifies Coach Portal automatically)..."
-            className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C]"
+            className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
           />
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setCancellingSchedule(null)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
             >
               Keep Session
             </button>

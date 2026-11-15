@@ -37,8 +37,8 @@ export const ENQUIRY_SOURCE_CONFIG = {
   [ENQUIRY_SOURCES.MANUAL]: {
     label: 'Manual / Walk-in',
     color: 'orange',
-    badgeClass: 'bg-[#55CDB3]/20 text-[#080B0C] border-[#55CDB3]/40',
-    dotClass: 'bg-[#55CDB3]',
+    badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
+    dotClass: 'bg-[#F4510B]',
     iconName: 'UserCheck',
   },
   [ENQUIRY_SOURCES.OTHER]: {

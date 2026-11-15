@@ -3,21 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --color-deep-black: #080B0C;
-  --color-mint-teal: #55CDB3;
-  --color-soft-white: #F4F7F6;
-  --color-deep-plum: #493548;
-
-  --color-warm-cream: #080B0C;
-  --color-spartan-orange: #55CDB3;
-  --color-navy-blue: #080B0C;
-  --color-pure-white: #F4F7F6;
+  --color-warm-cream: #FFF4E8;
+  --color-spartan-orange: #F4510B;
+  --color-navy-blue: #172B50;
+  --color-pure-white: #FFFFFF;
 }
 
 body {
   margin: 0;
-  background-color: #080B0C;
-  color: #F4F7F6;
+  background-color: #FFF4E8;
+  color: #172B50;
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -48,10 +43,10 @@ body {
 
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(85, 205, 179, 0.45);
+    box-shadow: 0 0 0 0 rgba(244, 81, 11, 0.45);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(85, 205, 179, 0);
+    box-shadow: 0 0 0 10px rgba(244, 81, 11, 0);
   }
 }
 
@@ -101,11 +96,11 @@ body {
 @keyframes flameFlicker {
   0%, 100% {
     transform: scale(1);
-    filter: drop-shadow(0 0 6px rgba(85, 205, 179, 0.6));
+    filter: drop-shadow(0 0 6px rgba(244, 81, 11, 0.6));
   }
   50% {
     transform: scale(1.12);
-    filter: drop-shadow(0 0 12px rgba(85, 205, 179, 0.9));
+    filter: drop-shadow(0 0 12px rgba(244, 81, 11, 0.9));
   }
 }
 
@@ -159,27 +154,27 @@ body {
 
 .interactive-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 28px -4px rgba(8, 11, 12, 0.4), 0 4px 10px -2px rgba(73, 53, 72, 0.2);
-  border-color: rgba(85, 205, 179, 0.5);
+  box-shadow: 0 14px 28px -4px rgba(23, 43, 80, 0.1), 0 4px 10px -2px rgba(23, 43, 80, 0.05);
+  border-color: rgba(244, 81, 11, 0.35);
 }
 
-/* Custom scrollbar matching MaxR CRM palette */
+/* Custom scrollbar matching Spartan palette */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #080B0C;
+  background: #FFF4E8;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #493548;
+  background: #172B5033;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #55CDB3;
+  background: #F4510B80;
 }
 
 /* Floating Submenu Smooth Animation */
@@ -198,14 +193,8 @@ body {
   animation: submenuSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Soft White cards & content surfaces with high-contrast text and sleek plum/teal border accents */
-main .bg-white,
-main .bg-\[\#FFF4E8\] {
-  color: #080B0C;
-}
-
-main .bg-white.shadow-card,
-main .bg-white {
-  background-color: #F4F7F6;
-  border-color: rgba(73, 53, 72, 0.18);
+/* Soft glass translucency on dashboard cards so the branded ZenConnect background watermark subtly shows through */
+main .bg-white.shadow-card {
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
 }

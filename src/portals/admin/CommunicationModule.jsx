@@ -52,25 +52,25 @@ export default function CommunicationModule() {
   return (
     <div className="space-y-6">
       {/* Module Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#493548]/20 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#172B501A] pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
             Academy Communication & Support
           </h1>
-          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
             Broadcast announcements, parent reviews, SMS dispatch and resolution ticketing
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#F4F7F6] rounded-xl border border-[#493548]/20 shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#172B5018] shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => setActiveSubTab('announcements')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'announcements'
-                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
-                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
+                ? 'bg-[#F4510B] text-white shadow-xs'
+                : 'text-[#172B50] hover:bg-[#FFF4E8]'
             }`}
           >
             <Bell className="w-4 h-4" />
@@ -82,8 +82,8 @@ export default function CommunicationModule() {
             onClick={() => setActiveSubTab('feedback')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'feedback'
-                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
-                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
+                ? 'bg-[#F4510B] text-white shadow-xs'
+                : 'text-[#172B50] hover:bg-[#FFF4E8]'
             }`}
           >
             <Star className="w-4 h-4" />
@@ -95,8 +95,8 @@ export default function CommunicationModule() {
             onClick={() => setActiveSubTab('parent_comm')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'parent_comm'
-                ? 'bg-[#55CDB3] text-[#080B0C] font-bold shadow-xs'
-                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
+                ? 'bg-[#F4510B] text-white shadow-xs'
+                : 'text-[#172B50] hover:bg-[#FFF4E8]'
             }`}
           >
             <MessageSquare className="w-4 h-4" />
@@ -108,11 +108,11 @@ export default function CommunicationModule() {
             onClick={() => setActiveSubTab('support_requests')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
               currentTab === 'support_requests'
-                ? 'bg-[#080B0C] text-[#F4F7F6] shadow-xs'
-                : 'text-[#080B0C] hover:bg-[#55CDB3]/15'
+                ? 'bg-[#172B50] text-white shadow-xs'
+                : 'text-[#172B50] hover:bg-[#FFF4E8]'
             }`}
           >
-            <LifeBuoy className="w-4 h-4 text-[#55CDB3]" />
+            <LifeBuoy className="w-4 h-4 text-[#F4510B]" />
             <span>Support Requests ({data.supportTickets.filter(t => t.status !== 'Resolved').length})</span>
           </button>
         </div>
@@ -122,8 +122,8 @@ export default function CommunicationModule() {
       {currentTab === 'announcements' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Create Announcement Form */}
-          <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
-            <h2 className="text-base font-extrabold text-[#080B0C] mb-3">Publish New Academy Circular</h2>
+          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
+            <h2 className="text-base font-extrabold text-[#172B50] mb-3">Publish New Academy Circular</h2>
             <form onSubmit={handlePublishAnnouncement} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
@@ -133,14 +133,14 @@ export default function CommunicationModule() {
                     placeholder="Announcement Title (e.g., Annual Sports Day Date Announced)"
                     value={newAnnTitle}
                     onChange={(e) => setNewAnnTitle(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs bg-[#493548]/15/40 border border-[#493548]/20 rounded-xl text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
+                    className="w-full px-3.5 py-2 text-xs bg-[#FFF4E8]/40 border border-[#172B5020] rounded-xl text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
                   />
                 </div>
                 <div>
                   <select
                     value={newAnnTarget}
                     onChange={(e) => setNewAnnTarget(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-[#F4F7F6] border border-[#493548]/20 rounded-xl font-semibold text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#172B5020] rounded-xl font-semibold text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
                   >
                     <option value="All Parents & Students">All Parents & Students</option>
                     <option value="Coaches & Staff">Coaches & Staff</option>
@@ -156,13 +156,13 @@ export default function CommunicationModule() {
                   placeholder="Detailed circular text, guidelines, uniform instructions or arena directions..."
                   value={newAnnContent}
                   onChange={(e) => setNewAnnContent(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-[#493548]/15/40 border border-[#493548]/20 rounded-xl text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
+                  className="w-full px-3.5 py-2 text-xs bg-[#FFF4E8]/40 border border-[#172B5020] rounded-xl text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
                 />
               </div>
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-xs hover:bg-[#55CDB3]/90 active:scale-95 transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-xs hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Broadcast Circular</span>
@@ -174,17 +174,17 @@ export default function CommunicationModule() {
           {/* List of Announcements */}
           <div className="space-y-3">
             {data.announcements.map(ann => (
-              <div key={ann.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
+              <div key={ann.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#080B0C] text-[#F4F7F6]">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#172B50] text-white">
                       {ann.target}
                     </span>
-                    <h3 className="font-extrabold text-base text-[#080B0C] mt-1.5">{ann.title}</h3>
+                    <h3 className="font-extrabold text-base text-[#172B50] mt-1.5">{ann.title}</h3>
                   </div>
-                  <span className="text-[11px] text-[#080B0C]/60 shrink-0 font-semibold">{ann.date}</span>
+                  <span className="text-[11px] text-[#172B50]/60 shrink-0 font-semibold">{ann.date}</span>
                 </div>
-                <p className="text-xs text-[#080B0C]/80 mt-2 leading-relaxed">{ann.content}</p>
+                <p className="text-xs text-[#172B50]/80 mt-2 leading-relaxed">{ann.content}</p>
               </div>
             ))}
           </div>
@@ -199,9 +199,9 @@ export default function CommunicationModule() {
       {/* SUBTAB 3: Broadcasts & SMS */}
       {currentTab === 'parent_comm' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card">
-            <h2 className="text-base font-extrabold text-[#080B0C] mb-2">SMS & WhatsApp Broadcast Gateway</h2>
-            <p className="text-xs text-[#080B0C]/70 mb-4">Instant alert delivery for emergency rain cancellations, bus updates and fee reminders</p>
+          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
+            <h2 className="text-base font-extrabold text-[#172B50] mb-2">SMS & WhatsApp Broadcast Gateway</h2>
+            <p className="text-xs text-[#172B50]/70 mb-4">Instant alert delivery for emergency rain cancellations, bus updates and fee reminders</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50">
                 <span className="font-bold text-xs text-emerald-800 block">Class Delay / Weather Alert</span>
@@ -228,7 +228,7 @@ export default function CommunicationModule() {
                 <p className="text-[11px] text-amber-700 mt-1">Automated payment link delivery</p>
                 <button
                   onClick={() => addToast('Fee reminder broadcast dispatched to pending list.')}
-                  className="mt-3 px-3 py-1.5 bg-[#55CDB3] text-[#080B0C] font-bold font-bold text-xs rounded-lg hover:bg-[#55CDB3]/90 cursor-pointer"
+                  className="mt-3 px-3 py-1.5 bg-[#F4510B] text-white font-bold text-xs rounded-lg hover:brightness-110 cursor-pointer"
                 >
                   Send Fee Alerts
                 </button>
@@ -242,14 +242,14 @@ export default function CommunicationModule() {
       {currentTab === 'support_requests' && (
         <div className="space-y-4 animate-in fade-in duration-200">
           {data.supportTickets.map(t => (
-            <div key={t.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#493548]/20">
+            <div key={t.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#172B5010]">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-[#55CDB3]">{t.id}</span>
-                    <span className="font-bold text-sm text-[#080B0C]">{t.subject}</span>
+                    <span className="font-mono text-xs font-bold text-[#F4510B]">{t.id}</span>
+                    <span className="font-bold text-sm text-[#172B50]">{t.subject}</span>
                   </div>
-                  <span className="text-[11px] text-[#080B0C]/60 block mt-0.5">
+                  <span className="text-[11px] text-[#172B50]/60 block mt-0.5">
                     From: {t.customerName} &bull; Category: {t.category}
                   </span>
                 </div>
@@ -273,12 +273,12 @@ export default function CommunicationModule() {
               </div>
 
               {/* Message thread */}
-              <div className="space-y-2 bg-[#493548]/15/20 p-3 rounded-xl border border-[#493548]/20">
+              <div className="space-y-2 bg-[#FFF4E8]/20 p-3 rounded-xl border border-[#172B5010]">
                 {t.messages.map((m, idx) => (
                   <div key={idx} className="text-xs">
-                    <span className="font-bold text-[#080B0C]">{m.sender}: </span>
-                    <span className="text-[#080B0C]/80">{m.text}</span>
-                    <span className="text-[10px] text-[#080B0C]/50 block mt-0.5">{m.time}</span>
+                    <span className="font-bold text-[#172B50]">{m.sender}: </span>
+                    <span className="text-[#172B50]/80">{m.text}</span>
+                    <span className="text-[10px] text-[#172B50]/50 block mt-0.5">{m.time}</span>
                   </div>
                 ))}
               </div>
@@ -291,12 +291,12 @@ export default function CommunicationModule() {
                     placeholder="Type official reply to parent..."
                     value={replyTextMap[t.id] || ''}
                     onChange={(e) => setReplyTextMap({ ...replyTextMap, [t.id]: e.target.value })}
-                    className="flex-1 px-3 py-1.5 text-xs bg-[#F4F7F6] border border-[#493548]/20 rounded-xl text-[#080B0C] focus:ring-2 focus:ring-[#55CDB3]"
+                    className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#172B5020] rounded-xl text-[#172B50] focus:ring-2 focus:ring-[#F4510B]"
                   />
                   <button
                     type="button"
                     onClick={() => handleSendTicketReply(t.id)}
-                    className="px-3.5 py-1.5 bg-[#080B0C] text-[#F4F7F6] text-xs font-bold rounded-xl hover:bg-[#20365F] transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 bg-[#172B50] text-white text-xs font-bold rounded-xl hover:bg-[#20365F] transition-colors cursor-pointer"
                   >
                     Reply
                   </button>

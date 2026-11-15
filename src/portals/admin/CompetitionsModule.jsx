@@ -57,17 +57,17 @@ export default function CompetitionsModule() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#080B0C] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
             Competitions, Derbies & Tournaments
           </h1>
-          <p className="text-xs sm:text-sm text-[#080B0C] opacity-75 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
             Inter-center tournaments, state championship qualifiers and Spartan medal fixtures
           </p>
         </div>
 
         <button
           onClick={() => setIsAddOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-white" />
           <span>Host New Tournament</span>
@@ -77,40 +77,40 @@ export default function CompetitionsModule() {
       {/* Tournaments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {data.competitions.map(comp => (
-          <div key={comp.id} className="bg-[#F4F7F6] rounded-2xl p-5 border border-[#493548]/20 shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
+          <div key={comp.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
             <div>
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#55CDB3]">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
                     {comp.sport}
                   </span>
-                  <h3 className="text-base font-extrabold text-[#080B0C] mt-0.5">{comp.title}</h3>
+                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{comp.title}</h3>
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-[#493548]/15 flex items-center justify-center shrink-0 border border-[#493548]/20">
-                  <Trophy className="w-4 h-4 text-[#55CDB3]" />
+                <div className="w-9 h-9 rounded-xl bg-[#FFF4E8] flex items-center justify-center shrink-0 border border-[#172B5015]">
+                  <Trophy className="w-4 h-4 text-[#F4510B]" />
                 </div>
               </div>
 
               {/* Details */}
-              <div className="mt-3.5 space-y-1.5 text-xs text-[#080B0C]">
+              <div className="mt-3.5 space-y-1.5 text-xs text-[#172B50]">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-[#55CDB3]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
                   <span className="font-semibold">{comp.date}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-[#55CDB3]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
                   <span className="opacity-80 truncate">{comp.venue}</span>
                 </div>
               </div>
 
               {/* Age Categories */}
-              <div className="mt-3 p-2.5 rounded-xl bg-[#493548]/15 border border-[#493548]/20">
-                <span className="text-[10px] font-bold uppercase text-[#493548] block mb-1">
+              <div className="mt-3 p-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
+                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block mb-1">
                   Eligible Age Divisions
                 </span>
                 <div className="flex flex-wrap gap-1">
                   {comp.ageCategories.map((c, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20">
+                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#172B50] border border-[#172B5015]">
                       {c}
                     </span>
                   ))}
@@ -118,30 +118,30 @@ export default function CompetitionsModule() {
               </div>
 
               {/* Prizes */}
-              <div className="mt-2.5 text-[11px] text-[#080B0C] opacity-80 flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5 text-[#55CDB3] shrink-0" />
+              <div className="mt-2.5 text-[11px] text-[#172B50] opacity-80 flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
                 <span>{comp.prizes}</span>
               </div>
             </div>
 
             {/* Registration Progress */}
-            <div className="mt-4 pt-3 border-t border-[#493548]/20">
+            <div className="mt-4 pt-3 border-t border-[#172B5015]">
               <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="text-[#080B0C]">Spots Filled</span>
-                <span className="text-[#55CDB3]">{comp.registeredCount}/{comp.maxParticipants}</span>
+                <span className="text-[#172B50]">Spots Filled</span>
+                <span className="text-[#F4510B]">{comp.registeredCount}/{comp.maxParticipants}</span>
               </div>
-              <div className="w-full h-2 bg-[#493548]/15 rounded-full overflow-hidden border border-[#493548]/20">
+              <div className="w-full h-2 bg-[#FFF4E8] rounded-full overflow-hidden border border-[#172B5015]">
                 <div
                   style={{ width: `${(comp.registeredCount / comp.maxParticipants) * 100}%` }}
-                  className="h-full bg-[#080B0C] rounded-full"
+                  className="h-full bg-[#172B50] rounded-full"
                 />
               </div>
 
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs font-black text-[#080B0C]">{comp.entryFee}</span>
+                <span className="text-xs font-black text-[#172B50]">{comp.entryFee}</span>
                 <button
                   onClick={() => setRegisterModalComp(comp)}
-                  className="px-3 py-1.5 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-lg shadow-sm hover:bg-[#55CDB3]/90 transition-all"
+                  className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg shadow-sm hover:brightness-110 transition-all"
                 >
                   Register Athlete
                 </button>
@@ -161,24 +161,24 @@ export default function CompetitionsModule() {
       >
         <form onSubmit={handleAddCompetition} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-[#080B0C] block mb-1">Tournament Title *</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Tournament Title *</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Spartan Sprint Challenge 2026"
-              className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Sport Discipline</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Sport Discipline</label>
               <select
                 value={sport}
                 onChange={(e) => setSport(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
                 <option value="Gymnastics & Obstacle Run">Gymnastics & Obstacle Run</option>
                 <option value="Football Derby (5v5)">Football Derby (5v5)</option>
@@ -188,50 +188,50 @@ export default function CompetitionsModule() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Event Date</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Event Date</label>
               <input
                 type="date"
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Venue Location</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Venue Location</label>
               <input
                 type="text"
                 required
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Max Participant Cap</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Max Participant Cap</label>
               <input
                 type="number"
                 value={maxParticipants}
                 onChange={(e) => setMaxParticipants(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#493548]/20 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsAddOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all"
+              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
             >
               Publish Tournament
             </button>
@@ -249,11 +249,11 @@ export default function CompetitionsModule() {
         >
           <form onSubmit={handleRegisterAthlete} className="space-y-3.5">
             <div>
-              <label className="text-xs font-bold text-[#080B0C] block mb-1">Select Spartan Athlete *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Select Spartan Athlete *</label>
               <select
                 value={selectedStudentName}
                 onChange={(e) => setSelectedStudentName(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-[#F4F7F6] text-[#080B0C] border border-[#493548]/20 rounded-xl focus:ring-2 focus:ring-[#55CDB3] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
                 {data.students.map(s => (
                   <option key={s.id} value={s.name}>{s.name} ({s.age} yrs - {s.rank})</option>
@@ -261,22 +261,22 @@ export default function CompetitionsModule() {
               </select>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#493548]/15 text-xs text-[#080B0C] border border-[#493548]/20">
+            <div className="p-3 rounded-xl bg-[#FFF4E8] text-xs text-[#172B50] border border-[#172B5015]">
               <p className="font-bold">Tournament Confirmation Notice:</p>
               <p className="opacity-80 mt-1">Official Little Spartans competition jersey and hydration kit will be issued at center reception before event day.</p>
             </div>
 
-            <div className="pt-3 border-t border-[#493548]/20 flex items-center justify-end gap-2">
+            <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setRegisterModalComp(null)}
-                className="px-4 py-2 text-xs font-semibold text-[#080B0C] hover:bg-[#55CDB3]/15 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-bold bg-[#55CDB3] text-[#080B0C] font-bold rounded-xl shadow-sm hover:bg-[#55CDB3]/90 active:scale-95 transition-all"
+                className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
               >
                 Confirm Athlete Registration
               </button>

@@ -184,15 +184,15 @@ export default function SportsProgramsPage({ onNavigateModule }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#F4F7F6] p-5 rounded-2xl border border-[#493548]/20 shadow-card">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#172B5012] shadow-card">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#55CDB3]">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F4510B]">
             <Trophy className="w-3.5 h-3.5" /> Module 1 • Curriculum & Academy Centres
           </div>
-          <h2 className="text-xl font-extrabold text-[#080B0C] tracking-tight mt-0.5">
+          <h2 className="text-xl font-extrabold text-[#172B50] tracking-tight mt-0.5">
             Sports Programs & Academy Locations
           </h2>
-          <p className="text-xs text-[#493548] mt-0.5">
+          <p className="text-xs text-[#172B50] opacity-70 mt-0.5">
             Create sports programs, define eligibility & age groups, and manage active academy locations dynamically.
           </p>
         </div>
@@ -204,15 +204,15 @@ export default function SportsProgramsPage({ onNavigateModule }) {
               openLocationEditor(null);
               setIsLocationModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#493548]/15 text-[#080B0C] border border-[#493548]/20 text-xs font-extrabold hover:border-[#55CDB3] hover:text-[#55CDB3] transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FFF4E8] text-[#172B50] border border-[#172B501F] text-xs font-extrabold hover:border-[#F4510B] hover:text-[#F4510B] transition-all cursor-pointer"
           >
-            <Building2 className="w-4 h-4 text-[#55CDB3]" />
+            <Building2 className="w-4 h-4 text-[#F4510B]" />
             Manage Locations ({activeLocations.length} Active)
           </button>
           <button
             type="button"
             onClick={() => openAddProgramModal(null)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#55CDB3] text-[#080B0C] font-bold text-xs font-extrabold shadow-sm hover:bg-[#d84306] transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F4510B] text-white text-xs font-extrabold shadow-sm hover:bg-[#d84306] transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add Sports Program
@@ -222,48 +222,48 @@ export default function SportsProgramsPage({ onNavigateModule }) {
 
       {/* Hierarchy / Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Active Locations</p>
-          <p className="text-2xl font-extrabold text-[#080B0C] mt-1">{activeLocations.length}</p>
-          <p className="text-[11px] text-[#080B0C] opacity-65 mt-0.5">{allLocations.length} total configured</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Active Locations</p>
+          <p className="text-2xl font-extrabold text-[#172B50] mt-1">{activeLocations.length}</p>
+          <p className="text-[11px] text-[#172B50] opacity-65 mt-0.5">{allLocations.length} total configured</p>
         </div>
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Sports Programs</p>
-          <p className="text-2xl font-extrabold text-[#55CDB3] mt-1">{activeProgramsCount}</p>
-          <p className="text-[11px] text-[#080B0C] opacity-65 mt-0.5">{(data.programs || []).length} total in catalog</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Sports Programs</p>
+          <p className="text-2xl font-extrabold text-[#F4510B] mt-1">{activeProgramsCount}</p>
+          <p className="text-[11px] text-[#172B50] opacity-65 mt-0.5">{(data.programs || []).length} total in catalog</p>
         </div>
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Training Batches</p>
-          <p className="text-2xl font-extrabold text-[#080B0C] mt-1">{(data.classes || []).length}</p>
-          <p className="text-[11px] text-[#080B0C] opacity-65 mt-0.5">Linked to programs</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Training Batches</p>
+          <p className="text-2xl font-extrabold text-[#172B50] mt-1">{(data.classes || []).length}</p>
+          <p className="text-[11px] text-[#172B50] opacity-65 mt-0.5">Linked to programs</p>
         </div>
-        <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#493548]">Enrolled Athletes</p>
+        <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-60">Enrolled Athletes</p>
           <p className="text-2xl font-extrabold text-emerald-700 mt-1">{(data.students || []).length}</p>
-          <p className="text-[11px] text-[#080B0C] opacity-65 mt-0.5">Across active centres</p>
+          <p className="text-[11px] text-[#172B50] opacity-65 mt-0.5">Across active centres</p>
         </div>
       </div>
 
       {/* Filters & Quick Templates */}
-      <div className="bg-[#F4F7F6] p-4 rounded-2xl border border-[#493548]/20 shadow-card space-y-3">
+      <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[220px]">
-            <Search className="w-4 h-4 text-[#080B0C] opacity-40 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#172B50] opacity-40 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search programs by name, age group, or description..."
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#493548]/20 bg-[#493548]/15/40 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#172B501A] bg-[#FFF4E8]/40 text-[#172B50] focus:outline-none focus:border-[#F4510B]"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-[#55CDB3]" />
+            <MapPin className="w-4 h-4 text-[#F4510B]" />
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
-              className="px-3 py-2 text-xs font-bold rounded-xl border border-[#493548]/20 bg-[#493548]/15 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+              className="px-3 py-2 text-xs font-bold rounded-xl border border-[#172B501A] bg-[#FFF4E8] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
             >
               <option value="All">All Locations</option>
               {activeLocations.map((loc) => (
@@ -274,7 +274,7 @@ export default function SportsProgramsPage({ onNavigateModule }) {
             </select>
           </div>
 
-          <div className="flex items-center gap-1 bg-[#493548]/15 p-1 rounded-xl border border-[#493548]/20">
+          <div className="flex items-center gap-1 bg-[#FFF4E8] p-1 rounded-xl border border-[#172B5014]">
             {['All', 'Active', 'Inactive'].map((st) => (
               <button
                 key={st}
@@ -282,8 +282,8 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                 onClick={() => setStatusFilter(st)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   statusFilter === st
-                    ? 'bg-[#080B0C] text-[#F4F7F6]'
-                    : 'text-[#080B0C] opacity-75 hover:opacity-100'
+                    ? 'bg-[#172B50] text-white'
+                    : 'text-[#172B50] opacity-75 hover:opacity-100'
                 }`}
               >
                 {st}
@@ -293,16 +293,16 @@ export default function SportsProgramsPage({ onNavigateModule }) {
         </div>
 
         {/* Optional Quick-Add Templates */}
-        <div className="pt-2 border-t border-[#493548]/20 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#493548] mr-1">
-            <Sparkles className="w-3.5 h-3.5 text-[#55CDB3]" /> Quick-add catalog templates:
+        <div className="pt-2 border-t border-[#172B5010] flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#172B50] opacity-70 mr-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#F4510B]" /> Quick-add catalog templates:
           </span>
           {PROGRAM_PRESETS.filter((preset) => !existingProgramNames.has(preset.name.toLowerCase())).map((preset) => (
             <button
               key={preset.name}
               type="button"
               onClick={() => openAddProgramModal(preset)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#493548]/15 text-[#080B0C] border border-[#55CDB3]/40 hover:bg-[#55CDB3] hover:text-[#080B0C] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#FFF4E8] text-[#172B50] border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
             >
               <span>{preset.icon}</span>
               <span>+ {preset.name}</span>
@@ -318,10 +318,10 @@ export default function SportsProgramsPage({ onNavigateModule }) {
 
       {/* Programs Grid */}
       {filteredPrograms.length === 0 ? (
-        <div className="bg-[#F4F7F6] rounded-2xl border border-dashed border-[#493548]/20 p-10 text-center">
-          <Trophy className="w-10 h-10 text-[#55CDB3] opacity-60 mx-auto mb-2" />
-          <h3 className="text-sm font-extrabold text-[#080B0C]">No Sports Programs Match This Filter</h3>
-          <p className="text-xs text-[#080B0C] opacity-65 mt-1">
+        <div className="bg-white rounded-2xl border border-dashed border-[#172B5026] p-10 text-center">
+          <Trophy className="w-10 h-10 text-[#F4510B] opacity-60 mx-auto mb-2" />
+          <h3 className="text-sm font-extrabold text-[#172B50]">No Sports Programs Match This Filter</h3>
+          <p className="text-xs text-[#172B50] opacity-65 mt-1">
             Click &ldquo;Add Sports Program&rdquo; or choose a quick-add template above to configure your academy syllabus.
           </p>
         </div>
@@ -339,19 +339,19 @@ export default function SportsProgramsPage({ onNavigateModule }) {
             return (
               <div
                 key={prog.id}
-                className={`bg-[#F4F7F6] rounded-2xl border p-5 shadow-card flex flex-col justify-between transition-all ${
-                  pStatus === 'Inactive' ? 'border-[#493548]/20 opacity-70' : 'border-[#493548]/20 hover:border-[#55CDB3]/40'
+                className={`bg-white rounded-2xl border p-5 shadow-card flex flex-col justify-between transition-all ${
+                  pStatus === 'Inactive' ? 'border-[#172B5015] opacity-70' : 'border-[#172B5014] hover:border-[#F4510B66]'
                 }`}
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-[#493548]/15 border border-[#55CDB3]/40 flex items-center justify-center text-xl shrink-0">
+                      <div className="w-11 h-11 rounded-2xl bg-[#FFF4E8] border border-[#F4510B25] flex items-center justify-center text-xl shrink-0">
                         {prog.icon || '🏆'}
                       </div>
                       <div>
-                        <h3 className="text-sm font-extrabold text-[#080B0C] leading-snug">{prog.name}</h3>
-                        <p className="text-[11px] font-semibold text-[#55CDB3]">{prog.ageGroup || 'All Ages'}</p>
+                        <h3 className="text-sm font-extrabold text-[#172B50] leading-snug">{prog.name}</h3>
+                        <p className="text-[11px] font-semibold text-[#F4510B]">{prog.ageGroup || 'All Ages'}</p>
                       </div>
                     </div>
                     <span
@@ -366,25 +366,25 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                   </div>
 
                   {prog.description && (
-                    <p className="text-xs text-[#080B0C] opacity-75 line-clamp-2">{prog.description}</p>
+                    <p className="text-xs text-[#172B50] opacity-75 line-clamp-2">{prog.description}</p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#493548]/15/60 p-3 rounded-xl border border-[#493548]/20">
-                    <div className="flex items-center gap-1.5 text-[#080B0C]">
-                      <Clock className="w-3.5 h-3.5 text-[#55CDB3]" />
+                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#FFF4E8]/60 p-3 rounded-xl border border-[#172B500D]">
+                    <div className="flex items-center gap-1.5 text-[#172B50]">
+                      <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
                       <span className="font-semibold">{prog.duration || '60 mins'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[#080B0C]">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#55CDB3]" />
+                    <div className="flex items-center gap-1.5 text-[#172B50]">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#F4510B]" />
                       <span className="font-semibold truncate">{prog.eligibility || 'Open enrollment'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[#080B0C]">
-                      <Users className="w-3.5 h-3.5 text-[#493548]" />
+                    <div className="flex items-center gap-1.5 text-[#172B50]">
+                      <Users className="w-3.5 h-3.5 text-[#172B50] opacity-70" />
                       <span>
                         <strong>{linkedBatches.length}</strong> batches • <strong>{enrolledCount}</strong> kids
                       </span>
                     </div>
-                    <div className="text-right font-extrabold text-[#080B0C]">
+                    <div className="text-right font-extrabold text-[#172B50]">
                       {prog.feeMonthly ? `₹${Number(prog.feeMonthly).toLocaleString()}/mo` : 'Custom Fee'}
                     </div>
                   </div>
@@ -393,20 +393,20 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                     {progLocations.map((loc) => (
                       <span
                         key={loc}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#493548]/15 text-[#080B0C]"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#172B500B] text-[#172B50]"
                       >
-                        <MapPin className="w-2.5 h-2.5 text-[#55CDB3]" /> {loc}
+                        <MapPin className="w-2.5 h-2.5 text-[#F4510B]" /> {loc}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#493548]/20 flex items-center justify-between gap-2">
+                <div className="mt-4 pt-3 border-t border-[#172B5010] flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => openEditProgramModal(prog)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-[#080B0C] bg-[#493548]/15 hover:bg-[#080B0C] hover:text-white transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-[#172B50] bg-[#FFF4E8] hover:bg-[#172B50] hover:text-white transition-colors cursor-pointer"
                     >
                       <Edit3 className="w-3 h-3" /> Edit
                     </button>
@@ -427,7 +427,7 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                     <button
                       type="button"
                       onClick={() => onNavigateModule('batches')}
-                      className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#55CDB3] hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#F4510B] hover:underline cursor-pointer"
                     >
                       Batches <ArrowRight className="w-3 h-3" />
                     </button>
@@ -450,90 +450,90 @@ export default function SportsProgramsPage({ onNavigateModule }) {
         <form onSubmit={handleSaveProgram} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Program Name *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Program Name *</label>
               <input
                 type="text"
                 required
                 value={programForm.name}
                 onChange={(e) => setProgramForm({ ...programForm, name: e.target.value })}
                 placeholder="e.g., Little Strikers, Professional Gymnastics"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Icon Emoji</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Icon Emoji</label>
               <input
                 type="text"
                 value={programForm.icon}
                 onChange={(e) => setProgramForm({ ...programForm, icon: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#080B0C] mb-1">Program Description</label>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">Program Description</label>
             <textarea
               rows={2}
               value={programForm.description}
               onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })}
               placeholder="Core training focus, skill milestones, and coaching structure..."
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Age Group *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Age Group *</label>
               <input
                 type="text"
                 required
                 value={programForm.ageGroup}
                 onChange={(e) => setProgramForm({ ...programForm, ageGroup: e.target.value })}
                 placeholder="e.g., 4 - 8 Yrs"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Session Duration *</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Session Duration *</label>
               <input
                 type="text"
                 required
                 value={programForm.duration}
                 onChange={(e) => setProgramForm({ ...programForm, duration: e.target.value })}
                 placeholder="e.g., 60 mins"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Monthly Fee (₹)</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Monthly Fee (₹)</label>
               <input
                 type="number"
                 min="0"
                 value={programForm.feeMonthly}
                 onChange={(e) => setProgramForm({ ...programForm, feeMonthly: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Eligibility / Prerequisites</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Eligibility / Prerequisites</label>
               <input
                 type="text"
                 value={programForm.eligibility}
                 onChange={(e) => setProgramForm({ ...programForm, eligibility: e.target.value })}
                 placeholder="e.g., Open enrollment / Trial assessment"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#080B0C] mb-1">Program Status</label>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Program Status</label>
               <select
                 value={programForm.status}
                 onChange={(e) => setProgramForm({ ...programForm, status: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 text-[#080B0C] focus:outline-none focus:border-[#55CDB3]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] focus:outline-none focus:border-[#F4510B]"
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -542,7 +542,7 @@ export default function SportsProgramsPage({ onNavigateModule }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#080B0C] mb-1.5">
+            <label className="block text-xs font-bold text-[#172B50] mb-1.5">
               Available Academy Locations
             </label>
             <div className="flex flex-wrap gap-2">
@@ -555,8 +555,8 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                     onClick={() => handleToggleProgramLocation(loc.name)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                       selected
-                        ? 'bg-[#080B0C] text-[#F4F7F6] border-[#493548]/20'
-                        : 'bg-[#493548]/15 text-[#080B0C] border-[#493548]/20 hover:border-[#55CDB3]'
+                        ? 'bg-[#172B50] text-white border-[#172B50]'
+                        : 'bg-[#FFF4E8] text-[#172B50] border-[#172B501F] hover:border-[#F4510B]'
                     }`}
                   >
                     {selected ? '✓ ' : '+ '}
@@ -567,17 +567,17 @@ export default function SportsProgramsPage({ onNavigateModule }) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#493548]/20">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
             <button
               type="button"
               onClick={() => setIsProgramModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#080B0C] hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#d84306] cursor-pointer"
+              className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:bg-[#d84306] cursor-pointer"
             >
               {editingProgram ? 'Save Changes' : 'Create Program'}
             </button>
@@ -594,16 +594,16 @@ export default function SportsProgramsPage({ onNavigateModule }) {
         maxWidth="max-w-3xl"
       >
         <div className="space-y-5">
-          <form onSubmit={handleSaveLocation} className="bg-[#493548]/15 p-4 rounded-2xl border border-[#493548]/20 space-y-3">
+          <form onSubmit={handleSaveLocation} className="bg-[#FFF4E8] p-4 rounded-2xl border border-[#172B5015] space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-extrabold text-[#080B0C] uppercase tracking-wider">
+              <h4 className="text-xs font-extrabold text-[#172B50] uppercase tracking-wider">
                 {editingLocation ? `Editing: ${editingLocation.name}` : 'Add New Academy Location'}
               </h4>
               {editingLocation && (
                 <button
                   type="button"
                   onClick={() => openLocationEditor(null)}
-                  className="text-[11px] font-bold text-[#55CDB3] hover:underline cursor-pointer"
+                  className="text-[11px] font-bold text-[#F4510B] hover:underline cursor-pointer"
                 >
                   + Switch to Add New
                 </button>
@@ -611,33 +611,33 @@ export default function SportsProgramsPage({ onNavigateModule }) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-[#080B0C] mb-1">Location Name *</label>
+                <label className="block text-[11px] font-bold text-[#172B50] mb-1">Location Name *</label>
                 <input
                   type="text"
                   required
                   value={locationForm.name}
                   onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
                   placeholder="e.g., YOKER YARD"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] bg-white text-[#172B50]"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#080B0C] mb-1">City</label>
+                <label className="block text-[11px] font-bold text-[#172B50] mb-1">City</label>
                 <input
                   type="text"
                   value={locationForm.city}
                   onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] bg-white text-[#172B50]"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#080B0C] mb-1">Courts / Venues (comma-separated)</label>
+                <label className="block text-[11px] font-bold text-[#172B50] mb-1">Courts / Venues (comma-separated)</label>
                 <input
                   type="text"
                   value={locationForm.courts}
                   onChange={(e) => setLocationForm({ ...locationForm, courts: e.target.value })}
                   placeholder="Main Arena, Mat Zone"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] bg-white text-[#172B50]"
                 />
               </div>
             </div>
@@ -647,11 +647,11 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                 value={locationForm.address}
                 onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })}
                 placeholder="Centre street address / landmark..."
-                className="flex-1 px-3 py-2 text-xs rounded-xl border border-[#493548]/20 bg-[#F4F7F6] text-[#080B0C]"
+                className="flex-1 px-3 py-2 text-xs rounded-xl border border-[#172B5022] bg-white text-[#172B50]"
               />
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl text-xs font-extrabold bg-[#55CDB3] text-[#080B0C] font-bold hover:bg-[#d84306] cursor-pointer shrink-0"
+                className="px-4 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:bg-[#d84306] cursor-pointer shrink-0"
               >
                 {editingLocation ? 'Update Location' : 'Add Location'}
               </button>
@@ -665,13 +665,13 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                 <div
                   key={loc.id}
                   className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl border ${
-                    isInactive ? 'bg-slate-50 border-slate-200 opacity-70' : 'bg-[#F4F7F6] border-[#493548]/20'
+                    isInactive ? 'bg-slate-50 border-slate-200 opacity-70' : 'bg-white border-[#172B5015]'
                   }`}
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-[#080B0C]">{loc.name}</span>
-                      <span className="text-[10px] font-semibold text-[#493548]">({loc.city || 'Chennai'})</span>
+                      <span className="text-xs font-extrabold text-[#172B50]">{loc.name}</span>
+                      <span className="text-[10px] font-semibold text-[#172B50] opacity-60">({loc.city || 'Chennai'})</span>
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           isInactive ? 'bg-slate-200 text-slate-700' : 'bg-emerald-50 text-emerald-700'
@@ -680,7 +680,7 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                         {loc.status || 'Active'}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#080B0C] opacity-65 mt-0.5">
+                    <p className="text-[11px] text-[#172B50] opacity-65 mt-0.5">
                       Venues: {(loc.courts || []).join(', ') || 'Main Arena'}
                     </p>
                   </div>
@@ -688,7 +688,7 @@ export default function SportsProgramsPage({ onNavigateModule }) {
                     <button
                       type="button"
                       onClick={() => openLocationEditor(loc)}
-                      className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-[#493548]/15 text-[#080B0C] hover:bg-[#080B0C] hover:text-white cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-[#FFF4E8] text-[#172B50] hover:bg-[#172B50] hover:text-white cursor-pointer"
                     >
                       Edit
                     </button>
