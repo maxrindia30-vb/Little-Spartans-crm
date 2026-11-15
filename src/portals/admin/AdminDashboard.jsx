@@ -144,19 +144,19 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-7 animate-slide-up pb-8">
+    <div className="space-y-6 animate-slide-up pb-8">
       
       {/* ============================================================ */}
       {/* 1. TOP HEADER: Good Morning, Admin! & Action Icons           */}
       {/* ============================================================ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Left: Heading & Subtitle */}
-        <div>
-          <h1 className="text-2xl sm:text-[28px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pt-1">
+        {/* Left: Heading & Subtitle (Positioned immediately to the right of sidebar) */}
+        <div className="text-left space-y-1">
+          <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
             <span>Good Morning, Admin!</span>
-            <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default">👋</span>
+            <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
           </h1>
-          <p className="text-xs sm:text-[13px] font-semibold text-[#172B50]/60 mt-0.5 tracking-tight">
+          <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
             Dashboard
           </p>
         </div>

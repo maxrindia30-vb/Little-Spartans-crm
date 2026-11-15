@@ -162,7 +162,7 @@ export default function App() {
 
         {/* Right Main Dashboard Content: independently scrollable */}
         <main className="flex-1 overflow-y-auto relative z-10">
-          <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+          <div className="px-5 sm:px-7 lg:px-9 py-6 w-full space-y-6">
             
             {/* Active Portal Content */}
             {currentPortal === 'admin' && renderAdminView()}
