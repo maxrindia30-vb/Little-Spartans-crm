@@ -712,127 +712,147 @@ export default function AdminDashboard() {
       </div>
 
       {/* ============================================================ */}
-      {/* 3. MIDDLE ROW: Today's Classes & Enquiry Sources (Side-by-Side) */}
+      {/* 3. MIDDLE ROW: Today's Classes & Enquiry Sources */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
         {/* ---------------------------------------------------- */}
-        {/* Left: Today's Classes Table (~60% / 7-8 cols)         */}
+        {/* Left: Today's Classes (Exact dimensions of Priority Tasks card) */}
         {/* ---------------------------------------------------- */}
         <FloatingCard 
           maxTilt={2} 
           scale={1.006} 
           glare={false}
-          className="lg:col-span-7 xl:col-span-8 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-full"
+          className="lg:col-span-6 xl:col-span-5 w-full max-w-[470px] bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
             {/* Header */}
             <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
-              <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-                <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                <CalendarDays className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
               </div>
               <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
                 Today's Classes
               </h2>
             </div>
+          </div>
 
-            {/* Live Classes Table or Clean Zero State */}
-            {liveClasses.length === 0 ? (
-              <div className="py-10 text-center flex flex-col items-center justify-center">
-                <div className="w-10 h-10 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-2">
-                  <CalendarDays className="w-5 h-5" />
-                </div>
-                <p className="text-xs font-black text-[#172B50]">No classes scheduled for today</p>
-                <p className="text-[11px] text-[#172B50]/60 mt-0.5">Scheduled training sessions will appear here live</p>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('schedules')}
-                  className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-[#FFF5ED] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all cursor-pointer"
-                >
-                  <span>Open Class Schedules</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+          {/* Live Classes Table or Clean Zero State */}
+          {liveClasses.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-4 my-auto">
+              <div className="w-11 h-11 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-2.5 shadow-2xs">
+                <CalendarDays className="w-5.5 h-5.5" />
               </div>
-            ) : (
-              <div className="overflow-x-auto mt-1">
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead>
-                    <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
-                      <th className="py-2.5 px-3">TIME</th>
-                      <th className="py-2.5 px-3">CLASS / PROGRAM</th>
-                      <th className="py-2.5 px-3">COACH</th>
-                      <th className="py-2.5 px-3">LOCATION</th>
-                      <th className="py-2.5 px-3 text-right">CAPACITY</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#172B500C]">
-                    {liveClasses.slice(0, 5).map((cls) => {
-                      const enrolled = cls.enrolledCount ?? (cls.enrolledStudents ? cls.enrolledStudents.length : 0);
-                      const capacity = cls.capacity || 20;
-                      const isFull = enrolled >= capacity;
-                      const isNearlyFull = !isFull && (enrolled / capacity >= 0.8);
+              <p className="text-xs sm:text-sm font-black text-[#172B50]">
+                No classes scheduled for today
+              </p>
+              <p className="text-[11px] text-[#172B50]/60 mt-1 max-w-[240px]">
+                Scheduled training sessions will appear here live
+              </p>
+              <button
+                type="button"
+                onClick={() => setCurrentView('schedules')}
+                className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-[#FFF5ED] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all cursor-pointer shadow-2xs group"
+              >
+                <span>Open Class Schedules</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[300px] mt-1 pr-0.5 scrollbar-thin">
+              <table className="w-full text-left text-xs whitespace-nowrap">
+                <thead>
+                  <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
+                    <th className="py-2 px-2.5">TIME</th>
+                    <th className="py-2 px-2.5">PROGRAM</th>
+                    <th className="py-2 px-2.5">COACH</th>
+                    <th className="py-2 px-2.5">LOCATION</th>
+                    <th className="py-2 px-2.5 text-right">CAPACITY</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#172B500C]">
+                  {liveClasses.slice(0, 5).map((cls) => {
+                    const enrolled = cls.enrolledCount ?? (cls.enrolledStudents ? cls.enrolledStudents.length : 0);
+                    const capacity = cls.capacity || 20;
+                    const isFull = enrolled >= capacity;
+                    const isNearlyFull = !isFull && (enrolled / capacity >= 0.8);
 
-                      return (
-                        <tr key={cls.id} className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" onClick={() => setCurrentView('schedules')}>
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-2 font-black text-[#172B50]">
-                              <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                              <span>{cls.startTime || cls.time || '09:00 AM'}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 font-extrabold text-[#172B50]">
-                            {cls.className || cls.program || 'Sports Session'}
-                          </td>
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-1.5 font-bold text-[#172B50]/85">
-                              <User className="w-3.5 h-3.5 text-[#172B50]/40 shrink-0" />
-                              <span>{cls.coachName || cls.coach || 'Assigned Coach'}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-1.5 font-bold text-[#172B50]/75">
-                              <MapPin className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                              <span>{cls.location || cls.center || 'KK NAGAR'}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-right">
-                            {isFull ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#F4510B] text-white shadow-2xs">
-                                <Check className="w-3 h-3 text-white" />
-                                <span>Full {enrolled}/{capacity}</span>
-                              </span>
-                            ) : isNearlyFull ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                <span>{enrolled}/{capacity}</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                <span>{enrolled}/{capacity}</span>
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    return (
+                      <tr 
+                        key={cls.id} 
+                        className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" 
+                        onClick={() => setCurrentView('schedules')}
+                      >
+                        <td className="py-2.5 px-2.5">
+                          <div className="flex items-center gap-1.5 font-black text-[#172B50]">
+                            <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                            <span>{cls.startTime || cls.time || '09:00 AM'}</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2.5 font-extrabold text-[#172B50] max-w-[130px] truncate">
+                          {cls.className || cls.program || 'Sports Session'}
+                        </td>
+                        <td className="py-2.5 px-2.5">
+                          <div className="flex items-center gap-1 font-bold text-[#172B50]/85">
+                            <User className="w-3 h-3 text-[#172B50]/40 shrink-0" />
+                            <span className="truncate max-w-[90px]">{cls.coachName || cls.coach || 'Coach'}</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2.5">
+                          <div className="flex items-center gap-1 font-bold text-[#172B50]/75">
+                            <MapPin className="w-3 h-3 text-[#F4510B] shrink-0" />
+                            <span>{cls.location || cls.center || 'KK NAGAR'}</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2.5 text-right">
+                          {isFull ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-[#F4510B] text-white">
+                              Full {enrolled}/{capacity}
+                            </span>
+                          ) : isNearlyFull ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              {enrolled}/{capacity}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              {enrolled}/{capacity}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Bottom Footer matching Priority Tasks */}
+          <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+              Daily Timetable
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentView('schedules')}
+              className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>Explore all classes</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </button>
           </div>
         </FloatingCard>
 
         {/* ---------------------------------------------------- */}
-        {/* Right: Enquiry Sources Donut Chart (~40% / 4-5 cols)  */}
+        {/* Right: Enquiry Sources Donut Chart                   */}
         {/* ---------------------------------------------------- */}
         <FloatingCard 
           maxTilt={4} 
           scale={1.015} 
           glare={true}
           onClick={() => setCurrentView('enquiries')}
-          className="lg:col-span-5 xl:col-span-4 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] cursor-pointer hover:border-[#F4510B35] h-full"
+          className="lg:col-span-6 xl:col-span-7 bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] cursor-pointer hover:border-[#F4510B35] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
@@ -923,6 +943,21 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Bottom Footer Link */}
+          <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+              Lead Channels
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentView('enquiries')}
+              className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>Explore all enquiries</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </button>
           </div>
         </FloatingCard>
 
