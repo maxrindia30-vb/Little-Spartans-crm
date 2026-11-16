@@ -6,6 +6,7 @@ import ToastContainer from './components/common/ToastContainer';
 import LoginModal from './components/common/LoginModal';
 import SpartzenLoginPage from './components/auth/SpartzenLoginPage';
 import MouseFloatingGlow from './components/common/MouseFloatingGlow';
+import DailyMotivationalModal from './components/common/DailyMotivationalModal';
 
 // Admin Portal Master Modules
 import AdminDashboard from './portals/admin/AdminDashboard';
@@ -184,6 +185,9 @@ export default function App() {
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
       />
+
+      {/* Daily Sports Motivational Welcome Modal (Displays once per day immediately after login) */}
+      <DailyMotivationalModal />
 
     </div>
   );

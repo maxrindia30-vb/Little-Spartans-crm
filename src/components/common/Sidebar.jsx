@@ -42,7 +42,8 @@ import {
   CalendarDays,
   Package,
   MapPin,
-  Activity
+  Activity,
+  Sparkles
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
@@ -639,6 +640,17 @@ export default function Sidebar() {
           {/* Quick profile popup */}
           {profileMenuOpen && (
             <div className={`absolute bottom-16 ${isFullView ? 'right-3 w-52' : 'left-14 w-52'} bg-[#161B26] border border-white/15 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95`}>
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('maxr:open-daily-motivational'));
+                  setProfileMenuOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 text-xs text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#55CDB3]" />
+                <span>Daily Motivation</span>
+              </button>
               <button
                 type="button"
                 onClick={() => {
