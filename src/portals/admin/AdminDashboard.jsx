@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, 
   GraduationCap, 
@@ -23,7 +23,10 @@ import {
   Inbox,
   Mail,
   Trophy,
-  Share2
+  Share2,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -80,6 +83,126 @@ export default function AdminDashboard() {
   const allDemos = getLatestRecords(data.demos || []);
   const allStudents = getLatestRecords(data.students || []);
   const liveClasses = data.classSchedules || [];
+
+  // ============================================================
+  // LIVE CALENDAR POPOVER STATE & HELPERS
+  // ============================================================
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [selectedCalDate, setSelectedCalDate] = useState(() => new Date());
+  const [calViewYear, setCalViewYear] = useState(() => new Date().getFullYear());
+  const [calViewMonth, setCalViewMonth] = useState(() => new Date().getMonth()); // 0-indexed
+  const [liveClock, setLiveClock] = useState(() => new Date());
+  const calendarRef = useRef(null);
+
+  // Live real-time clock tick (every second)
+  useEffect(() => {
+    const timer = setInterval(() => setLiveClock(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Click outside and Escape key listener to close calendar popover
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (calendarRef.current && !calendarRef.current.contains(e.target)) {
+        setCalendarOpen(false);
+      }
+    }
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setCalendarOpen(false);
+      }
+    }
+    if (calendarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [calendarOpen]);
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const handlePrevMonth = () => {
+    if (calViewMonth === 0) {
+      setCalViewMonth(11);
+      setCalViewYear(y => y - 1);
+    } else {
+      setCalViewMonth(m => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calViewMonth === 11) {
+      setCalViewMonth(0);
+      setCalViewYear(y => y + 1);
+    } else {
+      setCalViewMonth(m => m + 1);
+    }
+  };
+
+  const handleJumpToday = () => {
+    const now = new Date();
+    setCalViewMonth(now.getMonth());
+    setCalViewYear(now.getFullYear());
+    setSelectedCalDate(now);
+  };
+
+  // Generate calendar grid cells
+  const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(calViewYear, calViewMonth, 1).getDay();
+  const daysInPrevMonth = new Date(calViewYear, calViewMonth, 0).getDate();
+
+  const calCells = [];
+  // Trailing days from previous month
+  for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+    calCells.push({
+      day: daysInPrevMonth - i,
+      isCurrentMonth: false,
+      month: calViewMonth - 1,
+      year: calViewYear,
+      hasClasses: false
+    });
+  }
+  // Days of current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dObj = new Date(calViewYear, calViewMonth, d);
+    const ymd = `${calViewYear}-${String(calViewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const wDay = weekdayNames[dObj.getDay()];
+    const hasClasses = (data.classSchedules || []).some(
+      sch => sch.date === ymd || sch.weekday === wDay || sch.dayOfWeek === wDay
+    );
+    calCells.push({
+      day: d,
+      isCurrentMonth: true,
+      month: calViewMonth,
+      year: calViewYear,
+      hasClasses
+    });
+  }
+  // Leading days of next month to complete row
+  const remainingCells = (7 - (calCells.length % 7)) % 7;
+  for (let d = 1; d <= remainingCells; d++) {
+    calCells.push({
+      day: d,
+      isCurrentMonth: false,
+      month: calViewMonth + 1,
+      year: calViewYear,
+      hasClasses: false
+    });
+  }
+
+  // Selected date scheduled classes
+  const selectedYmd = `${selectedCalDate.getFullYear()}-${String(selectedCalDate.getMonth() + 1).padStart(2, '0')}-${String(selectedCalDate.getDate()).padStart(2, '0')}`;
+  const selectedWDay = weekdayNames[selectedCalDate.getDay()];
+  const selectedDayClasses = (data.classSchedules || []).filter(
+    sch => sch.date === selectedYmd || sch.weekday === selectedWDay || sch.dayOfWeek === selectedWDay
+  );
 
   const handleCreateStudent = (e) => {
     e.preventDefault();
@@ -149,7 +272,7 @@ export default function AdminDashboard() {
       {/* ============================================================ */}
       {/* 1. TOP HEADER: Good Morning, Admin! & Action Icons           */}
       {/* ============================================================ */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
         {/* Left: Heading & Subtitle (Positioned immediately to the right of sidebar) */}
         <div className="text-left space-y-1">
           <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
@@ -161,70 +284,230 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Right: Quick Action Round Buttons (Search, Bell, Profile, Plus, Export, Calendar) */}
-        <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2.5 self-start sm:self-auto shrink-0">
-          {/* Top Row: Search, Bell with Orange Dot, Admin Profile */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => addToast('Search active roster and records')}
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
-              title="Search"
-            >
-              <Search className="w-4 h-4 text-[#172B50]" />
-            </button>
+        {/* Right: Quick Action Round Buttons - All 5 actions in a single horizontal row */}
+        <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-center shrink-0">
+          {/* 1. Search */}
+          <button
+            type="button"
+            onClick={() => addToast('Search active roster and records')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+            title="Search"
+          >
+            <Search className="w-4 h-4 text-[#172B50]" />
+          </button>
 
-            <button
-              type="button"
-              onClick={() => addToast('No unread notifications')}
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
-              title="Notifications"
-            >
-              <Bell className="w-4 h-4 text-[#172B50]" />
-              <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
-            </button>
+          {/* 2. Notification */}
+          <button
+            type="button"
+            onClick={() => addToast('No unread notifications')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
+            title="Notifications"
+          >
+            <Bell className="w-4 h-4 text-[#172B50]" />
+            <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
+          </button>
 
-            <div 
-              onClick={() => setCurrentView('people')}
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer" 
-              title="Admin Profile"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"
-                alt="Admin"
-                className="w-full h-full object-cover"
-              />
-            </div>
+          {/* 3. Profile */}
+          <div 
+            onClick={() => setCurrentView('people')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
+            title="Admin Profile"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"
+              alt="Admin"
+              className="w-full h-full object-cover"
+            />
           </div>
 
-          {/* Bottom Row: Plus, Share/Export, Calendar */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setModalType('student')}
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
-              title="Enroll Student"
-            >
-              <Plus className="w-4 h-4 text-[#172B50]" />
-            </button>
+          {/* 4. Upload */}
+          <button
+            type="button"
+            onClick={() => setCurrentView('export')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+            title="Export Academy Data"
+          >
+            <Upload className="w-4 h-4 text-[#172B50]" />
+          </button>
 
+          {/* 5. Calendar (Live Calendar) */}
+          <div className="relative" ref={calendarRef}>
             <button
               type="button"
-              onClick={() => setCurrentView('export')}
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
-              title="Export Academy Data"
-            >
-              <Upload className="w-4 h-4 text-[#172B50]" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCurrentView('schedules')}
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
-              title="Class Schedules"
+              onClick={() => setCalendarOpen(prev => !prev)}
+              className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border ${
+                calendarOpen 
+                  ? 'border-[#F4510B] ring-2 ring-[#F4510B]/25 bg-[#FFF5ED]' 
+                  : 'border-[#172B5015] hover:bg-[#FFF4E8] hover:border-[#F4510B40]'
+              } shadow-2xs flex items-center justify-center text-[#172B50] transition-all cursor-pointer relative`}
+              title={`Live Calendar (Today: ${liveClock.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })})`}
             >
               <Calendar className="w-4 h-4 text-[#172B50]" />
+              {/* Live Day Badge */}
+              <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#F4510B] text-white text-[9px] font-black flex items-center justify-center leading-none ring-1.5 ring-white shadow-2xs select-none">
+                {liveClock.getDate()}
+              </span>
             </button>
+
+            {/* Interactive Live Calendar Popover */}
+            {calendarOpen && (
+              <div className="absolute right-0 top-full mt-2.5 z-50 w-[310px] sm:w-[330px] bg-white rounded-2xl shadow-[0_16px_40px_rgba(23,43,80,0.18)] border border-[#172B5015] p-3.5 sm:p-4 animate-in fade-in zoom-in-95 duration-150">
+                {/* Header: Title, Live Clock & Close Button */}
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#172B5010]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                    <span className="text-[11px] font-black uppercase tracking-wider text-[#172B50]">
+                      Live Calendar
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-[#172B50]/65 bg-[#172B5008] px-2 py-0.5 rounded-md">
+                      <Clock className="w-3 h-3 text-[#F4510B]" />
+                      <span>{liveClock.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCalendarOpen(false)}
+                      className="w-5 h-5 rounded-md text-[#172B50]/60 hover:text-[#172B50] hover:bg-[#172B500C] flex items-center justify-center transition-colors cursor-pointer"
+                      title="Close"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Month Navigation Row */}
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                    {monthNames[calViewMonth]} {calViewYear}
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handlePrevMonth}
+                      className="w-6 h-6 rounded-lg bg-[#172B5008] hover:bg-[#FFF4E8] text-[#172B50] flex items-center justify-center transition-colors cursor-pointer"
+                      title="Previous Month"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleJumpToday}
+                      className="px-2 py-0.5 rounded-lg bg-[#FFF5ED] hover:bg-[#F4510B] hover:text-white text-[#F4510B] text-[10px] font-extrabold transition-colors cursor-pointer"
+                      title="Jump to Today"
+                    >
+                      Today
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextMonth}
+                      className="w-6 h-6 rounded-lg bg-[#172B5008] hover:bg-[#FFF4E8] text-[#172B50] flex items-center justify-center transition-colors cursor-pointer"
+                      title="Next Month"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Day of Week Labels */}
+                <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
+                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
+                    <span key={i} className="text-[10px] font-black text-[#172B50]/45 uppercase select-none">
+                      {d}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Calendar Days Grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calCells.map((cell, idx) => {
+                    const todayDate = new Date();
+                    const isToday = cell.isCurrentMonth && 
+                      cell.day === todayDate.getDate() && 
+                      calViewMonth === todayDate.getMonth() && 
+                      calViewYear === todayDate.getFullYear();
+                    const isSelected = cell.isCurrentMonth && 
+                      cell.day === selectedCalDate.getDate() && 
+                      calViewMonth === selectedCalDate.getMonth() && 
+                      calViewYear === selectedCalDate.getFullYear();
+                    
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        disabled={!cell.isCurrentMonth}
+                        onClick={() => {
+                          if (cell.isCurrentMonth) {
+                            setSelectedCalDate(new Date(calViewYear, calViewMonth, cell.day));
+                          }
+                        }}
+                        className={`h-7 w-7 sm:h-7.5 sm:w-7.5 mx-auto rounded-lg text-[11px] font-bold flex flex-col items-center justify-center relative transition-all ${
+                          !cell.isCurrentMonth
+                            ? 'text-[#172B50]/20 cursor-default'
+                            : isSelected
+                            ? 'bg-[#172B50] text-white shadow-2xs scale-105'
+                            : isToday
+                            ? 'bg-[#FFF5ED] text-[#F4510B] font-black ring-1.5 ring-[#F4510B] hover:bg-[#F4510B] hover:text-white'
+                            : 'text-[#172B50] hover:bg-[#FFF4E8] cursor-pointer'
+                        }`}
+                      >
+                        <span>{cell.day}</span>
+                        {cell.hasClasses && cell.isCurrentMonth && (
+                          <span className={`w-1 h-1 rounded-full absolute bottom-0.5 ${isSelected ? 'bg-white' : 'bg-[#F4510B]'}`} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Day Agenda Box */}
+                <div className="mt-3 pt-2.5 border-t border-[#172B5010]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-black text-[#172B50]">
+                      {selectedCalDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className="text-[10px] font-bold text-[#172B50]/60">
+                      {selectedDayClasses.length} {selectedDayClasses.length === 1 ? 'class' : 'classes'}
+                    </span>
+                  </div>
+
+                  {selectedDayClasses.length === 0 ? (
+                    <div className="p-2 rounded-xl bg-[#F8FAFC] border border-[#172B5008] text-center">
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        No classes scheduled for this date
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-[110px] overflow-y-auto scrollbar-thin pr-0.5">
+                      {selectedDayClasses.slice(0, 3).map((cls, i) => (
+                        <div key={cls.id || i} className="p-1.5 rounded-lg bg-[#FFF5ED] border border-[#F4510B20] text-left">
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="font-black text-[#172B50] truncate">{cls.program || 'Junior Football'}</span>
+                            <span className="font-bold text-[#F4510B] shrink-0">{cls.startTime || cls.time || '09:00 AM'}</span>
+                          </div>
+                          <div className="text-[9.5px] text-[#172B50]/70 truncate mt-0.5">
+                            {cls.center || cls.location || 'KK NAGAR'} • {cls.coachName || 'Coach Arjun'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Quick Action Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCalendarOpen(false);
+                      setCurrentView('schedules');
+                    }}
+                    className="mt-2.5 w-full py-1.5 px-3 rounded-xl bg-[#172B50] hover:bg-[#F4510B] text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <span>Open Class Schedules</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
