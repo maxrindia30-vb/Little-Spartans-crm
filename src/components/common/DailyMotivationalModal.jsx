@@ -15,11 +15,11 @@ import { getDailyMotivationalQuote } from '../../data/dailyMotivationalQuotes';
  * Displays only once per user per calendar day.
  */
 export default function DailyMotivationalModal({ forceOpen = false, onCloseCallback = null }) {
-  const { currentUser, currentPortal, isLoggedIn } = useCrm();
+  const { currentUser, currentPortal, isLoggedIn, showMotivationalModal, setShowMotivationalModal } = useCrm();
   const [isOpen, setIsOpen] = useState(false);
   const [dailyData, setDailyData] = useState(null);
 
-  // Compute daily quote and check single-display-per-calendar-day rule
+  // Compute daily quote and check display rule
   useEffect(() => {
     if (!isLoggedIn && !forceOpen) {
       setIsOpen(false);
@@ -33,7 +33,7 @@ export default function DailyMotivationalModal({ forceOpen = false, onCloseCallb
     const quoteInfo = getDailyMotivationalQuote();
     setDailyData(quoteInfo);
 
-    if (forceOpen) {
+    if (forceOpen || showMotivationalModal) {
       setIsOpen(true);
       return;
     }
@@ -52,12 +52,13 @@ export default function DailyMotivationalModal({ forceOpen = false, onCloseCallb
       const freshQuote = getDailyMotivationalQuote();
       setDailyData(freshQuote);
       setIsOpen(true);
+      if (setShowMotivationalModal) setShowMotivationalModal(true);
     };
     window.addEventListener('maxr:open-daily-motivational', handleManualOpen);
     return () => {
       window.removeEventListener('maxr:open-daily-motivational', handleManualOpen);
     };
-  }, [isLoggedIn, currentUser, currentPortal, forceOpen]);
+  }, [isLoggedIn, showMotivationalModal, currentUser, currentPortal, forceOpen]);
 
   const handleClose = () => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -70,6 +71,9 @@ export default function DailyMotivationalModal({ forceOpen = false, onCloseCallb
       console.warn('Could not save motivational view state', e);
     }
 
+    if (setShowMotivationalModal) {
+      setShowMotivationalModal(false);
+    }
     setIsOpen(false);
     if (onCloseCallback) {
       onCloseCallback();

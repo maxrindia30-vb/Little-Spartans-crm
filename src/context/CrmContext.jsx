@@ -132,6 +132,7 @@ export function CrmProvider({ children }) {
 
   // Authentication state (default false to present the Little Spartans ZenConnect login portal immediately)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showMotivationalModal, setShowMotivationalModal] = useState(false);
 
   // Active Toast notification
   const [toasts, setToasts] = useState([]);
@@ -2410,10 +2411,14 @@ export function CrmProvider({ children }) {
         login: (portalRole) => {
           if (portalRole) setCurrentPortal(portalRole);
           setIsLoggedIn(true);
+          setShowMotivationalModal(true);
         },
         logout: () => {
           setIsLoggedIn(false);
+          setShowMotivationalModal(false);
         },
+        showMotivationalModal,
+        setShowMotivationalModal,
         toasts,
         addToast,
         removeToast,
