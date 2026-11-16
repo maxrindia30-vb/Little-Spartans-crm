@@ -431,7 +431,7 @@ export default function Sidebar() {
         <div className="px-3.5 py-3.5 flex items-center justify-between border-b border-white/10 shrink-0 h-16 overflow-hidden">
           {isFullView ? (
             <div className="flex items-center justify-between w-full animate-in fade-in duration-200">
-              <div className="flex items-center gap-1.5 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <img 
                   src="/assets/little-spartans-logo-4k.png" 
                   alt="Little Spartans" 
@@ -440,7 +440,18 @@ export default function Sidebar() {
                     imageRendering: '-webkit-optimize-contrast',
                     transform: 'translateZ(0)'
                   }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
                 />
+                <div 
+                  className="hidden items-center gap-1.5" 
+                  style={{ display: 'none' }}
+                >
+                  <span className="font-extrabold text-white text-sm tracking-tight">Little Spartans</span>
+                </div>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
