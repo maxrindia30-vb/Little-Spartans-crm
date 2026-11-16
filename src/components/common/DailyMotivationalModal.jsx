@@ -90,10 +90,10 @@ export default function DailyMotivationalModal({ forceOpen = false, onCloseCallb
       role="dialog"
       aria-modal="true"
     >
-      {/* Blurred Dark Backdrop Overlay */}
+      {/* Subtle Dark Transparent Overlay over the actual currently loaded CRM dashboard */}
       <div 
         onClick={handleClose}
-        className="fixed inset-0 bg-[#080B0C]/75 backdrop-blur-md transition-opacity cursor-pointer"
+        className="fixed inset-0 w-full h-full bg-[#080B0C]/35 backdrop-blur-[2.5px] transition-all duration-300 cursor-pointer"
         aria-hidden="true"
       />
 
