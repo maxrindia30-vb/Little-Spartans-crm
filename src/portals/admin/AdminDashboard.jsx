@@ -26,7 +26,9 @@ import {
   Share2,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Building2,
+  Package
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -995,18 +997,18 @@ export default function AdminDashboard() {
       </div>
 
       {/* ============================================================ */}
-      {/* 3. MIDDLE ROW: Today's Classes & Enquiry Sources */}
+      {/* 3. MIDDLE ROW: Today's Classes, Enquiry Sources & Academy Operations */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
         
         {/* ---------------------------------------------------- */}
-        {/* Left: Today's Classes (Exact dimensions of Priority Tasks card) */}
+        {/* Card 1: Today's Classes                              */}
         {/* ---------------------------------------------------- */}
         <FloatingCard 
           maxTilt={2} 
           scale={1.006} 
           glare={false}
-          className="lg:col-span-6 xl:col-span-6 w-full max-w-[470px] bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+          className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
@@ -1128,14 +1130,14 @@ export default function AdminDashboard() {
         </FloatingCard>
 
         {/* ---------------------------------------------------- */}
-        {/* Right: Enquiry Sources Donut Chart (Exact dimensions of Priority Tasks card) */}
+        {/* Card 2: Enquiry Sources (Exact width & height of Today's Classes) */}
         {/* ---------------------------------------------------- */}
         <FloatingCard 
-          maxTilt={4} 
-          scale={1.015} 
-          glare={true}
+          maxTilt={2} 
+          scale={1.006} 
+          glare={false}
           onClick={() => setCurrentView('enquiries')}
-          className="lg:col-span-6 xl:col-span-6 w-full max-w-[470px] bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] cursor-pointer hover:border-[#F4510B35] h-[440px] min-h-[440px]"
+          className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] cursor-pointer hover:border-[#F4510B35] h-[440px] min-h-[440px] transition-all"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
@@ -1160,8 +1162,8 @@ export default function AdminDashboard() {
             {/* Donut and Primary Legend */}
             <div className="flex items-center justify-center gap-5 sm:gap-6">
               {/* SVG Donut */}
-              <div className="relative w-32 h-32 sm:w-34 sm:h-34 shrink-0 flex items-center justify-center">
-                <svg className="w-32 h-32 sm:w-34 sm:h-34" viewBox="0 0 160 160">
+              <div className="relative w-30 h-30 sm:w-32 sm:h-32 shrink-0 flex items-center justify-center">
+                <svg className="w-30 h-30 sm:w-32 sm:h-32" viewBox="0 0 160 160">
                   {/* Background track circle */}
                   <circle
                     cx="80"
@@ -1216,7 +1218,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Dynamic Legend */}
-              <div className="space-y-2.5 text-xs w-full max-w-[155px]">
+              <div className="space-y-2 text-xs w-full max-w-[145px]">
                 <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl hover:bg-[#FFF5ED] transition-colors">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#F4510B] shrink-0" />
@@ -1236,7 +1238,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Source Details Cards */}
-            <div className="grid grid-cols-2 gap-2.5 mt-3.5 pt-3 border-t border-[#172B500C]">
+            <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#172B500C]">
               {/* Website Channel */}
               <div className="p-2.5 rounded-2xl bg-[#FFF9F5] border border-[#F4510B18] flex flex-col justify-between">
                 <div className="flex items-center justify-between">
@@ -1280,6 +1282,122 @@ export default function AdminDashboard() {
               className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
             >
               <span>Explore all enquiries</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </FloatingCard>
+
+        {/* ---------------------------------------------------- */}
+        {/* Card 3: Academy Operations (UI/UX Ref: Image 3)      */}
+        {/* ---------------------------------------------------- */}
+        <FloatingCard 
+          maxTilt={2} 
+          scale={1.006} 
+          glare={false}
+          className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+          contentClassName="flex flex-col justify-between h-full"
+        >
+          <div>
+            {/* Header matching Image 3 */}
+            <div className="flex items-center gap-3 pb-3.5 border-b border-[#172B5010]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                  Academy Operations
+                </h2>
+                <p className="text-[11px] font-medium text-[#172B50]/60">
+                  Centers, faculty & equipment
+                </p>
+              </div>
+            </div>
+
+            {/* 4 Action Tiles: 2-column grid matching Image 3 */}
+            <div className="min-h-[265px] flex flex-col justify-center mt-2.5">
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* Tile 1: Coaches & Staff (Featured dark blue tile) */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('people')}
+                  className="bg-[#0B3B60] text-white rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                >
+                  <div className="w-8.5 h-8.5 rounded-xl bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                    <UserCheck className="w-4.5 h-4.5 text-white" />
+                  </div>
+                  <span className="text-xs font-black text-white leading-tight">
+                    Coaches & Staff
+                  </span>
+                  <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
+                    {data.coaches?.length || 6} Active Coaches
+                  </span>
+                </button>
+
+                {/* Tile 2: Training Centers */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('people')}
+                  className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                >
+                  <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                    <MapPin className="w-4.5 h-4.5 text-[#F4510B]" />
+                  </div>
+                  <span className="text-xs font-black text-[#172B50] leading-tight">
+                    Training Centers
+                  </span>
+                  <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                    {commonLocations?.length || data.academy?.centers?.length || 5} Venues
+                  </span>
+                </button>
+
+                {/* Tile 3: Competitions */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('sports_events')}
+                  className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                >
+                  <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                    <Trophy className="w-4.5 h-4.5 text-[#F4510B]" />
+                  </div>
+                  <span className="text-xs font-black text-[#172B50] leading-tight">
+                    Competitions
+                  </span>
+                  <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                    {data.competitions?.length || 0} Fixtures & Cups
+                  </span>
+                </button>
+
+                {/* Tile 4: Equipment & Kits */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('equipment')}
+                  className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#0284C735] hover:bg-[#F0F9FF] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                >
+                  <div className="w-8.5 h-8.5 rounded-xl bg-[#F0F9FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                    <Package className="w-4.5 h-4.5 text-[#0284C7]" />
+                  </div>
+                  <span className="text-xs font-black text-[#172B50] leading-tight">
+                    Equipment & Kits
+                  </span>
+                  <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                    {data.equipment?.length || 0} Tracked Items
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Footer matching Image 3 */}
+          <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              Academy Network
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentView('people')}
+              className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>View All ({(data.coaches?.length || 6) + (commonLocations?.length || 5)})</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
