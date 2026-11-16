@@ -1406,101 +1406,169 @@ export default function AdminDashboard() {
       </div>
 
       {/* ============================================================ */}
-      {/* 4. BOTTOM SECTION: Demo Performance (4 Cards in a Strip)      */}
+      {/* 4. BOTTOM SECTION: Demo Performance (UI/UX Ref: Image 2)      */}
       {/* ============================================================ */}
-      <div className="bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)]">
-        {/* Header */}
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-            <BarChart2 className="w-4 h-4 text-[#F4510B]" />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
+        <FloatingCard 
+          maxTilt={2} 
+          scale={1.006} 
+          glare={false}
+          className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+          contentClassName="flex flex-col justify-between h-full"
+        >
+          <div>
+            {/* Header matching Image 2 */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#172B5010]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                  <BarChart2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                    Demo Performance
+                  </h2>
+                </div>
+              </div>
+              <span className="text-[10.5px] font-extrabold text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-full border border-[#F4510B20] select-none">
+                {demoMetrics.totalDemos || 0} Demos
+              </span>
+            </div>
           </div>
-          <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
-            Demo Performance
-          </h2>
-        </div>
 
-        {/* 4 Metric Cards Bound to Real Live CRM Data */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {/* Card 1: Total Demos */}
-          <FloatingCard 
-            onClick={() => setCurrentView('demos')}
-            maxTilt={6}
-            scale={1.025}
-            className="bg-gradient-to-br from-[#F0F7FF] via-[#F8FBFF] to-white rounded-2xl p-4 sm:p-5 border border-[#BAE6FD]/60 flex items-center gap-4 shadow-2xs hover:border-[#0284C7] transition-all cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
-              <Calendar className="w-5.5 h-5.5 text-[#0284C7]" />
-            </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                {demoMetrics.totalDemos || 0}
-              </p>
-              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
-                Total Demos
-              </p>
-            </div>
-          </FloatingCard>
+          {/* 4 KPI metrics in a 2-column grid matching Image 2 inner cards style */}
+          <div className="flex-1 flex flex-col justify-center py-2.5 my-auto">
+            <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
+              {/* KPI 1: Total Demos */}
+              <div 
+                onClick={() => setCurrentView('demos')}
+                className="p-3.5 sm:p-4 rounded-2xl bg-[#F0F7FF] border border-[#0284C720] flex flex-col justify-between hover:border-[#0284C750] transition-all cursor-pointer group shadow-2xs"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
+                      <Calendar className="w-3.5 h-3.5 text-[#0284C7]" />
+                    </div>
+                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#0284C7] transition-colors">
+                      Total Demos
+                    </span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-[#0284C7]" />
+                </div>
+                <div className="mt-3 flex items-baseline justify-between">
+                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                    {demoMetrics.totalDemos || 0}
+                  </span>
+                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                    Scheduled
+                  </span>
+                </div>
+              </div>
 
-          {/* Card 2: Upcoming */}
-          <FloatingCard 
-            onClick={() => setCurrentView('demos')}
-            maxTilt={6}
-            scale={1.025}
-            className="bg-gradient-to-br from-[#FAF5FF] via-[#FCF9FF] to-white rounded-2xl p-4 sm:p-5 border border-[#E9D5FF]/60 flex items-center gap-4 shadow-2xs hover:border-[#9333EA] transition-all cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
-              <Clock className="w-5.5 h-5.5 text-[#9333EA]" />
-            </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                {demoMetrics.upcomingDemos || 0}
-              </p>
-              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
-                Upcoming
-              </p>
-            </div>
-          </FloatingCard>
+              {/* KPI 2: Upcoming */}
+              <div 
+                onClick={() => setCurrentView('demos')}
+                className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF5FF] border border-[#9333EA20] flex flex-col justify-between hover:border-[#9333EA50] transition-all cursor-pointer group shadow-2xs"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                      <Clock className="w-3.5 h-3.5 text-[#9333EA]" />
+                    </div>
+                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#9333EA] transition-colors">
+                      Upcoming
+                    </span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-[#9333EA]" />
+                </div>
+                <div className="mt-3 flex items-baseline justify-between">
+                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                    {demoMetrics.upcomingDemos || 0}
+                  </span>
+                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                    Pending
+                  </span>
+                </div>
+              </div>
 
-          {/* Card 3: Completed */}
-          <FloatingCard 
-            onClick={() => setCurrentView('demos')}
-            maxTilt={6}
-            scale={1.025}
-            className="bg-gradient-to-br from-[#F0FDF4] via-[#F8FDF9] to-white rounded-2xl p-4 sm:p-5 border border-[#BBF7D0]/60 flex items-center gap-4 shadow-2xs hover:border-[#16A34A] transition-all cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-5.5 h-5.5 text-[#16A34A]" />
-            </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                {demoMetrics.completedDemos || 0}
-              </p>
-              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
-                Completed
-              </p>
-            </div>
-          </FloatingCard>
+              {/* KPI 3: Completed */}
+              <div 
+                onClick={() => setCurrentView('demos')}
+                className="p-3.5 sm:p-4 rounded-2xl bg-[#F0FDF4] border border-[#16A34A20] flex flex-col justify-between hover:border-[#16A34A50] transition-all cursor-pointer group shadow-2xs"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-lg bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
+                    </div>
+                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#16A34A] transition-colors">
+                      Completed
+                    </span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-[#16A34A]" />
+                </div>
+                <div className="mt-3 flex items-baseline justify-between">
+                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                    {demoMetrics.completedDemos || 0}
+                  </span>
+                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                    Evaluated
+                  </span>
+                </div>
+              </div>
 
-          {/* Card 4: Conversions */}
-          <FloatingCard 
-            onClick={() => setCurrentView('demos')}
-            maxTilt={6}
-            scale={1.025}
-            className="bg-gradient-to-br from-[#FFF5ED] via-[#FFF9F5] to-white rounded-2xl p-4 sm:p-5 border border-[#FED7AA]/60 flex items-center gap-4 shadow-2xs hover:border-[#F4510B] transition-all cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
-              <Trophy className="w-5.5 h-5.5 text-[#F4510B]" />
+              {/* KPI 4: Conversions */}
+              <div 
+                onClick={() => setCurrentView('demos')}
+                className="p-3.5 sm:p-4 rounded-2xl bg-[#FFF5ED] border border-[#F4510B20] flex flex-col justify-between hover:border-[#F4510B50] transition-all cursor-pointer group shadow-2xs"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-lg bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
+                      <Trophy className="w-3.5 h-3.5 text-[#F4510B]" />
+                    </div>
+                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                      Conversions
+                    </span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-[#F4510B]" />
+                </div>
+                <div className="mt-3 flex items-baseline justify-between">
+                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                    {demoMetrics.studentConversions || 0}
+                  </span>
+                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                    Enrolled
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                {demoMetrics.studentConversions || 0}
-              </p>
-              <p className="text-xs font-bold text-[#172B50]/70 mt-1">
-                Conversions
-              </p>
+
+            {/* Subtle Conversion Rate Summary Banner */}
+            <div className="mt-3 pt-3 border-t border-[#172B500C] flex items-center justify-between text-xs px-1">
+              <span className="text-[11px] font-bold text-[#172B50]/65">
+                Conversion Rate
+              </span>
+              <span className="text-[11px] font-black text-[#F4510B] bg-[#FFF5ED] px-2.5 py-0.5 rounded-lg border border-[#F4510B20]">
+                {demoMetrics.totalDemos > 0 ? Math.round((demoMetrics.studentConversions / demoMetrics.totalDemos) * 100) : 0}% success
+              </span>
             </div>
-          </FloatingCard>
-        </div>
+          </div>
+
+          {/* Bottom Footer matching Image 2 */}
+          <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+              Demo Performance
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentView('demos')}
+              className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>Explore all demos</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </FloatingCard>
       </div>
 
       {/* ============================================================ */}
