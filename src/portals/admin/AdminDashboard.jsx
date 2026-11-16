@@ -1006,7 +1006,7 @@ export default function AdminDashboard() {
           maxTilt={2} 
           scale={1.006} 
           glare={false}
-          className="lg:col-span-6 xl:col-span-5 w-full max-w-[470px] bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+          className="lg:col-span-6 xl:col-span-6 w-full max-w-[470px] bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
@@ -1128,32 +1128,40 @@ export default function AdminDashboard() {
         </FloatingCard>
 
         {/* ---------------------------------------------------- */}
-        {/* Right: Enquiry Sources Donut Chart                   */}
+        {/* Right: Enquiry Sources Donut Chart (Exact dimensions of Priority Tasks card) */}
         {/* ---------------------------------------------------- */}
         <FloatingCard 
           maxTilt={4} 
           scale={1.015} 
           glare={true}
           onClick={() => setCurrentView('enquiries')}
-          className="lg:col-span-6 xl:col-span-7 bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] cursor-pointer hover:border-[#F4510B35] h-[440px] min-h-[440px]"
+          className="lg:col-span-6 xl:col-span-6 w-full max-w-[470px] bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] cursor-pointer hover:border-[#F4510B35] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
             {/* Header */}
-            <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
-              <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-                <GraduationCap className="w-4 h-4 text-[#F4510B]" />
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#172B5010]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                  <GraduationCap className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+                </div>
+                <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                  Enquiry Sources
+                </h2>
               </div>
-              <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
-                Enquiry Sources
-              </h2>
+              <span className="text-[10.5px] font-extrabold text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-full border border-[#F4510B20] select-none">
+                {totalEnquiries} Leads
+              </span>
             </div>
+          </div>
 
-            {/* Donut and Legend */}
-            <div className="flex items-center justify-center sm:justify-start gap-5 sm:gap-7 mt-4 pt-1">
+          {/* Centered Donut, Legend & Source Breakdown (Removes excessive empty space) */}
+          <div className="flex-1 flex flex-col justify-center py-2.5 my-auto">
+            {/* Donut and Primary Legend */}
+            <div className="flex items-center justify-center gap-5 sm:gap-6">
               {/* SVG Donut */}
-              <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
-                <svg className="w-36 h-36" viewBox="0 0 160 160">
+              <div className="relative w-32 h-32 sm:w-34 sm:h-34 shrink-0 flex items-center justify-center">
+                <svg className="w-32 h-32 sm:w-34 sm:h-34" viewBox="0 0 160 160">
                   {/* Background track circle */}
                   <circle
                     cx="80"
@@ -1208,27 +1216,60 @@ export default function AdminDashboard() {
               </div>
 
               {/* Dynamic Legend */}
-              <div className="space-y-3 text-xs w-full max-w-[150px]">
-                <div className="flex items-center justify-between gap-2">
+              <div className="space-y-2.5 text-xs w-full max-w-[155px]">
+                <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl hover:bg-[#FFF5ED] transition-colors">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#F4510B] shrink-0" />
                     <span className="font-extrabold text-[#172B50]">Website</span>
                   </div>
-                  <span className="font-black text-[#172B50]">{websitePct}% ({websiteCount})</span>
+                  <span className="font-black text-[#172B50]">{websitePct}%</span>
                 </div>
 
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl hover:bg-[#F0F9FF] transition-colors">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#0284C7] shrink-0" />
-                    <span className="font-extrabold text-[#172B50]">Manual / Walk-in</span>
+                    <span className="font-extrabold text-[#172B50] truncate">Manual / Walk-in</span>
                   </div>
-                  <span className="font-black text-[#172B50]">{manualPct}% ({manualCount})</span>
+                  <span className="font-black text-[#172B50]">{manualPct}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Source Details Cards */}
+            <div className="grid grid-cols-2 gap-2.5 mt-3.5 pt-3 border-t border-[#172B500C]">
+              {/* Website Channel */}
+              <div className="p-2.5 rounded-2xl bg-[#FFF9F5] border border-[#F4510B18] flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-black text-[#172B50] flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#F4510B]" />
+                    <span>Website</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold text-[#F4510B]">{websitePct}%</span>
+                </div>
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <span className="text-base sm:text-lg font-black text-[#172B50]">{websiteCount}</span>
+                  <span className="text-[9.5px] font-bold text-[#172B50]/55">online leads</span>
+                </div>
+              </div>
+
+              {/* Manual / Walk-in Channel */}
+              <div className="p-2.5 rounded-2xl bg-[#F0F9FF] border border-[#0284C718] flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-black text-[#172B50] flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#0284C7]" />
+                    <span className="truncate">Walk-in</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold text-[#0284C7]">{manualPct}%</span>
+                </div>
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <span className="text-base sm:text-lg font-black text-[#172B50]">{manualCount}</span>
+                  <span className="text-[9.5px] font-bold text-[#172B50]/55">desk leads</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Footer Link */}
+          {/* Bottom Footer Link matching Priority Tasks */}
           <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
             <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
               Lead Channels
