@@ -43,6 +43,7 @@ import {
 } from '../../services/attendanceService';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
+import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
 import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 
@@ -111,6 +112,7 @@ export default function CoachPortalView() {
   const [coachAttBatchId, setCoachAttBatchId] = useState(coachAssignedBatches[0]?.id || '');
   const [coachAttDate, setCoachAttDate] = useState('2026-11-11');
   const [coachAttDrafts, setCoachAttDrafts] = useState({});
+  const [coachAttSubView, setCoachAttSubView] = useState('register');
 
   const effectiveCoachLocation =
     coachAttLocation && coachAssignedLocations.includes(coachAttLocation)
@@ -885,27 +887,61 @@ export default function CoachPortalView() {
       {/* 4. ATTENDANCE (LOCATION & ASSIGNED BATCH SCOPED) */}
       {currentView === 'attendance' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Mark Session Attendance
-              </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Showing only locations, classes &amp; athletes assigned to <strong>{coachProfile.name}</strong>
-              </p>
-            </div>
+          {/* Sub-view Navigation */}
+          <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
             <button
               type="button"
-              onClick={handleSaveCoachAttendance}
-              disabled={!effectiveCoachBatch || coachAttRows.length === 0}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 self-start sm:self-auto"
+              onClick={() => setCoachAttSubView('register')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                coachAttSubView === 'register'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
             >
-              <Save className="w-4 h-4" />
-              <span>
-                Save Attendance{coachAttDirtyCount > 0 ? ` (${coachAttDirtyCount})` : ''}
-              </span>
+              Coach Attendance Register
+            </button>
+            <button
+              type="button"
+              onClick={() => setCoachAttSubView('mark_session')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                coachAttSubView === 'mark_session'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Mark Student Attendance
             </button>
           </div>
+
+          {coachAttSubView === 'register' ? (
+            <CoachAttendanceRegister 
+              currentPortal="coach" 
+              defaultCoachId={coachProfile?.id}
+              allowedCoaches={[coachProfile]} 
+            />
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                    Mark Session Attendance
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                    Showing only locations, classes &amp; athletes assigned to <strong>{coachProfile.name}</strong>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveCoachAttendance}
+                  disabled={!effectiveCoachBatch || coachAttRows.length === 0}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 self-start sm:self-auto"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>
+                    Save Attendance{coachAttDirtyCount > 0 ? ` (${coachAttDirtyCount})` : ''}
+                  </span>
+                </button>
+              </div>
 
           {/* Coach Assigned Selectors & Summary Bar */}
           <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-4">
@@ -1134,6 +1170,8 @@ export default function CoachPortalView() {
               Saving updates the shared attendance register in browser <code className="font-bold">localStorage</code> so Admin Portal reflects it immediately. Production sync requires <code className="font-bold">PUT /api/v1/attendance/batch</code> with Coach RBAC verification.
             </span>
           </div>
+            </>
+          )}
         </div>
       )}
 

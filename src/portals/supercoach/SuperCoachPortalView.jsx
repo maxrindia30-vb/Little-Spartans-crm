@@ -37,6 +37,7 @@ import FloatingCard from '../../components/common/FloatingCard';
 import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import { checkScheduleConflict } from '../../services/scheduleService';
+import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
 
 export default function SuperCoachPortalView() {
   const {
@@ -65,6 +66,9 @@ export default function SuperCoachPortalView() {
     }
     return 'dashboard';
   });
+
+  // Attendance sub-view toggle: Coach Attendance Register vs Student Progression
+  const [attendanceSubView, setAttendanceSubView] = useState('coach_register');
 
   // Keep activeTab synced with currentView when sidebar triggers navigation
   React.useEffect(() => {
@@ -1005,77 +1009,112 @@ export default function SuperCoachPortalView() {
       {/* ============================================================ */}
       {activeTab === 'attendance' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card">
-              <span className="text-xs font-bold uppercase opacity-70 block">Average Attendance Rate</span>
-              <p className="text-3xl font-black text-emerald-700 mt-1">94.2%</p>
-              <span className="text-xs text-emerald-600 font-semibold mt-1 block">
-                Consistent across {assignedLocations.length} locations
-              </span>
-            </div>
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card">
-              <span className="text-xs font-bold uppercase opacity-70 block">Submitted Register Compliance</span>
-              <p className="text-3xl font-black text-blue-700 mt-1">100%</p>
-              <span className="text-xs text-blue-600 font-semibold mt-1 block">
-                Zero missed attendance submissions today
-              </span>
-            </div>
-            <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card">
-              <span className="text-xs font-bold uppercase opacity-70 block">Active Student Athletes</span>
-              <p className="text-3xl font-black text-[#172B50] mt-1">{scopedStudents.length}</p>
-              <span className="text-xs text-[#172B50] opacity-60 font-semibold mt-1 block">
-                Across {scopedLocations.length} assigned centers
-              </span>
-            </div>
+          {/* Sub-tab Navigation */}
+          <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
+            <button
+              type="button"
+              onClick={() => setAttendanceSubView('coach_register')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'coach_register'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Coach Attendance Register
+            </button>
+            <button
+              type="button"
+              onClick={() => setAttendanceSubView('student_progression')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'student_progression'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Student Progression Oversight
+            </button>
           </div>
 
-          <div className="bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card">
-            <h3 className="text-base font-black text-[#172B50] mb-3">
-              Student Attendance &amp; Skill Progression Oversight
-            </h3>
-            <p className="text-xs text-[#172B50] opacity-70 mb-5">
-              Super Coach can monitor student participation and verify coach performance metrics without accessing financial records.
-            </p>
+          {attendanceSubView === 'coach_register' ? (
+            <CoachAttendanceRegister 
+              currentPortal="super_coach" 
+              allowedCoaches={scopedCoaches} 
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card">
+                  <span className="text-xs font-bold uppercase opacity-70 block">Average Attendance Rate</span>
+                  <p className="text-3xl font-black text-emerald-700 mt-1">94.2%</p>
+                  <span className="text-xs text-emerald-600 font-semibold mt-1 block">
+                    Consistent across {assignedLocations.length} locations
+                  </span>
+                </div>
+                <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card">
+                  <span className="text-xs font-bold uppercase opacity-70 block">Submitted Register Compliance</span>
+                  <p className="text-3xl font-black text-blue-700 mt-1">100%</p>
+                  <span className="text-xs text-blue-600 font-semibold mt-1 block">
+                    Zero missed attendance submissions today
+                  </span>
+                </div>
+                <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card">
+                  <span className="text-xs font-bold uppercase opacity-70 block">Active Student Athletes</span>
+                  <p className="text-3xl font-black text-[#172B50] mt-1">{scopedStudents.length}</p>
+                  <span className="text-xs text-[#172B50] opacity-60 font-semibold mt-1 block">
+                    Across {scopedLocations.length} assigned centers
+                  </span>
+                </div>
+              </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#172B50]">
-                <thead className="bg-[#FFF4E8] border-b border-[#172B5015] text-[10.5px] font-extrabold uppercase">
-                  <tr>
-                    <th className="py-3 px-4">Student Athlete</th>
-                    <th className="py-3 px-3">Location</th>
-                    <th className="py-3 px-3">Enrolled Program</th>
-                    <th className="py-3 px-3">Lead Coach</th>
-                    <th className="py-3 px-3 text-center">Attendance Streak</th>
-                    <th className="py-3 px-3 text-center">Skill Rating</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#172B5010]">
-                  {scopedStudents.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-xs opacity-60">
-                        No students enrolled in your assigned locations yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    scopedStudents.map((st) => (
-                      <tr key={st.id} className="hover:bg-[#FFF4E8]/40">
-                        <td className="py-3 px-4 font-bold">{st.name}</td>
-                        <td className="py-3 px-3 font-bold text-[#F4510B]">{st.center}</td>
-                        <td className="py-3 px-3">{st.program || 'Junior Athletics'}</td>
-                        <td className="py-3 px-3 font-semibold">{st.coachName || 'Assigned Coach'}</td>
-                        <td className="py-3 px-3 text-center font-bold text-emerald-700">100%</td>
-                        <td className="py-3 px-3 text-center">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#FFF5ED] text-[#F4510B]">
-                            4.8 / 5.0
-                          </span>
-                        </td>
+              <div className="bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card">
+                <h3 className="text-base font-black text-[#172B50] mb-3">
+                  Student Attendance &amp; Skill Progression Oversight
+                </h3>
+                <p className="text-xs text-[#172B50] opacity-70 mb-5">
+                  Super Coach can monitor student participation and verify coach performance metrics without accessing financial records.
+                </p>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-[#172B50]">
+                    <thead className="bg-[#FFF4E8] border-b border-[#172B5015] text-[10.5px] font-extrabold uppercase">
+                      <tr>
+                        <th className="py-3 px-4">Student Athlete</th>
+                        <th className="py-3 px-3">Location</th>
+                        <th className="py-3 px-3">Enrolled Program</th>
+                        <th className="py-3 px-3">Lead Coach</th>
+                        <th className="py-3 px-3 text-center">Attendance Streak</th>
+                        <th className="py-3 px-3 text-center">Skill Rating</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                    </thead>
+                    <tbody className="divide-y divide-[#172B5010]">
+                      {scopedStudents.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-xs opacity-60">
+                            No students enrolled in your assigned locations yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        scopedStudents.map((st) => (
+                          <tr key={st.id} className="hover:bg-[#FFF4E8]/40">
+                            <td className="py-3 px-4 font-bold">{st.name}</td>
+                            <td className="py-3 px-3 font-bold text-[#F4510B]">{st.center}</td>
+                            <td className="py-3 px-3">{st.program || 'Junior Athletics'}</td>
+                            <td className="py-3 px-3 font-semibold">{st.coachName || 'Assigned Coach'}</td>
+                            <td className="py-3 px-3 text-center font-bold text-emerald-700">100%</td>
+                            <td className="py-3 px-3 text-center">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#FFF5ED] text-[#F4510B]">
+                                4.8 / 5.0
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

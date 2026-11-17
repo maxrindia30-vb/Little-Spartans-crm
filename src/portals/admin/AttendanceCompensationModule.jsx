@@ -26,6 +26,7 @@ import {
   COMPENSATION_STATUSES,
 } from '../../services/compensationService';
 import AttendanceManagement from './AttendanceManagement';
+import CoachAttendanceRegister from './CoachAttendanceRegister';
 import Modal from '../../components/common/Modal';
 
 const STATUS_BADGE_MAP = {
@@ -347,42 +348,37 @@ export default function AttendanceCompensationModule() {
           <button
             type="button"
             onClick={() => setActiveSubTab('student_attendance')}
-            className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'student_attendance'
                 ? 'bg-[#F4510B] text-white shadow-xs'
                 : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
             }`}
           >
-            <Calendar className="w-4 h-4" />
-            <span>Student Attendance</span>
+            Student Attendance
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab('coach_attendance')}
-            className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'coach_attendance'
                 ? 'bg-[#F4510B] text-white shadow-xs'
                 : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
             }`}
           >
-            <Users className="w-4 h-4" />
-            <span>Coach Attendance</span>
+            Coach Attendance
           </button>
-
-          <span className="w-px h-4 bg-[#172B5018] mx-1 shrink-0" />
 
           <button
             type="button"
             onClick={() => setActiveSubTab('student_compensation')}
-            className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'student_compensation'
                 ? 'bg-[#F4510B] text-white shadow-xs'
                 : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
             }`}
           >
-            <ShieldAlert className="w-4 h-4 text-[#F4510B]" />
-            <span>Student Compensation ({studentRequests.filter(r => r.status === 'Pending').length} Pending)</span>
+            Student Compensation ({studentRequests.filter(r => r.status === 'Pending').length} Pending)
           </button>
         </div>
       </div>
@@ -394,41 +390,7 @@ export default function AttendanceCompensationModule() {
 
       {/* SUBTAB 2: Coach Attendance */}
       {currentTab === 'coach_attendance' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-            <h2 className="text-base font-extrabold text-[#172B50] mb-4">Coach Attendance & Session Turnout</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
-                  <tr>
-                    <th className="px-5 py-3.5">Coach</th>
-                    <th className="px-4 py-3.5">Center</th>
-                    <th className="px-4 py-3.5">Classes This Month</th>
-                    <th className="px-4 py-3.5">Turnout Rate</th>
-                    <th className="px-4 py-3.5">Approved Leaves</th>
-                    <th className="px-4 py-3.5 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#172B5012]">
-                  {data.coaches.map(c => (
-                    <tr key={c.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                      <td className="px-5 py-3.5 font-bold text-[#172B50]">{c.name}</td>
-                      <td className="px-4 py-3.5">{c.center}</td>
-                      <td className="px-4 py-3.5">24 Sessions</td>
-                      <td className="px-4 py-3.5 font-bold text-emerald-600">97.8%</td>
-                      <td className="px-4 py-3.5">1 Day</td>
-                      <td className="px-4 py-3.5 text-right">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                          On Duty
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <CoachAttendanceRegister />
       )}
 
       {/* SUBTAB 3: Student Compensation Classes (Section 4.8) */}
