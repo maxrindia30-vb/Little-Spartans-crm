@@ -40,6 +40,8 @@ import { COMPENSATION_REASONS } from '../../services/compensationService';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
 import Modal from '../../components/common/Modal';
+import FeesPaymentsModule from '../admin/FeesPaymentsModule';
+import SportsEventsModule from '../admin/SportsEventsModule';
 
 const COMP_STATUS_STYLES = {
   Pending: 'bg-amber-100 text-amber-900',
@@ -1217,115 +1219,9 @@ export default function ParentPortalView() {
         </div>
       )}
 
-      {/* 5. FEES & PAYMENTS (Combined Master Navigation Item) */}
+      {/* 5. FEES & PAYMENTS */}
       {(currentView === 'fees_payments' || currentView === 'payments') && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Fees, Payments & Official Receipts
-              </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Transparent fee structures, sibling discount credits, online payment gateway & tax invoices
-              </p>
-            </div>
-
-            <button
-              onClick={() => setIsPayModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>Pay Online Now</span>
-            </button>
-          </div>
-
-          {/* Fee Structure Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
-                Aarav's Fee Plan
-              </span>
-              <h3 className="text-2xl font-black text-[#172B50]">Quarterly Tuition</h3>
-              <p className="text-xs text-[#172B50] opacity-80 mt-1">₹12,000 / Quarter (Gymnastics)</p>
-              <div className="mt-3 pt-3 border-t border-[#172B5010] flex justify-between text-xs">
-                <span className="text-emerald-700 font-bold">Paid till Dec 2026</span>
-                <span className="font-mono text-gray-500">Zero Due</span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
-                Family Benefit Applied
-              </span>
-              <h3 className="text-2xl font-black text-emerald-600">Sibling Discount 10%</h3>
-              <p className="text-xs text-[#172B50] opacity-80 mt-1">Automatically applied for 2 enrolled children</p>
-              <div className="mt-3 pt-3 border-t border-[#172B5010] flex justify-between text-xs">
-                <span className="text-[#F4510B] font-bold">Saves ₹2,400 / yr</span>
-                <span className="font-mono text-gray-500">Active</span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#172B50] opacity-70 block mb-1">
-                Upcoming Cycle Due
-              </span>
-              <h3 className="text-2xl font-black text-[#F4510B]">₹4,500</h3>
-              <p className="text-xs text-[#172B50] opacity-80 mt-1">Due Date: 05 Jan 2027</p>
-              <div className="mt-3 pt-3 border-t border-[#172B5010] flex justify-between text-xs">
-                <span className="text-[#172B50] font-bold">UPI / Cards / NetBanking</span>
-                <span className="text-[#F4510B] font-bold cursor-pointer hover:underline" onClick={() => setIsPayModalOpen(true)}>Pay Early &rarr;</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment History Table */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-4 border-b border-[#172B5010] flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#172B50]">
-                Payment Receipts & Invoices
-              </h3>
-              <span className="text-xs text-[#172B50] opacity-70">Official Tax Invoices</span>
-            </div>
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase text-[11px]">
-                <tr>
-                  <th className="p-3.5">Invoice #</th>
-                  <th className="p-3.5">Athlete</th>
-                  <th className="p-3.5">Amount</th>
-                  <th className="p-3.5">Payment Method</th>
-                  <th className="p-3.5">Date</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5 text-right">Receipt</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#172B5010]">
-                {data.payments.filter(p => p.parentName.includes('Rohan') || p.studentName.includes('Aarav') || p.studentName.includes('Sanya')).map(p => (
-                  <tr key={p.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                    <td className="p-3.5 font-bold font-mono text-[#172B50]">{p.invoiceNumber}</td>
-                    <td className="p-3.5 font-semibold text-[#172B50]">{p.studentName}</td>
-                    <td className="p-3.5 font-black text-[#172B50]">₹{p.amount.toLocaleString()}</td>
-                    <td className="p-3.5 text-[#172B50] opacity-80">{p.paymentMethod}</td>
-                    <td className="p-3.5 text-[#172B50]">{p.date}</td>
-                    <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#172B50] text-white">
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <button 
-                        onClick={() => addToast(`Official receipt ${p.invoiceNumber} downloaded as PDF.`)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#F4510B] hover:underline"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Download PDF</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <FeesPaymentsModule />
       )}
 
       {/* 6. PROGRESS & ACHIEVEMENTS */}
@@ -1393,32 +1289,8 @@ export default function ParentPortalView() {
       )}
 
       {/* 7. SPORTS & EVENTS / COMPETITIONS */}
-      {currentView === 'competitions' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Academy Competitions & Tournaments
-          </h1>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {data.competitions.map(comp => (
-              <div key={comp.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between">
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-[#F4510B]">{comp.sport}</span>
-                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{comp.title}</h3>
-                  <p className="text-xs text-[#172B50] opacity-75 mt-2">{comp.date} • {comp.venue}</p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-[#172B5015] flex justify-between items-center">
-                  <span className="text-xs font-black text-[#172B50]">{comp.entryFee}</span>
-                  <button
-                    onClick={() => myChildren[0] && registerCompetition(comp.id, myChildren[0].name)}
-                    className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg hover:brightness-110 cursor-pointer"
-                  >
-                    Register Child
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {(currentView === 'competitions' || currentView === 'sports_events') && (
+        <SportsEventsModule />
       )}
 
       {/* 8. COMMUNICATION */}

@@ -46,6 +46,7 @@ import FloatingCard from '../../components/common/FloatingCard';
 import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
 import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
+import SportsEventsModule from '../admin/SportsEventsModule';
 
 export default function CoachPortalView() {
   const { 
@@ -1394,31 +1395,8 @@ export default function CoachPortalView() {
       )}
 
       {/* 7. SPORTS & EVENTS */}
-      {currentView === 'competitions' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Tournament Squad Nominations
-          </h1>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {data.competitions.map(comp => (
-              <div key={comp.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between">
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-[#F4510B]">{comp.sport}</span>
-                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{comp.title}</h3>
-                  <p className="text-xs text-[#172B50] opacity-75 mt-1">{comp.date} • {comp.venue}</p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-[#172B5015]">
-                  <button
-                    onClick={() => addToast(`Squad list for ${comp.title} submitted to organizers.`)}
-                    className="w-full py-2 text-xs font-bold bg-[#172B50] text-white rounded-lg hover:bg-[#F4510B] transition-colors"
-                  >
-                    Nominate Squad ({comp.registeredCount} Kids)
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {(currentView === 'competitions' || currentView === 'sports_events') && (
+        <SportsEventsModule />
       )}
 
       {/* 8. EQUIPMENT INSPECTION & REPORTING */}
