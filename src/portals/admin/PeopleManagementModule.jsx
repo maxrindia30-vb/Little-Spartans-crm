@@ -96,26 +96,31 @@ export default function PeopleManagementModule() {
 
   return (
     <div className="space-y-6">
-      {/* Module Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#172B501A] pb-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            People & Access Management
-          </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-            Admin oversight for Students, Guardians, Coaches and Role-based Login Access
-          </p>
+      {/* Module Navigation Tabs (Matching UI/UX Reference) */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#F4510B] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
+              People &amp; Access Management
+            </h1>
+            <p className="text-xs sm:text-sm text-[#172B50]/75 mt-0.5">
+              Admin oversight for Students, Guardians, Coaches and Role-based Login Access
+            </p>
+          </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#172B5018] shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
+        {/* Tab Switcher Pills */}
+        <div className="flex items-center gap-2 self-start lg:self-auto overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => setActiveSubTab('students')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer shadow-2xs ${
               currentTab === 'students'
                 ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                : 'bg-white text-[#172B50] border border-[#172B5018] hover:bg-[#FFF4E8]'
             }`}
           >
             <GraduationCap className="w-4 h-4" />
@@ -125,10 +130,10 @@ export default function PeopleManagementModule() {
           <button
             type="button"
             onClick={() => setActiveSubTab('parents')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer shadow-2xs ${
               currentTab === 'parents'
                 ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                : 'bg-white text-[#172B50] border border-[#172B5018] hover:bg-[#FFF4E8]'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -138,10 +143,10 @@ export default function PeopleManagementModule() {
           <button
             type="button"
             onClick={() => setActiveSubTab('coaches')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer shadow-2xs ${
               currentTab === 'coaches'
                 ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                : 'bg-white text-[#172B50] border border-[#172B5018] hover:bg-[#FFF4E8]'
             }`}
           >
             <User className="w-4 h-4" />
@@ -151,14 +156,14 @@ export default function PeopleManagementModule() {
           <button
             type="button"
             onClick={() => setActiveSubTab('accounts')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer shadow-2xs ${
               currentTab === 'accounts'
                 ? 'bg-[#172B50] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                : 'bg-white text-[#172B50] border border-[#172B5018] hover:bg-[#FFF4E8]'
             }`}
           >
             <ShieldCheck className="w-4 h-4 text-[#F4510B]" />
-            <span>Account Management ({(data.userAccounts || []).length})</span>
+            <span>Accounts ({(data.userAccounts || []).length})</span>
           </button>
         </div>
       </div>

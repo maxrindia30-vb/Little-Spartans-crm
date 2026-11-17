@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   GraduationCap, 
   Search, 
@@ -13,7 +13,16 @@ import {
   Trophy,
   Heart,
   Phone,
-  MapPin
+  MapPin,
+  Users,
+  User,
+  UserCheck,
+  UserX,
+  CreditCard,
+  Settings,
+  ChevronDown,
+  Layers,
+  X
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -98,177 +107,424 @@ export default function StudentManagement() {
     setMedicalNote('');
   };
 
+  // Dynamic Student and Location Counting Logic
+  const totalKids = (data.students || []).length;
+  const activeKids = useMemo(() => {
+    return (data.students || []).filter(
+      (s) => (s.status || 'Active').toLowerCase() === 'active'
+    ).length;
+  }, [data.students]);
+
+  const inactiveKids = useMemo(() => {
+    return (data.students || []).filter((s) => {
+      const st = (s.status || '').toLowerCase();
+      return st === 'inactive' || st === 'paused';
+    }).length;
+  }, [data.students]);
+
+  const locationsCount = useMemo(() => {
+    return (
+      commonLocations.length ||
+      Array.from(new Set((data.students || []).map((s) => s.center).filter(Boolean))).length
+    );
+  }, [commonLocations, data.students]);
+
   return (
     <div className="space-y-6">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Spartan Student Roster
-          </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-            Manage athletes, track fitness progression, attendance and academy ranks
-          </p>
-        </div>
+      {/* 1. Dynamic Student KPI Cards & Filters Container (Matching Reference UI/UX) */}
+      <div className="bg-white rounded-3xl sm:rounded-[28px] border border-[#172B5015] shadow-sm p-4 sm:p-5 relative overflow-hidden space-y-4">
+        {/* Subtle decorative curved orange wave accent in top-left */}
+        <div className="absolute top-0 left-0 w-28 h-28 bg-gradient-to-br from-[#F4510B] via-[#F4510B30] to-transparent rounded-br-[48px] opacity-20 pointer-events-none" />
 
-        <button
-          onClick={handleOpenAddModal}
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-white" />
-          <span>Enroll New Athlete</span>
-        </button>
-      </div>
+        {/* Top Row: 4 Dynamic KPI Cards + Enroll Button */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 relative z-10">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 flex-1">
+            {/* Card 1 – Total Kids */}
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Total Kids</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {totalKids}
+                </div>
+              </div>
+            </div>
 
-      {/* Filter and Search Bar: Pure White (#FFFFFF) */}
-      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-        <div className="relative w-full lg:w-80">
-          <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by student, ID, or parent..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
-          />
-        </div>
+            {/* Card 2 – Active Kids */}
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <UserCheck className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Active Kids</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {activeKids}
+                </div>
+              </div>
+            </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-[#172B50] whitespace-nowrap inline-flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-              <span>Location:</span>
-            </label>
-            <select
-              aria-label="Filter students by location"
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none cursor-pointer focus:ring-2 focus:ring-[#F4510B]"
-            >
-              <option value="All">All Locations ({data.students.length})</option>
-              {commonLocations.map(loc => (
-                <option key={loc.id} value={loc.name}>
-                  {loc.name} ({data.students.filter(s => s.center === loc.name).length})
-                </option>
-              ))}
-            </select>
+            {/* Card 3 – Inactive Kids */}
+            <div className="bg-[#FFF1F2] border border-[#E11D4820] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#E11D4818] text-[#E11D48] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-[#E11D48]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Inactive Kids</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {inactiveKids}
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4 – Locations */}
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Locations</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {locationsCount}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-[#172B50] whitespace-nowrap">Program:</label>
-            <select
-              value={selectedProgram}
-              onChange={(e) => setSelectedProgram(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none cursor-pointer focus:ring-2 focus:ring-[#F4510B]"
-            >
-              <option value="All">All Sports Programs</option>
-              {data.programs.map(p => (
-                <option key={p.id} value={p.name}>{p.name}</option>
-              ))}
-            </select>
+          {/* Enroll New Athlete Button (prominent Spartan Orange on right side of KPI row) */}
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-[#F4510B] hover:bg-[#d94103] active:scale-95 text-white text-xs sm:text-sm font-bold rounded-full shadow-[0_4px_14px_rgba(244,81,11,0.35)] transition-all cursor-pointer shrink-0 self-stretch sm:self-auto"
+          >
+            <Plus className="w-4 h-4 text-white stroke-[2.5]" />
+            <span>Enroll New Athlete</span>
+          </button>
+        </div>
+
+        {/* Second Row: Search and Filters Container */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-1 border-t border-[#172B500C] relative z-10">
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-lg">
+            <Search className="w-4 h-4 text-[#172B50]/40 absolute left-3.5 top-3 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by student, ID, or parent..."
+              className="w-full pl-10 pr-8 py-2.5 text-xs font-medium bg-[#FFF4E8]/30 text-[#172B50] placeholder-[#172B5060] border border-[#172B5018] rounded-2xl shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#F4510B20] focus:border-[#F4510B] transition-all"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-2.5 text-[#172B50]/40 hover:text-[#172B50] cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Dropdowns */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Location Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#172B50] whitespace-nowrap inline-flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                <span>Location:</span>
+              </span>
+              <div className="relative inline-flex items-center">
+                <select
+                  aria-label="Filter students by location"
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="pl-3.5 pr-8 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5018] rounded-2xl shadow-2xs hover:border-[#F4510B50] focus:outline-none focus:border-[#F4510B] cursor-pointer appearance-none transition-all"
+                >
+                  <option value="All">All Locations ({(data.students || []).length})</option>
+                  {commonLocations.map((loc) => (
+                    <option key={loc.id} value={loc.name}>
+                      {loc.name} ({(data.students || []).filter((s) => s.center === loc.name).length})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-[#172B50]/50 absolute right-2.5 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Program Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#172B50] whitespace-nowrap inline-flex items-center gap-1">
+                <Layers className="w-3.5 h-3.5 text-[#F4510B]" />
+                <span>Program:</span>
+              </span>
+              <div className="relative inline-flex items-center">
+                <select
+                  aria-label="Filter students by program"
+                  value={selectedProgram}
+                  onChange={(e) => setSelectedProgram(e.target.value)}
+                  className="pl-3.5 pr-8 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5018] rounded-2xl shadow-2xs hover:border-[#F4510B50] focus:outline-none focus:border-[#F4510B] cursor-pointer appearance-none transition-all"
+                >
+                  <option value="All">All Sports Programs</option>
+                  {data.programs.map((p) => (
+                    <option key={p.id} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-[#172B50]/50 absolute right-2.5 pointer-events-none" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Student Cards & Table: Pure White (#FFFFFF) */}
-      <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+      {/* 2. Students Table Container */}
+      <div className="bg-white rounded-3xl border border-[#172B5015] shadow-sm overflow-hidden relative">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-[#FFF4E8] text-[#172B50] font-extrabold uppercase tracking-wider text-[11px] border-b border-[#172B5015]">
-                <th className="py-3.5 px-4">Athlete</th>
-                <th className="py-3.5 px-4">Program & Center</th>
-                <th className="py-3.5 px-4">Spartan Rank</th>
-                <th className="py-3.5 px-4">Parent Details</th>
-                <th className="py-3.5 px-4">Attendance</th>
-                <th className="py-3.5 px-4">Fee Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+              <tr className="bg-[#FFF4E8] text-[#172B50] border-b border-[#172B5012]">
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Kid Name
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Program
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Location
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Parent Name
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Parent Number
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Fee Status
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5 text-right">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Settings className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Actions
+                    </span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#172B5010]">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-[#172B50] opacity-60">
-                    No students found matching your criteria.
+                  <td colSpan="7" className="py-16 sm:py-20 px-4 text-center relative overflow-hidden">
+                    {/* Faint watermark of running kid athletes on the right */}
+                    <div className="absolute right-6 bottom-4 opacity-15 pointer-events-none select-none hidden sm:block">
+                      <svg className="w-36 h-28 text-[#F4510B]" viewBox="0 0 160 120" fill="currentColor">
+                        <circle cx="50" cy="25" r="12" />
+                        <path d="M45 40 L35 70 L20 85 L25 90 L40 75 L48 55 L60 70 L75 80 L80 72 L65 62 L55 45 Z" />
+                        <path d="M40 45 L25 55 L20 50 L35 40 Z" />
+                        <path d="M50 45 L65 52 L75 48 L73 40 L62 45 Z" />
+                        <circle cx="110" cy="20" r="14" />
+                        <path d="M105 37 L92 68 L75 82 L80 88 L98 73 L108 52 L122 68 L138 78 L142 70 L128 60 L116 42 Z" />
+                        <path d="M100 42 L82 52 L78 46 L95 37 Z" />
+                        <path d="M112 42 L128 50 L140 45 L138 37 L125 42 Z" />
+                      </svg>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center max-w-lg mx-auto relative z-10">
+                      {/* Sports-themed clipboard & checklist graphic */}
+                      <div className="relative w-28 h-28 flex items-center justify-center mb-4">
+                        <div className="absolute inset-0 bg-[#FFF5ED] rounded-full blur-[1px] transform scale-95" />
+                        <svg 
+                          className="w-20 h-20 relative z-10 text-[#F4510B]" 
+                          viewBox="0 0 80 80" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M55 12L60 8" stroke="#F4510B" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M63 19L68 17" stroke="#F4510B" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M59 26L64 27" stroke="#F4510B" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect 
+                            x="22" 
+                            y="18" 
+                            width="33" 
+                            height="43" 
+                            rx="6" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            fill="#FFFFFF" 
+                          />
+                          <path 
+                            d="M31 18V15C31 13.3431 32.3431 12 34 12H43C44.6569 12 46 13.3431 46 15V18" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            strokeLinecap="round" 
+                          />
+                          <circle cx="38.5" cy="15" r="1.5" fill="#F4510B" />
+                          <path d="M28 29L30.5 31.5L34 28" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="37" y1="29.5" x2="47" y2="29.5" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M28 38L30.5 40.5L34 37" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="37" y1="38.5" x2="44" y2="38.5" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M28 47L30.5 49.5L34 46" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="37" y1="47.5" x2="42" y2="47.5" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" />
+                          <circle 
+                            cx="47" 
+                            cy="48" 
+                            r="8" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            fill="#FFFFFF" 
+                          />
+                          <line 
+                            x1="53" 
+                            y1="54" 
+                            x2="60" 
+                            y2="61" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            strokeLinecap="round" 
+                          />
+                        </svg>
+                      </div>
+
+                      {/* Heading */}
+                      <h3 className="text-xl font-black text-[#172B50] tracking-tight mb-1.5">
+                        No students found
+                      </h3>
+
+                      {/* Supporting text */}
+                      <p className="text-xs sm:text-sm text-[#172B50]/70 max-w-md mx-auto mb-6 leading-relaxed">
+                        No students found matching your criteria.
+                      </p>
+
+                      {/* CTA Button */}
+                      <button
+                        type="button"
+                        onClick={handleOpenAddModal}
+                        className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#F4510B] hover:bg-[#d94103] active:scale-95 text-white text-xs sm:text-sm font-bold rounded-full shadow-[0_4px_14px_rgba(244,81,11,0.35)] transition-all cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4 text-white stroke-[2.5]" />
+                        <span>Enroll New Athlete</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ) : (
-                filteredStudents.map(student => (
-                  <tr key={student.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
-                    
-                    {/* Athlete Info */}
-                    <td className="py-3 px-4">
+                filteredStudents.map((student) => (
+                  <tr key={student.id} className="hover:bg-[#FFF4E8]/35 transition-colors">
+                    {/* 1. Kid Name */}
+                    <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
                         <img
-                          src={student.avatar}
+                          src={
+                            student.avatar ||
+                            'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80'
+                          }
                           alt={student.name}
-                          className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#172B5020] shrink-0"
+                          className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#172B5015] shrink-0"
                         />
                         <div>
-                          <span className="font-extrabold text-[#172B50] text-sm block leading-tight">
+                          <button
+                            type="button"
+                            onClick={() => setViewStudent(student)}
+                            className="font-extrabold text-[#172B50] hover:text-[#F4510B] text-sm block leading-tight text-left cursor-pointer transition-colors"
+                          >
                             {student.name}
-                          </span>
-                          <span className="text-[10px] text-[#172B50] opacity-60 font-semibold">
-                            {student.id} • {student.age} yrs ({student.gender})
+                          </button>
+                          <span className="text-[10.5px] text-[#172B50]/60 font-semibold block mt-0.5">
+                            {student.id} • {student.age} yrs ({student.gender || 'Athlete'})
                           </span>
                         </div>
                       </div>
                     </td>
 
-                    {/* Program */}
-                    <td className="py-3 px-4">
+                    {/* 2. Program */}
+                    <td className="py-3.5 px-5">
                       <span className="font-bold text-[#172B50] block">{student.program}</span>
-                      <span className="text-[10px] text-[#F4510B] font-semibold block">{student.center}</span>
                       {(student.batchName || student.enrolledClasses?.length > 0) && (
-                        <span className="text-[10px] text-[#172B50] opacity-70">
+                        <span className="text-[10px] text-[#172B50]/70 block mt-0.5">
                           Batch: {student.batchName || student.enrolledClasses.join(', ')}
                         </span>
                       )}
                     </td>
 
-                    {/* Rank */}
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020]">
-                        <Shield className="w-3 h-3 text-[#F4510B]" />
-                        <span>{student.rank}</span>
+                    {/* 3. Location */}
+                    <td className="py-3.5 px-5 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#F4510B]">
+                        <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                        <span>{student.center}</span>
                       </span>
                     </td>
 
-                    {/* Parent */}
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-[#172B50]">{student.parentName}</div>
-                      <div className="text-[10px] text-[#172B50] opacity-70">{student.parentPhone}</div>
+                    {/* 4. Parent Name */}
+                    <td className="py-3.5 px-5">
+                      <span className="font-bold text-[#172B50] block">{student.parentName || 'Guardian'}</span>
                     </td>
 
-                    {/* Attendance */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-[#FFF4E8] rounded-full overflow-hidden border border-[#172B5015]">
-                          <div
-                            style={{ width: `${student.attendanceRate}%` }}
-                            className="h-full bg-[#F4510B] rounded-full"
-                          />
-                        </div>
-                        <span className="font-bold text-[#172B50] text-[11px]">{student.attendanceRate}%</span>
-                      </div>
+                    {/* 5. Parent Number */}
+                    <td className="py-3.5 px-5 whitespace-nowrap">
+                      {student.parentPhone ? (
+                        <a
+                          href={`tel:${student.parentPhone}`}
+                          className="text-xs font-medium text-[#172B50]/80 hover:text-[#F4510B] transition-colors inline-flex items-center gap-1"
+                        >
+                          <Phone className="w-3 h-3 text-[#172B50]/50" />
+                          <span>{student.parentPhone}</span>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-[#172B50]/40">-</span>
+                      )}
                     </td>
 
-                    {/* Fee Status */}
-                    <td className="py-3 px-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                        student.feeStatus === 'Paid'
-                          ? 'bg-[#172B50] text-white'
-                          : 'bg-[#F4510B] text-white'
-                      }`}>
-                        {student.feeStatus}
+                    {/* 6. Fee Status */}
+                    <td className="py-3.5 px-5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-extrabold border ${
+                          student.feeStatus === 'Paid'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-[#FFF5ED] text-[#F4510B] border-[#F4510B30]'
+                        }`}
+                      >
+                        {student.feeStatus || 'Paid'}
                       </span>
                     </td>
 
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-right">
+                    {/* 7. Actions */}
+                    <td className="py-3.5 px-5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
+                          type="button"
                           onClick={() => setViewStudent(student)}
                           className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] transition-colors cursor-pointer"
                           title="View Athlete Profile & Badges"
@@ -276,6 +532,7 @@ export default function StudentManagement() {
                           <Eye className="w-4 h-4 text-[#172B50]" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => setEditingStudent({ ...student })}
                           className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] transition-colors cursor-pointer"
                           title="Edit Student Record"
@@ -283,6 +540,7 @@ export default function StudentManagement() {
                           <Edit3 className="w-4 h-4 text-[#172B50]" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => deleteStudent(student.id)}
                           className="p-1.5 rounded-lg text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors cursor-pointer"
                           title="Delete Record"
@@ -291,7 +549,6 @@ export default function StudentManagement() {
                         </button>
                       </div>
                     </td>
-
                   </tr>
                 ))
               )}
