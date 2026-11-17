@@ -62,6 +62,56 @@ export function generateUniquePrefixedId(items = [], prefix = 'REC') {
 }
 
 /**
+ * Known academy location codes mapping
+ */
+export const LOCATION_CODES = {
+  'KK NAGAR': 'KKN',
+  'ANNA NAGAR': 'ANN',
+  'KILPAUK': 'KLP',
+  'MAHALINGAPURAM': 'MHL',
+  'KOLATHUR': 'KOL',
+};
+
+/**
+ * Returns standardized 3-letter location code (e.g. KKN, ANN, KLP)
+ */
+export function getLocationCode(locationName = '') {
+  const normalized = String(locationName || '').trim().toUpperCase();
+  if (LOCATION_CODES[normalized]) return LOCATION_CODES[normalized];
+
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    if (words[0] === 'KK') return 'KKN';
+    return (words[0].slice(0, 2) + words[1].slice(0, 1)).toUpperCase();
+  }
+  return (normalized.replace(/[^A-Z]/g, '').slice(0, 3) || 'KKN').padEnd(3, 'X');
+}
+
+/**
+ * Generates a permanent location-based Kid ID:
+ * Format: LS-[LOCATION_CODE]-[YEAR]-[SEQUENCE]
+ * Examples: LS-KKN-2026-001, LS-ANN-2026-001, LS-KLP-2026-001
+ */
+export function generateLocationKidId(students = [], locationName = '', customYear) {
+  const locCode = getLocationCode(locationName);
+  const currentYear = customYear || new Date().getFullYear();
+  const prefix = `LS-${locCode}-${currentYear}`;
+  const regex = new RegExp(`^LS-${locCode}-${currentYear}-(\\d+)$`, 'i');
+
+  let maxSeq = 0;
+  students.forEach((s) => {
+    const match = regex.exec(String(s?.id || ''));
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!Number.isNaN(num) && num > maxSeq) maxSeq = num;
+    }
+  });
+
+  const nextSeq = String(maxSeq + 1).padStart(3, '0');
+  return `${prefix}-${nextSeq}`;
+}
+
+/**
  * Finds an existing parent by normalized email or normalized 10-digit phone
  * to prevent duplicate parent records when enrolling siblings.
  */
@@ -222,8 +272,8 @@ export function executeEnquiryEnrollmentTransaction(
     };
   }
 
-  // 3. Unique ID generation
-  const studentId = generateUniquePrefixedId(students, 'STU');
+  // 3. Unique permanent location-based Kid ID generation (e.g. LS-KKN-2026-001)
+  const studentId = generateLocationKidId(students, finalLocation);
 
   // 4. Create or Link Existing Parent (no duplicate parents!)
   const existingParent = findExistingParent(parents, {

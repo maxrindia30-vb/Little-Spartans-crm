@@ -27,6 +27,7 @@ import {
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
 import { getCommonLocations } from '../../services/locationService';
+import { getLocationCode } from '../../services/enrollmentService';
 
 export default function StudentManagement() {
   const { data, addStudent, updateStudent, deleteStudent, focusedRecord, setFocusedRecord } = useCrm();
@@ -61,15 +62,64 @@ export default function StudentManagement() {
   const [parentEmail, setParentEmail] = useState('');
   const [medicalNote, setMedicalNote] = useState('');
 
-  const filteredStudents = data.students.filter(s => {
-    const matchesSearch = 
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = selectedLocation === 'All' || s.center === selectedLocation;
-    const matchesProgram = selectedProgram === 'All' || s.program === selectedProgram;
-    return matchesSearch && matchesLocation && matchesProgram;
-  });
+  // Flexible Kid ID, Child, Parent, and Mobile Search
+  // Supports full Kid ID (e.g. LS-KKN-2026-001), partial year-sequence (e.g. 2026-001 across all locations),
+  // location prefix (e.g. LS-KKN, KKN), child name, parent name, and parent mobile number
+  const filteredStudents = useMemo(() => {
+    const rawQuery = searchTerm.trim().toLowerCase();
+    const cleanQuery = rawQuery.replace(/[-\s]/g, '');
+    const queryDigits = rawQuery.replace(/\D/g, '');
+
+    return (data.students || []).filter((s) => {
+      // 1. Location filter
+      const matchesLocation = selectedLocation === 'All' || s.center === selectedLocation;
+      if (!matchesLocation) return false;
+
+      // 2. Program filter
+      const matchesProgram = selectedProgram === 'All' || s.program === selectedProgram;
+      if (!matchesProgram) return false;
+
+      // 3. Search query
+      if (!rawQuery) return true;
+
+      const sId = (s.id || '').toLowerCase();
+      const sIdClean = sId.replace(/[-\s]/g, '');
+      const sName = (s.name || '').toLowerCase();
+      const sParentName = (s.parentName || '').toLowerCase();
+      const sPhone = (s.parentPhone || '');
+      const sPhoneDigits = sPhone.replace(/\D/g, '');
+      const sCenter = (s.center || '').toLowerCase();
+      const sLocCode = getLocationCode(s.center || '').toLowerCase();
+
+      // Check full or partial ID:
+      // - "LS-KKN-2026-001" (exact match)
+      // - "2026-001" (matches across every location)
+      // - "LS-KKN" or "KKN" (matches all KK Nagar students)
+      // - "001" (matches sequence)
+      const matchesId =
+        sId.includes(rawQuery) ||
+        (cleanQuery && sIdClean.includes(cleanQuery)) ||
+        sLocCode.includes(rawQuery);
+
+      // Check child name
+      const matchesChildName =
+        sName.includes(rawQuery) ||
+        (cleanQuery && sName.replace(/[-\s]/g, '').includes(cleanQuery));
+
+      // Check parent name
+      const matchesParentName = sParentName.includes(rawQuery);
+
+      // Check parent mobile number
+      const matchesPhone =
+        sPhone.toLowerCase().includes(rawQuery) ||
+        (queryDigits.length >= 3 && sPhoneDigits.includes(queryDigits));
+
+      // Check location name
+      const matchesCenter = sCenter.includes(rawQuery);
+
+      return matchesId || matchesChildName || matchesParentName || matchesPhone || matchesCenter;
+    });
+  }, [data.students, searchTerm, selectedLocation, selectedProgram]);
 
   const handleOpenAddModal = () => {
     if (selectedLocation !== 'All') {
@@ -462,8 +512,11 @@ export default function StudentManagement() {
                           >
                             {student.name}
                           </button>
-                          <span className="text-[10.5px] text-[#172B50]/60 font-semibold block mt-0.5">
-                            {student.id} • {student.age} yrs ({student.gender || 'Athlete'})
+                          <span className="text-[10.5px] text-[#172B50]/70 font-semibold flex items-center gap-1.5 flex-wrap mt-0.5">
+                            <span className="font-extrabold text-[#F4510B] bg-[#FFF5ED] px-1.5 py-0.5 rounded border border-[#F4510B25] text-[10px] tracking-wide font-mono">
+                              {student.id}
+                            </span>
+                            <span>• {student.age} yrs ({student.gender || 'Athlete'})</span>
                           </span>
                         </div>
                       </div>

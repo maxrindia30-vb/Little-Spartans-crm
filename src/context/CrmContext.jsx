@@ -13,6 +13,7 @@ import { upsertBatchAttendanceRecords } from '../services/attendanceService';
 import {
   executeEnquiryEnrollmentTransaction,
   generateUniquePrefixedId,
+  generateLocationKidId,
 } from '../services/enrollmentService';
 import {
   validateDemoPayload,
@@ -231,7 +232,8 @@ export function CrmProvider({ children }) {
       ) ||
       (data.classes || []).find(c => !studentData.center || c.center === studentData.center);
 
-    const studentId = generateUniquePrefixedId(data.students || [], 'STU');
+    // Permanent location-based Kid ID format: LS-[LOCATION_CODE]-[YEAR]-[SEQUENCE]
+    const studentId = studentData.id || generateLocationKidId(data.students || [], studentData.center);
     const newStudent = {
       ...studentData,
       id: studentId,
