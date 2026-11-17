@@ -22,7 +22,8 @@ import {
   Settings,
   ChevronDown,
   Layers,
-  X
+  X,
+  Hash
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -262,7 +263,7 @@ export default function StudentManagement() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by student, ID, or parent..."
+              placeholder="Search by Kid ID (e.g. 2026-001 or LS-KKN-2026-001), athlete name, or parent..."
               className="w-full pl-10 pr-8 py-2.5 text-xs font-medium bg-[#FFF4E8]/30 text-[#172B50] placeholder-[#172B5060] border border-[#172B5018] rounded-2xl shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#F4510B20] focus:border-[#F4510B] transition-all"
             />
             {searchTerm && (
@@ -335,6 +336,14 @@ export default function StudentManagement() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-[#FFF4E8] text-[#172B50] border-b border-[#172B5012]">
+                <th className="py-4 px-5 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-[11px] uppercase tracking-wider">
+                      Kid ID
+                    </span>
+                  </div>
+                </th>
                 <th className="py-4 px-5">
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-[#F4510B]" />
@@ -396,7 +405,7 @@ export default function StudentManagement() {
             <tbody className="divide-y divide-[#172B5010]">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-16 sm:py-20 px-4 text-center relative overflow-hidden">
+                  <td colSpan="8" className="py-16 sm:py-20 px-4 text-center relative overflow-hidden">
                     {/* Faint watermark of running kid athletes on the right */}
                     <div className="absolute right-6 bottom-4 opacity-15 pointer-events-none select-none hidden sm:block">
                       <svg className="w-36 h-28 text-[#F4510B]" viewBox="0 0 160 120" fill="currentColor">
@@ -493,7 +502,14 @@ export default function StudentManagement() {
               ) : (
                 filteredStudents.map((student) => (
                   <tr key={student.id} className="hover:bg-[#FFF4E8]/35 transition-colors">
-                    {/* 1. Kid Name */}
+                    {/* 1. Kid ID */}
+                    <td className="py-3.5 px-5 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5 font-black text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-lg border border-[#F4510B30] text-xs font-mono tracking-wide shadow-2xs">
+                        {student.id}
+                      </span>
+                    </td>
+
+                    {/* 2. Kid Name */}
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
                         <img
@@ -512,11 +528,8 @@ export default function StudentManagement() {
                           >
                             {student.name}
                           </button>
-                          <span className="text-[10.5px] text-[#172B50]/70 font-semibold flex items-center gap-1.5 flex-wrap mt-0.5">
-                            <span className="font-extrabold text-[#F4510B] bg-[#FFF5ED] px-1.5 py-0.5 rounded border border-[#F4510B25] text-[10px] tracking-wide font-mono">
-                              {student.id}
-                            </span>
-                            <span>• {student.age} yrs ({student.gender || 'Athlete'})</span>
+                          <span className="text-[11px] text-[#172B50]/70 font-semibold block mt-0.5">
+                            {student.age} yrs • {student.gender || 'Athlete'}
                           </span>
                         </div>
                       </div>
@@ -628,7 +641,12 @@ export default function StudentManagement() {
                 className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#F4510B]"
               />
               <div>
-                <h4 className="text-base font-extrabold text-[#172B50]">{viewStudent.name}</h4>
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="text-base font-extrabold text-[#172B50]">{viewStudent.name}</h4>
+                  <span className="font-extrabold text-[#F4510B] bg-white px-2 py-0.5 rounded-md border border-[#F4510B30] text-xs font-mono tracking-wide">
+                    {viewStudent.id}
+                  </span>
+                </div>
                 <p className="text-xs font-bold text-[#F4510B]">{viewStudent.rank} • {viewStudent.status || 'Active'}</p>
                 <p className="text-xs text-[#172B50] opacity-75 mt-0.5">
                   {viewStudent.program} • {viewStudent.center}
