@@ -8,10 +8,12 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Info,
   Eye,
   Edit3,
   UserPlus,
+  User,
   Users,
   ShieldCheck,
   AlertCircle,
@@ -21,6 +23,8 @@ import {
   Sparkles,
   TrendingUp,
   GraduationCap,
+  Filter,
+  Layers,
   X,
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
@@ -86,6 +90,7 @@ export default function EnquiryManagement() {
   const [selectedStage, setSelectedStage] = useState('All');
   const [selectedSource, setSelectedSource] = useState('All');
   const [selectedDate, setSelectedDate] = useState('');
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
@@ -449,18 +454,18 @@ export default function EnquiryManagement() {
         />
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-3">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
-            {/* Location Filter Dropdown */}
-            <div className="relative min-w-[210px]">
-              <MapPin className="w-4 h-4 text-[#F4510B] absolute left-3 top-2.5 pointer-events-none" />
+      {/* 1. Filter and Action Bar (Matching Reference Image 1) */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[320px]">
+            {/* Location Selector (White pill with MapPin & ChevronDown) */}
+            <div className="relative inline-flex items-center">
+              <MapPin className="w-4 h-4 text-[#F4510B] absolute left-3.5 pointer-events-none z-10" />
               <select
                 aria-label="Filter enquiries by academy location"
                 value={selectedLocation}
                 onChange={(e) => handleLocationChange(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5025] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B] cursor-pointer"
+                className="pl-9 pr-8 py-2 text-xs font-bold bg-white text-[#172B50] border border-[#172B5018] rounded-2xl shadow-2xs hover:border-[#F4510B50] focus:outline-none focus:ring-2 focus:ring-[#F4510B20] focus:border-[#F4510B] cursor-pointer appearance-none transition-all"
               >
                 <option value="All">All Locations ({(data.enquiries || []).length})</option>
                 {commonLocations.map((loc) => (
@@ -469,11 +474,12 @@ export default function EnquiryManagement() {
                   </option>
                 ))}
               </select>
+              <ChevronDown className="w-3.5 h-3.5 text-[#172B50]/50 absolute right-3 pointer-events-none" />
             </div>
 
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
+            {/* Search Input (White pill with Search icon) */}
+            <div className="relative flex-1 min-w-[240px] max-w-lg">
+              <Search className="w-4 h-4 text-[#172B50]/40 absolute left-3.5 top-2.5 pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
@@ -481,251 +487,359 @@ export default function EnquiryManagement() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search by child, parent, phone, or ID..."
-                className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] placeholder-[#172B5080] border border-[#172B5020] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
+                placeholder="Search by child, parent, phone, or Enquiry ID..."
+                className="w-full pl-9 pr-8 py-2 text-xs font-medium bg-white text-[#172B50] placeholder-[#172B5060] border border-[#172B5018] rounded-2xl shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#F4510B20] focus:border-[#F4510B] transition-all"
               />
-            </div>
-
-            {/* Date Filter & Quick Presets */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedDate(todayYmd);
-                  setCurrentPage(1);
-                }}
-                className={`px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                  selectedDate === todayYmd
-                    ? 'bg-[#F4510B] text-white shadow-xs'
-                    : 'bg-[#FFF4E8] text-[#172B50] hover:bg-white border border-[#172B5018]'
-                }`}
-                title="View Today's Enquiries"
-              >
-                Today
-              </button>
-
-              <div className="relative">
-                <Calendar className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute left-3 top-2.5 pointer-events-none" />
-                <input
-                  type="date"
-                  aria-label="Filter enquiries by created date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    setSelectedDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className={`pl-8 pr-2.5 py-1.5 text-xs font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F4510B] transition-all ${
-                    selectedDate
-                      ? 'bg-[#FFF5ED] border border-[#F4510B] text-[#172B50] font-bold'
-                      : 'bg-[#FFF4E8] text-[#172B50] border border-[#172B5020]'
-                  }`}
-                />
-              </div>
-
-              {selectedDate && (
+              {searchTerm && (
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedDate('');
+                    setSearchTerm('');
                     setCurrentPage(1);
                   }}
-                  className="px-2.5 py-1.5 text-xs font-bold text-[#F4510B] bg-[#FFF4E8] border border-[#F4510B30] rounded-xl hover:bg-white transition-all cursor-pointer flex items-center gap-1"
-                  title="Clear Date Filter (Show All Dates)"
+                  className="absolute right-3 top-2.5 text-[#172B50]/40 hover:text-[#172B50] cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
-                  <span>Clear Filter</span>
                 </button>
               )}
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 text-[11px] font-semibold text-[#172B50] opacity-75">
-            <span>
-              Showing <strong className="text-[#172B50]">{filteredEnquiries.length}</strong>{' '}
-              {selectedLocation === 'All' ? 'across all locations' : `at ${selectedLocation}`}
-            </span>
-          </div>
-        </div>
-
-        {/* Stage Filter Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
-          {WORKFLOW_STAGES.map((st) => (
+            {/* Today Quick Preset Button */}
             <button
-              key={st}
               type="button"
               onClick={() => {
-                setSelectedStage(st);
+                setSelectedDate(selectedDate === todayYmd ? '' : todayYmd);
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                selectedStage === st
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'bg-[#FFF4E8] text-[#172B50] hover:bg-white border border-[#172B5015]'
+              className={`px-3.5 py-2 text-xs font-bold rounded-2xl border transition-all cursor-pointer shadow-2xs flex items-center gap-1.5 ${
+                selectedDate === todayYmd
+                  ? 'bg-[#FFF5ED] border-[#F4510B] text-[#F4510B]'
+                  : 'bg-white border-[#F4510B55] text-[#172B50] hover:border-[#F4510B] hover:bg-[#FFF5ED]'
               }`}
+              title="Filter by Today's Date"
             >
-              {st}{' '}
-              {st !== 'All'
-                ? `(${locationScopedEnquiries.filter((e) => e.stage === st).length})`
-                : `(${locationScopedEnquiries.length})`}
+              <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+              <span>Today</span>
             </button>
-          ))}
-        </div>
 
-        {/* Source Filter Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-[#172B5010]">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#172B50] opacity-60 mr-1 shrink-0">
-            Enquiry Source:
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedSource('All');
-              setCurrentPage(1);
-            }}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              selectedSource === 'All'
-                ? 'bg-[#172B50] text-white shadow-xs'
-                : 'bg-slate-100 text-[#172B50] hover:bg-slate-200'
-            }`}
-          >
-            All Sources ({locationScopedEnquiries.length})
-          </button>
-          {Object.values(ENQUIRY_SOURCES).map((src) => {
-            const count = locationScopedEnquiries.filter(
-              (e) => (e.source || ENQUIRY_SOURCES.MANUAL).toLowerCase() === src.toLowerCase()
-            ).length;
-            const cfg = ENQUIRY_SOURCE_CONFIG[src];
-            const isSelected = selectedSource === src;
-            return (
+            {/* Date Picker Button (Native Picker trigger) */}
+            <div className="relative inline-flex items-center justify-center">
               <button
-                key={src}
                 type="button"
-                onClick={() => {
-                  setSelectedSource(src);
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border flex items-center justify-center transition-all cursor-pointer shadow-2xs ${
+                  selectedDate && selectedDate !== todayYmd
+                    ? 'bg-[#FFF5ED] border-[#F4510B] text-[#F4510B]'
+                    : 'bg-white border-[#F4510B55] text-[#F4510B] hover:border-[#F4510B] hover:bg-[#FFF5ED]'
+                }`}
+                title={selectedDate ? `Date Filter: ${selectedDate}` : 'Filter by Date'}
+              >
+                <Calendar className="w-4 h-4 text-[#F4510B]" />
+              </button>
+              <input
+                type="date"
+                aria-label="Filter enquiries by specific date"
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                  isSelected
-                    ? `${cfg.badgeClass} ring-2 ring-[#F4510B]`
-                    : `${cfg.badgeClass} opacity-85 hover:opacity-100`
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotClass}`} />
-                <span>
-                  {src} ({count})
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+            </div>
 
-      {/* Date Filter Active Banner */}
-      {selectedDate && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-[#FFF4E8] border border-[#F4510B40] rounded-2xl shadow-xs animate-in fade-in duration-200">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#F4510B] text-white flex items-center justify-center shrink-0">
-              <CalendarDays className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-extrabold text-[#F4510B] uppercase tracking-wider">
-                  Enquiries for Date:
-                </span>
-                <span className="text-sm font-extrabold text-[#172B50]">
-                  {formatDateLabel(selectedDate)}
-                </span>
-                {selectedDate === todayYmd && (
-                  <span className="px-2 py-0.5 text-[10px] font-extrabold bg-[#F4510B] text-white rounded-full">
-                    Today
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-[#172B50] opacity-70">
-                Displaying only enquiries created on {selectedDate}. Total received: <strong className="text-[#172B50] font-extrabold">{filteredEnquiries.length} enquiry{filteredEnquiries.length === 1 ? '' : 'ies'}</strong>.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-            <span className="px-3 py-1 rounded-full text-xs font-black bg-white text-[#F4510B] border border-[#F4510B30] shadow-2xs">
-              {filteredEnquiries.length} {filteredEnquiries.length === 1 ? 'Enquiry' : 'Enquiries'} Found
-            </span>
+            {/* Filter Funnel Toggle Button */}
             <button
               type="button"
-              onClick={() => {
-                setSelectedDate('');
-                setCurrentPage(1);
-              }}
-              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-[#172B50] bg-white hover:bg-[#FFF5ED] border border-[#172B5020] rounded-xl transition-all cursor-pointer"
+              onClick={() => setShowFilterDrawer((prev) => !prev)}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border flex items-center justify-center transition-all cursor-pointer shadow-2xs ${
+                showFilterDrawer || selectedStage !== 'All' || selectedSource !== 'All'
+                  ? 'bg-[#FFF5ED] border-[#F4510B] text-[#F4510B]'
+                  : 'bg-white border-[#172B5018] text-[#F4510B] hover:border-[#F4510B55] hover:bg-[#FFF5ED]'
+              }`}
+              title="Toggle Stage & Source Filters"
             >
-              <X className="w-3.5 h-3.5 text-[#F4510B]" />
-              <span>Clear Filter</span>
+              <Filter className="w-4 h-4 text-[#F4510B]" />
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Enquiries Table */}
-      <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+          {/* Right Summary Text */}
+          <div className="text-xs font-semibold text-[#172B50]/75 whitespace-nowrap ml-auto">
+            Showing <strong className="text-[#172B50] font-black">{filteredEnquiries.length}</strong>{' '}
+            {selectedLocation === 'All' ? 'across all locations' : `at ${selectedLocation}`}
+          </div>
+        </div>
+
+        {/* Optional Active Filters Badge Bar */}
+        {(selectedDate || selectedStage !== 'All' || selectedSource !== 'All') && (
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+            {selectedDate && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FFF5ED] border border-[#F4510B40] text-[#F4510B] font-bold">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Date: {formatDateLabel(selectedDate) || selectedDate}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate('')}
+                  className="hover:text-[#172B50] ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {selectedStage !== 'All' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FFF5ED] border border-[#F4510B40] text-[#F4510B] font-bold">
+                <span>Stage: {selectedStage}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStage('All')}
+                  className="hover:text-[#172B50] ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {selectedSource !== 'All' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FFF5ED] border border-[#F4510B40] text-[#F4510B] font-bold">
+                <span>Source: {selectedSource}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSource('All')}
+                  className="hover:text-[#172B50] ml-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Collapsible Advanced Filters Drawer (revealed when filter funnel clicked) */}
+        {showFilterDrawer && (
+          <div className="bg-white rounded-2xl p-4 border border-[#172B5015] shadow-xs space-y-3 animate-in fade-in duration-150">
+            {/* Stage Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#172B50]/60 mr-1 shrink-0">
+                Stage:
+              </span>
+              {WORKFLOW_STAGES.map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => {
+                    setSelectedStage(st);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    selectedStage === st
+                      ? 'bg-[#172B50] text-white shadow-xs'
+                      : 'bg-[#FFF5ED] text-[#172B50] hover:bg-[#FFE8D6] border border-[#172B5010]'
+                  }`}
+                >
+                  {st}{' '}
+                  {st !== 'All'
+                    ? `(${locationScopedEnquiries.filter((e) => e.stage === st).length})`
+                    : `(${locationScopedEnquiries.length})`}
+                </button>
+              ))}
+            </div>
+
+            {/* Source Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-[#172B500C]">
+              <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#172B50]/60 mr-1 shrink-0">
+                Source:
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedSource('All');
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedSource === 'All'
+                    ? 'bg-[#172B50] text-white shadow-xs'
+                    : 'bg-slate-100 text-[#172B50] hover:bg-slate-200'
+                }`}
+              >
+                All Sources ({locationScopedEnquiries.length})
+              </button>
+              {Object.values(ENQUIRY_SOURCES).map((src) => {
+                const count = locationScopedEnquiries.filter(
+                  (e) => (e.source || ENQUIRY_SOURCES.MANUAL).toLowerCase() === src.toLowerCase()
+                ).length;
+                const cfg = ENQUIRY_SOURCE_CONFIG[src];
+                const isSelected = selectedSource === src;
+                return (
+                  <button
+                    key={src}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSource(src);
+                      setCurrentPage(1);
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                      isSelected
+                        ? `${cfg.badgeClass} ring-2 ring-[#F4510B]`
+                        : `${cfg.badgeClass} opacity-85 hover:opacity-100`
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotClass}`} />
+                    <span>
+                      {src} ({count})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Enquiries Table (Matching Reference Image 1) */}
+      <div className="bg-white rounded-3xl border border-[#172B5015] shadow-[0_4px_25px_rgba(23,43,80,0.03)] overflow-hidden relative z-10">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-[#FFF4E8] text-[#172B50] font-extrabold uppercase tracking-wider text-[11px] border-b border-[#172B5015]">
-                <th className="py-3.5 px-4">Enquiry ID &amp; Date</th>
-                <th className="py-3.5 px-4">Lead Source</th>
-                <th className="py-3.5 px-4">Child Details</th>
-                <th className="py-3.5 px-4">Parent &amp; Contact</th>
-                <th className="py-3.5 px-4">Location &amp; Program</th>
-                <th className="py-3.5 px-4">Stage</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+              <tr className="bg-[#FFF5ED] text-[#172B50] border-b border-[#172B5010]">
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-xs sm:text-[13px] tracking-tight">
+                      Enquiry ID &amp; Date
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-xs sm:text-[13px] tracking-tight">
+                      Lead Source
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-xs sm:text-[13px] tracking-tight">
+                      Child Details
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-xs sm:text-[13px] tracking-tight">
+                      Parent &amp; Contact
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#F4510B]" />
+                    <span className="font-extrabold text-[#172B50] text-xs sm:text-[13px] tracking-tight">
+                      Location &amp; Program
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-5 text-right">
+                  <span className="font-extrabold text-[#172B50] text-xs sm:text-[13px] tracking-tight block text-right">
+                    Actions
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#172B5010]">
               {paginatedEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-12 px-4 text-center">
-                    {selectedDate ? (
-                      <div className="max-w-md mx-auto space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center mx-auto border border-[#F4510B25]">
-                          <Calendar className="w-6 h-6" />
-                        </div>
-                        <h4 className="text-sm font-black text-[#172B50]">
-                          No enquiries found for this date
-                        </h4>
-                        <p className="text-xs text-[#172B50] opacity-70 leading-relaxed">
-                          No student admission leads or enquiries were logged on{' '}
-                          <strong className="text-[#172B50]">{formatDateLabel(selectedDate) || selectedDate}</strong>.
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                          {selectedDate !== todayYmd && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedDate(todayYmd);
-                                setCurrentPage(1);
-                              }}
-                              className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#F4510B] hover:bg-[#D94103] rounded-xl transition-all cursor-pointer shadow-xs"
-                            >
-                              View Today's Enquiries
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedDate('');
-                              setCurrentPage(1);
-                            }}
-                            className="px-3.5 py-1.5 text-xs font-bold text-[#172B50] bg-[#FFF4E8] hover:bg-white border border-[#172B5020] rounded-xl transition-all cursor-pointer"
-                          >
-                            Clear Filter (View All)
-                          </button>
-                        </div>
+                  <td colSpan="6" className="py-14 sm:py-16 px-4 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-lg mx-auto">
+                      {/* Stylized Illustrated Graphic: Clipboard + Checklist + Magnifying Glass + Radiating Rays */}
+                      <div className="relative w-28 h-28 flex items-center justify-center mb-4">
+                        <div className="absolute inset-0 bg-[#FFF5ED] rounded-full blur-[1px] transform scale-95" />
+                        <svg 
+                          className="w-20 h-20 relative z-10 text-[#F4510B]" 
+                          viewBox="0 0 80 80" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          {/* Radiating sparkle rays at top-right */}
+                          <path d="M55 12L60 8" stroke="#F4510B" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M63 19L68 17" stroke="#F4510B" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M59 26L64 27" stroke="#F4510B" strokeWidth="2.5" strokeLinecap="round" />
+
+                          {/* Clipboard base */}
+                          <rect 
+                            x="22" 
+                            y="18" 
+                            width="33" 
+                            height="43" 
+                            rx="6" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            fill="#FFFFFF" 
+                          />
+
+                          {/* Clip at top */}
+                          <path 
+                            d="M31 18V15C31 13.3431 32.3431 12 34 12H43C44.6569 12 46 13.3431 46 15V18" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            strokeLinecap="round" 
+                          />
+                          <circle cx="38.5" cy="15" r="1.5" fill="#F4510B" />
+
+                          {/* Checklist item 1 */}
+                          <path d="M28 29L30.5 31.5L34 28" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="37" y1="29.5" x2="47" y2="29.5" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" />
+
+                          {/* Checklist item 2 */}
+                          <path d="M28 38L30.5 40.5L34 37" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="37" y1="38.5" x2="44" y2="38.5" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" />
+
+                          {/* Checklist item 3 */}
+                          <path d="M28 47L30.5 49.5L34 46" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="37" y1="47.5" x2="42" y2="47.5" stroke="#F4510B" strokeWidth="2" strokeLinecap="round" />
+
+                          {/* Magnifying Glass (sitting at bottom right) */}
+                          <circle 
+                            cx="47" 
+                            cy="48" 
+                            r="8" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            fill="#FFFFFF" 
+                          />
+                          <line 
+                            x1="53" 
+                            y1="54" 
+                            x2="60" 
+                            y2="61" 
+                            stroke="#F4510B" 
+                            strokeWidth="2.5" 
+                            strokeLinecap="round" 
+                          />
+                        </svg>
                       </div>
-                    ) : (
-                      <span className="text-[#172B50] opacity-60">
-                        No enquiries match the selected location, stage, source, or search filter.
-                      </span>
-                    )}
+
+                      {/* Heading */}
+                      <h3 className="text-lg sm:text-xl font-black text-[#172B50] tracking-tight mb-2">
+                        No enquiries found
+                      </h3>
+
+                      {/* Subtitle */}
+                      <p className="text-xs sm:text-[13px] text-[#172B50]/70 max-w-md mx-auto mb-6 leading-relaxed">
+                        No enquiries match the selected location, date range, or search filter.
+                      </p>
+
+                      {/* CTA Button */}
+                      <button
+                        type="button"
+                        onClick={handleOpenAddModal}
+                        className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#F4510B] hover:bg-[#d94103] active:scale-95 text-white text-xs sm:text-sm font-bold rounded-full shadow-[0_4px_14px_rgba(244,81,11,0.35)] transition-all cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4 text-white stroke-[2.5]" />
+                        <span>Add New Enquiry</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -735,8 +849,8 @@ export default function EnquiryManagement() {
                     ENQUIRY_SOURCE_CONFIG[src] || ENQUIRY_SOURCE_CONFIG[ENQUIRY_SOURCES.OTHER];
 
                   return (
-                    <tr key={enq.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
-                      <td className="py-3 px-4">
+                    <tr key={enq.id} className="hover:bg-[#FFF5ED]/40 transition-colors">
+                      <td className="py-3.5 px-5">
                         <button
                           type="button"
                           onClick={() => setDetailEnquiryId(enq.id)}
@@ -744,176 +858,158 @@ export default function EnquiryManagement() {
                         >
                           {enq.id}
                         </button>
-                        <span className="text-[10px] text-[#172B50] opacity-60">
+                        <span className="text-[10px] text-[#172B50]/60 font-semibold block">
                           {enq.enquiryDate || enq.createdAt}
                         </span>
                       </td>
 
-                      {/* Lead Source Badge */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${srcCfg.badgeClass}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${srcCfg.dotClass}`} />
-                          <span>{src}</span>
-                        </span>
+                      {/* Lead Source Badge & Stage */}
+                      <td className="py-3.5 px-5 whitespace-nowrap">
+                        <div className="flex flex-col gap-1.5 items-start">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${srcCfg.badgeClass}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${srcCfg.dotClass}`} />
+                            <span>{src}</span>
+                          </span>
+                          {enq.stage && (
+                            <span className="text-[10px] font-bold text-[#172B50]/60 bg-[#172B5008] px-2 py-0.5 rounded-md border border-[#172B5010]">
+                              {enq.stage}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <span className="font-extrabold text-[#172B50] text-sm block">
                           {enq.childName}
                         </span>
-                        <span className="text-[11px] text-[#172B50] opacity-70">
+                        <span className="text-[11px] text-[#172B50]/70">
                           {enq.childAge} yrs {enq.gender ? `• ${enq.gender}` : ''}
                           {enq.dob ? ` • DOB ${enq.dob}` : ''}
                         </span>
                       </td>
 
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <div className="font-bold text-[#172B50]">{enq.parentName}</div>
-                        <div className="text-[11px] text-[#172B50] opacity-75">{enq.phone}</div>
-                        <div className="text-[10px] text-[#172B50] opacity-55 truncate max-w-[165px]">
+                        <div className="text-[11px] text-[#172B50]/75">{enq.phone}</div>
+                        <div className="text-[10px] text-[#172B50]/55 truncate max-w-[165px]">
                           {enq.email}
                         </div>
                       </td>
 
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-5">
                         <span className="text-[10px] text-[#F4510B] font-extrabold uppercase block">
                           {enq.center}
                         </span>
                         <span className="font-bold text-[#172B50] block">{enq.interestedProgram}</span>
                         {enq.preferredBatchName && (
-                          <span className="text-[10px] text-[#172B50] opacity-70">
+                          <span className="text-[10px] text-[#172B50]/70">
                             Batch: {enq.preferredBatchName}
                           </span>
                         )}
                       </td>
 
-                      <td className="py-3 px-4">
-                        <select
-                          value={enq.stage}
-                          disabled={enq.stage === 'Enrolled'}
-                          onChange={(e) => updateEnquiryStage(enq.id, e.target.value)}
-                          className={`text-[11px] font-extrabold px-2.5 py-1 rounded-lg border border-[#172B5025] outline-none ${
-                            enq.stage === 'Enrolled'
-                              ? 'bg-[#172B50] text-white cursor-not-allowed'
-                              : enq.stage === 'Interested' || enq.stage === 'Demo Scheduled'
-                              ? 'bg-[#F4510B] text-white cursor-pointer'
-                              : enq.stage === 'Demo Completed'
-                              ? 'bg-emerald-600 text-white cursor-pointer'
-                              : 'bg-[#FFF4E8] text-[#172B50] cursor-pointer'
-                          }`}
-                        >
-                          <option value="New">New</option>
-                          <option value="Follow-up">Follow-up</option>
-                          <option value="Interested">Interested</option>
-                          <option value="Demo Scheduled">Demo Scheduled</option>
-                          <option value="Demo Completed">Demo Completed</option>
-                          <option value="Demo Cancelled">Demo Cancelled</option>
-                          <option value="Demo No Show">Demo No Show</option>
-                          <option value="Trial Scheduled">Trial Scheduled</option>
-                          <option value="Trial Completed">Trial Completed</option>
-                          {enq.stage === 'Enrolled' && <option value="Enrolled">Enrolled</option>}
-                        </select>
-                      </td>
+                      <td className="py-3.5 px-5 text-right">
+                        <div className="inline-flex items-center justify-end gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setDetailEnquiryId(enq.id)}
+                            title="View Enquiry Details"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B501A] rounded-lg hover:border-[#F4510B] cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Details</span>
+                          </button>
 
-                    <td className="py-3 px-4 text-right">
-                      <div className="inline-flex items-center justify-end gap-1.5 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => setDetailEnquiryId(enq.id)}
-                          title="View Enquiry Details"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B501A] rounded-lg hover:border-[#F4510B] cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Details</span>
-                        </button>
-
-                        {enq.stage !== 'Enrolled' ? (
-                          <>
-                            {!enq.demoId ? (
+                          {enq.stage !== 'Enrolled' ? (
+                            <>
+                              {!enq.demoId ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenConvertDemo(enq)}
+                                  title="Convert Lead into Scheduled Demo Class"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-lg shadow-sm hover:bg-[#F4510B] transition-all cursor-pointer"
+                                >
+                                  <CalendarDays className="w-3.5 h-3.5" />
+                                  <span>Convert to Demo</span>
+                                </button>
+                              ) : (
+                                <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg">
+                                  Demo: {enq.demoId}
+                                </span>
+                              )}
                               <button
                                 type="button"
-                                onClick={() => handleOpenConvertDemo(enq)}
-                                title="Convert Lead into Scheduled Demo Class"
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-lg shadow-sm hover:bg-[#F4510B] transition-all cursor-pointer"
+                                onClick={() => handleOpenEditModal(enq)}
+                                title="Edit Enquiry"
+                                className="p-1.5 text-[#172B50] hover:bg-[#FFF4E8] rounded-lg cursor-pointer"
                               >
-                                <CalendarDays className="w-3.5 h-3.5" />
-                                <span>Convert to Demo</span>
+                                <Edit3 className="w-3.5 h-3.5" />
                               </button>
-                            ) : (
-                              <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg">
-                                Demo: {enq.demoId}
+                              <button
+                                type="button"
+                                onClick={() => openEnrollConfirmation(enq)}
+                                className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg shadow-sm hover:brightness-110 transition-all inline-flex items-center gap-1 cursor-pointer"
+                              >
+                                <UserPlus className="w-3.5 h-3.5" />
+                                <span>Enroll Student</span>
+                              </button>
+                            </>
+                          ) : (
+                            <div className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Enrolled</span>
                               </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditModal(enq)}
-                              title="Edit Enquiry"
-                              className="p-1.5 text-[#172B50] hover:bg-[#FFF4E8] rounded-lg cursor-pointer"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => openEnrollConfirmation(enq)}
-                              className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg shadow-sm hover:brightness-110 transition-all inline-flex items-center gap-1 cursor-pointer"
-                            >
-                              <UserPlus className="w-3.5 h-3.5" />
-                              <span>Enroll Student</span>
-                            </button>
-                          </>
-                        ) : (
-                          <div className="inline-flex items-center gap-1.5">
-                            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Enrolled</span>
-                            </span>
-                            {enq.enrolledStudentId && (
-                              <button
-                                type="button"
-                                onClick={() => navigateToPersonRecord('student', enq.enrolledStudentId)}
-                                className="text-[10px] font-extrabold text-[#F4510B] hover:underline cursor-pointer"
-                              >
-                                {enq.enrolledStudentId}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+                              {enq.enrolledStudentId && (
+                                <button
+                                  type="button"
+                                  onClick={() => navigateToPersonRecord('student', enq.enrolledStudentId)}
+                                  className="text-[10px] font-extrabold text-[#F4510B] hover:underline cursor-pointer"
+                                >
+                                  {enq.enrolledStudentId}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Footer */}
-        <div className="px-4 py-3 bg-[#FFF4E8]/60 border-t border-[#172B5015] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#172B50]">
-          <span className="font-semibold opacity-75">
-            Page {safePage} of {totalPages} • {filteredEnquiries.length} enquiry record
-            {filteredEnquiries.length === 1 ? '' : 's'}
-          </span>
-          <div className="flex items-center gap-1.5">
+        {/* 3. Pagination Footer (Matching Reference Image 1) */}
+        <div className="px-5 py-3.5 bg-white border-t border-[#172B5010] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#172B50]">
+          <div className="flex items-center gap-2 text-[#172B50]/70 font-semibold">
+            <div className="w-4 h-4 rounded-full border border-[#F4510B] text-[#F4510B] flex items-center justify-center text-[10px] font-black shrink-0">
+              i
+            </div>
+            <span>
+              Page {safePage} of {totalPages} • {filteredEnquiries.length} enquiry record
+              {filteredEnquiries.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={safePage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="px-2.5 py-1.5 rounded-lg border border-[#172B5020] bg-white font-bold text-[#172B50] disabled:opacity-40 hover:bg-[#FFF4E8] inline-flex items-center gap-1 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl border border-[#172B5020] bg-white text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Prev</span>
+              &lt; Prev
             </button>
             <button
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="px-2.5 py-1.5 rounded-lg border border-[#172B5020] bg-white font-bold text-[#172B50] disabled:opacity-40 hover:bg-[#FFF4E8] inline-flex items-center gap-1 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl border border-[#172B5020] bg-white text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
             >
-              <span>Next</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              Next &gt;
             </button>
           </div>
         </div>
