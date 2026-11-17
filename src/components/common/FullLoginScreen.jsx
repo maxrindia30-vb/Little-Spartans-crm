@@ -275,25 +275,6 @@ export default function FullLoginScreen() {
                   <ArrowRight className="w-4 h-4 text-white" />
                 </button>
               </form>
-
-              {/* 1-Click Fast Demo Launcher */}
-              <div className="mt-5 pt-4 border-t border-[#172B5015]">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#172B50] opacity-60 block mb-2">
-                  Instant Demo Shortcuts:
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {Object.values(roleConfigs).map(r => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => handleInstantDemoLogin(r.id)}
-                      className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-[#FFF4E8] hover:bg-[#172B50] hover:text-white text-[#172B50] border border-[#172B5015] transition-colors truncate"
-                    >
-                      {r.roleLabel.replace(' Portal', '')}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             <div className="text-[11px] text-[#172B50] opacity-60 text-center pt-2">
