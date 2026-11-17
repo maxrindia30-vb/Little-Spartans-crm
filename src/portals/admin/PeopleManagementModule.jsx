@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   GraduationCap, 
@@ -29,6 +29,7 @@ import { getCommonLocations } from '../../services/locationService';
 export default function PeopleManagementModule() {
   const { 
     data, 
+    currentView,
     activeSubTab, 
     setActiveSubTab, 
     createAccount, 
@@ -39,7 +40,16 @@ export default function PeopleManagementModule() {
   const commonLocations = getCommonLocations(data);
 
   // Active tab: 'students' | 'parents' | 'coaches' | 'accounts'
-  const currentTab = activeSubTab || 'students';
+  // Defaults directly to 'students' when entering People Management
+  const currentTab = currentView === 'students' 
+    ? 'students' 
+    : (['students', 'parents', 'coaches', 'accounts'].includes(activeSubTab) ? activeSubTab : 'students');
+
+  useEffect(() => {
+    if (!activeSubTab || currentView === 'students') {
+      setActiveSubTab('students');
+    }
+  }, [currentView, activeSubTab, setActiveSubTab]);
 
   // Account creation modal state
   const [isCreateAccountOpen, setIsCreateAccountOpen] = useState(false);

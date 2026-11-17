@@ -37,7 +37,7 @@ import { getCommonLocations } from '../../services/locationService';
 import { calculateDemoMetrics } from '../../services/demoService';
 
 export default function AdminDashboard() {
-  const { data, setCurrentView, addStudent, addEnquiry, addPayment, addToast } = useCrm();
+  const { data, setCurrentView, setActiveSubTab, addStudent, addEnquiry, addPayment, addToast } = useCrm();
   const commonLocations = getCommonLocations(data);
 
   const [modalType, setModalType] = useState(null); // 'student' | 'enquiry' | 'payment'
@@ -311,7 +311,10 @@ export default function AdminDashboard() {
 
           {/* 3. Profile */}
           <div 
-            onClick={() => setCurrentView('people')}
+            onClick={() => {
+              setCurrentView('people');
+              if (setActiveSubTab) setActiveSubTab('students');
+            }}
             className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
             title="Admin Profile"
           >
@@ -833,7 +836,10 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setCurrentView('people')}
+                          onClick={() => {
+                            setCurrentView('people');
+                            if (setActiveSubTab) setActiveSubTab('students');
+                          }}
                           className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
                           title="View Profile"
                         >
@@ -853,7 +859,10 @@ export default function AdminDashboard() {
               </span>
               <button
                 type="button"
-                onClick={() => setCurrentView('people')}
+                onClick={() => {
+                  setCurrentView('people');
+                  if (setActiveSubTab) setActiveSubTab('students');
+                }}
                 className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
               >
                 <span>View All ({allStudents.length})</span>
@@ -1323,7 +1332,10 @@ export default function AdminDashboard() {
                 {/* Tile 1: Coaches & Staff (Featured dark blue tile) */}
                 <button
                   type="button"
-                  onClick={() => setCurrentView('people')}
+                  onClick={() => {
+                    setCurrentView('people');
+                    if (setActiveSubTab) setActiveSubTab('coaches');
+                  }}
                   className="bg-[#0B3B60] text-white rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
                 >
                   <div className="w-8.5 h-8.5 rounded-xl bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
@@ -1398,7 +1410,10 @@ export default function AdminDashboard() {
             </span>
             <button
               type="button"
-              onClick={() => setCurrentView('people')}
+              onClick={() => {
+                setCurrentView('people');
+                if (setActiveSubTab) setActiveSubTab('students');
+              }}
               className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
             >
               <span>View All ({(data.coaches?.length || 6) + (commonLocations?.length || 5)})</span>

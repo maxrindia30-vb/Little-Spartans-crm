@@ -118,8 +118,15 @@ export function CrmProvider({ children }) {
   });
 
   // Active module view within portal
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [activeSubTab, setActiveSubTab] = useState('');
+  const [currentView, setCurrentViewRaw] = useState('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState('students');
+
+  const setCurrentView = (view) => {
+    setCurrentViewRaw(view);
+    if (view === 'people' || view === 'students') {
+      setActiveSubTab('students');
+    }
+  };
   
   // Search query in top navbar
   const [globalSearch, setGlobalSearch] = useState('');
@@ -2378,7 +2385,11 @@ export function CrmProvider({ children }) {
 
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
-    if (subTab) setActiveSubTab(subTab);
+    if (subTab) {
+      setActiveSubTab(subTab);
+    } else if (view === 'people' || view === 'students') {
+      setActiveSubTab('students');
+    }
     setSidebarOpen(false);
   };
 

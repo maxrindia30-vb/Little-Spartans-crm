@@ -556,6 +556,9 @@ export default function Sidebar() {
                 key={item.id}
                 type="button"
                 onClick={(e) => {
+                  if (item.id === 'people' && setActiveSubTab) {
+                    setActiveSubTab('students');
+                  }
                   if (item.id === 'programs' && setActiveSubTab) {
                     const validProgramTabs = ['sports_programs', 'batches', 'schedules', 'coach_assignments'];
                     if (!validProgramTabs.includes(activeSubTab)) {

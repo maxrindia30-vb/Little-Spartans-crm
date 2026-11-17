@@ -13,7 +13,7 @@ const PIPELINE_STEPS = [
 ];
 
 export default function AdmissionPipelineStepper({ activeStep = 'enrolled', onStepClick, className = '' }) {
-  const { data, setCurrentView } = useCrm();
+  const { data, setCurrentView, setActiveSubTab } = useCrm();
 
   const enquiriesCount = (data.enquiries || []).length;
   const demosCount = (data.demos || []).length;
@@ -63,7 +63,10 @@ export default function AdmissionPipelineStepper({ activeStep = 'enrolled', onSt
                   } else {
                     if (idx <= 2) setCurrentView('enquiries');
                     else if (idx === 3) setCurrentView('demos');
-                    else setCurrentView('people');
+                    else {
+                      setCurrentView('people');
+                      if (setActiveSubTab) setActiveSubTab('students');
+                    }
                   }
                 }}
                 title={step.desc}
