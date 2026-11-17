@@ -5,6 +5,7 @@ import {
   MapPin,
   Edit3,
   Power,
+  Trash2,
   UserPlus,
   UserMinus,
   ArrowUpCircle,
@@ -24,6 +25,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
     createBatch,
     updateBatch,
     toggleBatchStatus,
+    deleteBatch,
     updateBatchEnrollment,
   } = useCrm();
 
@@ -429,7 +431,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-[#172B50] text-white hover:bg-[#F4510B] transition-colors cursor-pointer"
                     >
-                      <Users className="w-3.5 h-3.5" /> Students & Waitlist
+                      <Users className="w-3.5 h-3.5" /> Students
                     </button>
                     <button
                       type="button"
@@ -440,10 +442,15 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => toggleBatchStatus(batch.id)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 hover:bg-amber-100 cursor-pointer"
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to remove batch "${batch.name}"?`)) {
+                          deleteBatch(batch.id);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 transition-colors cursor-pointer"
+                      title="Remove Batch"
                     >
-                      <Power className="w-3 h-3" /> {bStatus === 'Inactive' ? 'Activate' : 'Deactivate'}
+                      <Trash2 className="w-3 h-3 text-rose-600" /> Remove
                     </button>
                   </div>
 
@@ -604,11 +611,11 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
         </form>
       </Modal>
 
-      {/* Manage Enrolled Students & Waitlist Modal */}
+      {/* Manage Enrolled Students Modal */}
       <Modal
         isOpen={Boolean(managingBatch)}
         onClose={() => setManagingBatchId(null)}
-        title={managingBatch ? `Roster & Waitlist: ${managingBatch.name}` : 'Roster'}
+        title={managingBatch ? `Students: ${managingBatch.name}` : 'Students'}
         subtitle={
           managingBatch
             ? `Showing athletes registered exclusively at ${managingBatch.center} • Capacity: ${managingBatch.capacity}`

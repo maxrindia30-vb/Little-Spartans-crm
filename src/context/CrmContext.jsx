@@ -1935,6 +1935,17 @@ export function CrmProvider({ children }) {
     return { success: true, status: nextStatus };
   };
 
+  const deleteBatch = (id) => {
+    const existing = (data.classes || []).find((c) => c.id === id);
+    if (!existing) return { success: false };
+    setData((prev) => ({
+      ...prev,
+      classes: (prev.classes || []).filter((c) => c.id !== id),
+    }));
+    addToast(`Training Batch "${existing.name}" removed successfully.`, 'info');
+    return { success: true };
+  };
+
   const updateBatchEnrollment = (batchId, { enrolledStudentIds, waitlistStudentIds }) => {
     const batch = (data.classes || []).find((c) => c.id === batchId);
     if (!batch) {
@@ -2492,6 +2503,7 @@ export function CrmProvider({ children }) {
         createBatch,
         updateBatch,
         toggleBatchStatus,
+        deleteBatch,
         updateBatchEnrollment,
         assignCoachesToBatch,
         // Super Coach & Sports Equipment Management Actions
