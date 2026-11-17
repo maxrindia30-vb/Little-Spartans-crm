@@ -89,11 +89,10 @@ const submenuConfig = {
     ]
   },
 
-  // 4. Programs & Classes (Sports Programs, Batches, Class Schedules, Coach Assignments)
+  // 4. Programs & Classes (Batches, Class Schedules, Coach Assignments)
   programs: {
     title: 'Programs & Classes',
     items: [
-      { parentId: 'programs', subTab: 'sports_programs', label: 'Sports Programs', desc: 'Programs, age groups, duration & locations', icon: Calendar },
       { parentId: 'programs', subTab: 'batches', label: 'Training Batches', desc: 'Capacities, enrolled athletes & waitlists', icon: Users },
       { parentId: 'programs', subTab: 'schedules', label: 'Class Schedules', desc: 'Daily, weekly & calendar timetable', icon: Clock },
       { parentId: 'programs', subTab: 'coach_assignments', label: 'Coach Assignments', desc: 'Lead & assistant trainer allocations', icon: UserCheck },
@@ -559,9 +558,9 @@ export default function Sidebar() {
                     setActiveSubTab('students');
                   }
                   if (item.id === 'programs' && setActiveSubTab) {
-                    const validProgramTabs = ['sports_programs', 'batches', 'schedules', 'coach_assignments'];
+                    const validProgramTabs = ['batches', 'schedules', 'coach_assignments'];
                     if (!validProgramTabs.includes(activeSubTab)) {
-                      setActiveSubTab('sports_programs');
+                      setActiveSubTab('batches');
                     }
                   }
                   setCurrentView(item.id);

@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
 import { Calendar, Users, Clock, UserCheck } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
-import SportsProgramsPage from './programs/SportsProgramsPage';
 import TrainingBatchesPage from './programs/TrainingBatchesPage';
 import ClassSchedulesPage from './programs/ClassSchedulesPage';
 import CoachAssignmentsPage from './programs/CoachAssignmentsPage';
 
 const MODULE_TABS = [
-  { id: 'sports_programs', label: 'Sports Programs', icon: Calendar },
   { id: 'batches', label: 'Training Batches', icon: Users },
   { id: 'schedules', label: 'Class Schedules', icon: Clock },
   { id: 'coach_assignments', label: 'Coach Assignments', icon: UserCheck },
@@ -18,11 +16,11 @@ export default function ProgramsClassesModule() {
 
   const resolvedTab = MODULE_TABS.some((t) => t.id === activeSubTab)
     ? activeSubTab
-    : currentView === 'batches'
-    ? 'batches'
     : currentView === 'schedules'
     ? 'schedules'
-    : 'sports_programs';
+    : currentView === 'coach_assignments'
+    ? 'coach_assignments'
+    : 'batches';
 
   useEffect(() => {
     if (activeSubTab !== resolvedTab && setActiveSubTab) {
@@ -66,9 +64,6 @@ export default function ProgramsClassesModule() {
       </div>
 
       {/* Dedicated Management Page per Module */}
-      {resolvedTab === 'sports_programs' && (
-        <SportsProgramsPage onNavigateModule={(targetTab) => setActiveSubTab(targetTab)} />
-      )}
       {resolvedTab === 'batches' && (
         <TrainingBatchesPage onNavigateModule={(targetTab) => setActiveSubTab(targetTab)} />
       )}
