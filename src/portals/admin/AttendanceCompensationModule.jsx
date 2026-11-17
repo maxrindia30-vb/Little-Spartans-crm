@@ -16,7 +16,8 @@ import {
   Eye,
   Edit3,
   Ban,
-  MapPin
+  MapPin,
+  Users
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import { getCommonLocations } from '../../services/locationService';
