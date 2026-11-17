@@ -57,12 +57,11 @@ export default function App() {
       case 'demos':
         return <DemoManagementModule />;
 
-      // 3. People Management (Students, Parents, Coaches, Account Management)
+      // 3. People Management (Students, Parents, Coaches)
       case 'people':
       case 'students':
       case 'parents':
       case 'coaches':
-      case 'accounts':
         return <PeopleManagementModule />;
 
       // 4. Programs & Classes (Sports Programs, Batches, Class Schedules, Coach Assignments)
@@ -98,9 +97,11 @@ export default function App() {
       case 'announcements':
         return <CommunicationModule />;
 
-      // 9. Access Management (User Governance, Location Access, Roles & Permissions, Activity History)
+      // 9. Access Management (User Governance, Location Access, Roles & Permissions, Activity History, Accounts)
       case 'access_management':
       case 'access':
+      case 'accounts':
+      case 'users':
         return <AccessManagementModule />;
 
       // 10. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)

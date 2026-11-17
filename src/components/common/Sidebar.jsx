@@ -79,14 +79,13 @@ const submenuConfig = {
     ]
   },
 
-  // 3. People Management (Students, Parents, Coaches, Account Management)
+  // 3. People Management (Students, Parents, Coaches)
   people: {
     title: 'People Management',
     items: [
       { parentId: 'people', subTab: 'students', label: 'Students Roster', desc: 'Full active roster, contacts & medical records', icon: GraduationCap },
       { parentId: 'people', subTab: 'parents', label: 'Parents Directory', desc: 'Guardian records & linked children', icon: Users },
       { parentId: 'people', subTab: 'coaches', label: 'Coaching Roster', desc: 'Head coaches & discipline specialists', icon: UserCheck },
-      { parentId: 'people', subTab: 'accounts', label: 'Admin-Only Accounts', desc: 'Create credentials & temp passwords (No public signup)', icon: ShieldCheck },
     ]
   },
 
@@ -160,7 +159,7 @@ const submenuConfig = {
     title: 'Access Management',
     items: [
       { parentId: 'access_management', subTab: 'overview', label: 'Access Overview', desc: 'KPI summaries & active account directory', icon: ShieldCheck },
-      { parentId: 'access_management', subTab: 'users', label: 'User Accounts', desc: 'Manage Admin, Coach & Parent accounts', icon: Users },
+      { parentId: 'access_management', subTab: 'accounts', label: 'Accounts', desc: 'Manage Admin, Coach & Parent accounts and logins', icon: ShieldCheck },
       { parentId: 'access_management', subTab: 'locations', label: 'Location Access', desc: 'Multi-center clearances & linked entities', icon: MapPin },
       { parentId: 'access_management', subTab: 'permissions', label: 'Roles & Permissions', desc: '13-module RBAC clearance matrix', icon: CheckSquare },
       { parentId: 'access_management', subTab: 'activity', label: 'Activity History', desc: 'Audit log of logins, role updates & actions', icon: History },

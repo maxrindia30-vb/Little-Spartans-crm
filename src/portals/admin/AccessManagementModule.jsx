@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   ShieldCheck, 
@@ -423,10 +423,22 @@ const INITIAL_ACTIVITY_LOGS = [
 ];
 
 export default function AccessManagementModule() {
-  const { addToast } = useCrm();
+  const { activeSubTab, setActiveSubTab, addToast } = useCrm();
 
-  // Active module tab: 'overview' | 'users' | 'locations' | 'permissions' | 'activity'
-  const [activeTab, setActiveTab] = useState('overview');
+  // Active module tab: 'overview' | 'accounts' | 'locations' | 'permissions' | 'activity'
+  const [activeTab, setActiveTab] = useState(() => {
+    if (activeSubTab === 'accounts' || activeSubTab === 'users') return 'accounts';
+    if (activeSubTab && ['overview', 'locations', 'permissions', 'activity'].includes(activeSubTab)) return activeSubTab;
+    return 'overview';
+  });
+
+  useEffect(() => {
+    if (activeSubTab === 'accounts' || activeSubTab === 'users') {
+      setActiveTab('accounts');
+    } else if (activeSubTab && ['overview', 'locations', 'permissions', 'activity'].includes(activeSubTab)) {
+      setActiveTab(activeSubTab);
+    }
+  }, [activeSubTab]);
 
   // User list state
   const [users, setUsers] = useState(INITIAL_USERS);
@@ -859,7 +871,7 @@ export default function AccessManagementModule() {
             className="px-4 py-2 rounded-xl bg-[#F4510B] text-white text-xs font-extrabold flex items-center gap-2 hover:bg-[#d94406] shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4 text-white stroke-[2.5]" />
-            <span>Add User</span>
+            <span>Add Account</span>
           </button>
         </div>
       </div>
@@ -870,7 +882,7 @@ export default function AccessManagementModule() {
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-[#172B500C]">
         {[
           { id: 'overview', label: 'Access Overview', icon: ShieldCheck, badge: null },
-          { id: 'users', label: 'User Accounts', icon: Users, badge: users.length },
+          { id: 'accounts', label: 'Accounts', icon: ShieldCheck, badge: users.length },
           { id: 'locations', label: 'Location Access', icon: MapPin, badge: ACADEMY_CENTERS.length },
           { id: 'permissions', label: 'Roles & Permissions', icon: CheckSquare, badge: '13 Modules' },
           { id: 'activity', label: 'Activity History', icon: History, badge: activityLogs.length }
@@ -911,7 +923,7 @@ export default function AccessManagementModule() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
             {/* Total Accounts */}
             <div 
-              onClick={() => { setActiveTab('users'); setStatusFilter('ALL'); }}
+              onClick={() => { setActiveTab('accounts'); setStatusFilter('ALL'); }}
               className="bg-white rounded-[22px] p-4.5 border border-[#172B5012] shadow-2xs flex flex-col justify-between hover:border-[#172B5030] transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">
@@ -928,7 +940,7 @@ export default function AccessManagementModule() {
 
             {/* Active Accounts */}
             <div 
-              onClick={() => { setActiveTab('users'); setStatusFilter('Active'); }}
+              onClick={() => { setActiveTab('accounts'); setStatusFilter('Active'); }}
               className="bg-gradient-to-br from-[#F0FDF4] to-white rounded-[22px] p-4.5 border border-[#BBF7D0] shadow-2xs flex flex-col justify-between hover:border-[#16A34A] transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">
@@ -945,7 +957,7 @@ export default function AccessManagementModule() {
 
             {/* Inactive Accounts */}
             <div 
-              onClick={() => { setActiveTab('users'); setStatusFilter('Inactive'); }}
+              onClick={() => { setActiveTab('accounts'); setStatusFilter('Inactive'); }}
               className="bg-gradient-to-br from-[#F8FAFC] to-white rounded-[22px] p-4.5 border border-[#CBD5E1] shadow-2xs flex flex-col justify-between hover:border-[#64748B] transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">
@@ -962,7 +974,7 @@ export default function AccessManagementModule() {
 
             {/* Pending Invitations */}
             <div 
-              onClick={() => { setActiveTab('users'); setStatusFilter('Pending'); }}
+              onClick={() => { setActiveTab('accounts'); setStatusFilter('Pending'); }}
               className="bg-gradient-to-br from-[#FEFCE8] to-white rounded-[22px] p-4.5 border border-[#FDE68A] shadow-2xs flex flex-col justify-between hover:border-[#D97706] transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">
@@ -979,7 +991,7 @@ export default function AccessManagementModule() {
 
             {/* Suspended Accounts */}
             <div 
-              onClick={() => { setActiveTab('users'); setStatusFilter('Suspended'); }}
+              onClick={() => { setActiveTab('accounts'); setStatusFilter('Suspended'); }}
               className="bg-gradient-to-br from-[#FFF1F2] to-white rounded-[22px] p-4.5 border border-[#FECDD3] shadow-2xs flex flex-col justify-between hover:border-[#E11D48] transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">
@@ -1004,7 +1016,7 @@ export default function AccessManagementModule() {
               </div>
               <button
                 type="button"
-                onClick={() => setActiveTab('users')}
+                onClick={() => setActiveTab('accounts')}
                 className="text-xs font-black text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
               >
                 <span>View Full Management Table ({users.length})</span>
@@ -1097,7 +1109,7 @@ export default function AccessManagementModule() {
       {/* ============================================================ */}
       {/* 4. TAB 2: FULL USER ACCOUNTS DIRECTORY                       */}
       {/* ============================================================ */}
-      {activeTab === 'users' && (
+      {(activeTab === 'accounts' || activeTab === 'users') && (
         <div className="space-y-4">
           {/* Search & Filter Toolbar */}
           <div className="bg-white rounded-2xl p-4 border border-[#172B5012] shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
