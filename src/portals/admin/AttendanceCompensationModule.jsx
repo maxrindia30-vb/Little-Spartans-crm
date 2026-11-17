@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   CalendarCheck, 
   UserCheck, 
@@ -55,8 +55,21 @@ export default function AttendanceCompensationModule() {
   const activeLocations = getCommonLocations(data);
   const todayYmd = new Date().toISOString().split('T')[0];
 
-  // Active subtab: 'student_attendance' | 'coach_attendance' | 'student_compensation' | 'coach_compensation' | 'compensation_history'
-  const currentTab = activeSubTab || 'student_attendance';
+  // Resolve active subtab with resilient fallback to student_attendance
+  const resolveTab = (tab) => {
+    if (tab === 'student_att' || tab === 'student_attendance' || tab === 'attendance') return 'student_attendance';
+    if (tab === 'coach_att' || tab === 'coach_attendance') return 'coach_attendance';
+    if (tab === 'student_comp' || tab === 'student_compensation' || tab === 'compensation') return 'student_compensation';
+    return 'student_attendance';
+  };
+
+  const currentTab = resolveTab(activeSubTab);
+
+  useEffect(() => {
+    if (activeSubTab !== currentTab && setActiveSubTab) {
+      setActiveSubTab(currentTab);
+    }
+  }, [activeSubTab, currentTab, setActiveSubTab]);
 
   // Student Compensation Filters
   const [compSearch, setCompSearch] = useState('');

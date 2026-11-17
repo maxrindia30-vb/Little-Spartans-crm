@@ -935,7 +935,10 @@ export default function AdminDashboard() {
                   {/* Tile 2: Attendance */}
                   <button
                     type="button"
-                    onClick={() => setCurrentView('attendance_compensation')}
+                    onClick={() => {
+                      if (setActiveSubTab) setActiveSubTab('student_attendance');
+                      setCurrentView('attendance_compensation');
+                    }}
                     className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
                   >
                     <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">

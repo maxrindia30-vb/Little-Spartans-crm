@@ -103,11 +103,9 @@ const submenuConfig = {
   attendance_compensation: {
     title: 'Attendance & Compensation',
     items: [
-      { parentId: 'attendance_compensation', subTab: 'student_att', label: 'Student Attendance', desc: 'Daily check-in register & absence alerts', icon: CalendarCheck },
-      { parentId: 'attendance_compensation', subTab: 'coach_att', label: 'Coach Attendance', desc: 'Staff check-ins & arena punch-ins', icon: UserCheck },
-      { parentId: 'attendance_compensation', subTab: 'student_comp', label: 'Student Compensation', desc: 'Book replacement slots for missed classes', icon: RefreshCw },
-      { parentId: 'attendance_compensation', subTab: 'coach_comp', label: 'Coach Compensation', desc: 'Substitute coverage & payout logs', icon: Clock },
-      { parentId: 'attendance_compensation', subTab: 'audit', label: 'Compensation History', desc: 'Audit log of past approvals & credits', icon: History },
+      { parentId: 'attendance_compensation', subTab: 'student_attendance', label: 'Student Attendance', desc: 'Daily check-in register & absence alerts', icon: CalendarCheck },
+      { parentId: 'attendance_compensation', subTab: 'coach_attendance', label: 'Coach Attendance', desc: 'Staff check-ins & arena punch-ins', icon: UserCheck },
+      { parentId: 'attendance_compensation', subTab: 'student_compensation', label: 'Student Compensation', desc: 'Book replacement slots for missed classes', icon: RefreshCw },
     ]
   },
 
@@ -561,6 +559,12 @@ export default function Sidebar() {
                     const validProgramTabs = ['batches', 'schedules', 'coach_assignments'];
                     if (!validProgramTabs.includes(activeSubTab)) {
                       setActiveSubTab('batches');
+                    }
+                  }
+                  if ((item.id === 'attendance_compensation' || item.id === 'attendance') && setActiveSubTab) {
+                    const validAttendanceTabs = ['student_attendance', 'coach_attendance', 'student_compensation'];
+                    if (!validAttendanceTabs.includes(activeSubTab)) {
+                      setActiveSubTab('student_attendance');
                     }
                   }
                   setCurrentView(item.id);
