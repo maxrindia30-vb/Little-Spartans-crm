@@ -35,6 +35,7 @@ export default function AttendanceManagement() {
   const [selectedProgram, setSelectedProgram] = useState('All');
   const [selectedBatchId, setSelectedBatchId] = useState('All');
   const [selectedCoach, setSelectedCoach] = useState('All');
+  const [selectedStatus, setSelectedStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
@@ -165,9 +166,14 @@ export default function AttendanceManagement() {
   const attendancePct = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0;
   const dirtyRowsCount = studentRows.filter(r => r.isDirty).length;
 
-  const totalPages = Math.max(1, Math.ceil(studentRows.length / pageSize));
+  const displayedRows = useMemo(() => {
+    if (selectedStatus === 'All') return studentRows;
+    return studentRows.filter(r => r.currentStatus === selectedStatus);
+  }, [studentRows, selectedStatus]);
+
+  const totalPages = Math.max(1, Math.ceil(displayedRows.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedRows = studentRows.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const paginatedRows = displayedRows.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const handleStageStatus = (row, status) => {
     setDraftStatuses(prev => ({
@@ -401,12 +407,94 @@ export default function AttendanceManagement() {
             </div>
           </div>
         </div>
+
+        {/* Secondary Row: Sports Program, Coach & Status Dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-[#172B500E]">
+          {/* Sports Program */}
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1.5">
+              Sports Program
+            </label>
+            <div className="relative flex items-center bg-[#FFF4E8]/60 border border-[#172B5014] rounded-full px-3.5 py-2 hover:border-[#F4510B]/40 transition-all">
+              <Layers className="w-4 h-4 text-[#F4510B] shrink-0" />
+              <select
+                aria-label="Filter by program"
+                value={selectedProgram}
+                onChange={(e) => {
+                  setSelectedProgram(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-transparent border-0 text-xs sm:text-sm font-bold text-[#172B50] pl-2 pr-6 outline-none appearance-none cursor-pointer"
+              >
+                <option value="All">All Sports Programs</option>
+                {availablePrograms.map(p => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#172B50]/60 shrink-0 pointer-events-none absolute right-3.5" />
+            </div>
+          </div>
+
+          {/* Assigned Coach */}
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1.5">
+              Assigned Coach
+            </label>
+            <div className="relative flex items-center bg-[#FFF4E8]/60 border border-[#172B5014] rounded-full px-3.5 py-2 hover:border-[#F4510B]/40 transition-all">
+              <User className="w-4 h-4 text-[#F4510B] shrink-0" />
+              <select
+                aria-label="Filter by coach"
+                value={selectedCoach}
+                onChange={(e) => {
+                  setSelectedCoach(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-transparent border-0 text-xs sm:text-sm font-bold text-[#172B50] pl-2 pr-6 outline-none appearance-none cursor-pointer"
+              >
+                <option value="All">All Coaches</option>
+                {availableCoaches.map(c => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#172B50]/60 shrink-0 pointer-events-none absolute right-3.5" />
+            </div>
+          </div>
+
+          {/* Attendance Status */}
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1.5">
+              Attendance Status
+            </label>
+            <div className="relative flex items-center bg-[#FFF4E8]/60 border border-[#172B5014] rounded-full px-3.5 py-2 hover:border-[#F4510B]/40 transition-all">
+              <Check className="w-4 h-4 text-[#F4510B] shrink-0" />
+              <select
+                aria-label="Filter by status"
+                value={selectedStatus}
+                onChange={(e) => {
+                  setSelectedStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-transparent border-0 text-xs sm:text-sm font-bold text-[#172B50] pl-2 pr-6 outline-none appearance-none cursor-pointer"
+              >
+                <option value="All">All Statuses</option>
+                <option value={ATTENDANCE_STATUSES.PRESENT}>Present</option>
+                <option value={ATTENDANCE_STATUSES.ABSENT}>Absent</option>
+                <option value={ATTENDANCE_STATUSES.NOT_MARKED}>Not Marked</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#172B50]/60 shrink-0 pointer-events-none absolute right-3.5" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 2. All Locations Student Register Table Card */}
       <div className="bg-white rounded-3xl border border-[#172B5014] shadow-xs overflow-hidden">
         {/* Table Subheader */}
-        <div className="px-5 py-4 border-b border-[#172B5012] bg-[#FFF4E8]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-[#172B5012] bg-[#FFF4E8]/40 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#FFF0E6] flex items-center justify-center shrink-0">
               <Layers className="w-5 h-5 text-[#F4510B]" />
@@ -428,12 +516,62 @@ export default function AttendanceManagement() {
             </div>
           </div>
 
-          {/* Turnout Pill */}
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B25] self-start sm:self-auto shadow-2xs">
-            <Users className="w-3.5 h-3.5 text-[#F4510B]" />
-            <span>
-              {attendancePct}% Turnout ({presentCount}/{totalStudents})
-            </span>
+          {/* Status Filter Pills & Turnout Badge */}
+          <div className="flex items-center flex-wrap gap-2.5">
+            <div className="inline-flex items-center bg-white p-1 rounded-full border border-[#172B5014] shadow-2xs gap-1">
+              <button
+                type="button"
+                onClick={() => { setSelectedStatus('All'); setCurrentPage(1); }}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  selectedStatus === 'All'
+                    ? 'bg-[#172B50] text-white shadow-2xs'
+                    : 'text-[#172B50]/70 hover:text-[#172B50]'
+                }`}
+              >
+                All ({totalStudents})
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedStatus(ATTENDANCE_STATUSES.PRESENT); setCurrentPage(1); }}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  selectedStatus === ATTENDANCE_STATUSES.PRESENT
+                    ? 'bg-emerald-600 text-white shadow-2xs'
+                    : 'text-emerald-700/80 hover:text-emerald-800'
+                }`}
+              >
+                Present ({presentCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedStatus(ATTENDANCE_STATUSES.ABSENT); setCurrentPage(1); }}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  selectedStatus === ATTENDANCE_STATUSES.ABSENT
+                    ? 'bg-[#F4510B] text-white shadow-2xs'
+                    : 'text-[#F4510B]/80 hover:text-[#F4510B]'
+                }`}
+              >
+                Absent ({absentCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedStatus(ATTENDANCE_STATUSES.NOT_MARKED); setCurrentPage(1); }}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  selectedStatus === ATTENDANCE_STATUSES.NOT_MARKED
+                    ? 'bg-slate-600 text-white shadow-2xs'
+                    : 'text-slate-600/80 hover:text-slate-800'
+                }`}
+              >
+                Not Marked ({notMarkedCount})
+              </button>
+            </div>
+
+            {/* Turnout Pill */}
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B25] shadow-2xs">
+              <Users className="w-3.5 h-3.5 text-[#F4510B]" />
+              <span>
+                {attendancePct}% Turnout ({presentCount}/{totalStudents})
+              </span>
+            </div>
           </div>
         </div>
 
@@ -667,7 +805,8 @@ export default function AttendanceManagement() {
         {/* Pagination Footer */}
         <div className="px-5 py-3.5 bg-[#FFF4E8]/40 border-t border-[#172B5012] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#172B50]">
           <span className="font-semibold opacity-75">
-            Page {safePage} of {totalPages} • {studentRows.length} athlete{studentRows.length === 1 ? '' : 's'}
+            Page {safePage} of {totalPages} • {displayedRows.length} athlete{displayedRows.length === 1 ? '' : 's'}
+            {selectedStatus !== 'All' ? ` (${selectedStatus})` : ''}
           </span>
           <div className="flex items-center gap-1.5">
             <button

@@ -112,7 +112,7 @@ export default function CoachPortalView() {
   const [coachAttBatchId, setCoachAttBatchId] = useState(coachAssignedBatches[0]?.id || '');
   const [coachAttDate, setCoachAttDate] = useState('2026-11-11');
   const [coachAttDrafts, setCoachAttDrafts] = useState({});
-  const [coachAttSubView, setCoachAttSubView] = useState('register');
+  const [coachAttSubView, setCoachAttSubView] = useState('mark_session');
 
   const effectiveCoachLocation =
     coachAttLocation && coachAssignedLocations.includes(coachAttLocation)

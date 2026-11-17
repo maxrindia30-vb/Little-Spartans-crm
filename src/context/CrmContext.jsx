@@ -90,6 +90,8 @@ export function CrmProvider({ children }) {
           demos: Array.isArray(parsed.demos) && parsed.demos.length > 0 ? parsed.demos : (initialAcademyData.demos || []),
           classSchedules: Array.isArray(parsed.classSchedules) ? parsed.classSchedules : initialAcademyData.classSchedules,
           attendanceRecords: Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
+          compensationRequests: Array.isArray(parsed.compensationRequests) ? parsed.compensationRequests : (initialAcademyData.compensationRequests || []),
+          compensationHistory: Array.isArray(parsed.compensationHistory) ? parsed.compensationHistory : (initialAcademyData.compensationHistory || []),
           notifications: Array.isArray(parsed.notifications) ? parsed.notifications : (initialAcademyData.notifications || []),
           superCoaches: Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : initialAcademyData.superCoaches,
           equipment: Array.isArray(parsed.equipment) && parsed.equipment.length > 0 ? parsed.equipment : initialEquipmentInventory,
@@ -555,6 +557,12 @@ export function CrmProvider({ children }) {
       ? (coachProfile?.name || 'Coach')
       : 'Commander Vikramaditya (Admin)';
 
+    // Map existing records to detect edits
+    const prevMap = new Map();
+    (data.attendanceRecords || []).forEach(r => {
+      prevMap.set(`${r.date}::${r.batchId}::${r.studentId}`, r);
+    });
+
     const result = upsertBatchAttendanceRecords(data.attendanceRecords || [], {
       entries,
       date,
@@ -573,13 +581,115 @@ export function CrmProvider({ children }) {
       return result;
     }
 
+    const newNotifications = [];
+    const newHistoryLogs = [];
+    let updatedCompensationRequests = [...(data.compensationRequests || [])];
+
+    entries.forEach(entry => {
+      const student = (data.students || []).find(s => s.id === entry.studentId);
+      if (!student) return;
+
+      const prevRec = prevMap.get(`${date}::${entry.batchId || batchId}::${entry.studentId}`);
+      const prevStatus = prevRec?.status;
+
+      // 1. When marked Absent (by Coach or Admin)
+      if (entry.status === 'Absent') {
+        const notif = createNotificationRecord({
+          targetRole: 'parent',
+          targetParentId: student.parentId || '',
+          targetLocation: student.center,
+          title: `Absence Recorded: ${student.name}`,
+          message: `Your child ${student.name} was absent on ${date}. You may submit a compensation request in the Parent Portal.`,
+          type: 'warning',
+        });
+        newNotifications.push(notif);
+
+        newHistoryLogs.push({
+          id: `HIST-${Date.now()}-${student.id}-${Math.random().toString(36).slice(2, 6)}`,
+          timestamp: new Date().toISOString(),
+          type: prevStatus ? 'Attendance Edited' : 'Attendance Marked',
+          studentId: student.id,
+          studentName: student.name,
+          parentName: student.parentName || '',
+          location: student.center,
+          program: student.program || '',
+          date,
+          details: `Marked Absent by ${markedBy}`,
+          actor: markedBy,
+          role: currentPortal === 'coach' ? 'Coach' : 'Admin',
+          status: 'Absent',
+        });
+      }
+      // 2. When edited from Absent to Present by Admin (Rule 8)
+      else if (prevStatus === 'Absent' && entry.status === 'Present') {
+        updatedCompensationRequests = updatedCompensationRequests.map(req => {
+          if (req.studentId === student.id && req.missedDate === date && req.status === 'Pending') {
+            return {
+              ...req,
+              status: 'Cancelled',
+              adminNotes: 'Attendance was updated from Absent to Present by Admin.',
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return req;
+        });
+
+        const notif = createNotificationRecord({
+          targetRole: 'parent',
+          targetParentId: student.parentId || '',
+          targetLocation: student.center,
+          title: `Attendance Corrected: ${student.name}`,
+          message: `Attendance for ${student.name} on ${date} was updated to Present.`,
+          type: 'info',
+        });
+        newNotifications.push(notif);
+
+        newHistoryLogs.push({
+          id: `HIST-${Date.now()}-${student.id}-${Math.random().toString(36).slice(2, 6)}`,
+          timestamp: new Date().toISOString(),
+          type: 'Attendance Edited',
+          studentId: student.id,
+          studentName: student.name,
+          parentName: student.parentName || '',
+          location: student.center,
+          program: student.program || '',
+          date,
+          details: `Changed from Absent to Present by ${markedBy}`,
+          actor: markedBy,
+          role: currentPortal === 'coach' ? 'Coach' : 'Admin',
+          status: 'Present',
+        });
+      }
+      // 3. When marked Present initially
+      else if (!prevStatus && entry.status === 'Present') {
+        newHistoryLogs.push({
+          id: `HIST-${Date.now()}-${student.id}-${Math.random().toString(36).slice(2, 6)}`,
+          timestamp: new Date().toISOString(),
+          type: 'Attendance Marked',
+          studentId: student.id,
+          studentName: student.name,
+          parentName: student.parentName || '',
+          location: student.center,
+          program: student.program || '',
+          date,
+          details: `Marked Present by ${markedBy}`,
+          actor: markedBy,
+          role: currentPortal === 'coach' ? 'Coach' : 'Admin',
+          status: 'Present',
+        });
+      }
+    });
+
     setData(prev => ({
       ...prev,
       attendanceRecords: result.records,
+      compensationRequests: updatedCompensationRequests,
+      notifications: [...newNotifications, ...(prev.notifications || [])].slice(0, 80),
+      compensationHistory: [...newHistoryLogs, ...(prev.compensationHistory || [])],
     }));
 
     addToast(
-      `Saved ${result.savedCount} attendance record${result.savedCount === 1 ? '' : 's'} for ${date} in browser storage (backend API not connected).`,
+      `Saved ${result.savedCount} attendance record${result.savedCount === 1 ? '' : 's'} for ${date}.`,
       'success'
     );
     return result;
@@ -1050,10 +1160,27 @@ export function CrmProvider({ children }) {
           type: 'info',
         });
 
+    const historyEntry = {
+      id: `HIST-${Date.now()}-${newReq.studentId}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: nowIso,
+      type: 'Request Submitted',
+      studentId: newReq.studentId,
+      studentName: newReq.studentName,
+      parentName: newReq.parentName,
+      location: newReq.location,
+      program: newReq.program,
+      date: newReq.missedDate,
+      details: `Submitted compensation request for missed session on ${newReq.missedDate} (${newReq.reason})`,
+      actor: newReq.parentName || requestSource,
+      role: requestSource,
+      status: 'Pending',
+    };
+
     setData(prev => ({
       ...prev,
       compensationRequests: [newReq, ...(prev.compensationRequests || [])],
       notifications: [alertNotif, ...(prev.notifications || [])].slice(0, 80),
+      compensationHistory: [historyEntry, ...(prev.compensationHistory || [])],
     }));
 
     addToast(
@@ -1229,11 +1356,30 @@ export function CrmProvider({ children }) {
       );
     }
 
+    const historyEvent = {
+      id: `HIST-${Date.now()}-${updatedReq.studentId || id}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      type: isScheduling ? 'Compensation Allotted' : `Request ${updatedReq.status}`,
+      studentId: updatedReq.studentId,
+      studentName: updatedReq.studentName,
+      parentName: updatedReq.parentName,
+      location: updatedReq.replacementLocation || updatedReq.center,
+      program: updatedReq.replacementProgram || updatedReq.program,
+      date: updatedReq.replacementDate || updatedReq.missedDate,
+      details: isScheduling
+        ? `Allotted replacement session on ${updatedReq.replacementDate} (${updatedReq.replacementSlot}) with ${updatedReq.replacementCoach}`
+        : `Request status updated to ${updatedReq.status}. Notes: ${updatedReq.approvalNotes || ''}`,
+      actor: 'Admin Vikramaditya',
+      role: 'Admin',
+      status: updatedReq.status,
+    };
+
     setData(prev => ({
       ...prev,
       compensationRequests: (prev.compensationRequests || []).map(r => (r.id === id ? updatedReq : r)),
       classSchedules: nextSchedules,
       notifications: [...newNotifications, ...(prev.notifications || [])].slice(0, 80),
+      compensationHistory: [historyEvent, ...(prev.compensationHistory || [])],
     }));
 
     addToast(`Compensation request ${id} updated to ${updatedReq.status}.`, 'success');

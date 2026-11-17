@@ -26,7 +26,8 @@ import {
   Check,
   ArrowRight,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CalendarX
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -923,7 +924,55 @@ export default function ParentPortalView() {
             </button>
           </div>
 
-          {/* Attendance Register Cards (Real Attendance Records per Child) */}
+          {/* 1. Absence Alerts (Prominent Notification when child is marked Absent by coach) */}
+          {myAttendanceRecords.some(r => r.status === 'Absent') && (
+            <div className="space-y-3">
+              {myAttendanceRecords.filter(r => r.status === 'Absent').map(abs => {
+                const hasCompReq = parentCompRequests.some(
+                  r => r.studentId === abs.studentId && r.missedDate === abs.date
+                );
+                return (
+                  <div 
+                    key={abs.id}
+                    className="p-4 sm:p-5 rounded-2xl bg-[#FFF4E8] border border-[#F4510B30] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-in fade-in"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#F4510B] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                        <CalendarX className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-[#172B50]">
+                          Absence Notice: Your child {abs.studentName} was absent on {abs.date}.
+                        </h4>
+                        <p className="text-xs text-[#172B50] opacity-80 mt-1">
+                          Location: <strong>{abs.location}</strong> • Program: <strong>{abs.program}</strong> • Class: <strong>{abs.batchName || 'Assigned Session'}</strong>.
+                          {hasCompReq ? ' A compensation request has already been logged with Admin.' : ' You may submit an authorized compensation request for this session.'}
+                        </p>
+                      </div>
+                    </div>
+                    {!hasCompReq && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCompChildId(abs.studentId);
+                          setMissedDate(abs.date);
+                          setCompMissedSession(abs.batchName || `${abs.program} Session`);
+                          setCompProgram(abs.program || '');
+                          setIsCompModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-[#F4510B] text-white hover:bg-[#E04505] transition-all shadow-xs shrink-0 cursor-pointer self-start sm:self-auto"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Request Compensation</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 2. Attendance Register Summary & Progress */}
           <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
             <h3 className="text-sm font-extrabold text-[#172B50] pb-3 border-b border-[#172B5012] mb-4">
               Attendance Register Summary
@@ -960,6 +1009,137 @@ export default function ParentPortalView() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* 3. Daily Attendance Calendar (Present = Green, Absent = Red, Not Marked = Grey) */}
+          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#172B5012]">
+              <div>
+                <h3 className="text-sm font-black text-[#172B50]">
+                  Daily Attendance Calendar (November 2026)
+                </h3>
+                <p className="text-xs text-[#172B50] opacity-70">
+                  Read-only attendance records synchronized live from coach session check-ins
+                </p>
+              </div>
+
+              {/* Status Color Legend */}
+              <div className="flex items-center gap-3 text-xs font-bold">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+                  <span className="text-emerald-700">Present (Green)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
+                  <span className="text-rose-700">Absent (Red)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-slate-200 border border-slate-300 inline-block" />
+                  <span className="text-slate-600">Not Marked (Grey)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Calendar Grid: 30 days of November 2026 */}
+            <div className="grid grid-cols-7 gap-2 text-center">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                <span key={d} className="text-[11px] font-black text-[#172B50] uppercase tracking-wider py-1">
+                  {d}
+                </span>
+              ))}
+
+              {Array.from({ length: 30 }, (_, i) => {
+                const dayNum = i + 1;
+                const dateStr = `2026-11-${String(dayNum).padStart(2, '0')}`;
+                const dayRecords = myAttendanceRecords.filter(r => r.date === dateStr);
+                const hasPresent = dayRecords.some(r => r.status === 'Present');
+                const hasAbsent = dayRecords.some(r => r.status === 'Absent');
+
+                let badgeColor = 'bg-slate-50 text-slate-400 border border-slate-200/60';
+                let statusLabel = 'Not Marked';
+
+                if (hasAbsent) {
+                  badgeColor = 'bg-rose-500 text-white font-black shadow-xs';
+                  statusLabel = 'Absent';
+                } else if (hasPresent) {
+                  badgeColor = 'bg-emerald-500 text-white font-black shadow-xs';
+                  statusLabel = 'Present';
+                }
+
+                return (
+                  <div
+                    key={dateStr}
+                    className="p-2 sm:p-2.5 rounded-xl border border-[#172B5010] flex flex-col items-center justify-between min-h-[64px] bg-white transition-all"
+                  >
+                    <span className="text-xs font-extrabold text-[#172B50]">
+                      {dayNum}
+                    </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1.5 block w-full truncate ${badgeColor}`}>
+                      {statusLabel}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 4. Attendance History Table */}
+          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+            <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-black text-[#172B50]">Daily Attendance History</h3>
+                <p className="text-xs text-[#172B50] opacity-70">Official session participation records for your linked child profiles</p>
+              </div>
+              <span className="text-xs font-bold text-[#172B50]/70">
+                {myAttendanceRecords.length} Total Logs
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#FFF4E8] text-[#172B50] font-black uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
+                  <tr>
+                    <th className="px-5 py-3.5">Date</th>
+                    <th className="px-4 py-3.5">Athlete</th>
+                    <th className="px-4 py-3.5">Program &amp; Location</th>
+                    <th className="px-4 py-3.5">Batch / Class</th>
+                    <th className="px-4 py-3.5">Marked By Coach</th>
+                    <th className="px-5 py-3.5 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#172B5010]">
+                  {myAttendanceRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-10 text-center text-xs text-[#172B50] opacity-65">
+                        No session attendance logs recorded for your children yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    myAttendanceRecords.map(rec => (
+                      <tr key={rec.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                        <td className="px-5 py-3.5 font-bold text-[#172B50]">{rec.date}</td>
+                        <td className="px-4 py-3.5 font-black text-[#172B50]">{rec.studentName}</td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-bold text-[#172B50] block">{rec.program}</span>
+                          <span className="text-[11px] font-bold text-[#F4510B] block">{rec.location}</span>
+                        </td>
+                        <td className="px-4 py-3.5 font-medium text-[#172B50]">{rec.batchName || 'Training Batch'}</td>
+                        <td className="px-4 py-3.5 text-[#172B50] opacity-80">{rec.coachName || rec.markedBy || 'Coach'}</td>
+                        <td className="px-5 py-3.5 text-right">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            rec.status === 'Present'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {rec.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Compensation Requests Section */}

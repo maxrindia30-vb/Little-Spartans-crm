@@ -57,6 +57,8 @@ export const initialAcademyData = {
 
   compensationRequests: [],
 
+  compensationHistory: [],
+
   coachCompensationClasses: [],
 
   // Super Admin root access account
