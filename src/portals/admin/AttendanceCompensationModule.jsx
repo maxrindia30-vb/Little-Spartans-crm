@@ -316,81 +316,59 @@ export default function AttendanceCompensationModule() {
   return (
     <div className="space-y-6">
       {/* Module Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#172B501A] pb-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Attendance & Compensation Classes
-          </h1>
-          <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-            Student & Coach session tracking, replacement slot scheduling and eligibility approvals
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B20] flex items-center justify-center shrink-0 shadow-2xs">
+            <Calendar className="w-5 h-5 text-[#F4510B]" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
+              Attendance &amp; Compensation Classes
+            </h1>
+          </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-[#172B5018] shadow-xs self-start sm:self-auto overflow-x-auto max-w-full">
+        {/* Tab Switcher: Exactly 3 Navigation Tabs matching reference UI */}
+        <div className="flex items-center bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start sm:self-auto overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => setActiveSubTab('student_attendance')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'student_attendance'
                 ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
             }`}
           >
-            <CalendarCheck className="w-4 h-4" />
+            <Calendar className="w-4 h-4" />
             <span>Student Attendance</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab('coach_attendance')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'coach_attendance'
                 ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
             }`}
           >
-            <UserCheck className="w-4 h-4" />
+            <Users className="w-4 h-4" />
             <span>Coach Attendance</span>
           </button>
+
+          <span className="w-px h-4 bg-[#172B5018] mx-1 shrink-0" />
 
           <button
             type="button"
             onClick={() => setActiveSubTab('student_compensation')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'student_compensation'
-                ? 'bg-[#172B50] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
-            }`}
-          >
-            <RotateCcw className="w-4 h-4 text-[#F4510B]" />
-            <span>Student Compensation ({studentRequests.filter(r => r.status === 'Pending').length} Pending)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('coach_compensation')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              currentTab === 'coach_compensation'
-                ? 'bg-[#172B50] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
-            }`}
-          >
-            <Clock className="w-4 h-4 text-[#F4510B]" />
-            <span>Coach Compensation</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('compensation_history')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              currentTab === 'compensation_history'
                 ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8]'
+                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
             }`}
           >
-            <History className="w-4 h-4" />
-            <span>Audit History</span>
+            <ShieldAlert className="w-4 h-4 text-[#F4510B]" />
+            <span>Student Compensation ({studentRequests.filter(r => r.status === 'Pending').length} Pending)</span>
           </button>
         </div>
       </div>
