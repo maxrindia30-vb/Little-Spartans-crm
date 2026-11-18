@@ -530,7 +530,7 @@ export default function AdminDashboard() {
             maxTilt={3} 
             scale={1.01} 
             glare={false}
-            className="relative bg-[#FFF9F5] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] h-full"
+            className="relative bg-[#FFE5D3] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B]/20 shadow-[0_4px_25px_rgba(244,81,11,0.06)] h-full"
             contentClassName="flex flex-col justify-between h-full"
           >
             <div>
@@ -651,7 +651,7 @@ export default function AdminDashboard() {
             maxTilt={3} 
             scale={1.01} 
             glare={false}
-            className="relative bg-[#F4FAFF] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] h-full"
+            className="relative bg-[#D9EFFE] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C7]/20 shadow-[0_4px_25px_rgba(2,132,199,0.06)] h-full"
             contentClassName="flex flex-col justify-between h-full"
           >
             <div>
@@ -772,7 +772,7 @@ export default function AdminDashboard() {
             maxTilt={3} 
             scale={1.01} 
             glare={false}
-            className="relative bg-[#F4FDF7] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] h-full"
+            className="relative bg-[#DEF7E6] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A]/20 shadow-[0_4px_25px_rgba(22,163,74,0.06)] h-full"
             contentClassName="flex flex-col justify-between h-full"
           >
             <div>
