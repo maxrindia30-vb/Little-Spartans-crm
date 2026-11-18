@@ -381,7 +381,7 @@ export default function CoachPortalView() {
                 <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
               </h1>
               <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
-                Dashboard • {coachProfile.center} • {coachProfile.specialization}
+                Dashboard
               </p>
             </div>
 

@@ -377,25 +377,15 @@ export default function ParentPortalView() {
     <div className="space-y-6">
       
       {/* 1. MASTER TOP HEADER (Admin Dashboard Reference System) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider flex items-center gap-1.5 shadow-xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-              </span>
-              <span>PARENT PORTAL • LIVE SYNC</span>
-            </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#172B50]/5 text-[#172B50] border border-[#172B5010]">
-              {parentProfile.center || myChildren[0]?.center || 'Chennai Academy'} • 2026-27
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Good Morning, {parentProfile.name ? parentProfile.name.split(' ')[0] : 'Parent'}! 👋
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+        {/* Left: Heading & Subtitle */}
+        <div className="text-left space-y-1">
+          <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
+            <span>Good Morning, {parentProfile.name ? parentProfile.name.split(' ')[0] : 'Parent'}!</span>
+            <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-[#172B50]/65 mt-0.5">
-            Dashboard • Little Spartans Family Hub • {myChildren.map(c => c.name).join(', ') || 'Parent Center'}
+          <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
+            Dashboard
           </p>
         </div>
 
@@ -453,38 +443,6 @@ export default function ParentPortalView() {
             onViewSchedule={() => setCurrentView('classes')} 
           />
         </div>
-      </div>
-
-      {/* Sub-navigation tabs */}
-      <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-[#172B5012] shadow-2xs flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-        {[
-          { id: 'dashboard', label: 'Dashboard', icon: Activity },
-          { id: 'children', label: 'My Children', icon: GraduationCap },
-          { id: 'classes', label: 'Class Timetable', icon: Calendar },
-          { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: ClipboardCheck },
-          { id: 'fees_payments', label: 'Fees & Invoices', icon: CreditCard },
-          { id: 'progress', label: 'Progress & Badges', icon: Award },
-          { id: 'competitions', label: 'Sports & Events', icon: Trophy },
-          { id: 'communication', label: 'Notices & Feedback', icon: MessageSquare }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = currentView === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setCurrentView(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#172B50] text-white shadow-2xs'
-                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#F4510B]' : 'text-[#172B50]/60'}`} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
       </div>
 
       {/* 2. PARENT DASHBOARD MAIN VIEW */}
