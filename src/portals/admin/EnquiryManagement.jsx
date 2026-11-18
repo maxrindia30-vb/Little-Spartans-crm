@@ -1021,85 +1021,38 @@ export default function EnquiryManagement() {
       <Modal
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
-        title={editingEnquiry ? `Edit Enquiry: ${editingEnquiry.id}` : 'Register Prospective Student Enquiry'}
-        subtitle="Capture complete child, guardian, location, sports program & preferred batch details"
-        maxWidth="max-w-2xl"
+        title={editingEnquiry ? `Edit Enquiry: ${editingEnquiry.id}` : 'Add New Enquiry'}
+        subtitle="Capture prospective student information"
       >
         <form onSubmit={handleFormSubmit} className="space-y-3.5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Child Athlete Name *</label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Child Name *</label>
               <input
                 type="text"
                 required
                 value={formState.childName}
                 onChange={(e) => setFormState({ ...formState, childName: e.target.value })}
-                placeholder="e.g. Samar Sen"
+                placeholder="Child's name"
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Gender *</label>
-              <select
-                value={formState.gender}
-                onChange={(e) => setFormState({ ...formState, gender: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-              >
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Date of Birth</label>
-              <input
-                type="date"
-                value={formState.dob}
-                onChange={(e) => handleDobChange(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Age (Years) *</label>
-              <input
-                type="number"
-                min="2"
-                max="18"
-                required
-                value={formState.childAge}
-                onChange={(e) => setFormState({ ...formState, childAge: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Enquiry Date *</label>
-              <input
-                type="date"
-                required
-                value={formState.enquiryDate}
-                onChange={(e) => setFormState({ ...formState, enquiryDate: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent / Guardian Name *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Name *</label>
               <input
                 type="text"
                 required
                 value={formState.parentName}
                 onChange={(e) => setFormState({ ...formState, parentName: e.target.value })}
-                placeholder="Parent's Name"
+                placeholder="Parent's name"
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Mobile Number *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Phone Number *</label>
               <input
                 type="tel"
                 required
@@ -1110,10 +1063,9 @@ export default function EnquiryManagement() {
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Email Address *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Parent Email ID</label>
               <input
                 type="email"
-                required
                 value={formState.email}
                 onChange={(e) => setFormState({ ...formState, email: e.target.value })}
                 placeholder="parent@example.com"
@@ -1122,14 +1074,12 @@ export default function EnquiryManagement() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Preferred Academy Location *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Location *</label>
               <select
                 value={formState.center}
-                onChange={(e) =>
-                  setFormState({ ...formState, center: e.target.value, preferredBatchId: '' })
-                }
+                onChange={(e) => setFormState({ ...formState, center: e.target.value })}
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
                 {commonLocations.map((loc) => (
@@ -1140,16 +1090,10 @@ export default function EnquiryManagement() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Interested Sports Program *</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Interested Program</label>
               <select
                 value={formState.interestedProgram}
-                onChange={(e) =>
-                  setFormState({
-                    ...formState,
-                    interestedProgram: e.target.value,
-                    preferredBatchId: '',
-                  })
-                }
+                onChange={(e) => setFormState({ ...formState, interestedProgram: e.target.value })}
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               >
                 {data.programs.map((p) => (
@@ -1159,64 +1103,6 @@ export default function EnquiryManagement() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Preferred Batch (Optional)</label>
-              <select
-                value={formState.preferredBatchId}
-                onChange={(e) => setFormState({ ...formState, preferredBatchId: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-              >
-                <option value="">Select later / Open</option>
-                {availableFormBatches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} ({b.enrolled || 0}/{b.capacity || 15})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Enquiry Lead Source *</label>
-              <select
-                required
-                value={formState.source}
-                onChange={(e) => setFormState({ ...formState, source: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none font-bold"
-              >
-                {Object.values(ENQUIRY_SOURCES).map((src) => (
-                  <option key={src} value={src}>
-                    {src}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Enquiry Stage</label>
-              <select
-                value={formState.stage}
-                onChange={(e) => setFormState({ ...formState, stage: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-              >
-                <option value="New">New</option>
-                <option value="Follow-up">Follow-up</option>
-                <option value="Interested">Interested</option>
-                <option value="Demo Scheduled">Demo Scheduled</option>
-                <option value="Demo Completed">Demo Completed</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Additional Notes</label>
-            <textarea
-              rows="3"
-              value={formState.notes}
-              onChange={(e) => setFormState({ ...formState, notes: e.target.value })}
-              placeholder="e.g. Trial slot preference, prior experience, medical notes..."
-              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
-            />
           </div>
 
           <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2">
@@ -1231,7 +1117,7 @@ export default function EnquiryManagement() {
               type="submit"
               className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
-              {editingEnquiry ? 'Save Enquiry Changes' : 'Create Enquiry Lead'}
+              Save Enquiry
             </button>
           </div>
         </form>

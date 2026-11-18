@@ -535,18 +535,28 @@ export default function AdminDashboard() {
           >
             <div>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-3.5">
-                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
-                  <Inbox className="w-4 h-4 text-[#F4510B]" />
+              <div className="flex items-center justify-between gap-2 mb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                    <Inbox className="w-4 h-4 text-[#F4510B]" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                      Enquiry Intake
+                    </h3>
+                    <p className="text-[11px] font-medium text-[#172B50]/60">
+                      Capture and qualify new leads
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                    Enquiry Intake
-                  </h3>
-                  <p className="text-[11px] font-medium text-[#172B50]/60">
-                    Capture and qualify new leads
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalType('enquiry')}
+                  title="Add Enquiry"
+                  className="w-7 h-7 rounded-lg bg-[#F4510B] text-white flex items-center justify-center shadow-xs hover:bg-[#d44105] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
+                </button>
               </div>
 
               {/* Dynamic Enquiries (5 Visible, Scroll if > 5) or Clean Zero State */}
@@ -656,18 +666,28 @@ export default function AdminDashboard() {
           >
             <div>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-3.5">
-                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
-                  <Mail className="w-4 h-4 text-[#0284C7]" />
+              <div className="flex items-center justify-between gap-2 mb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4 text-[#0284C7]" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                      Demo &amp; Assessment
+                    </h3>
+                    <p className="text-[11px] font-medium text-[#172B50]/60">
+                      Schedule and track demo sessions
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                    Demo &amp; Assessment
-                  </h3>
-                  <p className="text-[11px] font-medium text-[#172B50]/60">
-                    Schedule and track demo sessions
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('demos')}
+                  title="Demo Register"
+                  className="w-7 h-7 rounded-lg bg-[#0284C7] text-white flex items-center justify-center shadow-xs hover:bg-[#0369a1] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
+                </button>
               </div>
 
               {/* Dynamic Demos (5 Visible, Scroll if > 5) or Clean Zero State */}
@@ -777,18 +797,28 @@ export default function AdminDashboard() {
           >
             <div>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-3.5">
-                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
-                  <GraduationCap className="w-4 h-4 text-[#16A34A]" />
+              <div className="flex items-center justify-between gap-2 mb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
+                    <GraduationCap className="w-4 h-4 text-[#16A34A]" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                      Admission &amp; Enrollment
+                    </h3>
+                    <p className="text-[11px] font-medium text-[#172B50]/60">
+                      Convert demo to enrollment
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                    Admission &amp; Enrollment
-                  </h3>
-                  <p className="text-[11px] font-medium text-[#172B50]/60">
-                    Convert demo to enrollment
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalType('student')}
+                  title="Enroll Student"
+                  className="w-7 h-7 rounded-lg bg-[#16A34A] text-white flex items-center justify-center shadow-xs hover:bg-[#15803d] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
+                </button>
               </div>
 
               {/* Dynamic Students (5 Visible, Scroll if > 5) or Clean Zero State */}
@@ -893,14 +923,14 @@ export default function AdminDashboard() {
             maxTilt={3} 
             scale={1.01} 
             glare={false}
-            className="relative bg-white rounded-[24px] p-4 sm:p-4.5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-full"
+            className="relative bg-[#FEF7D6] rounded-[24px] p-4 sm:p-4.5 border border-[#EAB308]/25 shadow-[0_4px_25px_rgba(202,138,4,0.06)] h-full"
             contentClassName="flex flex-col justify-between h-full"
           >
             <div>
               {/* Header */}
               <div className="flex items-center gap-3 mb-3.5">
-                <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4 text-[#F4510B]" />
+                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#CA8A04] border border-[#EAB30835] shadow-2xs flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-[#CA8A04]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-[#172B50] tracking-tight">
@@ -997,7 +1027,7 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => setCurrentView('schedules')}
-                className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+                className="text-[11.5px] font-black text-[#B45309] hover:text-[#92400E] flex items-center gap-1 group cursor-pointer transition-colors"
               >
                 <span>View All ({liveClasses.length})</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
