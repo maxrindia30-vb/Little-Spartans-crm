@@ -50,7 +50,7 @@ const ACADEMY_CENTERS = [
   'KOLATHUR'
 ];
 
-// Initial High-Fidelity Demonstration User Accounts
+// Master Academy Root Administrator (Single Official Account)
 const INITIAL_USERS = [
   {
     id: 'USR-001',
@@ -65,185 +65,6 @@ const INITIAL_USERS = [
     twoFactorEnabled: true,
     avatarBg: 'bg-indigo-600',
     notes: 'Master Academy Administrator & Franchise Director'
-  },
-  {
-    id: 'USR-002',
-    name: 'Kavitha Raman',
-    email: 'kavitha.ops@littlespartans.co.in',
-    phone: '+91 98401 22334',
-    role: 'admin',
-    locations: ['KK NAGAR', 'KILPAUK'],
-    status: 'Active',
-    lastLogin: 'Today, 09:30 AM',
-    createdAt: '15 Aug 2026',
-    twoFactorEnabled: true,
-    avatarBg: 'bg-sky-600',
-    notes: 'Lead Operations Desk & Admissions Coordinator'
-  },
-  {
-    id: 'USR-003',
-    name: 'Coach Kapil',
-    email: 'kapil.coach@littlespartans.co.in',
-    phone: '+91 97910 88776',
-    role: 'coach',
-    locations: ['KK NAGAR', 'KILPAUK'],
-    status: 'Active',
-    lastLogin: 'Yesterday, 04:20 PM',
-    createdAt: '01 Sep 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-[#F4510B]',
-    assignedPrograms: ['Junior Football Champions', 'Spartan Athletics & Sprinting'],
-    assignedBatches: ['Morning Batch A (09:00 AM)', 'Weekend Premier Squad'],
-    notes: 'Head Football & Agility Trainer'
-  },
-  {
-    id: 'USR-004',
-    name: 'Coach Dibi',
-    email: 'dibi.coach@littlespartans.co.in',
-    phone: '+91 98840 55667',
-    role: 'coach',
-    locations: ['MAHALINGAPURAM'],
-    status: 'Active',
-    lastLogin: '14 Nov 2026, 02:45 PM',
-    createdAt: '05 Sep 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-[#F4510B]',
-    assignedPrograms: ['Spartan Gymnastics & Agility'],
-    assignedBatches: ['Cadet Agility (10:30 AM)', 'Junior Tumblers'],
-    notes: 'Senior Gymnastics Instructor'
-  },
-  {
-    id: 'USR-005',
-    name: 'Coach Hanif',
-    email: 'hanif.coach@littlespartans.co.in',
-    phone: '+91 97100 33445',
-    role: 'coach',
-    locations: ['ANNA NAGAR'],
-    status: 'Pending',
-    lastLogin: 'Never (Invite Sent)',
-    createdAt: '12 Nov 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-amber-600',
-    assignedPrograms: ['Basketball Rising Stars'],
-    assignedBatches: ['Weekend Cubs (02:00 PM)'],
-    notes: 'Onboarding Basketball Specialist'
-  },
-  {
-    id: 'USR-006',
-    name: 'Coach Teja',
-    email: 'teja.coach@littlespartans.co.in',
-    phone: '+91 96001 99882',
-    role: 'coach',
-    locations: ['KOLATHUR'],
-    status: 'Inactive',
-    lastLogin: '02 Nov 2026, 11:00 AM',
-    createdAt: '10 Aug 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-slate-600',
-    assignedPrograms: ['Spartan Martial Arts & Karate'],
-    assignedBatches: ['Dojo Masters (05:00 PM)'],
-    notes: 'Seasonal Martial Arts Instructor'
-  },
-  {
-    id: 'USR-007',
-    name: 'Coach Vikram',
-    email: 'vikram.coach@littlespartans.co.in',
-    phone: '+91 98402 77119',
-    role: 'coach',
-    locations: ['KK NAGAR'],
-    status: 'Suspended',
-    lastLogin: '28 Oct 2026, 05:15 PM',
-    createdAt: '20 Jul 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-rose-600',
-    assignedPrograms: ['Little Cubs Multi-Sport'],
-    assignedBatches: ['Early Years Agility'],
-    notes: 'Suspended pending arena discipline compliance review'
-  },
-  {
-    id: 'USR-008',
-    name: 'Suresh Kumar',
-    email: 'suresh.kumar@gmail.com',
-    phone: '+91 98841 12345',
-    role: 'parent',
-    locations: ['KK NAGAR'],
-    status: 'Active',
-    lastLogin: 'Today, 08:00 AM',
-    createdAt: '18 Aug 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-emerald-600',
-    linkedChildren: [
-      { name: 'Aarav Kumar', age: 7, program: 'Junior Football Champions', center: 'KK NAGAR', batch: '09:00 AM Daily' }
-    ],
-    notes: 'Parent of Aarav Kumar (Primary contact)'
-  },
-  {
-    id: 'USR-009',
-    name: 'Meera Krishnan',
-    email: 'meera.k@gmail.com',
-    phone: '+91 97909 33221',
-    role: 'parent',
-    locations: ['KILPAUK'],
-    status: 'Active',
-    lastLogin: 'Yesterday, 07:15 PM',
-    createdAt: '22 Aug 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-emerald-600',
-    linkedChildren: [
-      { name: 'Diya Krishnan', age: 6, program: 'Spartan Gymnastics & Agility', center: 'KILPAUK', batch: '10:30 AM Weekend' }
-    ],
-    notes: 'Guardian of Diya Krishnan'
-  },
-  {
-    id: 'USR-010',
-    name: 'Ramesh Varma',
-    email: 'ramesh.varma@outlook.com',
-    phone: '+91 98400 99112',
-    role: 'parent',
-    locations: ['MAHALINGAPURAM'],
-    status: 'Suspended',
-    lastLogin: '25 Oct 2026, 06:40 PM',
-    createdAt: '01 Sep 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-rose-600',
-    linkedChildren: [
-      { name: 'Rohan Varma', age: 8, program: 'Basketball Rising Stars', center: 'MAHALINGAPURAM', batch: '02:00 PM Daily' }
-    ],
-    notes: 'Account suspended due to repeated fee recovery bounce'
-  },
-  {
-    id: 'USR-011',
-    name: 'Anitha Sundaram',
-    email: 'anitha.sundaram@yahoo.co.in',
-    phone: '+91 99401 44556',
-    role: 'parent',
-    locations: ['ANNA NAGAR'],
-    status: 'Active',
-    lastLogin: '12 Nov 2026, 03:10 PM',
-    createdAt: '05 Sep 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-emerald-600',
-    linkedChildren: [
-      { name: 'Varun Sundaram', age: 5, program: 'Little Cubs Multi-Sport', center: 'ANNA NAGAR', batch: '04:00 PM Weekend' }
-    ],
-    notes: 'Parent of Varun Sundaram'
-  },
-  {
-    id: 'USR-012',
-    name: 'Deepak Raj',
-    email: 'deepak.raj@gmail.com',
-    phone: '+91 98412 66778',
-    role: 'parent',
-    locations: ['KOLATHUR'],
-    status: 'Inactive',
-    lastLogin: '01 Nov 2026, 09:20 AM',
-    createdAt: '12 Sep 2026',
-    twoFactorEnabled: false,
-    avatarBg: 'bg-slate-600',
-    linkedChildren: [
-      { name: 'Nikhil Raj', age: 9, program: 'Spartan Athletics & Sprinting', center: 'KOLATHUR', batch: '07:30 AM Morning' }
-    ],
-    notes: 'Seasonal leave requested for child'
   }
 ];
 
@@ -328,102 +149,21 @@ const PERMISSION_MODULES = [
   { id: 'settings', label: 'Settings', desc: 'Little Spartans branding, academic year & credentials' }
 ];
 
-// Initial High-Fidelity Activity Audit Log
+// Initial High-Fidelity Activity Audit Log (Root Administrator Only)
 const INITIAL_ACTIVITY_LOGS = [
   {
     id: 'ACT-101',
     user: 'Balavivek S',
     role: 'super_admin',
-    action: 'Assigned location KILPAUK to Coach Kapil',
+    action: 'Master Academy system initialized with single Super Admin root credentials',
     location: 'Global',
-    timestamp: '15 Nov 2026, 10:15 AM',
-    status: 'Success'
-  },
-  {
-    id: 'ACT-102',
-    user: 'Kavitha Raman',
-    role: 'admin',
-    action: 'Reset temporary password for Parent Suresh Kumar',
-    location: 'KK NAGAR',
-    timestamp: '15 Nov 2026, 09:42 AM',
-    status: 'Success'
-  },
-  {
-    id: 'ACT-103',
-    user: 'Coach Kapil',
-    role: 'coach',
-    action: 'Recorded daily attendance for Junior Football Batch A',
-    location: 'KK NAGAR',
-    timestamp: '15 Nov 2026, 09:15 AM',
-    status: 'Success'
-  },
-  {
-    id: 'ACT-104',
-    user: 'Suresh Kumar',
-    role: 'parent',
-    action: 'Initiated UPI Tuition payment ₹4,500 for Aarav Kumar',
-    location: 'KK NAGAR',
-    timestamp: '15 Nov 2026, 08:30 AM',
-    status: 'Success'
-  },
-  {
-    id: 'ACT-105',
-    user: 'Kavitha Raman',
-    role: 'admin',
-    action: 'Dispatched onboarding invitation email to Coach Hanif',
-    location: 'ANNA NAGAR',
-    timestamp: '14 Nov 2026, 04:50 PM',
-    status: 'Success'
-  },
-  {
-    id: 'ACT-106',
-    user: 'Security Sentinel',
-    role: 'super_admin',
-    action: 'Suspended account Ramesh Varma (Overdue fee audit lock)',
-    location: 'MAHALINGAPURAM',
-    timestamp: '14 Nov 2026, 03:22 PM',
-    status: 'Warning'
-  },
-  {
-    id: 'ACT-107',
-    user: 'Coach Dibi',
-    role: 'coach',
-    action: 'Submitted Equipment Condition Report: Gymnastics Floor Mats',
-    location: 'MAHALINGAPURAM',
-    timestamp: '14 Nov 2026, 02:40 PM',
-    status: 'Success'
-  },
-  {
-    id: 'ACT-108',
-    user: 'Balavivek S',
-    role: 'super_admin',
-    action: 'Modified RBAC Matrix: Disabled data export permissions for Coaches',
-    location: 'Global',
-    timestamp: '14 Nov 2026, 11:10 AM',
-    status: 'Success'
-  },
-  {
-    id: 'ACT-109',
-    user: 'Coach Vikram',
-    role: 'coach',
-    action: 'Failed login challenge: 3 incorrect PIN entries detected',
-    location: 'KK NAGAR',
-    timestamp: '13 Nov 2026, 06:14 PM',
-    status: 'Failed'
-  },
-  {
-    id: 'ACT-110',
-    user: 'Kavitha Raman',
-    role: 'admin',
-    action: 'Deactivated seasonal coach account for Coach Teja',
-    location: 'KOLATHUR',
-    timestamp: '12 Nov 2026, 01:25 PM',
+    timestamp: 'Today, 09:00 AM',
     status: 'Success'
   }
 ];
 
 export default function AccessManagementModule() {
-  const { activeSubTab, setActiveSubTab, addToast } = useCrm();
+  const { activeSubTab, setActiveSubTab, addToast, deleteAccount } = useCrm();
 
   // Active module tab: 'overview' | 'accounts' | 'locations' | 'permissions' | 'activity'
   const [activeTab, setActiveTab] = useState(() => {
@@ -475,6 +215,71 @@ export default function AccessManagementModule() {
   // Status toggle confirmation
   const [pendingStatusTarget, setPendingStatusTarget] = useState(null); // { user, newStatus, reason }
   const [statusReason, setStatusReason] = useState('');
+
+  // Delete confirmation modal state
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState(null);
+
+  // Dynamic Role Statistics for Donut/Pie Chart
+  const roleStats = useMemo(() => {
+    const superAdminCount = users.filter(u => u.role === 'super_admin' || u.role === 'admin').length;
+    const coachCount = users.filter(u => u.role === 'coach').length;
+    const parentCount = users.filter(u => u.role === 'parent').length;
+    const total = users.length;
+
+    const superAdminPct = total > 0 ? Math.round((superAdminCount / total) * 100) : 0;
+    const coachPct = total > 0 ? Math.round((coachCount / total) * 100) : 0;
+    const parentPct = total > 0 ? Math.max(0, 100 - superAdminPct - coachPct) : 0;
+
+    return {
+      superAdminCount,
+      coachCount,
+      parentCount,
+      total,
+      superAdminPct,
+      coachPct,
+      parentPct
+    };
+  }, [users]);
+
+  const roleConicGradient = useMemo(() => {
+    if (roleStats.total === 0) return '#E2E8F0 0% 100%';
+    if (roleStats.superAdminCount === roleStats.total) return '#4F46E5 0% 100%';
+    const saStop = roleStats.superAdminPct;
+    const cStop = saStop + roleStats.coachPct;
+    return `#4F46E5 0% ${saStop}%, #F4510B ${saStop}% ${cStop}%, #10B981 ${cStop}% 100%`;
+  }, [roleStats]);
+
+  const handleInitiateDeleteUser = (user) => {
+    if (user.role === 'super_admin' || user.id === 'USR-001' || user.email === 'admin@littlespartans.co.in') {
+      addToast('The primary Super Admin root account cannot be deleted for system governance.', 'error');
+      return;
+    }
+    setDeleteConfirmTarget(user);
+  };
+
+  const handleConfirmDeleteUser = () => {
+    if (!deleteConfirmTarget) return;
+    const target = deleteConfirmTarget;
+
+    setUsers(prev => prev.filter(u => u.id !== target.id));
+    if (deleteAccount) {
+      deleteAccount(target.id, target.email);
+    }
+
+    const logEntry = {
+      id: `ACT-${Date.now()}`,
+      user: 'Balavivek S',
+      role: 'super_admin',
+      action: `Permanently deleted user account for ${target.name} (${target.role})`,
+      location: target.locations?.[0] || 'Global',
+      timestamp: 'Just now',
+      status: 'Success'
+    };
+    setActivityLogs(prev => [logEntry, ...prev]);
+
+    setDeleteConfirmTarget(null);
+    addToast(`Account for "${target.name}" has been permanently deleted.`, 'success');
+  };
 
   // Filtered Users
   const filteredUsers = useMemo(() => {
@@ -1007,6 +812,127 @@ export default function AccessManagementModule() {
             </div>
           </div>
 
+          {/* Role Distribution & Center Governance Overview */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* Real Role Distribution Pie / Donut Chart */}
+            <div className="bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between pb-3 border-b border-[#172B500C]">
+                <div>
+                  <h3 className="text-base font-black text-[#172B50] tracking-tight">Role Distribution</h3>
+                  <p className="text-xs font-medium text-[#172B50]/60">Live registered credentials by role</p>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4 text-[#F4510B]" />
+                </div>
+              </div>
+
+              <div className="py-6 flex flex-col sm:flex-row items-center justify-center gap-6">
+                {/* Conic Donut */}
+                <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
+                  <div
+                    className="w-full h-full rounded-full transition-all duration-700 shadow-inner"
+                    style={{
+                      background: `conic-gradient(${roleConicGradient})`
+                    }}
+                  />
+                  {/* Inner Cutout */}
+                  <div className="absolute w-24 h-24 rounded-full bg-white flex flex-col items-center justify-center shadow-xs">
+                    <span className="text-2xl font-black text-[#172B50]">{roleStats.total}</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#172B50]/60">Total</span>
+                  </div>
+                </div>
+
+                {/* Role Legend & Real Percentages */}
+                <div className="space-y-2.5 w-full max-w-xs">
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-indigo-50/70 border border-indigo-100">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
+                      <span className="text-xs font-black text-[#172B50]">Admin / Super Admin</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black text-indigo-700">{roleStats.superAdminCount}</span>
+                      <span className="text-[10.5px] font-bold text-indigo-500">({roleStats.superAdminPct}%)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#FFF5ED] border border-[#FED7AA]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#F4510B] shrink-0" />
+                      <span className="text-xs font-black text-[#172B50]">Coaches</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black text-[#F4510B]">{roleStats.coachCount}</span>
+                      <span className="text-[10.5px] font-bold text-[#F4510B]/70">({roleStats.coachPct}%)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/70 border border-emerald-100">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0" />
+                      <span className="text-xs font-black text-[#172B50]">Parents</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black text-emerald-700">{roleStats.parentCount}</span>
+                      <span className="text-[10.5px] font-bold text-emerald-500">({roleStats.parentPct}%)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#172B500C] text-[11px] font-medium text-[#172B50]/65 text-center">
+                {roleStats.total === 1 && roleStats.superAdminCount === 1 ? (
+                  <span className="text-emerald-700 font-bold">Only the master Super Admin account is active. Zero dummy accounts.</span>
+                ) : (
+                  <span>Dynamic role breakdown updating automatically with account changes.</span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Center Governance Summary */}
+            <div className="lg:col-span-2 bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-2xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-[#172B500C]">
+                  <div>
+                    <h3 className="text-base font-black text-[#172B50] tracking-tight">Multi-Center Access Overview</h3>
+                    <p className="text-xs font-medium text-[#172B50]/60">Center coverage and security boundary status</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('locations')}
+                    className="text-xs font-black text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Manage Locations</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4">
+                  {ACADEMY_CENTERS.map((loc) => {
+                    const locUsers = users.filter(u => u.locations?.includes(loc));
+                    return (
+                      <div key={loc} className="p-3 rounded-2xl bg-[#FFF4E8]/30 border border-[#172B5010]">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-[#172B50]">
+                          <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                          <span>{loc}</span>
+                        </div>
+                        <p className="text-lg font-black text-[#172B50] mt-1.5">{locUsers.length}</p>
+                        <p className="text-[10px] font-medium text-[#172B50]/60">Authorized users</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-3 mt-4 border-t border-[#172B500C] flex items-center justify-between text-xs text-[#172B50]/70 font-semibold">
+                <span className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Role isolation verified across all 5 centers
+                </span>
+                <span className="text-[11px] font-medium text-[#172B50]/50">Master Admin has global 5-center clearance</span>
+              </div>
+            </div>
+          </div>
+
           {/* Quick User Management Table Preview */}
           <div className="bg-white rounded-[24px] p-5 sm:p-6 border border-[#172B5012] shadow-2xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#172B500C]">
@@ -1094,6 +1020,19 @@ export default function AccessManagementModule() {
                             title="Assign Locations"
                           >
                             <MapPin className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInitiateDeleteUser(u)}
+                            disabled={u.role === 'super_admin'}
+                            className={`p-1.5 rounded-lg border transition-all ${
+                              u.role === 'super_admin'
+                                ? 'border-[#172B5010] text-[#172B50]/30 cursor-not-allowed bg-slate-50'
+                                : 'border-rose-200 bg-white hover:bg-rose-50 text-rose-600 cursor-pointer shadow-2xs hover:border-rose-300'
+                            }`}
+                            title={u.role === 'super_admin' ? 'Root Super Admin cannot be deleted' : 'Delete Account'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
@@ -1358,6 +1297,21 @@ export default function AccessManagementModule() {
                               title="Send / Resend Invitation"
                             >
                               <Send className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Permanently Delete Account */}
+                            <button
+                              type="button"
+                              onClick={() => handleInitiateDeleteUser(u)}
+                              disabled={u.role === 'super_admin'}
+                              className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all shadow-2xs ${
+                                u.role === 'super_admin'
+                                  ? 'border-[#172B5010] text-[#172B50]/30 cursor-not-allowed bg-slate-50'
+                                  : 'border-rose-200 bg-white hover:bg-rose-50 text-rose-600 cursor-pointer hover:border-rose-300'
+                              }`}
+                              title={u.role === 'super_admin' ? 'Root Super Admin cannot be deleted' : 'Permanently Delete Account'}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -2401,6 +2355,57 @@ export default function AccessManagementModule() {
               }`}
             >
               Confirm Status Change
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 11. CONFIRM DELETE USER MODAL */}
+      <Modal
+        isOpen={Boolean(deleteConfirmTarget)}
+        onClose={() => setDeleteConfirmTarget(null)}
+        title="Confirm Permanent Account Deletion"
+      >
+        <div className="space-y-4">
+          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="text-xs leading-relaxed space-y-1">
+              <p className="font-black text-sm text-rose-950">
+                Are you sure you want to permanently delete this account?
+              </p>
+              <p>
+                Target Account: <strong className="font-black">{deleteConfirmTarget?.name}</strong> ({deleteConfirmTarget?.email})
+              </p>
+              <p className="text-rose-800">
+                This action cannot be undone. It will permanently revoke portal access, remove assigned center authorizations, and purge account credentials immediately.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11.5px] text-slate-700 font-medium flex items-center justify-between">
+            <div>
+              Role: <strong className="font-bold uppercase text-[#172B50]">{deleteConfirmTarget?.role}</strong>
+            </div>
+            <div>
+              Assigned Centers: <strong className="font-bold text-[#172B50]">{deleteConfirmTarget?.locations?.join(', ') || 'None'}</strong>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-[#172B5010] flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setDeleteConfirmTarget(null)}
+              className="px-4 py-2 rounded-xl border border-[#172B5018] text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDeleteUser}
+              className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-sm cursor-pointer flex items-center gap-1.5 active:scale-95 transition-all"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-white" />
+              <span>Permanently Delete Account</span>
             </button>
           </div>
         </div>

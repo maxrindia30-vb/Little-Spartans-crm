@@ -96,6 +96,9 @@ export function CrmProvider({ children }) {
           superCoaches: Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : initialAcademyData.superCoaches,
           equipment: Array.isArray(parsed.equipment) && parsed.equipment.length > 0 ? parsed.equipment : initialEquipmentInventory,
           equipmentReports: Array.isArray(parsed.equipmentReports) && parsed.equipmentReports.length > 0 ? parsed.equipmentReports : initialEquipmentReports,
+          userAccounts: Array.isArray(parsed.userAccounts) 
+            ? parsed.userAccounts.filter(a => a.role === 'admin' || a.role === 'super_admin' || a.id === 'ACC-001')
+            : (initialAcademyData.userAccounts || []),
         };
       }
     } catch (e) {
@@ -1002,6 +1005,16 @@ export function CrmProvider({ children }) {
       )
     }));
     addToast('Account status updated.');
+  };
+
+  const deleteAccount = (accountId, accountEmail) => {
+    setData(prev => ({
+      ...prev,
+      userAccounts: (prev.userAccounts || []).filter(
+        a => a.id !== accountId && (!accountEmail || (a.email && a.email.toLowerCase() !== accountEmail.toLowerCase()))
+      )
+    }));
+    addToast('Account deleted permanently.', 'info');
   };
 
   // Module 4.9: Fee Structures & Assignments
@@ -2621,6 +2634,7 @@ export function CrmProvider({ children }) {
         createAccount,
         resetAccountPassword,
         toggleAccountStatus,
+        deleteAccount,
         createFeeStructure,
         assignStudentFee,
         submitCompensationRequest,

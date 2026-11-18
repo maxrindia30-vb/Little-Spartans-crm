@@ -74,7 +74,7 @@ export default function ReportsAnalytics() {
           <RevenueTrendChart />
         </div>
         <div>
-          <AttendanceDonutChart presentRate={92} />
+          <AttendanceDonutChart />
         </div>
       </div>
 

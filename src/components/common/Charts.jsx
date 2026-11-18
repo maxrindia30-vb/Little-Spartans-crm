@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useCrm } from '../../context/CrmContext';
 
 // Monthly Revenue & Enrollments Area/Bar Chart
 export function RevenueTrendChart() {
@@ -70,17 +71,38 @@ export function RevenueTrendChart() {
   );
 }
 
-// Attendance Donut Chart
-export function AttendanceDonutChart({ presentRate = 92 }) {
-  const absentRate = 100 - presentRate;
+// Attendance Donut Chart (Dynamically computed from actual attendance data - 0 dummy records)
+export function AttendanceDonutChart({ 
+  presentRate, 
+  totalRecords, 
+  attendedCount, 
+  absentCount 
+}) {
+  const { data } = useCrm();
+  const attList = data.attendanceRecords || [];
+  
+  const effectiveTotal = totalRecords !== undefined ? totalRecords : attList.length;
+  const effectiveAttended = attendedCount !== undefined ? attendedCount : attList.filter(r => r.status === 'Present').length;
+  const effectiveAbsent = absentCount !== undefined ? absentCount : attList.filter(r => r.status === 'Absent').length;
+  const effectiveRate = presentRate !== undefined 
+    ? presentRate 
+    : (effectiveTotal > 0 ? Math.round((effectiveAttended / effectiveTotal) * 100) : 0);
+
+  const absentRate = effectiveTotal > 0 ? 100 - effectiveRate : 0;
   // Circumference for r=38 is 2 * PI * 38 = ~238.76
-  const strokeDashoffset = 238.76 - (238.76 * presentRate) / 100;
+  const strokeDashoffset = effectiveTotal > 0 
+    ? 238.76 - (238.76 * effectiveRate) / 100 
+    : 238.76;
 
   return (
     <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between">
       <div className="pb-3 border-b border-[#172B5012]">
         <h4 className="text-sm font-extrabold text-[#172B50]">Today's Academy Attendance</h4>
-        <p className="text-xs text-[#172B50] opacity-70">Across all 5 training centers</p>
+        <p className="text-xs text-[#172B50] opacity-70">
+          {effectiveTotal > 0 
+            ? `${effectiveTotal} session check-in${effectiveTotal === 1 ? '' : 's'} recorded`
+            : 'Live attendance check-in register across centers'}
+        </p>
       </div>
 
       <div className="my-4 flex items-center justify-center relative">
@@ -93,7 +115,7 @@ export function AttendanceDonutChart({ presentRate = 92 }) {
             stroke="#172B50"
             strokeWidth="11"
             fill="transparent"
-            className="opacity-20"
+            className="opacity-15"
           />
           {/* Active present arc: Spartan Orange */}
           <circle
@@ -111,41 +133,59 @@ export function AttendanceDonutChart({ presentRate = 92 }) {
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-black text-[#172B50]">{presentRate}%</span>
-          <span className="text-[10px] font-bold text-[#F4510B] uppercase tracking-wider">Present</span>
+          <span className="text-2xl font-black text-[#172B50]">{effectiveRate}%</span>
+          <span className="text-[10px] font-bold text-[#F4510B] uppercase tracking-wider">
+            {effectiveTotal > 0 ? 'Present' : '0 Marked'}
+          </span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#172B5012] text-center text-xs">
         <div className="p-2 rounded-xl bg-[#FFF4E8]">
           <span className="text-[11px] font-bold text-[#172B50] block">Attended</span>
-          <span className="text-sm font-extrabold text-[#F4510B]">{presentRate}%</span>
+          <span className="text-sm font-extrabold text-[#F4510B]">
+            {effectiveTotal > 0 ? `${effectiveAttended} (${effectiveRate}%)` : '0 (0%)'}
+          </span>
         </div>
         <div className="p-2 rounded-xl bg-[#FFF4E8]">
           <span className="text-[11px] font-bold text-[#172B50] block">Absent / Leave</span>
-          <span className="text-sm font-extrabold text-[#172B50]">{absentRate}%</span>
+          <span className="text-sm font-extrabold text-[#172B50]">
+            {effectiveTotal > 0 ? `${effectiveAbsent} (${absentRate}%)` : '0 (0%)'}
+          </span>
         </div>
       </div>
     </div>
   );
 }
 
-// Sports Distribution Progress Chart
+// Sports Distribution Progress Chart (Computed dynamically from real student enrollments)
 export function ProgramDistributionChart() {
-  const sports = [
-    { name: 'Gymnastics & Agility', students: 48, pct: 90 },
-    { name: 'Junior Football', students: 64, pct: 95 },
-    { name: 'Athletics & Sprints', students: 38, pct: 76 },
-    { name: 'Basketball Stars', students: 42, pct: 84 },
-    { name: 'Martial Arts & Karate', students: 32, pct: 70 },
-    { name: 'Little Cubs Multi-Sport', students: 36, pct: 80 }
+  const { data } = useCrm();
+  const students = data.students || [];
+  const programsList = data.programs || [
+    { name: 'Junior Athletics' },
+    { name: 'Gymnastics & Agility' },
+    { name: 'Football Champions' },
+    { name: 'Basketball Stars' },
+    { name: 'Martial Arts & Karate' },
+    { name: 'Little Cubs Multi-Sport' }
   ];
+
+  const sports = programsList.map(prog => {
+    const count = students.filter(s => (s.program || '').toLowerCase() === prog.name.toLowerCase()).length;
+    const pct = students.length > 0 ? Math.round((count / students.length) * 100) : 0;
+    return { name: prog.name, students: count, pct };
+  });
 
   return (
     <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
       <div className="pb-3 border-b border-[#172B5012] mb-4">
         <h4 className="text-sm font-extrabold text-[#172B50]">Batch Capacity & Student Distribution</h4>
-        <p className="text-xs text-[#172B50] opacity-70">Enrollments per sports curriculum</p>
+        <p className="text-xs text-[#172B50] opacity-70">
+          {students.length > 0 
+            ? `Enrollments across ${students.length} active athletes` 
+            : 'Real-time athlete enrollments per sports curriculum'}
+        </p>
       </div>
 
       <div className="space-y-3.5">
@@ -153,7 +193,9 @@ export function ProgramDistributionChart() {
           <div key={item.name}>
             <div className="flex justify-between text-xs font-bold mb-1">
               <span className="text-[#172B50]">{item.name}</span>
-              <span className="text-[#F4510B]">{item.students} Students ({item.pct}%)</span>
+              <span className="text-[#F4510B]">
+                {item.students} Student{item.students === 1 ? '' : 's'} ({item.pct}%)
+              </span>
             </div>
             <div className="w-full h-2.5 bg-[#FFF4E8] rounded-full overflow-hidden border border-[#172B5015]">
               <div 

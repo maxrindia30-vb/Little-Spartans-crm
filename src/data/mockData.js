@@ -66,12 +66,12 @@ export const initialAcademyData = {
     {
       id: "ACC-001",
       role: "admin",
-      name: "Commander Vikramaditya",
-      email: "director@littlespartans.co.in",
+      name: "Balavivek S",
+      email: "admin@littlespartans.co.in",
       phone: "+91 98765 43210",
       status: "Active",
       isTemporaryPassword: false,
-      lastLogin: "2026-11-11 09:15 AM",
+      lastLogin: "2026-11-18 10:15 AM",
       createdAt: "2024-01-01",
       permissions: ["SUPER_ADMIN", "FULL_ACCESS"]
     }
