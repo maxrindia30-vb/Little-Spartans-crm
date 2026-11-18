@@ -189,9 +189,36 @@ export default function AccessManagementModule() {
 
     setUsers((prevUsers) => {
       const superAdmins = INITIAL_USERS;
-      const liveAccounts = (data.userAccounts || []).filter(
+      const rawLive = (data.userAccounts || []).filter(
         (acc) => acc.role === 'parent' || acc.role === 'coach' || acc.role === 'admin'
       );
+
+      // Auto-sync every enrolled parent from data.parents into live accounts
+      const liveAccounts = [...rawLive];
+      (data.parents || []).forEach((p) => {
+        const normEmail = (p.email || `${p.name.toLowerCase().replace(/\s+/g, '')}@spartanparent.com`).toLowerCase();
+        const hasAccount = liveAccounts.some(
+          (acc) => (acc.email && acc.email.toLowerCase() === normEmail) || acc.id === `ACC-${p.id}` || acc.id === p.id
+        );
+        if (!hasAccount) {
+          const autoPass = p.password || p.tempPassword || p.tempPasswordDisplay || `Spartan@${String(p.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`;
+          liveAccounts.push({
+            id: `ACC-${p.id}`,
+            role: 'parent',
+            name: p.name,
+            email: normEmail,
+            phone: p.phone || '',
+            center: p.center || 'KK NAGAR',
+            locations: [p.center || 'KK NAGAR'],
+            linkedStudents: p.children || [],
+            status: 'Active',
+            password: autoPass,
+            tempPasswordDisplay: autoPass,
+            createdAt: p.createdAt || 'Today',
+            lastLogin: 'Never',
+          });
+        }
+      });
 
       const mappedLiveUsers = liveAccounts.map((acc) => {
         const matchingParent = (data.parents || []).find(
@@ -243,6 +270,12 @@ export default function AccessManagementModule() {
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [locationFilter, setLocationFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [visibleAccountPasswords, setVisibleAccountPasswords] = useState({});
+  const [profilePasswordVisible, setProfilePasswordVisible] = useState(false);
+
+  const toggleAccountPassword = (userId) => {
+    setVisibleAccountPasswords(prev => ({ ...prev, [userId]: !prev[userId] }));
+  };
 
   // RBAC Permission Matrix state
   const [permissionMatrix, setPermissionMatrix] = useState(INITIAL_PERMISSION_MATRIX);
@@ -402,6 +435,7 @@ export default function AccessManagementModule() {
   };
 
   const handleOpenViewProfile = (user) => {
+    setProfilePasswordVisible(false);
     setSelectedUser(user);
     setModalType('view_profile');
   };
@@ -1226,7 +1260,22 @@ export default function AccessManagementModule() {
 
                         {/* Mobile */}
                         <td className="py-3.5 px-4 font-bold text-[#172B50]/80">
-                          {u.phone}
+                          <div>{u.phone}</div>
+                          {u.tempPasswordDisplay && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="font-mono text-[10.5px] font-bold text-[#F4510B]">
+                                {visibleAccountPasswords[u.id] ? u.tempPasswordDisplay : '••••••••'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => toggleAccountPassword(u.id)}
+                                title={visibleAccountPasswords[u.id] ? 'Hide Password' : 'View Password'}
+                                className="p-0.5 text-[#172B50]/50 hover:text-[#F4510B] cursor-pointer"
+                              >
+                                {visibleAccountPasswords[u.id] ? <EyeOff className="w-3 h-3 text-[#F4510B]" /> : <Eye className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          )}
                         </td>
 
                         {/* Role */}
@@ -2170,6 +2219,51 @@ export default function AccessManagementModule() {
                     {loc}
                   </span>
                 ))}
+              </div>
+            </div>
+
+            {/* Auto-Generated Credentials & Password with View / Copy */}
+            <div className="p-3 bg-[#FFF5ED] rounded-xl border border-[#F4510B20] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-[#F4510B]">
+                  Account Credentials
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  Auto-Generated
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-[#172B5015]">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Key className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                  <span className="text-xs font-bold text-[#172B50]/65">Password:</span>
+                  <span className="font-mono text-xs font-black text-[#172B50] select-all truncate">
+                    {profilePasswordVisible
+                      ? (selectedUser.tempPasswordDisplay || selectedUser.password || `Spartan@${String(selectedUser.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`)
+                      : '••••••••••••'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setProfilePasswordVisible(v => !v)}
+                    className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
+                    title={profilePasswordVisible ? 'Hide Password' : 'View Password'}
+                  >
+                    {profilePasswordVisible ? <EyeOff className="w-3.5 h-3.5 text-[#F4510B]" /> : <Eye className="w-3.5 h-3.5 opacity-70" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const pass = selectedUser.tempPasswordDisplay || selectedUser.password || `Spartan@${String(selectedUser.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`;
+                      navigator.clipboard?.writeText(pass);
+                      addToast('Password copied to clipboard!');
+                    }}
+                    className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
+                    title="Copy Password"
+                  >
+                    <Copy className="w-3.5 h-3.5 opacity-70" />
+                  </button>
+                </div>
               </div>
             </div>
 

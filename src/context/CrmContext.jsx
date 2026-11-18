@@ -449,12 +449,34 @@ export function CrmProvider({ children }) {
           nextParents = [newParent, ...nextParents];
         }
 
-        if (parentEmail && !nextAccounts.some(a => a.email?.toLowerCase() === parentEmail)) {
+        const accEmail = parentEmail || `${parentName.toLowerCase().replace(/\s+/g, '')}@spartanparent.com`;
+        const existingAccIdx = nextAccounts.findIndex(a => 
+          (a.email && a.email.toLowerCase() === accEmail.toLowerCase()) ||
+          a.id === `ACC-${parentId}` ||
+          (a.phone && parentPhone && a.phone.replace(/\D/g, '') === parentPhone.replace(/\D/g, ''))
+        );
+
+        if (existingAccIdx >= 0) {
+          const existingAcc = nextAccounts[existingAccIdx];
+          const updatedAcc = {
+            ...existingAcc,
+            id: `ACC-${parentId}`,
+            role: 'parent',
+            name: parentName,
+            center: studentData.center,
+            locations: Array.from(new Set([...(existingAcc.locations || []), studentData.center])),
+            linkedStudents: Array.from(new Set([...(existingAcc.linkedStudents || []), newStudent.name])),
+            password: existingAcc.password || autoPassword,
+            tempPasswordDisplay: existingAcc.tempPasswordDisplay || autoPassword,
+            status: 'Active',
+          };
+          nextAccounts = nextAccounts.map((a, idx) => idx === existingAccIdx ? updatedAcc : a);
+        } else {
           const newAcc = {
             id: `ACC-${parentId}`,
             role: 'parent',
             name: parentName,
-            email: parentEmail,
+            email: accEmail,
             phone: parentPhone || '',
             center: studentData.center,
             locations: [studentData.center],
@@ -1461,7 +1483,7 @@ export function CrmProvider({ children }) {
     setData((prev) => ({
       ...prev,
       parents: (prev.parents || []).map((p) =>
-        p.id === id ? { ...p, ...updatedFields } : p
+        p.id === id || (p.linkedStudentIds || []).includes(id) ? { ...p, ...updatedFields, id } : p
       ),
     }));
     addToast('Parent record updated.');

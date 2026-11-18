@@ -105,6 +105,7 @@ export default function ParentPortalView() {
   const myChildren = useMemo(() => {
     if (parentProfile?.id) {
       const filtered = (data.students || []).filter(s => 
+        s.id === parentProfile.id ||
         s.parentId === parentProfile.id ||
         (parentProfile.email && s.parentEmail && s.parentEmail.toLowerCase() === parentProfile.email.toLowerCase()) ||
         (parentProfile.phone && s.parentPhone && s.parentPhone === parentProfile.phone) ||
@@ -114,6 +115,13 @@ export default function ParentPortalView() {
     }
     return (data.students || []);
   }, [parentProfile, data.students]);
+
+  // Harmonized One Common ID for Kid & Parent (e.g. LS-KKN-2026-001)
+  const commonMemberId = useMemo(() => {
+    if (myChildren[0]?.id && myChildren[0].id.startsWith('LS-')) return myChildren[0].id;
+    if (parentProfile?.id && parentProfile.id.startsWith('LS-')) return parentProfile.id;
+    return myChildren[0]?.id || parentProfile?.id || 'LS-KKN-2026-001';
+  }, [myChildren, parentProfile]);
 
   // Package Audit & Attendance History Modal state
   const [packageHistoryChild, setPackageHistoryChild] = useState(null);
@@ -425,10 +433,10 @@ export default function ParentPortalView() {
           </h1>
           <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left flex items-center gap-2">
             <span>Dashboard</span>
-            {parentProfile.id && (
+            {commonMemberId && (
               <>
                 <span>•</span>
-                <span className="font-mono font-bold text-[#F4510B]">Parent ID: {parentProfile.id}</span>
+                <span className="font-mono font-bold text-[#F4510B]">Parent ID: {commonMemberId}</span>
               </>
             )}
           </p>
