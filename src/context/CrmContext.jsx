@@ -37,6 +37,13 @@ import {
   PACKAGE_REMINDER_THRESHOLD,
   PACKAGE_STATUSES
 } from '../services/packageService';
+import {
+  LEAVE_TYPES,
+  LEAVE_STATUSES,
+  HALF_DAY_SESSIONS,
+  getCoachApprovedLeaveForDate,
+  validateCoachLeavePayload,
+} from '../services/coachLeaveService';
 
 const CrmContext = createContext();
 
@@ -84,26 +91,48 @@ export function CrmProvider({ children }) {
         const rawParents = Array.isArray(parsed.parents) ? parsed.parents : (initialAcademyData.parents || []);
 
         // Migrate & harmonize One Common ID for Kid & Parent, Auto-generate passwords
-        const migratedStudents = rawStudents.map((student) => ({ ...student }));
+        const migratedStudents = rawStudents.map((student) => ({
+          ...student,
+          parentId: student.parentId?.startsWith('LS-') ? student.parentId : (student.id?.startsWith('LS-') ? student.id : student.parentId || student.id),
+        }));
+
         const migratedParents = rawParents.map((parent) => {
-          const matchingChild = migratedStudents.find(
-            (s) =>
+          const normParentPhone = String(parent.phone || '').replace(/\D/g, '');
+          const normParentEmail = String(parent.email || '').trim().toLowerCase();
+          const normParentName = String(parent.name || '').trim().toLowerCase();
+
+          const matchingChild = migratedStudents.find((s) => {
+            const normStudentParentPhone = String(s.parentPhone || '').replace(/\D/g, '');
+            const normStudentParentEmail = String(s.parentEmail || '').trim().toLowerCase();
+            const normStudentParentName = String(s.parentName || '').trim().toLowerCase();
+            const childName = String(s.name || '').trim().toLowerCase();
+
+            return (
               s.id === parent.id ||
               s.parentId === parent.id ||
-              (s.parentEmail && parent.email && s.parentEmail.toLowerCase() === parent.email.toLowerCase()) ||
-              (s.parentPhone && parent.phone && s.parentPhone === parent.phone) ||
-              (Array.isArray(parent.children) && parent.children.includes(s.name))
-          );
+              (Array.isArray(parent.linkedStudentIds) && parent.linkedStudentIds.includes(s.id)) ||
+              (normParentEmail && normStudentParentEmail && normParentEmail === normStudentParentEmail) ||
+              (normParentPhone && normStudentParentPhone && (normParentPhone.slice(-10) === normStudentParentPhone.slice(-10))) ||
+              (normParentName && normStudentParentName && normParentName === normStudentParentName) ||
+              (Array.isArray(parent.children) && parent.children.some((cn) => String(cn || '').trim().toLowerCase() === childName))
+            );
+          });
 
+          // Harmonize to One Common ID for Kid & Parent (e.g. LS-KKN-2026-001)
           const commonId =
             matchingChild?.id && matchingChild.id.startsWith('LS-')
               ? matchingChild.id
-              : parent.id && parent.id.startsWith('LS-')
+              : (parent.id && parent.id.startsWith('LS-'))
               ? parent.id
+              : matchingChild?.id
+              ? matchingChild.id
+              : (Array.isArray(parent.linkedStudentIds) && parent.linkedStudentIds[0])
+              ? parent.linkedStudentIds[0]
               : parent.id;
 
           if (matchingChild) {
             matchingChild.parentId = commonId;
+            matchingChild.parentName = matchingChild.parentName || parent.name;
           }
 
           const autoPass = parent.password || parent.tempPassword || generateParentPassword(parent.phone);
@@ -116,7 +145,10 @@ export function CrmProvider({ children }) {
             tempPasswordDisplay: autoPass,
             portalAccess: true,
             status: 'Active',
-            linkedStudentIds: matchingChild ? [matchingChild.id] : parent.linkedStudentIds || [],
+            children: matchingChild
+              ? Array.from(new Set([...(parent.children || []), matchingChild.name]))
+              : parent.children || [],
+            linkedStudentIds: matchingChild ? [commonId] : parent.linkedStudentIds || [],
           };
         });
 
@@ -190,6 +222,16 @@ export function CrmProvider({ children }) {
           equipment: Array.isArray(parsed.equipment) && parsed.equipment.length > 0 ? parsed.equipment : initialEquipmentInventory,
           equipmentReports: Array.isArray(parsed.equipmentReports) && parsed.equipmentReports.length > 0 ? parsed.equipmentReports : initialEquipmentReports,
           userAccounts: mergedAccounts,
+          coachLeaveRequests: Array.isArray(parsed.coachLeaveRequests)
+            ? parsed.coachLeaveRequests
+            : Array.isArray(parsed.leaveRequests)
+            ? parsed.leaveRequests
+            : (initialAcademyData.coachLeaveRequests || []),
+          leaveRequests: Array.isArray(parsed.coachLeaveRequests)
+            ? parsed.coachLeaveRequests
+            : Array.isArray(parsed.leaveRequests)
+            ? parsed.leaveRequests
+            : (initialAcademyData.leaveRequests || []),
         };
       }
     } catch (e) {
@@ -378,6 +420,7 @@ export function CrmProvider({ children }) {
           const ep = nextParents[existingPIdx];
           const updatedP = {
             ...ep,
+            id: parentId, // Harmonize to One Common ID for Kid & Parent
             children: Array.from(new Set([...(ep.children || []), newStudent.name])),
             linkedStudentIds: Array.from(new Set([...(ep.linkedStudentIds || []), studentId])),
             password: ep.password || autoPassword,
@@ -441,10 +484,38 @@ export function CrmProvider({ children }) {
   };
 
   const updateStudent = (id, updatedFields) => {
-    setData(prev => ({
-      ...prev,
-      students: prev.students.map(s => s.id === id ? { ...s, ...updatedFields } : s)
-    }));
+    setData(prev => {
+      const nextStudents = prev.students.map(s => s.id === id ? { ...s, ...updatedFields } : s);
+      let nextParents = prev.parents || [];
+
+      // If feeStatus was updated, synchronize with linked parent billing
+      if (updatedFields.feeStatus) {
+        const targetStudent = nextStudents.find(s => s.id === id);
+        if (targetStudent) {
+          nextParents = nextParents.map(p => {
+            const isLinked =
+              p.id === targetStudent.parentId ||
+              p.id === targetStudent.id ||
+              (p.linkedStudentIds || []).includes(targetStudent.id) ||
+              (p.children || []).includes(targetStudent.name);
+            if (isLinked) {
+              return {
+                ...p,
+                pendingDue: updatedFields.feeStatus === 'Paid' ? '₹0' : '₹6,500',
+                totalFeesPaid: updatedFields.feeStatus === 'Paid' ? (p.totalFeesPaid === '₹0' ? '₹6,500' : p.totalFeesPaid) : p.totalFeesPaid,
+              };
+            }
+            return p;
+          });
+        }
+      }
+
+      return {
+        ...prev,
+        students: nextStudents,
+        parents: nextParents,
+      };
+    });
     addToast('Student details updated.');
   };
 
@@ -1036,27 +1107,176 @@ export function CrmProvider({ children }) {
     });
   };
 
-  const applyLeave = (leaveData) => {
-    const newLeave = {
-      ...leaveData,
-      id: `LEV-${100 + data.leaveRequests.length + 1}`,
-      appliedOn: new Date().toISOString().split('T')[0],
-      status: 'Pending'
+  // ==========================================================================
+  // Coach Leave Request Workflow (Unified Coach Portal <-> Super Admin <-> Admin)
+  // ==========================================================================
+  const applyCoachLeave = (leavePayload = {}) => {
+    const coachId = leavePayload.coachId || '';
+    const coachName = leavePayload.coachName || '';
+    const location = leavePayload.location || leavePayload.center || 'KK NAGAR';
+    const leaveType = leavePayload.leaveType || LEAVE_TYPES.FULL_DAY;
+    const halfDaySession =
+      leavePayload.halfDaySession ||
+      (leaveType === LEAVE_TYPES.HALF_DAY ? HALF_DAY_SESSIONS.MORNING : null);
+    const startDate = leavePayload.startDate || new Date().toISOString().split('T')[0];
+    const endDate = leavePayload.endDate || startDate;
+    const reason = (leavePayload.reason || '').trim();
+    const attachmentUrl = leavePayload.attachmentUrl || '';
+    const attachmentName = leavePayload.attachmentName || '';
+
+    const validation = validateCoachLeavePayload({
+      coachId,
+      coachName,
+      startDate,
+      endDate,
+      leaveType,
+      reason,
+    });
+
+    if (!validation.isValid) {
+      addToast(validation.errors[0] || 'Incomplete leave request details.', 'error');
+      return { success: false, errors: validation.errors };
+    }
+
+    // Duplicate detection: prevent identical active pending request for same coach and dates
+    const existingPending = (data.coachLeaveRequests || []).find(
+      (r) =>
+        r.coachId === coachId &&
+        r.status === LEAVE_STATUSES.PENDING &&
+        r.startDate <= endDate &&
+        (r.endDate || r.startDate) >= startDate
+    );
+    if (existingPending) {
+      addToast(`A pending leave request (${existingPending.id}) is already awaiting review for these dates.`, 'error');
+      return { success: false, duplicate: true, error: 'Duplicate pending leave request', existingId: existingPending.id };
+    }
+
+    // Generate collision-free Leave Request ID: CLR-001, CLR-002...
+    const nextId = generateUniquePrefixedId(data.coachLeaveRequests || [], 'CLR');
+    const today = new Date().toISOString().split('T')[0];
+    const nowIso = new Date().toISOString();
+
+    const newRequest = {
+      id: nextId,
+      coachId,
+      coachName,
+      location,
+      center: location,
+      leaveType,
+      halfDaySession,
+      startDate,
+      endDate,
+      reason,
+      attachmentUrl,
+      attachmentName,
+      status: LEAVE_STATUSES.PENDING,
+      appliedOn: today,
+      submittedAt: nowIso,
+      reviewedBy: null,
+      reviewedRole: null,
+      reviewedAt: null,
+      reviewNotes: '',
     };
-    setData(prev => ({
-      ...prev,
-      leaveRequests: [newLeave, ...prev.leaveRequests]
-    }));
-    addToast('Leave request submitted successfully.');
+
+    // Cross-portal notification for Admins & Super Admins
+    const adminNotif = createNotificationRecord({
+      targetRole: 'admin',
+      targetLocation: location,
+      title: `Coach Leave Request: ${coachName}`,
+      message: `${coachName} (${coachId}) submitted a ${leaveType} leave request for ${startDate} to ${endDate}. Reason: ${reason}`,
+      type: 'warning',
+    });
+
+    const superAdminNotif = createNotificationRecord({
+      targetRole: 'super_admin',
+      targetLocation: location,
+      title: `Coach Leave Request: ${coachName}`,
+      message: `${coachName} submitted ${leaveType} leave (${startDate} to ${endDate}) pending review.`,
+      type: 'warning',
+    });
+
+    setData((prev) => {
+      const nextCoachLeaves = [newRequest, ...(prev.coachLeaveRequests || [])];
+      return {
+        ...prev,
+        coachLeaveRequests: nextCoachLeaves,
+        leaveRequests: nextCoachLeaves, // Synchronize for backwards compatibility
+        notifications: [adminNotif, superAdminNotif, ...(prev.notifications || [])].slice(0, 80),
+      };
+    });
+
+    addToast(`Leave request ${nextId} submitted successfully. Status: Pending.`, 'success');
+    return { success: true, request: newRequest };
   };
 
-  const updateLeaveStatus = (id, newStatus, reviewer) => {
-    setData(prev => ({
-      ...prev,
-      leaveRequests: prev.leaveRequests.map(l => l.id === id ? { ...l, status: newStatus, reviewedBy: reviewer || 'Admin' } : l)
-    }));
-    addToast(`Leave request ${newStatus}.`);
+  const reviewCoachLeave = (requestId, { status, reviewedBy, reviewedRole, reviewNotes } = {}) => {
+    if (status !== LEAVE_STATUSES.APPROVED && status !== LEAVE_STATUSES.REJECTED) {
+      addToast('Invalid review status. Must be Approved or Rejected.', 'error');
+      return { success: false, error: 'Invalid status' };
+    }
+
+    const targetReq = (data.coachLeaveRequests || []).find((r) => r.id === requestId);
+    if (!targetReq) {
+      addToast(`Leave request ${requestId} not found.`, 'error');
+      return { success: false, error: 'Request not found' };
+    }
+
+    const reviewerName = reviewedBy || (currentPortal === 'super_coach' ? 'Super Admin' : 'Admin');
+    const reviewerRole = reviewedRole || (currentPortal === 'super_coach' ? 'super_admin' : 'admin');
+    const nowIso = new Date().toISOString();
+
+    const updatedRequest = {
+      ...targetReq,
+      status,
+      reviewedBy: reviewerName,
+      reviewedRole: reviewerRole,
+      reviewedAt: nowIso,
+      reviewNotes:
+        reviewNotes ||
+        (status === LEAVE_STATUSES.APPROVED
+          ? 'Approved by Academy Administration.'
+          : 'Declined according to staffing schedule requirements.'),
+    };
+
+    // Notify the Coach
+    const coachNotif = createNotificationRecord({
+      targetRole: 'coach',
+      targetCoachId: targetReq.coachId,
+      targetLocation: targetReq.location,
+      title: `Leave Request ${status}: ${targetReq.id}`,
+      message: `Your ${targetReq.leaveType} leave request for ${targetReq.startDate} to ${targetReq.endDate} has been ${status.toLowerCase()} by ${reviewerName}.${reviewNotes ? ` Note: ${reviewNotes}` : ''}`,
+      type: status === LEAVE_STATUSES.APPROVED ? 'success' : 'error',
+    });
+
+    setData((prev) => {
+      const nextCoachLeaves = (prev.coachLeaveRequests || []).map((r) =>
+        r.id === requestId ? updatedRequest : r
+      );
+      return {
+        ...prev,
+        coachLeaveRequests: nextCoachLeaves,
+        leaveRequests: nextCoachLeaves,
+        notifications: [coachNotif, ...(prev.notifications || [])].slice(0, 80),
+      };
+    });
+
+    addToast(`Coach leave request ${requestId} has been ${status}.`, 'success');
+    return { success: true, request: updatedRequest };
   };
+
+  const deleteCoachLeave = (requestId) => {
+    setData((prev) => ({
+      ...prev,
+      coachLeaveRequests: (prev.coachLeaveRequests || []).filter((r) => r.id !== requestId),
+      leaveRequests: (prev.leaveRequests || []).filter((r) => r.id !== requestId),
+    }));
+    addToast(`Leave request ${requestId} removed.`, 'info');
+  };
+
+  // Legacy wrappers for backwards compatibility
+  const applyLeave = (leaveData) => applyCoachLeave(leaveData);
+  const updateLeaveStatus = (id, newStatus, reviewer, reviewNotes) =>
+    reviewCoachLeave(id, { status: newStatus, reviewedBy: reviewer, reviewNotes });
 
   const createTicket = (ticketData) => {
     const newTicket = {
@@ -2991,6 +3211,10 @@ export function CrmProvider({ children }) {
         markAttendance,
         applyLeave,
         updateLeaveStatus,
+        applyCoachLeave,
+        reviewCoachLeave,
+        deleteCoachLeave,
+        getCoachApprovedLeaveForDate,
         createTicket,
         updateTicketStatus,
         addTicketReply,

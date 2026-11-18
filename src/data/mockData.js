@@ -40,6 +40,7 @@ export const initialAcademyData = {
   competitions: [],
 
   leaveRequests: [],
+  coachLeaveRequests: [],
 
   feedback: [],
 

@@ -47,6 +47,7 @@ import { checkScheduleConflict } from '../../services/scheduleService';
 import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
 import AttendanceManagement from '../admin/AttendanceManagement';
 import LiveCalendarButton from '../../components/common/LiveCalendarButton';
+import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
 
 export default function SuperCoachPortalView() {
   const {
@@ -1773,6 +1774,18 @@ export default function SuperCoachPortalView() {
             >
               Coach Attendance Register
             </button>
+            <button
+              type="button"
+              onClick={() => setAttendanceSubView('coach_leaves')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'coach_leaves'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Coach Leave Requests{(data.coachLeaveRequests || []).filter(r => r.status === 'Pending').length > 0 ? ` (${(data.coachLeaveRequests || []).filter(r => r.status === 'Pending').length})` : ''}
+            </button>
+
             <button
               type="button"
               onClick={() => setAttendanceSubView('student_progression')}

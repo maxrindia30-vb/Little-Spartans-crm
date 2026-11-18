@@ -220,24 +220,17 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
     });
   };
 
-  const totalSlots = (data.classes || []).reduce((sum, b) => sum + (b.capacity || 20), 0);
+  const totalSlots = (data.classes || []).reduce((sum, b) => sum + (Number(b.capacity) || 20), 0);
   const totalEnrolled = (data.classes || []).reduce(
     (sum, b) => sum + getBatchRosterState(b).enrolledIds.length,
     0
   );
 
-  const locationsCount = activeLocations.length > 0 ? activeLocations.length : 4;
-  const batchesCount = (data.classes && data.classes.length > 0) ? data.classes.length : 12;
-  const enrolledStudentsCount =
-    totalEnrolled > 0
-      ? totalEnrolled
-      : (data.students && data.students.length > 0)
-      ? data.students.length
-      : 248;
-  const availableSlotsCount =
-    totalSlots > 0
-      ? Math.max(0, totalSlots - totalEnrolled)
-      : (batchesCount * 20 > 0 ? batchesCount * 20 : 240);
+  const activeBatchesCount = (data.classes || []).filter((c) => (c.status || 'Active') === 'Active').length;
+  const locationsCount = activeLocations.length;
+  const batchesCount = (data.classes || []).length;
+  const enrolledStudentsCount = totalEnrolled;
+  const availableSlotsCount = Math.max(0, totalSlots - totalEnrolled);
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -273,8 +266,10 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
               </span>
             </div>
           </div>
-          <span className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#E8F8EE] text-[#16A34A] shrink-0">
-            ↑ +2
+          <span className={`inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${
+            batchesCount > 0 ? 'bg-[#E8F8EE] text-[#16A34A]' : 'bg-[#172B500C] text-[#172B50]/60'
+          }`}>
+            {batchesCount > 0 ? `${activeBatchesCount} Active` : '0 Active'}
           </span>
         </div>
 
@@ -293,8 +288,10 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
               </span>
             </div>
           </div>
-          <span className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#E8F8EE] text-[#16A34A] shrink-0">
-            ↑ +18
+          <span className={`inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${
+            enrolledStudentsCount > 0 ? 'bg-[#E8F8EE] text-[#16A34A]' : 'bg-[#172B500C] text-[#172B50]/60'
+          }`}>
+            {enrolledStudentsCount > 0 ? `${enrolledStudentsCount} Enrolled` : '0 Enrolled'}
           </span>
         </div>
 
@@ -314,7 +311,7 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
             </div>
           </div>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#E8F4FD] text-[#0284C7] border border-[#0284C720] shrink-0">
-            <Armchair className="w-3.5 h-3.5" /> 20 per Batch
+            <Armchair className="w-3.5 h-3.5" /> {batchesCount > 0 ? '20 per Batch' : '0 Capacity'}
           </span>
         </div>
       </div>

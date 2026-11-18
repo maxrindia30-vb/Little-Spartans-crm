@@ -237,6 +237,33 @@ export default function ParentManagement() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredParents.map(parent => {
+            const normParentPhone = String(parent.phone || '').replace(/\D/g, '');
+            const normParentEmail = String(parent.email || '').trim().toLowerCase();
+            const normParentName = String(parent.name || '').trim().toLowerCase();
+
+            const matchedStudent = (data.students || []).find((s) => {
+              const sPhone = String(s.parentPhone || '').replace(/\D/g, '');
+              const sEmail = String(s.parentEmail || '').trim().toLowerCase();
+              const sParentName = String(s.parentName || '').trim().toLowerCase();
+              const childName = String(s.name || '').trim().toLowerCase();
+
+              return (
+                s.id === parent.id ||
+                s.parentId === parent.id ||
+                (Array.isArray(parent.linkedStudentIds) && parent.linkedStudentIds.includes(s.id)) ||
+                (normParentEmail && sEmail && normParentEmail === sEmail) ||
+                (normParentPhone && sPhone && (normParentPhone.slice(-10) === sPhone.slice(-10))) ||
+                (normParentName && sParentName && normParentName === sParentName) ||
+                (Array.isArray(parent.children) && parent.children.some((cn) => String(cn || '').trim().toLowerCase() === childName))
+              );
+            });
+
+            // One Common ID for Kid & Parent (e.g. LS-KKN-2026-001)
+            const displayParentId =
+              (parent.id && parent.id.startsWith('LS-'))
+                ? parent.id
+                : (matchedStudent?.id || parent.linkedStudentIds?.[0] || parent.id);
+
             const linkedAccount = (data.userAccounts || []).find(
               acc => acc.role === 'parent' && acc.email.toLowerCase() === (parent.email || '').toLowerCase()
             );
@@ -248,28 +275,28 @@ export default function ParentManagement() {
               linkedAccount?.tempPasswordDisplay ||
               `Spartan@${String(parent.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`;
 
-            const isPasswordVisible = !!visiblePasswords[parent.id];
-            const isCopied = copiedParentId === parent.id;
+            const isPasswordVisible = !!visiblePasswords[displayParentId] || !!visiblePasswords[parent.id];
+            const isCopied = copiedParentId === displayParentId || copiedParentId === parent.id;
 
             return (
               <div
-                key={parent.id}
+                key={displayParentId || parent.id}
                 className={`bg-white rounded-2xl p-5 border shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow ${
-                  highlightedParentId === parent.id ? 'border-[#F4510B] ring-2 ring-[#F4510B]/30' : 'border-[#172B501A]'
+                  highlightedParentId === parent.id || highlightedParentId === displayParentId ? 'border-[#F4510B] ring-2 ring-[#F4510B]/30' : 'border-[#172B501A]'
                 }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
-                        {parent.id} • {parent.center}
+                        {displayParentId} • {parent.center}
                       </span>
                       <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{parent.name}</h3>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => setEditingParent({ ...parent })}
+                        onClick={() => setEditingParent({ ...parent, id: displayParentId })}
                         title="Edit Parent Record"
                         className="p-1.5 rounded-lg bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] cursor-pointer"
                       >
@@ -310,7 +337,7 @@ export default function ParentManagement() {
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          onClick={() => togglePasswordVisibility(parent.id)}
+                          onClick={() => togglePasswordVisibility(displayParentId)}
                           title={isPasswordVisible ? 'Hide Password' : 'View Password'}
                           className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
                         >
@@ -322,7 +349,7 @@ export default function ParentManagement() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleCopyPassword(parent.id, parentPassword)}
+                          onClick={() => handleCopyPassword(displayParentId, parentPassword)}
                           title="Copy Password to Clipboard"
                           className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
                         >

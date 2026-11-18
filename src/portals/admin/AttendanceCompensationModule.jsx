@@ -28,6 +28,7 @@ import {
 import AttendanceManagement from './AttendanceManagement';
 import CoachAttendanceRegister from './CoachAttendanceRegister';
 import StudentCompensationManager from './StudentCompensationManager';
+import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
 import Modal from '../../components/common/Modal';
 
 const STATUS_BADGE_MAP = {
@@ -63,6 +64,7 @@ export default function AttendanceCompensationModule() {
     if (tab === 'student_att' || tab === 'student_attendance' || tab === 'attendance') return 'student_attendance';
     if (tab === 'coach_att' || tab === 'coach_attendance') return 'coach_attendance';
     if (tab === 'student_comp' || tab === 'student_compensation' || tab === 'compensation') return 'student_compensation';
+    if (tab === 'coach_leaves' || tab === 'coach_leave_requests' || tab === 'leave_requests') return 'coach_leaves';
     return 'student_attendance';
   };
 
@@ -368,6 +370,18 @@ export default function AttendanceCompensationModule() {
             }`}
           >
             Coach Attendance
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('coach_leaves')}
+            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+              currentTab === 'coach_leaves'
+                ? 'bg-[#F4510B] text-white shadow-xs'
+                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+            }`}
+          >
+            Coach Leaves{(data.coachLeaveRequests || []).filter(r => r.status === 'Pending').length > 0 ? ` (${(data.coachLeaveRequests || []).filter(r => r.status === 'Pending').length} Pending)` : ''}
           </button>
 
           <button

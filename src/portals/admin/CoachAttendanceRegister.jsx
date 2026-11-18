@@ -11,9 +11,25 @@ import {
   Search, 
   Download, 
   Save, 
-  Check 
+  Check,
+  Plus,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Lock
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
+import Modal from '../../components/common/Modal';
+import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
+import {
+  LEAVE_TYPES,
+  LEAVE_STATUSES,
+  HALF_DAY_SESSIONS,
+  getCoachApprovedLeaveForDate,
+  formatLeaveDateRange,
+  calculateLeaveDurationDays
+} from '../../services/coachLeaveService';
 
 const TIME_SLOTS = [
   '6:00 am',
@@ -47,7 +63,7 @@ export default function CoachAttendanceRegister({
   defaultCoachId, 
   allowedCoaches 
 }) {
-  const { data, addToast, currentPortal: crmPortal } = useCrm();
+  const { data, addToast, applyCoachLeave, currentPortal: crmPortal } = useCrm();
   const effectivePortal = portalProp || crmPortal || 'admin';
 
   // State: selected date, default 11-11-2026 (YYYY-MM-DD = 2026-11-11)
@@ -58,6 +74,16 @@ export default function CoachAttendanceRegister({
   const [selectedCoachId, setSelectedCoachId] = useState(defaultCoachId || 'all');
   const [selectedBatchId, setSelectedBatchId] = useState('all');
   const [coachSearchQuery, setCoachSearchQuery] = useState('');
+
+  // Coach Leave Workflow States
+  const [showLeaveManager, setShowLeaveManager] = useState(false);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [formLeaveType, setFormLeaveType] = useState(LEAVE_TYPES.FULL_DAY);
+  const [formHalfDaySession, setFormHalfDaySession] = useState(HALF_DAY_SESSIONS.MORNING);
+  const [formStartDate, setFormStartDate] = useState(selectedDate);
+  const [formEndDate, setFormEndDate] = useState(selectedDate);
+  const [formReason, setFormReason] = useState('');
+  const [formAttachmentName, setFormAttachmentName] = useState('');
 
   // Dropdown Open states
   const [isCoachDropdownOpen, setIsCoachDropdownOpen] = useState(false);
@@ -184,6 +210,34 @@ export default function CoachAttendanceRegister({
     return found ? found.name : 'All Coaches';
   }, [selectedCoachId, data.coaches]);
 
+  // Target coach ID for leave queries and applications
+  const targetCoachIdForLeave = useMemo(() => {
+    if (defaultCoachId) return defaultCoachId;
+    if (selectedCoachId !== 'all') return selectedCoachId;
+    return (data.coaches || [])[0]?.id || '';
+  }, [defaultCoachId, selectedCoachId, data.coaches]);
+
+  // Target coach record
+  const targetCoachRecord = useMemo(() => {
+    if (!targetCoachIdForLeave) return null;
+    return (data.coaches || []).find(c => c.id === targetCoachIdForLeave) || null;
+  }, [targetCoachIdForLeave, data.coaches]);
+
+  // Active approved leave covering the currently selected date
+  const activeApprovedLeave = useMemo(() => {
+    if (!targetCoachIdForLeave) return null;
+    return getCoachApprovedLeaveForDate(data.coachLeaveRequests || [], targetCoachIdForLeave, selectedDate);
+  }, [data.coachLeaveRequests, targetCoachIdForLeave, selectedDate]);
+
+  // Count pending leaves for current coach or all coaches
+  const pendingLeavesCount = useMemo(() => {
+    const list = data.coachLeaveRequests || [];
+    if (effectivePortal === 'coach' && defaultCoachId) {
+      return list.filter(r => r.coachId === defaultCoachId && r.status === LEAVE_STATUSES.PENDING).length;
+    }
+    return list.filter(r => r.status === LEAVE_STATUSES.PENDING).length;
+  }, [data.coachLeaveRequests, effectivePortal, defaultCoachId]);
+
   // Selected batch label
   const selectedBatchLabel = useMemo(() => {
     if (selectedBatchId === 'all') return 'All Batches';
@@ -231,10 +285,49 @@ export default function CoachAttendanceRegister({
     }
   };
 
-  // Save Attendance action
+  // Save Attendance action with strict approved leave lock
   const handleSaveAttendance = () => {
+    if (activeApprovedLeave && activeApprovedLeave.leaveType === LEAVE_TYPES.FULL_DAY) {
+      addToast(`Cannot mark normal attendance: Coach ${targetCoachRecord?.name || ''} is on Approved Full-Day Leave on ${formatDateToDMY(selectedDate)}.`, 'error');
+      return;
+    }
     const coachLabel = selectedCoachId === 'all' ? 'All Coaches' : selectedCoachLabel;
     addToast(`Coach attendance saved successfully for ${coachLabel} on ${formatDateToDMY(selectedDate)}.`, 'success');
+  };
+
+  // Apply Leave Handlers
+  const handleOpenApplyModal = () => {
+    setFormStartDate(selectedDate);
+    setFormEndDate(selectedDate);
+    setFormLeaveType(LEAVE_TYPES.FULL_DAY);
+    setFormHalfDaySession(HALF_DAY_SESSIONS.MORNING);
+    setFormReason('');
+    setFormAttachmentName('');
+    setIsApplyModalOpen(true);
+  };
+
+  const handleApplyLeaveSubmit = (e) => {
+    e.preventDefault();
+    if (!targetCoachIdForLeave) {
+      addToast('No coach profile found to submit leave application.', 'error');
+      return;
+    }
+    const coachRec = (data.coaches || []).find(c => c.id === targetCoachIdForLeave);
+    const res = applyCoachLeave({
+      coachId: targetCoachIdForLeave,
+      coachName: coachRec?.name || selectedCoachLabel,
+      coachEmail: coachRec?.email || '',
+      center: coachRec?.center || 'Main Branch',
+      leaveType: formLeaveType,
+      halfDaySession: formLeaveType === LEAVE_TYPES.HALF_DAY ? formHalfDaySession : undefined,
+      startDate: formStartDate,
+      endDate: formEndDate,
+      reason: formReason,
+      attachmentName: formAttachmentName || undefined,
+    });
+    if (res.success) {
+      setIsApplyModalOpen(false);
+    }
   };
 
   // Export Data action
@@ -288,28 +381,118 @@ export default function CoachAttendanceRegister({
             </h2>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+            {/* Apply for Leave Button */}
+            <button
+              type="button"
+              onClick={handleOpenApplyModal}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#FFE8D6] transition-all border border-[#F4510B30] shadow-2xs cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-[#F4510B]" />
+              <span>Apply for Leave</span>
+            </button>
+
+            {/* View Leave Requests Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowLeaveManager((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-2xs cursor-pointer ${
+                showLeaveManager
+                  ? 'bg-[#172B50] text-white border-[#172B50]'
+                  : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-slate-50'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>{effectivePortal === 'coach' ? 'My Leave Requests' : 'Coach Leaves'}</span>
+              {pendingLeavesCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-[#F4510B] text-white">
+                  {pendingLeavesCount}
+                </span>
+              )}
+            </button>
+
             {/* Export Data Button */}
             <button
               type="button"
               onClick={handleExportData}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#FFE8D6] transition-all border border-[#F4510B25] shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#FFE8D6] transition-all border border-[#F4510B25] shadow-2xs cursor-pointer"
             >
               <Download className="w-4 h-4 text-[#F4510B]" />
-              <span>Export Data</span>
+              <span className="hidden sm:inline">Export</span>
             </button>
 
             {/* Save Attendance Button */}
             <button
               type="button"
               onClick={handleSaveAttendance}
-              className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#F4510B] text-white hover:bg-[#E04505] transition-all shadow-xs cursor-pointer"
+              disabled={activeApprovedLeave && activeApprovedLeave.leaveType === LEAVE_TYPES.FULL_DAY}
+              className={`inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer ${
+                activeApprovedLeave && activeApprovedLeave.leaveType === LEAVE_TYPES.FULL_DAY
+                  ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'
+                  : 'bg-[#F4510B] text-white hover:bg-[#E04505]'
+              }`}
+              title={activeApprovedLeave && activeApprovedLeave.leaveType === LEAVE_TYPES.FULL_DAY ? 'Attendance locked: Coach is on approved leave' : 'Save Attendance'}
             >
-              <Save className="w-4 h-4 text-white" />
-              <span>Save Attendance</span>
+              {activeApprovedLeave && activeApprovedLeave.leaveType === LEAVE_TYPES.FULL_DAY ? (
+                <>
+                  <Lock className="w-4 h-4 text-slate-400" />
+                  <span>Locked (On Leave)</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 text-white" />
+                  <span>Save Attendance</span>
+                </>
+              )}
             </button>
           </div>
         </div>
+
+        {/* Approved Leave Alert Banner */}
+        {activeApprovedLeave && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-extrabold text-amber-950">
+                  On Approved {activeApprovedLeave.leaveType} Leave ({formatLeaveDateRange(activeApprovedLeave.startDate, activeApprovedLeave.endDate)})
+                </p>
+                <p className="text-[11px] text-amber-800/85 mt-0.5">
+                  Coach: <strong className="font-bold">{activeApprovedLeave.coachName}</strong> ({activeApprovedLeave.coachId}) • Reason: &ldquo;{activeApprovedLeave.reason}&rdquo;
+                  {activeApprovedLeave.leaveType === LEAVE_TYPES.HALF_DAY && ` • Session: ${activeApprovedLeave.halfDaySession || 'Morning'}`}
+                </p>
+              </div>
+            </div>
+            <span className="self-start sm:self-auto px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+              Leave Approved
+            </span>
+          </div>
+        )}
+
+        {/* Embedded Coach Leave Requests Manager if toggled */}
+        {showLeaveManager && (
+          <div className="pt-2 border-t border-[#172B5014] animate-in fade-in">
+            <div className="flex items-center justify-between pb-3">
+              <h3 className="text-sm font-extrabold text-[#172B50] flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#F4510B]" />
+                <span>Coach Leave Management</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowLeaveManager(false)}
+                className="text-xs text-[#172B50]/60 hover:text-[#F4510B] font-bold cursor-pointer"
+              >
+                Close View ✕
+              </button>
+            </div>
+            <CoachLeaveRequestsManager
+              mode={effectivePortal}
+              coachId={effectivePortal === 'coach' ? defaultCoachId : undefined}
+            />
+          </div>
+        )}
 
         {/* Filter Controls Row: All Coaches, Date Picker, Batch / Class, Search Coach */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-end pt-1">
@@ -606,6 +789,15 @@ export default function CoachAttendanceRegister({
                     }`}>
                       {day.dateNumber}
                     </span>
+                    {(() => {
+                      const dayLeave = getCoachApprovedLeaveForDate(data.coachLeaveRequests || [], targetCoachIdForLeave, day.fullDate);
+                      if (!dayLeave) return null;
+                      return (
+                        <span className="block mt-1 text-[9px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 rounded px-1 py-0.5 truncate">
+                          Leave
+                        </span>
+                      );
+                    })()}
                   </button>
                 ))}
               </div>
@@ -695,31 +887,210 @@ export default function CoachAttendanceRegister({
 
             {/* Grid of days */}
             <div className="grid grid-cols-7 divide-x divide-y divide-[#172B5012]">
-              {monthGridDays.map((cell, idx) => (
-                <div
-                  key={`${cell.fullDate}-${idx}`}
-                  onClick={() => setSelectedDate(cell.fullDate)}
-                  className={`h-20 sm:h-24 p-2 transition-all cursor-pointer hover:bg-[#FFF4E8]/30 ${
-                    !cell.isCurrentMonth ? 'opacity-35 bg-slate-50/50' : ''
-                  } ${cell.isSelected ? 'bg-[#FFF4E8]' : ''}`}
-                >
-                  <span
-                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black ${
-                      cell.isSelected
-                        ? 'bg-[#172B50] text-white shadow-sm'
-                        : cell.isCurrentMonth
-                        ? 'text-[#172B50]'
-                        : 'text-slate-400'
-                    }`}
+              {monthGridDays.map((cell, idx) => {
+                const cellLeave = getCoachApprovedLeaveForDate(data.coachLeaveRequests || [], targetCoachIdForLeave, cell.fullDate);
+                return (
+                  <div
+                    key={`${cell.fullDate}-${idx}`}
+                    onClick={() => setSelectedDate(cell.fullDate)}
+                    className={`h-20 sm:h-24 p-2 transition-all cursor-pointer hover:bg-[#FFF4E8]/30 ${
+                      !cell.isCurrentMonth ? 'opacity-35 bg-slate-50/50' : ''
+                    } ${cell.isSelected ? 'bg-[#FFF4E8]' : ''}`}
                   >
-                    {cell.dateNumber}
-                  </span>
-                </div>
-              ))}
+                    <span
+                      className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black ${
+                        cell.isSelected
+                          ? 'bg-[#172B50] text-white shadow-sm'
+                          : cell.isCurrentMonth
+                          ? 'text-[#172B50]'
+                          : 'text-slate-400'
+                      }`}
+                    >
+                      {cell.dateNumber}
+                    </span>
+                    {cellLeave && (
+                      <span className="block mt-1 text-[9px] font-black uppercase tracking-wider text-amber-700 bg-amber-100/90 rounded px-1 py-0.5 truncate text-center">
+                        On Leave
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
+
+      {/* ========================================================= */}
+      {/* APPLY FOR LEAVE MODAL                                     */}
+      {/* ========================================================= */}
+      {isApplyModalOpen && (
+        <Modal
+          isOpen={isApplyModalOpen}
+          onClose={() => setIsApplyModalOpen(false)}
+          title="Apply for Coach Leave"
+        >
+          <form onSubmit={handleApplyLeaveSubmit} className="space-y-4">
+            {/* Auto-filled Coach Identity Banner */}
+            <div className="bg-[#FFF4E8] border border-[#F4510B20] rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#F4510B]">
+                  Applicant Coach
+                </span>
+                <h4 className="text-sm font-black text-[#172B50] mt-0.5">
+                  {targetCoachRecord?.name || selectedCoachLabel}
+                </h4>
+                <p className="text-[11px] text-[#172B50]/70">
+                  ID: <strong className="font-bold">{targetCoachIdForLeave}</strong> • Location: {targetCoachRecord?.center || 'Main Branch'}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center font-black text-sm shrink-0">
+                {(targetCoachRecord?.name || 'C')[0]}
+              </div>
+            </div>
+
+            {/* Leave Type: Full Day / Half Day */}
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1.5">
+                Leave Type <span className="text-[#F4510B]">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormLeaveType(LEAVE_TYPES.FULL_DAY)}
+                  className={`py-2 px-3 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                    formLeaveType === LEAVE_TYPES.FULL_DAY
+                      ? 'bg-[#172B50] text-white border-[#172B50]'
+                      : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-[#FFF4E8]'
+                  }`}
+                >
+                  Full Day
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormLeaveType(LEAVE_TYPES.HALF_DAY)}
+                  className={`py-2 px-3 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                    formLeaveType === LEAVE_TYPES.HALF_DAY
+                      ? 'bg-[#172B50] text-white border-[#172B50]'
+                      : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-[#FFF4E8]'
+                  }`}
+                >
+                  Half Day
+                </button>
+              </div>
+            </div>
+
+            {/* Half Day Session Selector */}
+            {formLeaveType === LEAVE_TYPES.HALF_DAY && (
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1.5">
+                  Half Day Session <span className="text-[#F4510B]">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.values(HALF_DAY_SESSIONS).map((sess) => (
+                    <button
+                      key={sess}
+                      type="button"
+                      onClick={() => setFormHalfDaySession(sess)}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        formHalfDaySession === sess
+                          ? 'bg-[#F4510B] text-white border-[#F4510B]'
+                          : 'bg-white text-[#172B50] border-[#172B5020] hover:bg-slate-50'
+                      }`}
+                    >
+                      {sess}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">
+                  Start Date <span className="text-[#F4510B]">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formStartDate}
+                  onChange={(e) => {
+                    setFormStartDate(e.target.value);
+                    if (formLeaveType === LEAVE_TYPES.HALF_DAY || e.target.value > formEndDate) {
+                      setFormEndDate(e.target.value);
+                    }
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-[#172B5025] focus:outline-none focus:border-[#F4510B]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">
+                  End Date <span className="text-[#F4510B]">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  disabled={formLeaveType === LEAVE_TYPES.HALF_DAY}
+                  value={formEndDate}
+                  min={formStartDate}
+                  onChange={(e) => setFormEndDate(e.target.value)}
+                  className={`w-full px-3 py-2 text-xs font-bold rounded-xl border border-[#172B5025] focus:outline-none focus:border-[#F4510B] ${
+                    formLeaveType === LEAVE_TYPES.HALF_DAY ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Reason */}
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                Reason for Leave <span className="text-[#F4510B]">*</span>
+              </label>
+              <textarea
+                required
+                rows={3}
+                placeholder="State the reason for leave (medical, personal, family emergency, etc.)..."
+                value={formReason}
+                onChange={(e) => setFormReason(e.target.value)}
+                className="w-full p-3 text-xs rounded-xl border border-[#172B5025] focus:outline-none focus:border-[#F4510B]"
+              />
+            </div>
+
+            {/* Optional Attachment */}
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                Optional Attachment / Doctor Note (File Name)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. medical_certificate.pdf or leave_note.jpg"
+                value={formAttachmentName}
+                onChange={(e) => setFormAttachmentName(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5025] focus:outline-none focus:border-[#F4510B]"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#172B5014]">
+              <button
+                type="button"
+                onClick={() => setIsApplyModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl text-xs font-black bg-[#F4510B] text-white hover:bg-[#E04505] shadow-xs cursor-pointer"
+              >
+                Submit Leave Request
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
