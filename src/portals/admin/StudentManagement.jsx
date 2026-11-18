@@ -23,7 +23,8 @@ import {
   ChevronDown,
   Layers,
   X,
-  Hash
+  Hash,
+  Check
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -40,6 +41,32 @@ export default function StudentManagement() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [viewStudent, setViewStudent] = useState(null);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [openFeeDropdownId, setOpenFeeDropdownId] = useState(null);
+
+  // Close fee status dropdown on outside click or Escape
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.fee-status-dropdown-container')) {
+        setOpenFeeDropdownId(null);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setOpenFeeDropdownId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleSelectFeeStatus = (student, newStatus) => {
+    updateStudent(student.id, { feeStatus: newStatus });
+    setOpenFeeDropdownId(null);
+  };
 
   useEffect(() => {
     if (focusedRecord?.type === 'student' && focusedRecord.id) {
@@ -332,7 +359,7 @@ export default function StudentManagement() {
 
       {/* 2. Students Table Container */}
       <div className="bg-white rounded-3xl border border-[#172B5015] shadow-sm overflow-hidden relative">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[360px] pb-28">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-[#FFF4E8] text-[#172B50] border-b border-[#172B5012]">
@@ -575,15 +602,88 @@ export default function StudentManagement() {
 
                     {/* 6. Fee Status */}
                     <td className="py-3.5 px-5 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-extrabold border ${
-                          student.feeStatus === 'Paid'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-[#FFF5ED] text-[#F4510B] border-[#F4510B30]'
-                        }`}
-                      >
-                        {student.feeStatus || 'Paid'}
-                      </span>
+                      <div className="relative inline-block text-left fee-status-dropdown-container">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFeeDropdownId((prev) => (prev === student.id ? null : student.id));
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-extrabold border transition-all cursor-pointer shadow-2xs hover:opacity-90 hover:shadow-xs active:scale-95 ${
+                            (student.feeStatus || 'Pending') === 'Paid'
+                              ? 'bg-[#DCFCE7] text-[#16A34A] border-[#BBF7D0]'
+                              : (student.feeStatus || 'Pending') === 'Unpaid'
+                              ? 'bg-[#FFE4E6] text-[#E11D48] border-[#FECDD3]'
+                              : 'bg-[#FFF5ED] text-[#F4510B] border-[#F4510B30]'
+                          } ${
+                            openFeeDropdownId === student.id ? 'ring-2 ring-offset-1 ring-[#172B5020]' : ''
+                          }`}
+                          title="Click to change Fee Status"
+                        >
+                          <span>{student.feeStatus || 'Pending'}</span>
+                          <ChevronDown
+                            className={`w-3 h-3 stroke-[2.5] transition-transform duration-200 ${
+                              openFeeDropdownId === student.id ? 'rotate-180' : ''
+                            } ${
+                              (student.feeStatus || 'Pending') === 'Paid'
+                                ? 'text-[#16A34A]'
+                                : (student.feeStatus || 'Pending') === 'Unpaid'
+                                ? 'text-[#E11D48]'
+                                : 'text-[#F4510B]'
+                            }`}
+                          />
+                        </button>
+
+                        {/* Dropdown Options Menu */}
+                        {openFeeDropdownId === student.id && (
+                          <div 
+                            className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-2xl border border-[#172B5018] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 backdrop-blur-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#172B50]/50 border-b border-[#172B500C] mb-1">
+                              Fee Status
+                            </div>
+
+                            {/* Option: Unpaid */}
+                            <button
+                              type="button"
+                              onClick={() => handleSelectFeeStatus(student, 'Unpaid')}
+                              className={`w-full px-3 py-2 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                                student.feeStatus === 'Unpaid'
+                                  ? 'bg-[#FFE4E6]/70 text-[#E11D48] font-black'
+                                  : 'text-[#172B50] hover:bg-rose-50 hover:text-[#E11D48]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#E11D48] shrink-0" />
+                                <span>Unpaid</span>
+                              </div>
+                              {student.feeStatus === 'Unpaid' && (
+                                <Check className="w-3.5 h-3.5 text-[#E11D48] stroke-[2.5]" />
+                              )}
+                            </button>
+
+                            {/* Option: Paid */}
+                            <button
+                              type="button"
+                              onClick={() => handleSelectFeeStatus(student, 'Paid')}
+                              className={`w-full px-3 py-2 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                                student.feeStatus === 'Paid'
+                                  ? 'bg-[#DCFCE7]/70 text-[#16A34A] font-black'
+                                  : 'text-[#172B50] hover:bg-emerald-50 hover:text-[#16A34A]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#16A34A] shrink-0" />
+                                <span>Paid</span>
+                              </div>
+                              {student.feeStatus === 'Paid' && (
+                                <Check className="w-3.5 h-3.5 text-[#16A34A] stroke-[2.5]" />
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
 
                     {/* 7. Actions */}
@@ -868,6 +968,7 @@ export default function StudentManagement() {
                 parentPhone: editingStudent.parentPhone,
                 parentEmail: editingStudent.parentEmail,
                 status: editingStudent.status || 'Active',
+                feeStatus: editingStudent.feeStatus || 'Pending',
                 medicalNote: editingStudent.medicalNote,
               });
               setEditingStudent(null);
