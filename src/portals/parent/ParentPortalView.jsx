@@ -36,7 +36,12 @@ import {
   Building2,
   User,
   Zap,
-  BarChart2
+  BarChart2,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Info,
+  CalendarCheck
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -46,6 +51,16 @@ import {
   formatYmd,
 } from '../../services/scheduleService';
 import { COMPENSATION_REASONS } from '../../services/compensationService';
+import {
+  computeStudentPackage,
+  calculatePackageExpiryDate,
+  calculatePackageOverviewMetrics,
+  PACKAGE_STATUS_CONFIG,
+  PACKAGE_TOTAL_CLASSES,
+  PACKAGE_STATUSES,
+  PACKAGE_REMINDER_THRESHOLD,
+  getStudentPackageAttendance
+} from '../../services/packageService';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
 import Modal from '../../components/common/Modal';
@@ -87,9 +102,31 @@ export default function ParentPortalView() {
 
   // Current logged in parent profile
   const parentProfile = data.parents[0] || { id: '', name: 'Parent Account', email: '' };
-  const myChildren = parentProfile.id
-    ? data.students.filter(s => s.parentId === parentProfile.id)
-    : [];
+  const myChildren = useMemo(() => {
+    if (parentProfile?.id) {
+      const filtered = (data.students || []).filter(s => 
+        s.parentId === parentProfile.id ||
+        (parentProfile.email && s.parentEmail && s.parentEmail.toLowerCase() === parentProfile.email.toLowerCase()) ||
+        (parentProfile.phone && s.parentPhone && s.parentPhone === parentProfile.phone) ||
+        (parentProfile.name && s.parentName && s.parentName.toLowerCase().trim() === parentProfile.name.toLowerCase().trim())
+      );
+      if (filtered.length > 0) return filtered;
+    }
+    return (data.students || []);
+  }, [parentProfile, data.students]);
+
+  // Package Audit & Attendance History Modal state
+  const [packageHistoryChild, setPackageHistoryChild] = useState(null);
+
+  const todayYmd = formatYmd(new Date());
+
+  // Individual Class Package calculations for parent's children (24 classes, 3 months duration)
+  const myChildrenPackages = useMemo(() => {
+    return myChildren.map(child => ({
+      child,
+      pkg: computeStudentPackage(child, data.attendanceRecords || [], todayYmd)
+    }));
+  }, [myChildren, data.attendanceRecords, todayYmd]);
 
   // States for modals
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -105,8 +142,6 @@ export default function ParentPortalView() {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [fbComment, setFbComment] = useState('');
   const [fbRating, setFbRating] = useState('5');
-
-  const todayYmd = formatYmd(new Date());
 
   // Compensation Request Modal state
   const [isCompModalOpen, setIsCompModalOpen] = useState(false);
@@ -1201,6 +1236,204 @@ export default function ParentPortalView() {
 
           </div>
 
+          {/* INDIVIDUAL STUDENT CLASS PACKAGES & 24-CLASS QUOTA TRACKING */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#172B501A] shadow-card">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-[#172B5010]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#F4510B]/10 border border-[#F4510B]/20 flex items-center justify-center text-[#F4510B] shrink-0">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                      Individual Student Class Packages
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white">
+                      24 Classes • 3 Months
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#172B50]/65 mt-0.5">
+                    Live attendance-deducted class balance, validity dates &amp; automatic renewal triggers for your athletes
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentView('fees_payments')}
+                className="px-4 py-2 rounded-xl text-xs font-black bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+              >
+                <span>Fees &amp; Full Package History</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {myChildrenPackages.length === 0 ? (
+              <div className="p-6 rounded-2xl bg-[#FFF9F5] border border-dashed border-[#172B5020] text-center">
+                <p className="text-xs font-bold text-[#172B50]/70">No registered children found on your account.</p>
+                <p className="text-[11px] text-[#172B50]/50 mt-1">Class package tracking will activate automatically upon enrollment confirmation.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {myChildrenPackages.map(({ child, pkg }) => {
+                  const statusCfg = PACKAGE_STATUS_CONFIG[pkg.status] || PACKAGE_STATUS_CONFIG['Active'];
+                  const isReminderDue = pkg.status === 'Reminder Due' || (pkg.classesAttended >= 20 && pkg.classesAttended < 24);
+                  const isCompleted = pkg.status === 'Completed' || pkg.classesAttended >= 24;
+                  const isExpired = pkg.status === 'Expired';
+
+                  return (
+                    <div 
+                      key={child.id} 
+                      className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                        isReminderDue 
+                          ? 'bg-[#FFF9F5] border-amber-300 shadow-sm' 
+                          : isCompleted 
+                          ? 'bg-[#F8FAFC] border-indigo-200' 
+                          : 'bg-white border-[#172B5014] hover:border-[#F4510B30] shadow-2xs'
+                      }`}
+                    >
+                      {/* Athlete Header */}
+                      <div className="flex items-start justify-between gap-3 pb-3 border-b border-[#172B500E]">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={child.avatar} 
+                            alt={child.name} 
+                            className="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#172B5015]"
+                          />
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="text-sm font-black text-[#172B50]">{child.name}</h3>
+                              <span className="text-[10px] font-bold text-[#172B50]/50">({child.id})</span>
+                            </div>
+                            <p className="text-[11px] font-bold text-[#F4510B] mt-0.5">{child.program}</p>
+                            <p className="text-[10.5px] text-[#172B50]/60 font-semibold">{child.center} • Coach {child.coachName || 'Assigned'}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${statusCfg.badge}`}>
+                            {pkg.status}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-extrabold ${
+                            child.feeStatus === 'Paid' 
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                              : child.feeStatus === 'Unpaid' 
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}>
+                            Tuition: {child.feeStatus || 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Package Validity 3-Month Metrics */}
+                      <div className="grid grid-cols-3 gap-2 my-3 text-center">
+                        <div className="p-2 rounded-xl bg-white/80 border border-[#172B500C]">
+                          <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Activation</span>
+                          <span className="text-xs font-black text-[#172B50] mt-0.5 block truncate">
+                            {pkg.activationDate || 'Pending'}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white/80 border border-[#172B500C]">
+                          <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Valid Until (3 Mo)</span>
+                          <span className="text-xs font-black text-[#172B50] mt-0.5 block truncate">
+                            {pkg.expiryDate || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white/80 border border-[#172B500C]">
+                          <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Remaining</span>
+                          <span className={`text-xs font-black mt-0.5 block ${
+                            isCompleted ? 'text-indigo-700' : isReminderDue ? 'text-[#F4510B]' : 'text-emerald-700'
+                          }`}>
+                            {pkg.classesRemaining} Classes
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Usage Progress Bar */}
+                      <div className="space-y-1.5 my-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-[#172B50]">
+                            {pkg.classesAttended} of 24 Attended
+                          </span>
+                          <span className="font-black text-[#172B50]">
+                            {pkg.percentage}%
+                          </span>
+                        </div>
+                        <div className="w-full h-3 rounded-full bg-[#172B500D] overflow-hidden p-0.5 border border-[#172B5010]">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isCompleted 
+                                ? 'bg-gradient-to-r from-indigo-500 to-indigo-700' 
+                                : isReminderDue 
+                                ? 'bg-gradient-to-r from-amber-500 to-[#F4510B]' 
+                                : isExpired 
+                                ? 'bg-gradient-to-r from-rose-400 to-rose-600' 
+                                : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
+                            }`}
+                            style={{ width: `${pkg.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Reminder / Notification Banners */}
+                      {isReminderDue && (
+                        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2 mb-3">
+                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="font-black block">Renewal Reminder Approaching</span>
+                            <span className="text-[11px] text-amber-800">
+                              {child.name} has attended {pkg.classesAttended} of 24 classes (only {pkg.classesRemaining} remaining). Package expires on {pkg.expiryDate}. Please renew to prevent class interruption.
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {isCompleted && (
+                        <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs flex items-start gap-2 mb-3">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="font-black block">24 Classes Completed • Renewal Due</span>
+                            <span className="text-[11px] text-indigo-800">
+                              All 24 classes for this 3-month package have been completed! Please renew for the next cycle.
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {isExpired && (
+                        <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2 mb-3">
+                          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="font-black block">Package Expired</span>
+                            <span className="text-[11px] text-rose-800">
+                              This package expired on {pkg.expiryDate}. Please contact academy desk to reactivate.
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Card Footer Actions */}
+                      <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-bold text-[#172B50]/60">
+                          {pkg.attendanceBreakdown.filter(a => a.status === 'Present').length} Present • {pkg.attendanceBreakdown.filter(a => a.status === 'Absent').length} Absent
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setPackageHistoryChild(child)}
+                          className="font-extrabold text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>View Attendance History</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* ATHLETE ROSTER SUMMARY STRIP */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -2134,9 +2367,491 @@ export default function ParentPortalView() {
         </div>
       )}
 
-      {/* 5. FEES & PAYMENTS */}
+      {/* 5. FEES & INDIVIDUAL CLASS PACKAGES (PARENT ISOLATED VIEW) */}
       {(currentView === 'fees_payments' || currentView === 'payments') && (
-        <FeesPaymentsModule />
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B]/10 text-[#F4510B] border border-[#F4510B]/20">
+                  Individual 24-Class Quota
+                </span>
+                <span className="text-[11px] font-bold text-[#172B50]/50">• 3 Months Validity</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Class Packages &amp; Tuition Tracking
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Attendance-based class quota, package validity dates &amp; tuition fee records for your registered athletes
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedChildForPay(myChildren[0]?.name || '');
+                  setIsPayModalOpen(true);
+                }}
+                className="px-4 py-2.5 rounded-xl text-xs font-black bg-[#F4510B] text-white hover:brightness-110 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Pay / Renew Tuition</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-3 flex items-center gap-3 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Registered Athletes</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myChildren.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-3 flex items-center gap-3 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Active Packages</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myChildrenPackages.filter(p => p.pkg.status === 'Active' || p.pkg.status === 'Reminder Due').length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-3 flex items-center gap-3 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <ClipboardCheck className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Classes Attended</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myChildrenPackages.reduce((sum, p) => sum + p.pkg.classesAttended, 0)}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FAF5FF] border border-purple-200 rounded-2xl px-3.5 sm:px-4 py-3 flex items-center gap-3 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                <Sparkles className="w-4 h-4 text-purple-700" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Classes Remaining</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myChildrenPackages.reduce((sum, p) => sum + p.pkg.classesRemaining, 0)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Child Package Cards List */}
+          <div className="space-y-5">
+            {myChildrenPackages.length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 border border-dashed border-[#172B5020] text-center">
+                <Users className="w-12 h-12 text-[#172B50]/20 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-[#172B50]">No Enrolled Athletes Found</h3>
+                <p className="text-xs text-[#172B50]/60 mt-1 max-w-md mx-auto">
+                  Once your child is confirmed and enrolled into a Little Spartans training batch, their individual 24-class package will be activated here automatically.
+                </p>
+              </div>
+            ) : (
+              myChildrenPackages.map(({ child, pkg }) => {
+                const statusCfg = PACKAGE_STATUS_CONFIG[pkg.status] || PACKAGE_STATUS_CONFIG['Active'];
+                const isReminderDue = pkg.status === 'Reminder Due' || (pkg.classesAttended >= 20 && pkg.classesAttended < 24);
+                const isCompleted = pkg.status === 'Completed' || pkg.classesAttended >= 24;
+                const isExpired = pkg.status === 'Expired';
+
+                return (
+                  <div
+                    key={child.id}
+                    className="bg-white rounded-3xl p-6 border border-[#172B501A] shadow-card hover:border-[#F4510B30] transition-all space-y-5"
+                  >
+                    {/* Athlete Profile & Status Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#172B5010]">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={child.avatar}
+                          alt={child.name}
+                          className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#F4510B] shadow-2xs"
+                        />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-black text-[#172B50]">{child.name}</h3>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white">
+                              {child.rank || 'Spartan'}
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-[#F4510B] mt-0.5">{child.program}</p>
+                          <p className="text-[11px] text-[#172B50]/60 mt-0.5">
+                            Athlete ID: <span className="font-mono font-bold text-[#172B50]">{child.id}</span> • Center: <span className="font-bold text-[#172B50]">{child.center}</span> • Coach: <span className="font-bold text-[#172B50]">{child.coachName || 'Assigned'}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-black border ${statusCfg.badge}`}>
+                          Package: {pkg.status}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-black ${
+                          child.feeStatus === 'Paid'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : child.feeStatus === 'Unpaid'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}>
+                          Fee Status: {child.feeStatus || 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 3-Month Validity & 24-Class Quota Breakdown Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Validity Period Box */}
+                      <div className="p-4 rounded-2xl bg-[#FFF9F5] border border-[#F4510B18] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-[#F4510B]">
+                            Package Validity
+                          </span>
+                          <span className="text-[10px] font-black bg-white px-2 py-0.5 rounded-md text-[#172B50] border border-[#172B5010]">
+                            3 Months Duration
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[#172B50]/70 font-semibold">Activation Date:</span>
+                            <span className="font-black text-[#172B50]">{pkg.activationDate || 'Pending'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[#172B50]/70 font-semibold">Expiry Date:</span>
+                            <span className="font-black text-[#172B50]">{pkg.expiryDate || 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-1 border-t border-[#F4510B15]">
+                            <span className="text-[#172B50]/70 font-semibold">Cycle:</span>
+                            <span className="font-black text-[#F4510B]">Cycle #{pkg.packageCycle || 1}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Class Usage Quota Box */}
+                      <div className="p-4 rounded-2xl bg-[#F4FAFF] border border-[#0B3B60]/15 space-y-2 md:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-[#0B3B60]">
+                            24-Class Quota Consumption
+                          </span>
+                          <span className="text-xs font-black text-[#172B50]">
+                            {pkg.classesAttended} / 24 Classes Attended ({pkg.classesRemaining} Left)
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full h-3.5 rounded-full bg-white overflow-hidden p-0.5 border border-[#0B3B60]/20">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isCompleted
+                                ? 'bg-gradient-to-r from-indigo-500 to-indigo-700'
+                                : isReminderDue
+                                ? 'bg-gradient-to-r from-amber-500 to-[#F4510B]'
+                                : isExpired
+                                ? 'bg-gradient-to-r from-rose-400 to-rose-600'
+                                : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
+                            }`}
+                            style={{ width: `${pkg.percentage}%` }}
+                          />
+                        </div>
+
+                        {/* Consumption stats summary */}
+                        <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-[#172B50]/70 pt-1">
+                          <span className="text-emerald-700 font-bold">
+                            ✓ {pkg.attendanceBreakdown.filter(a => a.status === 'Present').length} Present (Deducted)
+                          </span>
+                          <span>•</span>
+                          <span className="text-rose-700">
+                            ✕ {pkg.attendanceBreakdown.filter(a => a.status === 'Absent').length} Absent (No deduction)
+                          </span>
+                          <span>•</span>
+                          <span className="text-sky-700">
+                            ★ {pkg.attendanceBreakdown.filter(a => a.isDemo).length} Demo (No deduction)
+                          </span>
+                          <span>•</span>
+                          <span className="font-black text-[#172B50]">
+                            {pkg.percentage}% Consumed
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Alert Notifications */}
+                    {isReminderDue && (
+                      <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-xs font-black text-amber-900">
+                            Package Renewal Reminder (20 of 24 Classes Attended)
+                          </h4>
+                          <p className="text-xs text-amber-800 mt-0.5">
+                            {child.name} has attended {pkg.classesAttended} classes with only {pkg.classesRemaining} remaining. Package validity ends on {pkg.expiryDate}. Please renew the package to avoid any training stoppage.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {isCompleted && (
+                      <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-950 flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-xs font-black text-indigo-900">
+                            Package Completed (24 / 24 Classes Attended) • Renewal Due
+                          </h4>
+                          <p className="text-xs text-indigo-800 mt-0.5">
+                            Congratulations! {child.name} has completed the full 24-class training quota. Package renewal is now due for the next 3-month cycle.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {isExpired && (
+                      <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-xs font-black text-rose-900">
+                            Package Expired (3-Month Validity Ended)
+                          </h4>
+                          <p className="text-xs text-rose-800 mt-0.5">
+                            This package reached its 3-month expiration date on {pkg.expiryDate}. Please contact the academy desk to activate a new package.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Attendance Audit Log Table for this child */}
+                    <div className="rounded-2xl border border-[#172B5012] overflow-hidden">
+                      <div className="p-3.5 bg-[#172B5005] border-b border-[#172B5010] flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <ClipboardCheck className="w-4 h-4 text-[#F4510B]" />
+                          <h4 className="text-xs font-black text-[#172B50]">
+                            Verified Attendance &amp; Quota Deductions ({pkg.attendanceBreakdown.length} Records)
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#172B50]/60">
+                          Independent Student Tracking
+                        </span>
+                      </div>
+
+                      {pkg.attendanceBreakdown.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-[#172B50]/60">
+                          No attendance records entered for this package yet. Once coaches verify check-ins, sessions will show here.
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-[#172B5010] text-[10px] font-black uppercase text-[#172B50]/60 tracking-wider">
+                                <th className="py-2.5 px-4">DATE</th>
+                                <th className="py-2.5 px-3">BATCH / SESSION</th>
+                                <th className="py-2.5 px-3">LOCATION</th>
+                                <th className="py-2.5 px-3">ATTENDANCE</th>
+                                <th className="py-2.5 px-3">QUOTA IMPACT</th>
+                                <th className="py-2.5 px-4 text-right">COACH</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#172B500A]">
+                              {pkg.attendanceBreakdown.slice(0, 5).map((rec, idx) => (
+                                <tr key={rec.id || idx} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                                  <td className="py-2.5 px-4 font-bold text-[#172B50]">
+                                    {rec.date}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-semibold text-[#172B50]">
+                                    {rec.className || rec.batchId || child.program}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-[#172B50]/70 text-[11px]">
+                                    {rec.center || rec.location || child.center}
+                                  </td>
+                                  <td className="py-2.5 px-3">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                      rec.status === 'Present'
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : 'bg-rose-100 text-rose-800'
+                                    }`}>
+                                      {rec.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3">
+                                    <span className={`text-[11px] font-black ${
+                                      rec.status === 'Present'
+                                        ? 'text-emerald-700'
+                                        : 'text-[#172B50]/50'
+                                    }`}>
+                                      {rec.status === 'Present' ? '-1 Class Deducted' : '0 (No Deduction)'}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-4 text-right font-semibold text-[#172B50]/80 text-[11px]">
+                                    {rec.markedBy || child.coachName || 'Spartan Coach'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <div className="p-3 bg-slate-50 border-t border-[#172B500E] flex items-center justify-between">
+                        <span className="text-[11px] text-[#172B50]/70 font-semibold">
+                          Showing recent sessions. Click full audit log to see every class date.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setPackageHistoryChild(child)}
+                          className="text-xs font-black text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Open Complete Audit History</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Card Footer Actions */}
+                    <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-[11px] text-[#172B50]/60">
+                        Package ID: <span className="font-mono font-bold text-[#172B50]">{child.id}-PKG-{child.packageCycle || 1}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPackageHistoryChild(child)}
+                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white border border-[#172B5018] text-[#172B50] hover:bg-[#FFF4E8] transition-colors cursor-pointer"
+                        >
+                          Audit Attendance
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedChildForPay(child.name);
+                            setIsPayModalOpen(true);
+                          }}
+                          className="px-4 py-1.5 rounded-xl text-xs font-black bg-[#F4510B] text-white hover:brightness-110 shadow-xs transition-all cursor-pointer"
+                        >
+                          Pay / Renew Tuition
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Payment Receipts & Tuition Records */}
+          <div className="bg-white rounded-3xl p-6 border border-[#172B501A] shadow-card">
+            <div className="flex items-center justify-between pb-4 border-b border-[#172B5010] mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#0B3B60]/10 text-[#0B3B60] flex items-center justify-center">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-[#172B50]">
+                    Tuition Invoices &amp; Payment Receipts
+                  </h3>
+                  <p className="text-[11px] text-[#172B50]/60">
+                    Official financial statements and payment receipts for your children
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedChildForPay(myChildren[0]?.name || '');
+                  setIsPayModalOpen(true);
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#172B50] text-white hover:bg-[#F4510B] transition-colors cursor-pointer"
+              >
+                + Make Payment
+              </button>
+            </div>
+
+            {(() => {
+              const childNames = myChildren.map(c => c.name.toLowerCase());
+              const parentPayments = (data.payments || []).filter(p => 
+                (p.studentName && childNames.includes(p.studentName.toLowerCase())) ||
+                (p.parentName && parentProfile.name && p.parentName.toLowerCase() === parentProfile.name.toLowerCase())
+              );
+
+              if (parentPayments.length === 0) {
+                return (
+                  <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-[#172B5015]">
+                    <Receipt className="w-10 h-10 text-[#172B50]/20 mx-auto mb-2" />
+                    <p className="text-xs font-bold text-[#172B50]">No Payment Receipts Found</p>
+                    <p className="text-[11px] text-[#172B50]/50 mt-0.5">
+                      Receipts will be generated here upon completing online tuition or manual desk payments.
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-[#172B5010] text-[10px] font-black uppercase text-[#172B50]/50 tracking-wider">
+                        <th className="pb-2.5 px-3">INVOICE #</th>
+                        <th className="pb-2.5 px-3">DATE</th>
+                        <th className="pb-2.5 px-3">ATHLETE</th>
+                        <th className="pb-2.5 px-3">AMOUNT</th>
+                        <th className="pb-2.5 px-3">METHOD</th>
+                        <th className="pb-2.5 px-3">STATUS</th>
+                        <th className="pb-2.5 px-3 text-right">RECEIPT</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#172B5008]">
+                      {parentPayments.map((pay, i) => (
+                        <tr key={pay.id || i} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                          <td className="py-3 px-3 font-mono font-bold text-[#172B50]">
+                            {pay.id || `INV-${202600 + i}`}
+                          </td>
+                          <td className="py-3 px-3 font-semibold text-[#172B50]/70">
+                            {pay.date || todayYmd}
+                          </td>
+                          <td className="py-3 px-3 font-black text-[#F4510B]">
+                            {pay.studentName || myChildren[0]?.name}
+                          </td>
+                          <td className="py-3 px-3 font-black text-[#172B50]">
+                            ₹{pay.amount ? Number(pay.amount).toLocaleString('en-IN') : '4,500'}
+                          </td>
+                          <td className="py-3 px-3 text-[#172B50]/70 text-[11px]">
+                            {pay.method || 'Online UPI'}
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
+                              {pay.status || 'Paid'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => addToast(`Receipt #${pay.id || 'INV'} downloaded successfully`, 'success')}
+                              className="text-xs font-bold text-[#0B3B60] hover:underline cursor-pointer"
+                            >
+                              Download
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
       )}
 
       {/* 6. PROGRESS & ACHIEVEMENTS */}
@@ -2611,6 +3326,152 @@ export default function ParentPortalView() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* 5. INDIVIDUAL STUDENT PACKAGE ATTENDANCE AUDIT MODAL */}
+      <Modal
+        isOpen={Boolean(packageHistoryChild)}
+        onClose={() => setPackageHistoryChild(null)}
+        title={packageHistoryChild ? `Attendance & Package Audit — ${packageHistoryChild.name}` : 'Package Audit'}
+      >
+        {packageHistoryChild && (() => {
+          const pkgInfo = computeStudentPackage(packageHistoryChild, data.attendanceRecords || [], todayYmd);
+          const statusCfg = PACKAGE_STATUS_CONFIG[pkgInfo.status] || PACKAGE_STATUS_CONFIG['Active'];
+
+          return (
+            <div className="space-y-4">
+              {/* Athlete & Package Header */}
+              <div className="p-4 rounded-2xl bg-[#FFF9F5] border border-[#F4510B15] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={packageHistoryChild.avatar}
+                    alt={packageHistoryChild.name}
+                    className="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#F4510B]"
+                  />
+                  <div>
+                    <h3 className="text-base font-black text-[#172B50]">{packageHistoryChild.name}</h3>
+                    <p className="text-xs font-bold text-[#F4510B]">{packageHistoryChild.program}</p>
+                    <p className="text-[11px] text-[#172B50]/60">
+                      ID: <span className="font-mono font-bold text-[#172B50]">{packageHistoryChild.id}</span> • {packageHistoryChild.center}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1 shrink-0">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${statusCfg.badge}`}>
+                    {pkgInfo.status}
+                  </span>
+                  <span className="text-[11px] font-bold text-[#172B50]/70">
+                    Cycle #{pkgInfo.packageCycle || 1}
+                  </span>
+                </div>
+              </div>
+
+              {/* 4 Summary Stat Pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-[#172B5010]">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Total Quota</span>
+                  <span className="text-base font-black text-[#172B50] mt-0.5 block">24 Classes</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <span className="text-[10px] font-bold uppercase text-emerald-800 block">Attended</span>
+                  <span className="text-base font-black text-emerald-700 mt-0.5 block">{pkgInfo.classesAttended}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
+                  <span className="text-[10px] font-bold uppercase text-amber-800 block">Remaining</span>
+                  <span className="text-base font-black text-amber-700 mt-0.5 block">{pkgInfo.classesRemaining}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-sky-50 border border-sky-200">
+                  <span className="text-[10px] font-bold uppercase text-sky-800 block">Valid Until</span>
+                  <span className="text-xs font-black text-sky-800 mt-1 block truncate">{pkgInfo.expiryDate || 'N/A'}</span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-bold text-[#172B50]">
+                  <span>Package Usage: {pkgInfo.classesAttended} / 24</span>
+                  <span>{pkgInfo.percentage}%</span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-[#172B5010] overflow-hidden p-0.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-[#F4510B]"
+                    style={{ width: `${pkgInfo.percentage}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Business Rule Explanation */}
+              <div className="p-3 rounded-xl bg-[#F4FAFF] border border-[#0B3B60]/15 text-xs text-[#0B3B60] flex items-start gap-2">
+                <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  <strong>Quota Policy:</strong> Only confirmed regular <strong>&quot;Present&quot;</strong> check-ins deduct 1 class from your 24-class package balance. Trial demos, absences, and holidays are <em>never</em> deducted.
+                </p>
+              </div>
+
+              {/* Table of Records */}
+              <div className="border border-[#172B5012] rounded-xl overflow-hidden max-h-72 overflow-y-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="sticky top-0 bg-[#FFF9F5] border-b border-[#172B5010] text-[10px] font-black uppercase text-[#172B50]/60">
+                    <tr>
+                      <th className="py-2.5 px-3">DATE</th>
+                      <th className="py-2.5 px-3">BATCH</th>
+                      <th className="py-2.5 px-3">STATUS</th>
+                      <th className="py-2.5 px-3">QUOTA IMPACT</th>
+                      <th className="py-2.5 px-3 text-right">COACH</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#172B500A]">
+                    {pkgInfo.attendanceBreakdown.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="py-6 text-center text-xs text-[#172B50]/50">
+                          No attendance records entered for this student yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      pkgInfo.attendanceBreakdown.map((rec, i) => (
+                        <tr key={rec.id || i} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-2.5 px-3 font-bold text-[#172B50]">{rec.date}</td>
+                          <td className="py-2.5 px-3 text-[#172B50]/80">{rec.className || rec.batchId || packageHistoryChild.program}</td>
+                          <td className="py-2.5 px-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                              rec.status === 'Present'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-rose-100 text-rose-800'
+                            }`}>
+                              {rec.status}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 font-bold">
+                            {rec.status === 'Present' ? (
+                              <span className="text-emerald-700">-1 Class Deducted</span>
+                            ) : (
+                              <span className="text-slate-400">0 (No deduction)</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right text-[#172B50]/70 text-[11px]">
+                            {rec.markedBy || packageHistoryChild.coachName || 'Coach'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Close Button */}
+              <div className="pt-3 border-t border-[#172B5010] flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setPackageHistoryChild(null)}
+                  className="px-5 py-2 text-xs font-bold bg-[#172B50] text-white rounded-xl hover:bg-[#F4510B] transition-colors cursor-pointer"
+                >
+                  Close Audit Log
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
 
     </div>

@@ -28,6 +28,13 @@ import {
   initialEquipmentReports,
   REPORT_STATUSES,
 } from '../services/equipmentService';
+import {
+  calculatePackageExpiryDate,
+  computeStudentPackage,
+  PACKAGE_TOTAL_CLASSES,
+  PACKAGE_REMINDER_THRESHOLD,
+  PACKAGE_STATUSES
+} from '../services/packageService';
 
 const CrmContext = createContext();
 
@@ -284,6 +291,107 @@ export function CrmProvider({ children }) {
       students: prev.students.filter(s => s.id !== id)
     }));
     addToast('Student record removed.', 'info');
+  };
+
+  // --------------------------------------------------------------------------
+  // Student Individual Class Package Management
+  // --------------------------------------------------------------------------
+  const activateStudentPackage = (studentId, activationDate = new Date().toISOString().split('T')[0]) => {
+    const student = (data.students || []).find(s => s.id === studentId);
+    if (!student) {
+      addToast('Student record not found.', 'error');
+      return { success: false, error: 'Student not found' };
+    }
+
+    const expiryDate = calculatePackageExpiryDate(activationDate);
+    const updatedFields = {
+      packageActivationDate: activationDate,
+      packageExpiryDate: expiryDate,
+      packageStatus: PACKAGE_STATUSES.ACTIVE,
+      packageCycle: student.packageCycle || 1,
+      reminder20Notified: false,
+      completionNotified: false
+    };
+
+    const notif = createNotificationRecord({
+      targetRole: 'parent',
+      targetParentId: student.parentId || '',
+      targetLocation: student.center,
+      title: `24-Class Package Activated: ${student.name}`,
+      message: `Your child's 24-Class Package for ${student.program} is now active from ${activationDate} to ${expiryDate} (3 months validity).`,
+      type: 'success'
+    });
+
+    setData(prev => ({
+      ...prev,
+      students: (prev.students || []).map(s => s.id === studentId ? { ...s, ...updatedFields } : s),
+      notifications: [notif, ...(prev.notifications || [])].slice(0, 80)
+    }));
+
+    addToast(`24-Class Package activated for ${student.name} through ${expiryDate}!`, 'success');
+    return { success: true, student: { ...student, ...updatedFields } };
+  };
+
+  const renewStudentPackage = (studentId, newActivationDate = new Date().toISOString().split('T')[0]) => {
+    const student = (data.students || []).find(s => s.id === studentId);
+    if (!student) {
+      addToast('Student record not found.', 'error');
+      return { success: false, error: 'Student not found' };
+    }
+
+    const expiryDate = calculatePackageExpiryDate(newActivationDate);
+    const updatedFields = {
+      packageActivationDate: newActivationDate,
+      packageExpiryDate: expiryDate,
+      packageStatus: PACKAGE_STATUSES.ACTIVE,
+      packageCycle: (student.packageCycle || 1) + 1,
+      reminder20Notified: false,
+      completionNotified: false
+    };
+
+    const notif = createNotificationRecord({
+      targetRole: 'parent',
+      targetParentId: student.parentId || '',
+      targetLocation: student.center,
+      title: `Class Package Renewed: ${student.name}`,
+      message: `A fresh 24-Class Package for ${student.name} has been renewed from ${newActivationDate} to ${expiryDate} (Cycle ${(student.packageCycle || 1) + 1}).`,
+      type: 'success'
+    });
+
+    setData(prev => ({
+      ...prev,
+      students: (prev.students || []).map(s => s.id === studentId ? { ...s, ...updatedFields } : s),
+      notifications: [notif, ...(prev.notifications || [])].slice(0, 80)
+    }));
+
+    addToast(`Fresh 24-class package renewed for ${student.name}!`, 'success');
+    return { success: true, student: { ...student, ...updatedFields } };
+  };
+
+  const sendManualPackageReminder = (studentId) => {
+    const student = (data.students || []).find(s => s.id === studentId);
+    if (!student) {
+      addToast('Student record not found.', 'error');
+      return { success: false };
+    }
+
+    const pkg = computeStudentPackage(student, data.attendanceRecords || []);
+    const notif = createNotificationRecord({
+      targetRole: 'parent',
+      targetParentId: student.parentId || '',
+      targetLocation: student.center,
+      title: `Package Renewal Notice: ${student.name}`,
+      message: `Dear Parent, ${student.name} has attended ${pkg.classesAttended} of 24 classes (${pkg.classesRemaining} remaining). Package valid through ${pkg.expiryDate}. Contact academy for renewal.`,
+      type: 'warning'
+    });
+
+    setData(prev => ({
+      ...prev,
+      notifications: [notif, ...(prev.notifications || [])].slice(0, 80)
+    }));
+
+    addToast(`Package renewal alert dispatched to ${student.parentName} (${student.parentPhone || 'Parent'}).`, 'success');
+    return { success: true };
   };
 
   const addEnquiry = (enquiryData) => {
@@ -683,12 +791,68 @@ export function CrmProvider({ children }) {
       }
     });
 
+    // ------------------------------------------------------------------------
+    // Automatic Class Package Tracking & Reminder Automation
+    // ------------------------------------------------------------------------
+    const studentPackageUpdates = {};
+    const todayYmd = new Date().toISOString().split('T')[0];
+
+    (data.students || []).forEach(student => {
+      // Evaluate each student who has an active package
+      if (student.packageActivationDate) {
+        const pkg = computeStudentPackage(student, result.records, todayYmd);
+        
+        // 1. 20-Class Parent Reminder Automation
+        if (pkg.classesAttended >= PACKAGE_REMINDER_THRESHOLD && !student.reminder20Notified) {
+          const reminderNotif = createNotificationRecord({
+            targetRole: 'parent',
+            targetParentId: student.parentId || '',
+            targetLocation: student.center,
+            title: `Class Package Renewal Reminder: ${student.name}`,
+            message: `Your child ${student.name} has attended 20 of 24 classes (${pkg.classesRemaining} remaining). Package renewal is approaching.`,
+            type: 'warning'
+          });
+          newNotifications.push(reminderNotif);
+
+          studentPackageUpdates[student.id] = {
+            ...(studentPackageUpdates[student.id] || {}),
+            reminder20Notified: true,
+            reminder20Date: todayYmd,
+            packageStatus: PACKAGE_STATUSES.REMINDER_DUE
+          };
+        }
+
+        // 2. 24-Class Package Completion & Renewal Notice
+        if (pkg.classesAttended >= PACKAGE_TOTAL_CLASSES && !student.completionNotified) {
+          const completionNotif = createNotificationRecord({
+            targetRole: 'parent',
+            targetParentId: student.parentId || '',
+            targetLocation: student.center,
+            title: `Package Completed - Renewal Due: ${student.name}`,
+            message: `${student.name} has completed all 24 classes of the package. Renewal is now due. Please contact the academy desk to enroll for the next term.`,
+            type: 'warning'
+          });
+          newNotifications.push(completionNotif);
+
+          studentPackageUpdates[student.id] = {
+            ...(studentPackageUpdates[student.id] || {}),
+            completionNotified: true,
+            completionDate: todayYmd,
+            packageStatus: PACKAGE_STATUSES.COMPLETED
+          };
+        }
+      }
+    });
+
     setData(prev => ({
       ...prev,
       attendanceRecords: result.records,
       compensationRequests: updatedCompensationRequests,
       notifications: [...newNotifications, ...(prev.notifications || [])].slice(0, 80),
       compensationHistory: [...newHistoryLogs, ...(prev.compensationHistory || [])],
+      students: Object.keys(studentPackageUpdates).length > 0
+        ? (prev.students || []).map(s => studentPackageUpdates[s.id] ? { ...s, ...studentPackageUpdates[s.id] } : s)
+        : prev.students
     }));
 
     addToast(
@@ -2644,6 +2808,10 @@ export function CrmProvider({ children }) {
         updateCoachCompensation,
         createBackup,
         restoreBackup,
+        // Student Individual Class Package Management
+        activateStudentPackage,
+        renewStudentPackage,
+        sendManualPackageReminder,
         saveBatchAttendance,
         // Location-Based Class Scheduling Actions
         createClassSchedule,
