@@ -7,6 +7,7 @@ import LoginModal from './components/common/LoginModal';
 import SpartzenLoginPage from './components/auth/SpartzenLoginPage';
 import MouseFloatingGlow from './components/common/MouseFloatingGlow';
 import DailyMotivationalModal from './components/common/DailyMotivationalModal';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Admin Portal Master Modules
 import AdminDashboard from './portals/admin/AdminDashboard';
@@ -166,12 +167,14 @@ export default function App() {
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="px-5 sm:px-7 lg:px-9 py-6 w-full space-y-6">
             
-            {/* Active Portal Content */}
-            {currentPortal === 'admin' && renderAdminView()}
-            {currentPortal === 'super_coach' && <SuperCoachPortalView />}
-            {currentPortal === 'parent' && <ParentPortalView />}
-            {currentPortal === 'coach' && <CoachPortalView />}
-            {currentPortal === 'support' && <SupportPortalView />}
+            {/* Active Portal Content guarded by ErrorBoundary to prevent white screens */}
+            <ErrorBoundary key={`${currentPortal}_${currentView}`}>
+              {currentPortal === 'admin' && renderAdminView()}
+              {currentPortal === 'super_coach' && <SuperCoachPortalView />}
+              {currentPortal === 'parent' && <ParentPortalView />}
+              {currentPortal === 'coach' && <CoachPortalView />}
+              {currentPortal === 'support' && <SupportPortalView />}
+            </ErrorBoundary>
 
           </div>
         </main>

@@ -38,16 +38,16 @@ export default function SupportPortalView() {
   // Create ticket modal states
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
   const [ticketSubject, setTicketSubject] = useState('');
-  const [ticketCustomer, setTicketCustomer] = useState(data.parents[0]?.name || '');
+  const [ticketCustomer, setTicketCustomer] = useState((data.parents || [])[0]?.name || '');
   const [ticketCategory, setTicketCategory] = useState('Batch Reschedule');
   const [ticketPriority, setTicketPriority] = useState('Medium');
   const [ticketDescription, setTicketDescription] = useState('');
 
   // Follow up completion state
-  const [followupsList, setFollowupsList] = useState(data.followups);
+  const [followupsList, setFollowupsList] = useState(data.followups || []);
 
-  const openTickets = data.supportTickets.filter(t => t.status === 'Open').length;
-  const inProgressTickets = data.supportTickets.filter(t => t.status === 'In Progress').length;
+  const openTickets = (data.supportTickets || []).filter(t => t.status === 'Open').length;
+  const inProgressTickets = (data.supportTickets || []).filter(t => t.status === 'In Progress').length;
 
   const handleCreateTicket = (e) => {
     e.preventDefault();
