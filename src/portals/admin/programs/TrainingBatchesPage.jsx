@@ -352,6 +352,16 @@ export default function TrainingBatchesPage({ onNavigateModule }) {
           </select>
           <ChevronDown className="w-4 h-4 text-[#172B50]/60 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
+
+        {/* Create Batch Button - Allocated near All Sports Programs */}
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#F4510B] hover:bg-[#d94103] active:scale-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-[0_4px_16px_rgba(244,81,11,0.25)] transition-all cursor-pointer shrink-0 whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create Batch</span>
+        </button>
       </div>
 
       {/* 3. Training Batches Content / Empty State */}
