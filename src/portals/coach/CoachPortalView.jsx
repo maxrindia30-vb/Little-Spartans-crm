@@ -37,6 +37,7 @@ import {
   User,
   Building2,
   BarChart2,
+  Layers,
   Search
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';

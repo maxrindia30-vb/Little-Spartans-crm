@@ -3,6 +3,7 @@ import {
   Shield,
   MapPin,
   Users,
+  User,
   Star,
   CalendarDays,
   GraduationCap,
@@ -31,7 +32,11 @@ import {
   Send,
   Sparkles,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Bell,
+  Inbox,
+  BarChart2,
+  Building2
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import { AnimatedCounter } from '../../components/common/KpiCard';
@@ -1787,30 +1792,6 @@ export default function SuperCoachPortalView() {
               portalRole="super_coach"
             />
           )}
-          <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
-            <button
-              type="button"
-              onClick={() => setAttendanceSubView('coach_register')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-                attendanceSubView === 'coach_register'
-                  ? 'bg-[#F4510B] text-white shadow-xs'
-                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-              }`}
-            >
-              Coach Attendance Register
-            </button>
-            <button
-              type="button"
-              onClick={() => setAttendanceSubView('student_progression')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-                attendanceSubView === 'student_progression'
-                  ? 'bg-[#F4510B] text-white shadow-xs'
-                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-              }`}
-            >
-              Student Progression Oversight
-            </button>
-          </div>
 
           {attendanceSubView === 'coach_register' && (
             <CoachAttendanceRegister 
