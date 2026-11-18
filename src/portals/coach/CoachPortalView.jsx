@@ -1915,9 +1915,9 @@ export default function CoachPortalView() {
                 <UserCheck className="w-4 h-4 text-[#F4510B]" />
               </div>
               <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Substitute Requests</div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Substitute Coverage</div>
                 <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  {substituteRequests.length}
+                  {coachComps.length}
                 </div>
               </div>
             </div>
