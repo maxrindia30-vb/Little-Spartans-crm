@@ -755,7 +755,7 @@ export default function StudentManagement() {
                   <p className="text-[10px] font-semibold text-[#172B50] opacity-70 mt-0.5">
                     {viewStudent.enquiryId ? `Enquiry: ${viewStudent.enquiryId}` : ''}
                     {viewStudent.enquiryId && viewStudent.parentId ? ' • ' : ''}
-                    {viewStudent.parentId ? `Parent: ${viewStudent.parentId}` : ''}
+                    {viewStudent.parentId ? `Parent ID: ${viewStudent.parentId}` : ''}
                   </p>
                 )}
               </div>

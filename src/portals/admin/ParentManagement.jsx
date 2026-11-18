@@ -10,7 +10,11 @@ import {
   Plus,
   Key,
   ShieldCheck,
-  Edit3
+  Edit3,
+  Eye,
+  EyeOff,
+  Copy,
+  Check
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -25,6 +29,30 @@ export default function ParentManagement() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingParent, setEditingParent] = useState(null);
   const [highlightedParentId, setHighlightedParentId] = useState(null);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
+  const [copiedParentId, setCopiedParentId] = useState(null);
+
+  const togglePasswordVisibility = (id) => {
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleCopyPassword = (id, password) => {
+    if (!password) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(password).then(() => {
+        setCopiedParentId(id);
+        addToast(`Password copied for ${id}!`, 'info');
+        setTimeout(() => setCopiedParentId(null), 2000);
+      }).catch(() => {
+        addToast(`Password: ${password}`, 'info');
+      });
+    } else {
+      addToast(`Password: ${password}`, 'info');
+    }
+  };
 
   useEffect(() => {
     if (focusedRecord?.type === 'parent' && focusedRecord.id) {
@@ -213,6 +241,16 @@ export default function ParentManagement() {
               acc => acc.role === 'parent' && acc.email.toLowerCase() === (parent.email || '').toLowerCase()
             );
 
+            const parentPassword =
+              parent.password ||
+              parent.tempPassword ||
+              parent.tempPasswordDisplay ||
+              linkedAccount?.tempPasswordDisplay ||
+              `Spartan@${String(parent.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`;
+
+            const isPasswordVisible = !!visiblePasswords[parent.id];
+            const isCopied = copiedParentId === parent.id;
+
             return (
               <div
                 key={parent.id}
@@ -247,24 +285,55 @@ export default function ParentManagement() {
                     </div>
                   </div>
 
-                  {/* Portal Access Pill */}
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    {linkedAccount ? (
+                  {/* Portal Access & Auto-Generated Password with View Option */}
+                  <div className="mt-2.5 p-2 rounded-xl bg-[#FFF5ED] border border-[#F4510B20] space-y-2">
+                    <div className="flex items-center justify-between gap-1.5">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <ShieldCheck className="w-3 h-3" />
-                        <span>Parent Portal: {linkedAccount.status}</span>
+                        <span>Parent Portal: Active</span>
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-[#172B50] opacity-70">
-                        Directory Record
+                      <span className="text-[10px] font-bold text-[#F4510B] uppercase tracking-wide">
+                        Auto-Credentials
                       </span>
-                    )}
-                    {linkedAccount?.tempPasswordDisplay && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5015]">
-                        <Key className="w-2.5 h-2.5 text-[#F4510B]" />
-                        {linkedAccount.tempPasswordDisplay}
-                      </span>
-                    )}
+                    </div>
+
+                    {/* Auto-Generated Password with View and Copy buttons */}
+                    <div className="flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-[#172B5015] shadow-2xs">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Key className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                        <span className="text-[10px] font-bold text-[#172B50]/65 uppercase tracking-wider">Pass:</span>
+                        <span className="font-mono text-xs font-black text-[#172B50] tracking-wider select-all truncate">
+                          {isPasswordVisible ? parentPassword : '••••••••••••'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility(parent.id)}
+                          title={isPasswordVisible ? 'Hide Password' : 'View Password'}
+                          className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
+                        >
+                          {isPasswordVisible ? (
+                            <EyeOff className="w-3.5 h-3.5 text-[#F4510B]" />
+                          ) : (
+                            <Eye className="w-3.5 h-3.5 opacity-70" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyPassword(parent.id, parentPassword)}
+                          title="Copy Password to Clipboard"
+                          className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
+                        >
+                          {isCopied ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5 opacity-70" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Children enrolled */}

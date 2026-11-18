@@ -163,7 +163,7 @@ const INITIAL_ACTIVITY_LOGS = [
 ];
 
 export default function AccessManagementModule() {
-  const { activeSubTab, setActiveSubTab, addToast, deleteAccount } = useCrm();
+  const { activeSubTab, setActiveSubTab, addToast, deleteAccount, data } = useCrm();
 
   // Active module tab: 'overview' | 'accounts' | 'locations' | 'permissions' | 'activity'
   const [activeTab, setActiveTab] = useState(() => {
@@ -180,8 +180,65 @@ export default function AccessManagementModule() {
     }
   }, [activeSubTab]);
 
-  // User list state
+  // User list state: initialize with master Super Admin
   const [users, setUsers] = useState(INITIAL_USERS);
+
+  // Synchronize live accounts (parents, coaches) from CRM Context matching their assigned locations
+  useEffect(() => {
+    if (!data?.userAccounts) return;
+
+    setUsers((prevUsers) => {
+      const superAdmins = INITIAL_USERS;
+      const liveAccounts = (data.userAccounts || []).filter(
+        (acc) => acc.role === 'parent' || acc.role === 'coach' || acc.role === 'admin'
+      );
+
+      const mappedLiveUsers = liveAccounts.map((acc) => {
+        const matchingParent = (data.parents || []).find(
+          (p) =>
+            (acc.email && p.email && p.email.toLowerCase() === acc.email.toLowerCase()) ||
+            p.id === acc.id?.replace('ACC-', '')
+        );
+
+        const targetLocation = acc.center || acc.locations?.[0] || matchingParent?.center || 'KK NAGAR';
+        const assignedLocations =
+          Array.isArray(acc.locations) && acc.locations.length > 0 ? acc.locations : [targetLocation];
+
+        const notes =
+          acc.role === 'parent'
+            ? matchingParent?.children?.length
+              ? `Parent of ${matchingParent.children.join(', ')}`
+              : 'Enrolled Parent'
+            : acc.notes || `Assigned ${acc.role.toUpperCase()} credentials`;
+
+        return {
+          id: acc.id || `USR-${acc.email}`,
+          name: acc.name,
+          email: acc.email,
+          phone: acc.phone || matchingParent?.phone || '+91 98765 00000',
+          role: acc.role,
+          locations: assignedLocations,
+          status: acc.status || 'Active',
+          lastLogin: acc.lastLogin || 'Never',
+          createdAt: acc.createdAt || 'Today',
+          twoFactorEnabled: !!acc.twoFactorEnabled,
+          avatarBg: acc.role === 'coach' ? 'bg-[#F4510B]' : acc.role === 'parent' ? 'bg-emerald-600' : 'bg-sky-600',
+          notes,
+          tempPasswordDisplay: acc.tempPasswordDisplay || matchingParent?.password,
+        };
+      });
+
+      // Combine Super Admin + live accounts
+      const combined = [...superAdmins];
+      mappedLiveUsers.forEach((lu) => {
+        if (!combined.some((u) => u.email.toLowerCase() === lu.email.toLowerCase())) {
+          combined.push(lu);
+        }
+      });
+
+      return combined;
+    });
+  }, [data?.userAccounts, data?.parents]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [locationFilter, setLocationFilter] = useState('ALL');

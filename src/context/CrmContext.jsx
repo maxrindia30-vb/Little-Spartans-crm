@@ -14,6 +14,8 @@ import {
   executeEnquiryEnrollmentTransaction,
   generateUniquePrefixedId,
   generateLocationKidId,
+  generateCommonMemberId,
+  generateParentPassword,
 } from '../services/enrollmentService';
 import {
   validateDemoPayload,
@@ -78,9 +80,93 @@ export function CrmProvider({ children }) {
           .filter((l) => l.status !== 'Inactive')
           .map((l) => l.name);
 
+        const rawStudents = Array.isArray(parsed.students) ? parsed.students : (initialAcademyData.students || []);
+        const rawParents = Array.isArray(parsed.parents) ? parsed.parents : (initialAcademyData.parents || []);
+
+        // Migrate & harmonize One Common ID for Kid & Parent, Auto-generate passwords
+        const migratedStudents = rawStudents.map((student) => ({ ...student }));
+        const migratedParents = rawParents.map((parent) => {
+          const matchingChild = migratedStudents.find(
+            (s) =>
+              s.id === parent.id ||
+              s.parentId === parent.id ||
+              (s.parentEmail && parent.email && s.parentEmail.toLowerCase() === parent.email.toLowerCase()) ||
+              (s.parentPhone && parent.phone && s.parentPhone === parent.phone) ||
+              (Array.isArray(parent.children) && parent.children.includes(s.name))
+          );
+
+          const commonId =
+            matchingChild?.id && matchingChild.id.startsWith('LS-')
+              ? matchingChild.id
+              : parent.id && parent.id.startsWith('LS-')
+              ? parent.id
+              : parent.id;
+
+          if (matchingChild) {
+            matchingChild.parentId = commonId;
+          }
+
+          const autoPass = parent.password || parent.tempPassword || generateParentPassword(parent.phone);
+
+          return {
+            ...parent,
+            id: commonId,
+            password: autoPass,
+            tempPassword: autoPass,
+            tempPasswordDisplay: autoPass,
+            portalAccess: true,
+            status: 'Active',
+            linkedStudentIds: matchingChild ? [matchingChild.id] : parent.linkedStudentIds || [],
+          };
+        });
+
+        // Ensure userAccounts contains active parent accounts matching location
+        const existingAccounts = Array.isArray(parsed.userAccounts)
+          ? parsed.userAccounts
+          : initialAcademyData.userAccounts || [];
+
+        // Retain super_admin, admin, coach, and valid parent accounts
+        const retainedAccounts = existingAccounts.filter(
+          (a) => a.role === 'admin' || a.role === 'super_admin' || a.id === 'ACC-001' || a.role === 'coach'
+        );
+
+        // Auto-sync parent accounts for all enrolled parents matching locations
+        const parentAccounts = migratedParents.map((p) => {
+          const existingAcc = existingAccounts.find(
+            (a) => a.email && p.email && a.email.toLowerCase() === p.email.toLowerCase()
+          );
+          const targetLoc = p.center || 'KK NAGAR';
+          return {
+            id: existingAcc?.id || `ACC-${p.id}`,
+            role: 'parent',
+            name: p.name,
+            email: p.email,
+            phone: p.phone,
+            center: targetLoc,
+            locations: [targetLoc],
+            linkedStudents: p.children || [],
+            status: 'Active',
+            isTemporaryPassword: true,
+            password: p.password,
+            tempPasswordDisplay: p.password,
+            createdAt: p.createdAt || 'Today',
+            lastLogin: existingAcc?.lastLogin || 'Never',
+            permissions: ['VIEW_OWN_CHILDREN', 'MAKE_PAYMENTS', 'REQUEST_COMPENSATION'],
+          };
+        });
+
+        const mergedAccounts = [...retainedAccounts];
+        parentAccounts.forEach((pa) => {
+          if (!mergedAccounts.some((a) => a.email && pa.email && a.email.toLowerCase() === pa.email.toLowerCase())) {
+            mergedAccounts.push(pa);
+          }
+        });
+
         return {
           ...initialAcademyData,
           ...parsed,
+          students: migratedStudents,
+          parents: migratedParents,
           academy: {
             ...initialAcademyData.academy,
             ...(parsed.academy || {}),
@@ -103,9 +189,7 @@ export function CrmProvider({ children }) {
           superCoaches: Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : initialAcademyData.superCoaches,
           equipment: Array.isArray(parsed.equipment) && parsed.equipment.length > 0 ? parsed.equipment : initialEquipmentInventory,
           equipmentReports: Array.isArray(parsed.equipmentReports) && parsed.equipmentReports.length > 0 ? parsed.equipmentReports : initialEquipmentReports,
-          userAccounts: Array.isArray(parsed.userAccounts) 
-            ? parsed.userAccounts.filter(a => a.role === 'admin' || a.role === 'super_admin' || a.id === 'ACC-001')
-            : (initialAcademyData.userAccounts || []),
+          userAccounts: mergedAccounts,
         };
       }
     } catch (e) {
@@ -251,11 +335,15 @@ export function CrmProvider({ children }) {
       ) ||
       (data.classes || []).find(c => !studentData.center || c.center === studentData.center);
 
-    // Permanent location-based Kid ID format: LS-[LOCATION_CODE]-[YEAR]-[SEQUENCE]
-    const studentId = studentData.id || generateLocationKidId(data.students || [], studentData.center);
+    // One Common ID for Kid & Parent: LS-[LOCATION_CODE]-[YEAR]-[SEQUENCE]
+    const commonId = studentData.id || generateCommonMemberId(data.students || [], data.parents || [], studentData.center);
+    const studentId = commonId;
+    const parentId = commonId;
+
     const newStudent = {
       ...studentData,
       id: studentId,
+      parentId: parentId,
       joinDate: new Date().toISOString().split('T')[0],
       status: studentData.status || 'Active',
       attendanceRate: 100,
@@ -269,11 +357,86 @@ export function CrmProvider({ children }) {
       badges: ['New Spartan recruit'],
       avatar: studentData.avatar || 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=150&auto=format&fit=crop&q=80'
     };
-    setData(prev => ({
-      ...prev,
-      students: [newStudent, ...prev.students]
-    }));
-    addToast(`Student "${newStudent.name}" enrolled successfully!`);
+
+    // Auto-create or sync linked parent and portal account
+    const parentName = studentData.parentName?.trim();
+    const parentPhone = studentData.parentPhone?.trim();
+    const parentEmail = studentData.parentEmail?.trim().toLowerCase();
+    const autoPassword = generateParentPassword(parentPhone);
+
+    setData(prev => {
+      let nextParents = prev.parents || [];
+      let nextAccounts = prev.userAccounts || [];
+
+      if (parentName) {
+        const existingPIdx = nextParents.findIndex(p =>
+          (parentEmail && p.email?.toLowerCase() === parentEmail) ||
+          (parentPhone && p.phone === parentPhone)
+        );
+
+        if (existingPIdx >= 0) {
+          const ep = nextParents[existingPIdx];
+          const updatedP = {
+            ...ep,
+            children: Array.from(new Set([...(ep.children || []), newStudent.name])),
+            linkedStudentIds: Array.from(new Set([...(ep.linkedStudentIds || []), studentId])),
+            password: ep.password || autoPassword,
+            tempPasswordDisplay: ep.password || autoPassword,
+          };
+          nextParents = nextParents.map((p, idx) => idx === existingPIdx ? updatedP : p);
+        } else {
+          const newParent = {
+            id: parentId, // Exactly the same ID as studentId
+            name: parentName,
+            phone: parentPhone || '',
+            email: parentEmail || '',
+            center: studentData.center,
+            address: `${studentData.center}, Chennai`,
+            children: [newStudent.name],
+            linkedStudentIds: [studentId],
+            totalFeesPaid: '₹0',
+            pendingDue: '₹0',
+            portalAccess: true,
+            status: 'Active',
+            password: autoPassword,
+            tempPassword: autoPassword,
+            tempPasswordDisplay: autoPassword,
+            createdAt: new Date().toISOString().split('T')[0],
+          };
+          nextParents = [newParent, ...nextParents];
+        }
+
+        if (parentEmail && !nextAccounts.some(a => a.email?.toLowerCase() === parentEmail)) {
+          const newAcc = {
+            id: `ACC-${parentId}`,
+            role: 'parent',
+            name: parentName,
+            email: parentEmail,
+            phone: parentPhone || '',
+            center: studentData.center,
+            locations: [studentData.center],
+            linkedStudents: [newStudent.name],
+            status: 'Active',
+            isTemporaryPassword: true,
+            password: autoPassword,
+            tempPasswordDisplay: autoPassword,
+            createdAt: new Date().toISOString().split('T')[0],
+            lastLogin: 'Never',
+            permissions: ['VIEW_OWN_CHILDREN', 'MAKE_PAYMENTS', 'REQUEST_COMPENSATION'],
+          };
+          nextAccounts = [newAcc, ...nextAccounts];
+        }
+      }
+
+      return {
+        ...prev,
+        students: [newStudent, ...prev.students],
+        parents: nextParents,
+        userAccounts: nextAccounts
+      };
+    });
+
+    addToast(`Student "${newStudent.name}" (${studentId}) enrolled successfully!`);
     return newStudent;
   };
 
@@ -972,9 +1135,13 @@ export function CrmProvider({ children }) {
 
   const addParent = (parentData) => {
     const existingParents = data.parents || [];
-    const parentId = generateUniquePrefixedId(existingParents, 'PAR');
+    const firstLinkedStudentId = Array.isArray(parentData.linkedStudentIds) && parentData.linkedStudentIds[0];
+    const parentId =
+      firstLinkedStudentId ||
+      generateCommonMemberId(data.students || [], existingParents, parentData.center);
     const linkedStudentNames = Array.isArray(parentData.children) ? parentData.children : [];
     const normalizedEmail = (parentData.email || '').trim().toLowerCase();
+    const tempPassword = generateParentPassword(parentData.phone);
 
     let createdAccountResult = null;
     let nextUserAccounts = data.userAccounts || [];
@@ -992,17 +1159,18 @@ export function CrmProvider({ children }) {
         return { success: false, error: 'Email already exists' };
       }
 
-      const tempPassword = `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
       const newAccount = {
-        id: `ACC-${String(nextUserAccounts.length + 1).padStart(3, '0')}`,
+        id: `ACC-${parentId}`,
         role: 'parent',
         name: parentData.name.trim(),
         email: normalizedEmail,
         phone: parentData.phone?.trim() || '',
         center: parentData.center,
+        locations: [parentData.center],
         linkedStudents: linkedStudentNames,
         status: 'Active',
         isTemporaryPassword: true,
+        password: tempPassword,
         tempPasswordDisplay: tempPassword,
         createdAt: new Date().toISOString().split('T')[0],
         lastLogin: 'Never',
@@ -1020,9 +1188,14 @@ export function CrmProvider({ children }) {
       center: parentData.center,
       address: parentData.address?.trim() || `${parentData.center}, Chennai`,
       children: linkedStudentNames,
+      linkedStudentIds: Array.isArray(parentData.linkedStudentIds) ? parentData.linkedStudentIds : (firstLinkedStudentId ? [firstLinkedStudentId] : []),
       totalFeesPaid: '₹0',
       pendingDue: '₹0',
       portalAccess: parentData.grantPortalAccess !== false,
+      status: 'Active',
+      password: tempPassword,
+      tempPassword: tempPassword,
+      tempPasswordDisplay: tempPassword,
       createdAt: new Date().toISOString().split('T')[0],
     };
 
@@ -1054,11 +1227,11 @@ export function CrmProvider({ children }) {
 
     if (createdAccountResult) {
       addToast(
-        `Parent "${newParent.name}" (${newParent.center}) added & Parent Portal activated! Temp Password: ${createdAccountResult.tempPassword}`,
+        `Parent "${newParent.name}" (${newParent.id}) added & Portal activated! Password: ${createdAccountResult.tempPassword}`,
         'success'
       );
     } else {
-      addToast(`Parent "${newParent.name}" added under ${newParent.center}.`, 'success');
+      addToast(`Parent "${newParent.name}" (${newParent.id}) added under ${newParent.center}.`, 'success');
     }
 
     return { success: true, parent: newParent, ...createdAccountResult };
@@ -1086,14 +1259,34 @@ export function CrmProvider({ children }) {
       return { success: false, error: 'Email already exists' };
     }
 
-    const tempPassword = `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
     const normalizedEmail = accountData.email.trim().toLowerCase();
+    const targetLoc = accountData.center || accountData.locations?.[0] || 'KK NAGAR';
+    const locs = accountData.locations?.length ? accountData.locations : [targetLoc];
+
+    // Determine ID: for parents, check if child linked or generate common ID
+    const childrenNames = Array.isArray(accountData.linkedStudents) ? accountData.linkedStudents : [];
+    const matchedChild = (data.students || []).find(s => 
+      childrenNames.includes(s.name) ||
+      (s.parentEmail && s.parentEmail.toLowerCase() === normalizedEmail)
+    );
+
+    const commonMemberId = (matchedChild?.id && matchedChild.id.startsWith('LS-'))
+      ? matchedChild.id
+      : generateCommonMemberId(data.students || [], data.parents || [], targetLoc);
+
+    const tempPassword = accountData.role === 'parent'
+      ? generateParentPassword(accountData.phone)
+      : `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
+
     const newAccount = {
-      id: `ACC-${String((data.userAccounts || []).length + 1).padStart(3, '0')}`,
+      id: accountData.role === 'parent' ? `ACC-${commonMemberId}` : `ACC-${String((data.userAccounts || []).length + 1).padStart(3, '0')}`,
       ...accountData,
       email: normalizedEmail,
+      center: targetLoc,
+      locations: locs,
       status: 'Active',
       isTemporaryPassword: true,
+      password: tempPassword,
       tempPasswordDisplay: tempPassword,
       createdAt: new Date().toISOString().split('T')[0],
       lastLogin: 'Never',
@@ -1110,9 +1303,7 @@ export function CrmProvider({ children }) {
         accountData.role === 'parent' &&
         !nextParents.some(p => (p.email || '').toLowerCase() === normalizedEmail)
       ) {
-        const parentId = `PAR-${String(nextParents.length + 1).padStart(3, '0')}`;
-        const childrenNames = Array.isArray(accountData.linkedStudents) ? accountData.linkedStudents : [];
-        const center = accountData.center || prev.academy?.centers?.[0] || 'KK NAGAR';
+        const parentId = commonMemberId;
 
         nextParents = [
           {
@@ -1120,12 +1311,17 @@ export function CrmProvider({ children }) {
             name: accountData.name.trim(),
             phone: accountData.phone?.trim() || '',
             email: normalizedEmail,
-            center,
-            address: `${center}, Chennai`,
+            center: targetLoc,
+            address: `${targetLoc}, Chennai`,
             children: childrenNames,
+            linkedStudentIds: matchedChild ? [matchedChild.id] : [],
             totalFeesPaid: '₹0',
             pendingDue: '₹0',
             portalAccess: true,
+            status: 'Active',
+            password: tempPassword,
+            tempPassword: tempPassword,
+            tempPasswordDisplay: tempPassword,
             createdAt: new Date().toISOString().split('T')[0],
           },
           ...nextParents,
@@ -1176,6 +1372,11 @@ export function CrmProvider({ children }) {
       ...prev,
       userAccounts: (prev.userAccounts || []).filter(
         a => a.id !== accountId && (!accountEmail || (a.email && a.email.toLowerCase() !== accountEmail.toLowerCase()))
+      ),
+      parents: (prev.parents || []).map(p =>
+        (accountEmail && p.email && p.email.toLowerCase() === accountEmail.toLowerCase())
+          ? { ...p, portalAccess: false }
+          : p
       )
     }));
     addToast('Account deleted permanently.', 'info');

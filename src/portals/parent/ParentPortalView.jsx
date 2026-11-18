@@ -423,8 +423,14 @@ export default function ParentPortalView() {
             <span>Good Morning, {parentProfile.name ? parentProfile.name.split(' ')[0] : 'Parent'}!</span>
             <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
           </h1>
-          <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
-            Dashboard
+          <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left flex items-center gap-2">
+            <span>Dashboard</span>
+            {parentProfile.id && (
+              <>
+                <span>•</span>
+                <span className="font-mono font-bold text-[#F4510B]">Parent ID: {parentProfile.id}</span>
+              </>
+            )}
           </p>
         </div>
 
@@ -543,8 +549,8 @@ export default function ParentPortalView() {
                                   <h4 className="text-xs font-black text-[#172B50] truncate group-hover:text-[#F4510B] transition-colors">
                                     {child.name}
                                   </h4>
-                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#172B50] text-white shrink-0">
-                                    {child.rank || 'Spartan'}
+                                  <span className="font-mono text-[9px] font-black text-[#F4510B] bg-[#FFF5ED] px-1.5 py-0.5 rounded border border-[#F4510B30] shrink-0">
+                                    {child.id}
                                   </span>
                                 </div>
                                 <p className="text-[10.5px] font-bold text-[#172B50]/70 truncate mt-0.5">
@@ -2925,7 +2931,9 @@ export default function ParentPortalView() {
                 <div className="flex items-center justify-between pb-3 border-b border-[#172B5015]">
                   <div>
                     <h3 className="text-lg font-black text-[#172B50]">{child.name}</h3>
-                    <p className="text-xs font-bold text-[#F4510B]">{child.rank}</p>
+                    <p className="text-xs font-bold text-[#F4510B]">
+                      {child.rank} • Kid ID: <span className="font-mono font-bold text-[#172B50]">{child.id}</span>
+                    </p>
                   </div>
                   <span className="px-3 py-1 rounded-full text-xs font-black bg-[#172B50] text-white">
                     Level 3 Advanced
