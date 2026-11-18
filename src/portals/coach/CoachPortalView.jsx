@@ -49,6 +49,7 @@ import {
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
 import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
+import AttendanceManagement from '../admin/AttendanceManagement';
 import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import SportsEventsModule from '../admin/SportsEventsModule';
@@ -231,6 +232,7 @@ export default function CoachPortalView() {
 
   // Leave Modal
   const [isLeaveOpen, setIsLeaveOpen] = useState(false);
+  const [athleteSearch, setAthleteSearch] = useState('');
   const [leaveStart, setLeaveStart] = useState('2026-11-25');
   const [leaveEnd, setLeaveEnd] = useState('2026-11-26');
   const [leaveReason, setLeaveReason] = useState('');
@@ -1194,12 +1196,66 @@ export default function CoachPortalView() {
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight mt-1">
-                My Class Schedules & Court Allocations
+                My Class Schedules &amp; Court Allocations
               </h1>
               <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
                 Real-time schedules published by Admin for Coach {coachProfile.name}. Any updates or cancellations reflect instantly.
               </p>
             </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin ProgramsClassesModule */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Assigned Schedules</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {mySchedules.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Active Batches</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myClasses.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Enrolled Athletes</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myStudents.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Assigned Center</div>
+                <div className="text-base sm:text-lg font-black text-[#172B50] leading-none tracking-tight mt-0.5 truncate max-w-[120px]">
+                  {coachProfile.center || 'Main Academy'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
 
             {/* Toggle View: Schedules vs Standing Batches */}
             <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-[#172B5015] self-start sm:self-auto shadow-xs">
@@ -1479,59 +1535,167 @@ export default function CoachPortalView() {
         </div>
       )}
 
-      {/* 3. MY STUDENTS */}
+      {/* 3. MY STUDENTS: ADAPTED FROM ADMIN STUDENT MANAGEMENT */}
       {currentView === 'students' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            My Student Roster & Medical Alerts
-          </h1>
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                My Student Roster &amp; Athlete Management
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Athletes currently enrolled in your training batches across {coachProfile.center || 'academy centers'}
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin StudentManagement */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Assigned Athletes</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myStudents.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <UserCheck className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Active Athletes</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myStudents.filter(s => s.status !== 'Inactive').length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Average Turnout</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myStudents.length > 0 ? Math.round(myStudents.reduce((acc, s) => acc + (s.attendanceRate || 95), 0) / myStudents.length) : 95}%
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Layers className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">My Batches</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {coachAssignedBatches.length}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search bar matching Admin */}
+          <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-[#172B50]/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search athlete by name, kid ID, or program..."
+                className="w-full pl-9 pr-4 py-2 bg-[#FFF4E8]/40 border border-[#172B5018] rounded-full text-xs font-semibold text-[#172B50] placeholder:text-[#172B50]/40 outline-none focus:border-[#F4510B]"
+                onChange={(e) => setAthleteSearch(e.target.value)}
+              />
+            </div>
+            <span className="text-xs font-bold text-[#172B50]/60">
+              Showing {myStudents.length} athletes assigned to Coach {coachProfile.name}
+            </span>
+          </div>
+
+          {/* Table matching Admin Student Management */}
           <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#FFF4E8] text-[#172B50] font-bold uppercase text-[11px]">
-                <tr>
-                  <th className="p-3.5">Athlete</th>
-                  <th className="p-3.5">Age / Gender</th>
-                  <th className="p-3.5">Rank</th>
-                  <th className="p-3.5">Turnout</th>
-                  <th className="p-3.5">Emergency Note</th>
-                  <th className="p-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#172B5010]">
-                {myStudents.map(s => (
-                  <tr key={s.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                    <td className="p-3.5 font-bold text-[#172B50] flex items-center gap-2">
-                      <img src={s.avatar} alt={s.name} className="w-7 h-7 rounded-full object-cover" />
-                      <span>{s.name}</span>
-                    </td>
-                    <td className="p-3.5">{s.age} yrs • {s.gender}</td>
-                    <td className="p-3.5 font-bold text-[#F4510B]">{s.rank}</td>
-                    <td className="p-3.5 font-bold text-emerald-700">{s.attendanceRate || 95}%</td>
-                    <td className="p-3.5 text-[11px] text-[#172B50] opacity-80">{s.medicalNote || 'Fit for full drills'}</td>
-                    <td className="p-3.5 text-right">
-                      <button 
-                        onClick={() => {
-                          setEvalStudent(s.id);
-                          setCurrentView('evaluations');
-                        }}
-                        className="px-2.5 py-1 text-[11px] font-bold bg-[#172B50] text-white rounded-lg hover:bg-[#F4510B]"
-                      >
-                        Evaluate
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#FFF4E8] text-[#172B50] font-black uppercase text-[11px] tracking-wider border-b border-[#172B5015]">
+                  <tr>
+                    <th className="p-3.5"># KID ID</th>
+                    <th className="p-3.5">STUDENT &amp; PARENT</th>
+                    <th className="p-3.5">PROGRAM &amp; BATCH</th>
+                    <th className="p-3.5">ATTENDANCE %</th>
+                    <th className="p-3.5">MEDICAL &amp; NOTES</th>
+                    <th className="p-3.5 text-right">ACTIONS</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#172B5010]">
+                  {myStudents
+                    .filter(s => !athleteSearch || s.name.toLowerCase().includes(athleteSearch.toLowerCase()) || (s.id && s.id.toLowerCase().includes(athleteSearch.toLowerCase())))
+                    .map(s => (
+                    <tr key={s.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                      <td className="p-3.5 font-mono text-[11px] font-black text-[#F4510B]">{s.id}</td>
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <img src={s.avatar} alt={s.name} className="w-8 h-8 rounded-full object-cover ring-1 ring-[#172B5020]" />
+                          <div>
+                            <span className="font-extrabold text-[#172B50] block">{s.name}</span>
+                            <span className="text-[10px] text-[#172B50]/60 block">{s.parentName} ({s.parentPhone})</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3.5">
+                        <span className="font-bold text-[#172B50] block">{s.program}</span>
+                        <span className="text-[10.5px] font-semibold text-[#F4510B] block">{s.batchName || 'General Batch'}</span>
+                      </td>
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-emerald-700">{s.attendanceRate || 95}%</span>
+                          <div className="w-16 h-1.5 bg-[#172B5010] rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${s.attendanceRate || 95}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3.5 text-[11px] text-[#172B50] opacity-80 max-w-xs truncate">
+                        {s.medicalNote || 'Fit for full athletic drills'}
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <button 
+                          onClick={() => {
+                            setEvalStudent(s.id);
+                            setCurrentView('evaluations');
+                          }}
+                          className="px-3 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-xl hover:bg-[#F4510B] transition-colors cursor-pointer shadow-2xs"
+                        >
+                          Evaluate Athlete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {/* 4. ATTENDANCE (LOCATION & ASSIGNED BATCH SCOPED) */}
       {currentView === 'attendance' && (
-        <div className="space-y-6">
-          {/* Sub-view Navigation */}
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Sub-view Navigation matching Admin Module Tab Switcher */}
           <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
+            <button
+              type="button"
+              onClick={() => setCoachAttSubView('mark_session')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                coachAttSubView === 'mark_session'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Student Attendance
+            </button>
             <button
               type="button"
               onClick={() => setCoachAttSubView('register')}
@@ -1543,277 +1707,22 @@ export default function CoachPortalView() {
             >
               Coach Attendance Register
             </button>
-            <button
-              type="button"
-              onClick={() => setCoachAttSubView('mark_session')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-                coachAttSubView === 'mark_session'
-                  ? 'bg-[#F4510B] text-white shadow-xs'
-                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-              }`}
-            >
-              Mark Student Attendance
-            </button>
           </div>
 
-          {coachAttSubView === 'register' ? (
+          {coachAttSubView === 'mark_session' ? (
+            <AttendanceManagement 
+              initialLocation={coachProfile.center || 'KK NAGAR'}
+              initialCoach={coachProfile.name}
+              fixedLocation={true}
+              fixedCoach={true}
+              portalRole="coach"
+            />
+          ) : (
             <CoachAttendanceRegister 
               currentPortal="coach" 
               defaultCoachId={coachProfile?.id}
               allowedCoaches={[coachProfile]} 
             />
-          ) : (
-            <>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                    Mark Session Attendance
-                  </h1>
-                  <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                    Showing only locations, classes &amp; athletes assigned to <strong>{coachProfile.name}</strong>
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSaveCoachAttendance}
-                  disabled={!effectiveCoachBatch || coachAttRows.length === 0}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 self-start sm:self-auto"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>
-                    Save Attendance{coachAttDirtyCount > 0 ? ` (${coachAttDirtyCount})` : ''}
-                  </span>
-                </button>
-              </div>
-
-          {/* Coach Assigned Selectors & Summary Bar */}
-          <div className="bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-70 block mb-1">
-                  Assigned Location
-                </label>
-                <div className="relative">
-                  <MapPin className="w-3.5 h-3.5 text-[#F4510B] absolute left-2.5 top-2.5 pointer-events-none" />
-                  <select
-                    aria-label="Select assigned academy location"
-                    value={effectiveCoachLocation}
-                    onChange={(e) => handleCoachLocationChange(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none focus:ring-2 focus:ring-[#F4510B]"
-                  >
-                    {coachAssignedLocations.length === 0 ? (
-                      <option value="">No Assigned Locations</option>
-                    ) : (
-                      coachAssignedLocations.map(loc => (
-                        <option key={loc} value={loc}>{loc}</option>
-                      ))
-                    )}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-70 block mb-1">
-                  Assigned Class / Batch
-                </label>
-                <select
-                  aria-label="Select assigned class or batch"
-                  value={effectiveCoachBatch?.id || ''}
-                  onChange={(e) => setCoachAttBatchId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none focus:ring-2 focus:ring-[#F4510B]"
-                >
-                  {coachLocationBatches.length === 0 ? (
-                    <option value="">No Assigned Batches at Location</option>
-                  ) : (
-                    coachLocationBatches.map(b => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} ({b.program})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-[#172B50] opacity-70 block mb-1">
-                  Attendance Date
-                </label>
-                <div className="relative">
-                  <Calendar className="w-3.5 h-3.5 text-[#172B50] opacity-60 absolute left-2.5 top-2.5 pointer-events-none" />
-                  <input
-                    type="date"
-                    aria-label="Coach attendance date"
-                    value={coachAttDate}
-                    onChange={(e) => setCoachAttDate(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] outline-none focus:ring-2 focus:ring-[#F4510B]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Coach Attendance Summary */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-[#172B5010]">
-              <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
-                <span className="text-[11px] font-bold text-[#172B50]">Total Students</span>
-                <span className="text-sm font-black text-[#172B50]">{coachAttTotal}</span>
-              </div>
-              <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
-                <span className="text-[11px] font-bold text-[#172B50]">Present</span>
-                <span className="text-sm font-black text-emerald-700">{coachAttPresent}</span>
-              </div>
-              <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] flex items-center justify-between">
-                <span className="text-[11px] font-bold text-[#172B50]">Absent</span>
-                <span className="text-sm font-black text-[#F4510B]">{coachAttAbsent}</span>
-              </div>
-              <div className="px-3.5 py-2 rounded-xl bg-[#172B50] text-white flex items-center justify-between">
-                <span className="text-[11px] font-bold">Not Marked</span>
-                <span className="text-sm font-black text-[#FFF4E8]">{coachAttNotMarked}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Student List for Assigned Batch + Location */}
-          <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
-            {effectiveCoachBatch && (
-              <div className="pb-3 mb-3 border-b border-[#172B5015] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-extrabold text-[#172B50]">
-                    {effectiveCoachBatch.name} • {effectiveCoachLocation}
-                  </h3>
-                  <p className="text-[11px] text-[#172B50] opacity-75">
-                    {effectiveCoachBatch.program} • {effectiveCoachBatch.schedule} • Date: <strong>{coachAttDate}</strong>
-                  </p>
-                </div>
-                <span className="text-xs font-bold text-[#F4510B]">
-                  {coachAttTotal > 0 ? Math.round((coachAttPresent / coachAttTotal) * 100) : 0}% Present
-                </span>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              {coachAttRows.length === 0 ? (
-                <div className="py-8 text-center text-xs text-[#172B50] opacity-65 space-y-1.5">
-                  <Users className="w-7 h-7 mx-auto opacity-40" />
-                  <p>No students enrolled in this assigned class at {effectiveCoachLocation || 'this location'}.</p>
-                </div>
-              ) : (
-                coachAttRows.map(row => {
-                  const { student, draftKey, currentStatus, isDirty } = row;
-                  return (
-                    <div
-                      key={student.id}
-                      className="p-3.5 bg-[#FFF4E8] rounded-xl border border-[#172B5015] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img src={student.avatar} alt={student.name} className="w-9 h-9 rounded-full object-cover ring-1 ring-[#172B5020]" />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-xs font-black text-[#172B50]">{student.name}</h4>
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
-                                currentStatus === ATTENDANCE_STATUSES.PRESENT
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : currentStatus === ATTENDANCE_STATUSES.ABSENT
-                                  ? 'bg-[#F4510B]/15 text-[#F4510B]'
-                                  : 'bg-white text-[#172B50] opacity-75 border border-[#172B5020]'
-                              }`}
-                            >
-                              {currentStatus === ATTENDANCE_STATUSES.PRESENT && <Check className="w-2.5 h-2.5" />}
-                              {currentStatus === ATTENDANCE_STATUSES.ABSENT && <X className="w-2.5 h-2.5" />}
-                              {currentStatus === ATTENDANCE_STATUSES.NOT_MARKED && <Clock className="w-2.5 h-2.5" />}
-                              <span>{currentStatus}</span>
-                              {isDirty && <span className="opacity-75">(Unsaved)</span>}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-[#172B50] opacity-75">
-                            {student.id} • {student.center} • {student.program}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-end sm:self-auto">
-                        {[ATTENDANCE_STATUSES.PRESENT, ATTENDANCE_STATUSES.ABSENT].map(status => (
-                          <button
-                            key={status}
-                            type="button"
-                            onClick={() =>
-                              setCoachAttDrafts(prev => ({
-                                ...prev,
-                                [draftKey]: status,
-                              }))
-                            }
-                            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                              currentStatus === status
-                                ? status === ATTENDANCE_STATUSES.PRESENT
-                                  ? 'bg-[#172B50] text-white shadow-sm'
-                                  : 'bg-[#F4510B] text-white shadow-sm'
-                                : 'bg-white text-[#172B50] border border-[#172B5020] hover:bg-white/80'
-                            }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {assignedStudentReplacements.filter(r => r.status === 'Scheduled').length > 0 && (
-            <div className="bg-white rounded-2xl border border-[#F4510B30] shadow-card overflow-hidden">
-              <div className="p-4 border-b border-[#172B5010] bg-[#FFF4E8]/60 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-[#172B50]">
-                    Replacement Compensation Sessions — Attendance
-                  </h3>
-                  <p className="text-[11px] text-[#172B50]/70">
-                    Mark Present or Absent for makeup classes scheduled to you by Admin
-                  </p>
-                </div>
-                <span className="text-xs font-extrabold text-[#F4510B]">
-                  {assignedStudentReplacements.filter(r => r.status === 'Scheduled').length} Active
-                </span>
-              </div>
-              <div className="divide-y divide-[#172B5010]">
-                {assignedStudentReplacements.filter(r => r.status === 'Scheduled').map(rep => (
-                  <div key={rep.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div>
-                      <span className="font-extrabold text-[#172B50] text-sm">{rep.studentName}</span>
-                      <p className="text-[11px] text-[#172B50]/75 mt-0.5">
-                        {rep.replacementSlot} • {rep.replacementProgram || rep.program} (Makeup for {rep.missedDate})
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleMarkReplacementAttendance(rep, ATTENDANCE_STATUSES.PRESENT)}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#172B50] text-white font-bold hover:bg-emerald-600 transition-colors cursor-pointer"
-                      >
-                        Present &amp; Complete
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMarkReplacementAttendance(rep, ATTENDANCE_STATUSES.ABSENT)}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30] font-bold hover:bg-rose-50 transition-colors cursor-pointer"
-                      >
-                        Mark Absent
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-[11px] text-[#172B50]">
-            <Info className="w-4 h-4 text-[#F4510B] shrink-0 mt-0.5" />
-            <span>
-              Saving updates the shared attendance register in browser <code className="font-bold">localStorage</code> so Admin Portal reflects it immediately. Production sync requires <code className="font-bold">PUT /api/v1/attendance/batch</code> with Coach RBAC verification.
-            </span>
-          </div>
-            </>
           )}
         </div>
       )}
@@ -1821,9 +1730,67 @@ export default function CoachPortalView() {
       {/* 5. STUDENT PERFORMANCE (EVALUATIONS) */}
       {currentView === 'evaluations' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Spartan Athlete Skill Assessments
-          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Spartan Athlete Skill Assessments &amp; Evaluations
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Admin-standard technical rubric scoring, belt progressions, and term milestone tracking
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin Certificates / Evaluations */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Total Athletes</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myStudents.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Evaluation Rubrics</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  5 Disciplines
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Star className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Average Score</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  8.8 / 10
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Calendar className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Current Term</div>
+                <div className="text-base sm:text-lg font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  Q4 2026
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-[#172B5015]">
@@ -1901,6 +1868,57 @@ export default function CoachPortalView() {
               <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
                 Track student makeup sessions assigned to you, mark replacement attendance, and manage substitute coverage
               </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin StudentCompensation */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <RefreshCw className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Assigned Replacements</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {assignedStudentReplacements.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Completed Sessions</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {assignedStudentReplacements.filter(r => r.status === 'Completed').length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Pending Execution</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {assignedStudentReplacements.filter(r => r.status !== 'Completed').length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <UserCheck className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Substitute Requests</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {substituteRequests.length}
+                </div>
+              </div>
             </div>
           </div>
 

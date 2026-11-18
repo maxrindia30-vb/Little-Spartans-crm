@@ -25,16 +25,33 @@ import {
   resolveStudentBatch,
 } from '../../services/attendanceService';
 
-export default function AttendanceManagement() {
+export default function AttendanceManagement({
+  initialLocation,
+  initialCoach,
+  allowedLocations,
+  allowedCoaches,
+  fixedLocation = false,
+  fixedCoach = false,
+  portalRole = 'admin',
+} = {}) {
   const { data, saveBatchAttendance, addToast } = useCrm();
 
-  const commonLocations = getCommonLocations(data);
+  const allLocations = getCommonLocations(data);
+  const commonLocations = useMemo(() => {
+    if (allowedLocations && allowedLocations.length > 0) {
+      return allLocations.filter(loc => allowedLocations.includes(loc.name));
+    }
+    return allLocations;
+  }, [allLocations, allowedLocations]);
 
-  const [selectedLocation, setSelectedLocation] = useState('All');
+  const defaultLoc = initialLocation || (allowedLocations && allowedLocations[0]) || 'All';
+  const defaultCoach = initialCoach || 'All';
+
+  const [selectedLocation, setSelectedLocation] = useState(defaultLoc);
   const [selectedDate, setSelectedDate] = useState('2026-11-11');
   const [selectedProgram, setSelectedProgram] = useState('All');
   const [selectedBatchId, setSelectedBatchId] = useState('All');
-  const [selectedCoach, setSelectedCoach] = useState('All');
+  const [selectedCoach, setSelectedCoach] = useState(defaultCoach);
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,24 +60,40 @@ export default function AttendanceManagement() {
   // Draft edits keyed by `${studentId}::${batchId}::${date}::${location}`
   const [draftStatuses, setDraftStatuses] = useState({});
 
+  const scopedBaseClasses = useMemo(() => {
+    let list = data.classes || [];
+    if (allowedLocations && allowedLocations.length > 0) {
+      list = list.filter(c => allowedLocations.includes(c.center));
+    }
+    return list;
+  }, [data.classes, allowedLocations]);
+
+  const scopedBaseStudents = useMemo(() => {
+    let list = data.students || [];
+    if (allowedLocations && allowedLocations.length > 0) {
+      list = list.filter(s => allowedLocations.includes(s.center));
+    }
+    return list;
+  }, [data.students, allowedLocations]);
+
   const locationScopedClasses = useMemo(() => {
-    return (data.classes || []).filter(
+    return scopedBaseClasses.filter(
       c => selectedLocation === 'All' || c.center === selectedLocation
     );
-  }, [data.classes, selectedLocation]);
+  }, [scopedBaseClasses, selectedLocation]);
 
   const availablePrograms = useMemo(() => {
     const names = new Set();
     locationScopedClasses.forEach(c => {
       if (c.program) names.add(c.program);
     });
-    (data.students || []).forEach(s => {
+    scopedBaseStudents.forEach(s => {
       if ((selectedLocation === 'All' || s.center === selectedLocation) && s.program) {
         names.add(s.program);
       }
     });
     return Array.from(names);
-  }, [locationScopedClasses, data.students, selectedLocation]);
+  }, [locationScopedClasses, scopedBaseStudents, selectedLocation]);
 
   const availableBatches = useMemo(() => {
     return locationScopedClasses.filter(
@@ -73,22 +106,22 @@ export default function AttendanceManagement() {
     locationScopedClasses.forEach(c => {
       if (c.coach) coachNames.add(c.coach);
     });
-    (data.students || []).forEach(s => {
+    scopedBaseStudents.forEach(s => {
       if ((selectedLocation === 'All' || s.center === selectedLocation) && s.coachName) {
         coachNames.add(s.coachName);
       }
     });
     return Array.from(coachNames);
-  }, [locationScopedClasses, data.students, selectedLocation]);
+  }, [locationScopedClasses, scopedBaseStudents, selectedLocation]);
 
   const handleLocationChange = (nextLocation) => {
     setSelectedLocation(nextLocation);
     setCurrentPage(1);
 
-    const nextClasses = (data.classes || []).filter(
+    const nextClasses = scopedBaseClasses.filter(
       c => nextLocation === 'All' || c.center === nextLocation
     );
-    const nextStudents = (data.students || []).filter(
+    const nextStudents = scopedBaseStudents.filter(
       s => nextLocation === 'All' || s.center === nextLocation
     );
 
@@ -117,14 +150,14 @@ export default function AttendanceManagement() {
   };
 
   const filteredStudents = useMemo(() => {
-    return filterStudentsForAttendance(data.students || [], data.classes || [], {
+    return filterStudentsForAttendance(scopedBaseStudents, scopedBaseClasses, {
       location: selectedLocation,
       program: selectedProgram,
       batchId: selectedBatchId,
       coach: selectedCoach,
       search: searchTerm,
     });
-  }, [data.students, data.classes, selectedLocation, selectedProgram, selectedBatchId, selectedCoach, searchTerm]);
+  }, [scopedBaseStudents, scopedBaseClasses, selectedLocation, selectedProgram, selectedBatchId, selectedCoach, searchTerm]);
 
   const studentRows = useMemo(() => {
     return filteredStudents.map(student => {
@@ -230,6 +263,7 @@ export default function AttendanceManagement() {
         date: selectedDate,
         location: group.location,
         batchId: group.batchId,
+        markedBy: initialCoach || 'Admin Attendance',
       });
       if (!res?.success) {
         allSucceeded = false;
@@ -325,10 +359,13 @@ export default function AttendanceManagement() {
               <select
                 aria-label="Filter student attendance by location"
                 value={selectedLocation}
+                disabled={fixedLocation}
                 onChange={(e) => handleLocationChange(e.target.value)}
-                className="w-full bg-transparent border-0 text-xs sm:text-sm font-bold text-[#172B50] pl-2 pr-6 outline-none appearance-none cursor-pointer"
+                className={`w-full bg-transparent border-0 text-xs sm:text-sm font-bold text-[#172B50] pl-2 pr-6 outline-none appearance-none ${
+                  fixedLocation ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                }`}
               >
-                <option value="All">All Locations</option>
+                {!fixedLocation && <option value="All">All Locations</option>}
                 {commonLocations.map(loc => (
                   <option key={loc.id} value={loc.name}>
                     {loc.name}
@@ -447,13 +484,16 @@ export default function AttendanceManagement() {
               <select
                 aria-label="Filter by coach"
                 value={selectedCoach}
+                disabled={fixedCoach}
                 onChange={(e) => {
                   setSelectedCoach(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-transparent border-0 text-xs sm:text-sm font-bold text-[#172B50] pl-2 pr-6 outline-none appearance-none cursor-pointer"
+                className={`w-full bg-transparent border-0 text-xs sm:text-sm font-bold text-[#172B50] pl-2 pr-6 outline-none appearance-none ${
+                  fixedCoach ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                }`}
               >
-                <option value="All">All Coaches</option>
+                {!fixedCoach && <option value="All">All Coaches</option>}
                 {availableCoaches.map(c => (
                   <option key={c} value={c}>
                     {c}

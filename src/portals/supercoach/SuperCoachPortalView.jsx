@@ -3,6 +3,8 @@ import {
   Shield,
   MapPin,
   Users,
+  Star,
+  CalendarDays,
   GraduationCap,
   Calendar,
   CheckCircle2,
@@ -38,6 +40,7 @@ import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import { checkScheduleConflict } from '../../services/scheduleService';
 import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
+import AttendanceManagement from '../admin/AttendanceManagement';
 import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 
 export default function SuperCoachPortalView() {
@@ -1228,10 +1231,70 @@ export default function SuperCoachPortalView() {
         </div>
       )}
 
-      {/* 3. TAB 2: MULTI-LOCATION HUB                                  */}
-      {/* ============================================================ */}
+      {/* 3. TAB 2: MULTI-LOCATION HUB: ADAPTED FROM ADMIN ACADEMY SETTINGS & CENTERS */}
       {activeTab === 'locations' && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Multi-Location Operations Hub
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Center operational oversight, arena capacity, equipment distribution, and staffing compliance across authorized branches
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin Academy Settings */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Authorized Centers</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedLocations.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Layers className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Arenas &amp; Courts</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedLocations.reduce((sum, l) => sum + (l.courts?.length || 0), 0)}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Supervised Faculty</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedCoaches.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Enrolled Athletes</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedStudents.length}
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {scopedLocations.map((loc) => {
               const locStudents = scopedStudents.filter((s) => s.center === loc.name);
@@ -1329,6 +1392,68 @@ export default function SuperCoachPortalView() {
       {/* ============================================================ */}
       {activeTab === 'coaches' && (
         <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Coaching Faculty &amp; Supervision
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Faculty qualifications, session allocations, student ratios, and supervisory performance oversight
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin CoachManagement */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <UserCheck className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Faculty Members</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedCoaches.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Certified Specialists</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedCoaches.filter(c => c.certification).length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Layers className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Active Batches</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedSchedules.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Star className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Faculty Rating</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  4.9 ★
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white rounded-3xl p-5 border border-[#172B5014] shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-5 rounded-full bg-[#F4510B]" />
@@ -1444,6 +1569,68 @@ export default function SuperCoachPortalView() {
       {/* ============================================================ */}
       {activeTab === 'schedules' && (
         <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Class Timetable &amp; Schedule Oversight
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Session scheduling, court allocations, and coach reassignment across authorized locations
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin ClassSchedulesPage */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Published Schedules</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {scopedSchedules.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Authorized Centers</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {assignedLocations.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <UserCheck className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Instructors Assigned</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {new Set(scopedSchedules.map(s => s.coachName)).size}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Status Compliance</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  100%
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white rounded-3xl p-5 border border-[#172B5014] shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-5 rounded-full bg-[#F4510B]" />
@@ -1543,11 +1730,63 @@ export default function SuperCoachPortalView() {
       )}
 
       {/* ============================================================ */}
-      {/* 7. TAB 6: ATTENDANCE & PERFORMANCE                            */}
-      {/* ============================================================ */}
+      {/* 7. TAB 6: ATTENDANCE & PERFORMANCE: ADAPTED FROM ADMIN ATTENDANCE & COMPENSATION */}
       {activeTab === 'attendance' && (
-        <div className="space-y-6">
-          {/* Sub-tab Navigation */}
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Attendance &amp; Performance Oversight
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Centralized student attendance register, faculty attendance calendar, and skill progression across authorized locations
+              </p>
+            </div>
+          </div>
+
+          {/* Sub-tab Navigation matching Admin Attendance Module */}
+          <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
+            <button
+              type="button"
+              onClick={() => setAttendanceSubView('student_attendance')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'student_attendance'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Student Attendance Register
+            </button>
+            <button
+              type="button"
+              onClick={() => setAttendanceSubView('coach_register')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'coach_register'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Coach Attendance Register
+            </button>
+            <button
+              type="button"
+              onClick={() => setAttendanceSubView('student_progression')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'student_progression'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Student Progression Oversight
+            </button>
+          </div>
+
+          {attendanceSubView === 'student_attendance' && (
+            <AttendanceManagement
+              allowedLocations={assignedLocations}
+              portalRole="super_coach"
+            />
+          )}
           <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
             <button
               type="button"
@@ -1573,12 +1812,14 @@ export default function SuperCoachPortalView() {
             </button>
           </div>
 
-          {attendanceSubView === 'coach_register' ? (
+          {attendanceSubView === 'coach_register' && (
             <CoachAttendanceRegister 
               currentPortal="super_coach" 
               allowedCoaches={scopedCoaches} 
             />
-          ) : (
+          )}
+
+          {attendanceSubView === 'student_progression' && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card">
@@ -1662,12 +1903,67 @@ export default function SuperCoachPortalView() {
       {activeTab === 'reports' && (
         <div className="space-y-6">
           <div className="bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card">
-            <h3 className="text-base font-black text-[#172B50] mb-2">
-              Super Coach Multi-Location Analytics &amp; Reports
-            </h3>
-            <p className="text-xs text-[#172B50] opacity-70 mb-6">
-              Generate operational reports for class completion, coach rosters, equipment health, and attendance across authorized centers.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Super Coach Multi-Location Analytics &amp; Reports
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Generate operational audits for class completion, coach rosters, equipment health, and attendance across authorized centers
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin ReportsAnalytics */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Audit Reports</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  4 Available
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Reporting Centers</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {assignedLocations.length} Centers
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Compliance Rate</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  100%
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Cadence</div>
+                <div className="text-base sm:text-lg font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  Weekly Sync
+                </div>
+              </div>
+            </div>
+          </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-4 rounded-2xl bg-[#FFF4E8] border border-[#172B5015] flex flex-col justify-between">

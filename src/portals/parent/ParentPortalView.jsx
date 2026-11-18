@@ -5,7 +5,10 @@ import {
   CalendarDays,
   CreditCard, 
   ClipboardCheck, 
-  Trophy, 
+  Trophy,
+  Medal,
+  Users,
+  Layers, 
   CalendarOff, 
   Award, 
   Bell, 
@@ -119,6 +122,7 @@ export default function ParentPortalView() {
   const [selectedScheduleChildId, setSelectedScheduleChildId] = useState('all');
   const [scheduleTab, setScheduleTab] = useState('weekly'); // 'weekly' | 'calendar' | 'upcoming' | 'completed' | 'cancelled'
   const [scheduleFocusDate, setScheduleFocusDate] = useState(todayYmd);
+  const [parentAttSubTab, setParentAttSubTab] = useState('attendance');
 
   const openParentCompModal = () => {
     const firstChild = myChildren[0];
@@ -1250,45 +1254,147 @@ export default function ParentPortalView() {
         </div>
       )}
 
-      {/* 3. MY CHILDREN */}
+      {/* 3. MY CHILDREN: ADAPTED FROM ADMIN STUDENT MANAGEMENT */}
       {currentView === 'children' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            My Registered Spartan Children
-          </h1>
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                My Registered Spartan Athletes
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Official athlete profiles, program enrollments, assigned coaches, and emergency records
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin StudentManagement */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Registered Children</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myChildren.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Active Programs</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {new Set(myChildren.map(c => c.program)).size}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Overall Turnout</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myChildren.length > 0 ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 95), 0) / myChildren.length) : 95}%
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Academy Centers</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {new Set(myChildren.map(c => c.center)).size}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Children Profiles Grid matching Admin Student Profile Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {myChildren.map(child => (
-              <div key={child.id} className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
-                <div className="flex items-center gap-4 pb-4 border-b border-[#172B5015]">
-                  <img src={child.avatar} alt={child.name} className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#F4510B]" />
-                  <div>
-                    <h3 className="text-lg font-black text-[#172B50]">{child.name}</h3>
-                    <p className="text-xs font-bold text-[#F4510B]">{child.rank}</p>
-                    <p className="text-xs text-[#172B50] opacity-75">ID: {child.id} • DOB: {child.dob}</p>
+              <div key={child.id} className="bg-white rounded-3xl p-6 border border-[#172B501A] shadow-card hover:border-[#F4510B30] transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-4 border-b border-[#172B5012]">
+                    <div className="flex items-center gap-3.5">
+                      <img src={child.avatar} alt={child.name} className="w-14 h-14 rounded-2xl object-cover ring-2 ring-[#F4510B] shadow-2xs" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base sm:text-lg font-black text-[#172B50]">{child.name}</h3>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white">
+                            {child.rank || 'Spartan'}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-[#F4510B] mt-0.5">{child.program}</p>
+                        <p className="text-[11px] text-[#172B50]/60">Athlete ID: {child.id} • DOB: {child.dob}</p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Active
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5 mt-4 text-xs">
+                    <div className="flex justify-between items-center py-1 border-b border-[#172B500C]">
+                      <span className="text-[#172B50]/70 font-semibold">Training Center:</span>
+                      <span className="font-extrabold text-[#172B50]">{child.center}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-[#172B500C]">
+                      <span className="text-[#172B50]/70 font-semibold">Assigned Head Coach:</span>
+                      <span className="font-extrabold text-[#172B50]">{child.coachName || 'Assigned Coach'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-[#172B500C]">
+                      <span className="text-[#172B50]/70 font-semibold">Attendance Turnout:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-emerald-700">{child.attendanceRate}%</span>
+                        <div className="w-16 h-1.5 bg-[#172B5010] rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${child.attendanceRate}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-[#172B500C]">
+                      <span className="text-[#172B50]/70 font-semibold">Tuition Status:</span>
+                      <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[10.5px]">
+                        {child.feeStatus || 'Paid & Verified'}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-[#FFF4E8] rounded-2xl border border-[#172B5015] mt-2">
+                      <span className="font-bold text-[#172B50] text-[11px] block mb-0.5">Medical &amp; Physical Fitness:</span>
+                      <span className="text-[11px] text-[#172B50]/80">{child.medicalNote || 'Fit for full athletic drills'}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3 mt-4 text-xs">
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Program Enrolled:</span>
-                    <span className="font-bold text-[#172B50]">{child.program}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Assigned Head Coach:</span>
-                    <span className="font-bold text-[#172B50]">{child.coachName}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Overall Attendance:</span>
-                    <span className="font-bold text-[#F4510B]">{child.attendanceRate}%</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-[#172B5010]">
-                    <span className="text-[#172B50] opacity-70">Tuition Status:</span>
-                    <span className="font-bold text-[#172B50]">{child.feeStatus}</span>
-                  </div>
-                  <div className="p-3 bg-[#FFF4E8] rounded-xl border border-[#172B5015]">
-                    <span className="font-bold text-[#172B50] block mb-1">Medical Record Note:</span>
-                    <span className="text-[#172B50] opacity-80">{child.medicalNote}</span>
-                  </div>
+                <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-[#172B5010]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedScheduleChildId(child.id);
+                      setCurrentView('classes');
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#172B50] text-white hover:bg-[#F4510B] transition-colors cursor-pointer"
+                  >
+                    View Timetable
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCompChildId(child.id);
+                      setCurrentView('attendance_compensation');
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
+                  >
+                    Attendance &amp; Compensation
+                  </button>
                 </div>
               </div>
             ))}
@@ -1314,6 +1420,60 @@ export default function ParentPortalView() {
                 Showing only published classes matching your children&apos;s enrolled location, program, and batch.
               </p>
             </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin ProgramsClassesModule */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Weekly Sessions</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {visibleChildSessions.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Enrolled Programs</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {new Set(myChildren.map(c => c.program)).size}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <UserCheck2 className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Assigned Coaches</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {new Set(myChildren.map(c => c.coachName)).size}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Training Centers</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {new Set(myChildren.map(c => c.center)).size}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
 
             {myChildren.length > 1 && (
               <div className="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-[#172B501A]">
@@ -1597,6 +1757,83 @@ export default function ParentPortalView() {
             </button>
           </div>
 
+          {/* Top 4 KPI Cards matching Admin Attendance & Compensation */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Total Marked Sessions</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myAttendanceRecords.length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Present Attendance</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myAttendanceRecords.filter(r => r.status === 'Present').length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF1F2] border border-[#F43F5E20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F43F5E18] text-[#F43F5E] flex items-center justify-center shrink-0">
+                <CalendarX className="w-4 h-4 text-[#F43F5E]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Missed Sessions (Absent)</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {myAttendanceRecords.filter(r => r.status === 'Absent').length}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <RefreshCw className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Compensation Requests</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  {parentCompRequests.length}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sub-view Navigation matching Admin Module Tab Switcher */}
+          <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
+            <button
+              type="button"
+              onClick={() => setParentAttSubTab('attendance')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                parentAttSubTab === 'attendance'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Daily Attendance Register
+            </button>
+            <button
+              type="button"
+              onClick={() => setParentAttSubTab('compensation')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                parentAttSubTab === 'compensation'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Compensation Requests ({parentCompRequests.length})
+            </button>
+          </div>
+
           {/* 1. Absence Alerts (Prominent Notification when child is marked Absent by coach) */}
           {myAttendanceRecords.some(r => r.status === 'Absent') && (
             <div className="space-y-3">
@@ -1645,248 +1882,255 @@ export default function ParentPortalView() {
             </div>
           )}
 
-          {/* 2. Attendance Register Summary & Progress */}
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
-            <h3 className="text-sm font-extrabold text-[#172B50] pb-3 border-b border-[#172B5012] mb-4">
-              Attendance Register Summary
-            </h3>
-            {myChildren.length === 0 ? (
-              <p className="text-xs text-[#172B50]/70">No child profile is linked to this parent account yet.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {myChildren.map(child => {
-                  const childRecords = myAttendanceRecords.filter(r => r.studentId === child.id);
-                  const presentCount = childRecords.filter(r => r.status === 'Present').length;
-                  const absentCount = childRecords.filter(r => r.status === 'Absent').length;
-                  const totalMarked = childRecords.length;
-                  const computedRate = totalMarked > 0 ? Math.round((presentCount / totalMarked) * 100) : (child.attendanceRate || 0);
-                  return (
-                    <div key={child.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
-                      <div className="flex justify-between items-center mb-2">
-                        <div>
-                          <span className="text-sm font-extrabold text-[#172B50] block">{child.name}</span>
-                          <span className="text-[10px] font-bold text-[#172B50]/65">{child.center} • {child.program}</span>
-                        </div>
-                        <span className="text-xs font-black text-[#F4510B]">{computedRate}% Present</span>
-                      </div>
-                      <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#172B5015]">
-                        <div style={{ width: `${computedRate}%` }} className="h-full bg-[#172B50] rounded-full" />
-                      </div>
-                      <p className="text-[11px] text-[#172B50] opacity-75 mt-2">
-                        {totalMarked === 0
-                          ? 'No attendance logs recorded yet.'
-                          : `${presentCount} present, ${absentCount} absent out of ${totalMarked} marked sessions.`}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* 3. Daily Attendance Calendar (Present = Green, Absent = Red, Not Marked = Grey) */}
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#172B5012]">
-              <div>
-                <h3 className="text-sm font-black text-[#172B50]">
-                  Daily Attendance Calendar (November 2026)
+          {/* TAB CONTENT: ATTENDANCE REGISTER */}
+          {parentAttSubTab === 'attendance' && (
+            <>
+              {/* 2. Attendance Register Summary & Progress */}
+              <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card">
+                <h3 className="text-sm font-extrabold text-[#172B50] pb-3 border-b border-[#172B5012] mb-4">
+                  Attendance Register Summary
                 </h3>
-                <p className="text-xs text-[#172B50] opacity-70">
-                  Read-only attendance records synchronized live from coach session check-ins
-                </p>
-              </div>
-
-              {/* Status Color Legend */}
-              <div className="flex items-center gap-3 text-xs font-bold">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
-                  <span className="text-emerald-700">Present (Green)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
-                  <span className="text-rose-700">Absent (Red)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-slate-200 border border-slate-300 inline-block" />
-                  <span className="text-slate-600">Not Marked (Grey)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Calendar Grid: 30 days of November 2026 */}
-            <div className="grid grid-cols-7 gap-2 text-center">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                <span key={d} className="text-[11px] font-black text-[#172B50] uppercase tracking-wider py-1">
-                  {d}
-                </span>
-              ))}
-
-              {Array.from({ length: 30 }, (_, i) => {
-                const dayNum = i + 1;
-                const dateStr = `2026-11-${String(dayNum).padStart(2, '0')}`;
-                const dayRecords = myAttendanceRecords.filter(r => r.date === dateStr);
-                const hasPresent = dayRecords.some(r => r.status === 'Present');
-                const hasAbsent = dayRecords.some(r => r.status === 'Absent');
-
-                let badgeColor = 'bg-slate-50 text-slate-400 border border-slate-200/60';
-                let statusLabel = 'Not Marked';
-
-                if (hasAbsent) {
-                  badgeColor = 'bg-rose-500 text-white font-black shadow-xs';
-                  statusLabel = 'Absent';
-                } else if (hasPresent) {
-                  badgeColor = 'bg-emerald-500 text-white font-black shadow-xs';
-                  statusLabel = 'Present';
-                }
-
-                return (
-                  <div
-                    key={dateStr}
-                    className="p-2 sm:p-2.5 rounded-xl border border-[#172B5010] flex flex-col items-center justify-between min-h-[64px] bg-white transition-all"
-                  >
-                    <span className="text-xs font-extrabold text-[#172B50]">
-                      {dayNum}
-                    </span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1.5 block w-full truncate ${badgeColor}`}>
-                      {statusLabel}
-                    </span>
+                {myChildren.length === 0 ? (
+                  <p className="text-xs text-[#172B50]/70">No child profile is linked to this parent account yet.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {myChildren.map(child => {
+                      const childRecords = myAttendanceRecords.filter(r => r.studentId === child.id);
+                      const presentCount = childRecords.filter(r => r.status === 'Present').length;
+                      const absentCount = childRecords.filter(r => r.status === 'Absent').length;
+                      const totalMarked = childRecords.length;
+                      const computedRate = totalMarked > 0 ? Math.round((presentCount / totalMarked) * 100) : (child.attendanceRate || 0);
+                      return (
+                        <div key={child.id} className="p-4 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
+                          <div className="flex justify-between items-center mb-2">
+                            <div>
+                              <span className="text-sm font-extrabold text-[#172B50] block">{child.name}</span>
+                              <span className="text-[10px] font-bold text-[#172B50]/65">{child.center} • {child.program}</span>
+                            </div>
+                            <span className="text-xs font-black text-[#F4510B]">{computedRate}% Present</span>
+                          </div>
+                          <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#172B5015]">
+                            <div style={{ width: `${computedRate}%` }} className="h-full bg-[#172B50] rounded-full" />
+                          </div>
+                          <p className="text-[11px] text-[#172B50] opacity-75 mt-2">
+                            {totalMarked === 0
+                              ? 'No attendance logs recorded yet.'
+                              : `${presentCount} present, ${absentCount} absent out of ${totalMarked} marked sessions.`}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 4. Attendance History Table */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-black text-[#172B50]">Daily Attendance History</h3>
-                <p className="text-xs text-[#172B50] opacity-70">Official session participation records for your linked child profiles</p>
+                )}
               </div>
-              <span className="text-xs font-bold text-[#172B50]/70">
-                {myAttendanceRecords.length} Total Logs
-              </span>
-            </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#FFF4E8] text-[#172B50] font-black uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
-                  <tr>
-                    <th className="px-5 py-3.5">Date</th>
-                    <th className="px-4 py-3.5">Athlete</th>
-                    <th className="px-4 py-3.5">Program &amp; Location</th>
-                    <th className="px-4 py-3.5">Batch / Class</th>
-                    <th className="px-4 py-3.5">Marked By Coach</th>
-                    <th className="px-5 py-3.5 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#172B5010]">
-                  {myAttendanceRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="px-6 py-10 text-center text-xs text-[#172B50] opacity-65">
-                        No session attendance logs recorded for your children yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    myAttendanceRecords.map(rec => (
-                      <tr key={rec.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                        <td className="px-5 py-3.5 font-bold text-[#172B50]">{rec.date}</td>
-                        <td className="px-4 py-3.5 font-black text-[#172B50]">{rec.studentName}</td>
-                        <td className="px-4 py-3.5">
-                          <span className="font-bold text-[#172B50] block">{rec.program}</span>
-                          <span className="text-[11px] font-bold text-[#F4510B] block">{rec.location}</span>
-                        </td>
-                        <td className="px-4 py-3.5 font-medium text-[#172B50]">{rec.batchName || 'Training Batch'}</td>
-                        <td className="px-4 py-3.5 text-[#172B50] opacity-80">{rec.coachName || rec.markedBy || 'Coach'}</td>
-                        <td className="px-5 py-3.5 text-right">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                            rec.status === 'Present'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-rose-100 text-rose-800'
-                          }`}>
-                            {rec.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              {/* 3. Daily Attendance Calendar (Present = Green, Absent = Red, Not Marked = Grey) */}
+              <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#172B5012]">
+                  <div>
+                    <h3 className="text-sm font-black text-[#172B50]">
+                      Daily Attendance Calendar (November 2026)
+                    </h3>
+                    <p className="text-xs text-[#172B50] opacity-70">
+                      Read-only attendance records synchronized live from coach session check-ins
+                    </p>
+                  </div>
 
-          {/* Compensation Requests Section */}
-          <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
-            <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-black text-[#172B50]">Compensation Requests</h3>
-                <p className="text-xs text-[#172B50] opacity-70">Track approval status, admin remarks &amp; scheduled replacement slots</p>
-              </div>
-              <span className="text-xs font-bold text-[#F4510B]">
-                {parentCompRequests.length} Requests
-              </span>
-            </div>
-
-            <div className="divide-y divide-[#172B500C]">
-              {parentCompRequests.length === 0 ? (
-                <div className="p-8 text-center text-xs text-[#172B50] opacity-70">
-                  No compensation requests yet. Missed a class? Click <strong>Request Compensation</strong> above.
-                </div>
-              ) : (
-                parentCompRequests.map(comp => (
-                  <div key={comp.id} className="p-4 sm:p-5 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs">
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-black text-[#172B50] text-sm">{comp.studentName}</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                          COMP_STATUS_STYLES[comp.status] || 'bg-amber-100 text-amber-900'
-                        }`}>
-                          {comp.status}
-                        </span>
-                        {comp.requestSource && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5015]">
-                            Source: {comp.requestSource}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-[#172B50] opacity-80">
-                        Location: <strong>{comp.center || comp.location}</strong> • Missed: <strong>{comp.missedClass}</strong> on <strong>{comp.missedDate}</strong>
-                      </p>
-                      <p className="text-[11px] text-[#172B50] opacity-75">
-                        Reason: &quot;{comp.reason}&quot;
-                      </p>
-                      {comp.approvalNotes && (
-                        <p className="text-[11px] text-[#172B50] bg-[#FFF4E8]/60 px-2.5 py-1.5 rounded-lg inline-block mt-1">
-                          <strong>Admin Response:</strong> {comp.approvalNotes}
-                        </p>
-                      )}
+                  {/* Status Color Legend */}
+                  <div className="flex items-center gap-3 text-xs font-bold">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+                      <span className="text-emerald-700">Present (Green)</span>
                     </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
+                      <span className="text-rose-700">Absent (Red)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-slate-200 border border-slate-300 inline-block" />
+                      <span className="text-slate-600">Not Marked (Grey)</span>
+                    </div>
+                  </div>
+                </div>
 
-                    <div className="lg:text-right shrink-0 space-y-1">
-                      {comp.replacementSlot ? (
-                        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-left lg:text-right space-y-0.5">
-                          <span className="text-[10px] font-black uppercase text-emerald-700 block">
-                            Scheduled Replacement Class
+                {/* Calendar Grid: 30 days of November 2026 */}
+                <div className="grid grid-cols-7 gap-2 text-center">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                    <span key={d} className="text-[11px] font-black text-[#172B50] uppercase tracking-wider py-1">
+                      {d}
+                    </span>
+                  ))}
+
+                  {Array.from({ length: 30 }, (_, i) => {
+                    const dayNum = i + 1;
+                    const dateStr = `2026-11-${String(dayNum).padStart(2, '0')}`;
+                    const dayRecords = myAttendanceRecords.filter(r => r.date === dateStr);
+                    const hasPresent = dayRecords.some(r => r.status === 'Present');
+                    const hasAbsent = dayRecords.some(r => r.status === 'Absent');
+
+                    let badgeColor = 'bg-slate-50 text-slate-400 border border-slate-200/60';
+                    let statusLabel = 'Not Marked';
+
+                    if (hasAbsent) {
+                      badgeColor = 'bg-rose-500 text-white font-black shadow-xs';
+                      statusLabel = 'Absent';
+                    } else if (hasPresent) {
+                      badgeColor = 'bg-emerald-500 text-white font-black shadow-xs';
+                      statusLabel = 'Present';
+                    }
+
+                    return (
+                      <div
+                        key={dateStr}
+                        className="p-2 sm:p-2.5 rounded-xl border border-[#172B5010] flex flex-col items-center justify-between min-h-[64px] bg-white transition-all"
+                      >
+                        <span className="text-xs font-extrabold text-[#172B50]">
+                          {dayNum}
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full mt-1.5 block w-full truncate ${badgeColor}`}>
+                          {statusLabel}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Attendance History Table */}
+              <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+                <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-black text-[#172B50]">Daily Attendance History</h3>
+                    <p className="text-xs text-[#172B50] opacity-70">Official session participation records for your linked child profiles</p>
+                  </div>
+                  <span className="text-xs font-bold text-[#172B50]/70">
+                    {myAttendanceRecords.length} Total Logs
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#FFF4E8] text-[#172B50] font-black uppercase tracking-wider text-[11px] border-b border-[#172B501A]">
+                      <tr>
+                        <th className="px-5 py-3.5">Date</th>
+                        <th className="px-4 py-3.5">Athlete</th>
+                        <th className="px-4 py-3.5">Program &amp; Location</th>
+                        <th className="px-4 py-3.5">Batch / Class</th>
+                        <th className="px-4 py-3.5">Marked By Coach</th>
+                        <th className="px-5 py-3.5 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#172B5010]">
+                      {myAttendanceRecords.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-10 text-center text-xs text-[#172B50] opacity-65">
+                            No session attendance logs recorded for your children yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        myAttendanceRecords.map(rec => (
+                          <tr key={rec.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                            <td className="px-5 py-3.5 font-bold text-[#172B50]">{rec.date}</td>
+                            <td className="px-4 py-3.5 font-black text-[#172B50]">{rec.studentName}</td>
+                            <td className="px-4 py-3.5">
+                              <span className="font-bold text-[#172B50] block">{rec.program}</span>
+                              <span className="text-[11px] font-bold text-[#F4510B] block">{rec.location}</span>
+                            </td>
+                            <td className="px-4 py-3.5 font-medium text-[#172B50]">{rec.batchName || 'Training Batch'}</td>
+                            <td className="px-4 py-3.5 text-[#172B50] opacity-80">{rec.coachName || rec.markedBy || 'Coach'}</td>
+                            <td className="px-5 py-3.5 text-right">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                                rec.status === 'Present'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-rose-100 text-rose-800'
+                              }`}>
+                                {rec.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB CONTENT: COMPENSATION REQUESTS */}
+          {parentAttSubTab === 'compensation' && (
+            <div className="bg-white rounded-2xl border border-[#172B501A] shadow-card overflow-hidden">
+              <div className="p-5 border-b border-[#172B5010] flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-[#172B50]">Compensation Requests</h3>
+                  <p className="text-xs text-[#172B50] opacity-70">Track approval status, admin remarks &amp; scheduled replacement slots</p>
+                </div>
+                <span className="text-xs font-bold text-[#F4510B]">
+                  {parentCompRequests.length} Requests
+                </span>
+              </div>
+
+              <div className="divide-y divide-[#172B500C]">
+                {parentCompRequests.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-[#172B50] opacity-70">
+                    No compensation requests yet. Missed a class? Click <strong>Request Compensation</strong> above.
+                  </div>
+                ) : (
+                  parentCompRequests.map(comp => (
+                    <div key={comp.id} className="p-4 sm:p-5 hover:bg-[#FFF4E8]/20 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-black text-[#172B50] text-sm">{comp.studentName}</span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                            COMP_STATUS_STYLES[comp.status] || 'bg-amber-100 text-amber-900'
+                          }`}>
+                            {comp.status}
                           </span>
-                          <span className="text-xs font-extrabold text-[#172B50] block">{comp.replacementSlot}</span>
-                          {comp.replacementCoach && (
-                            <span className="text-[11px] font-bold text-[#F4510B] block">
-                              Assigned Coach: {comp.replacementCoach}
+                          {comp.requestSource && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5015]">
+                              Source: {comp.requestSource}
                             </span>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-[11px] font-semibold text-[#172B50]/60 block">
-                          Awaiting Admin slot assignment
-                        </span>
-                      )}
-                      <span className="text-[10px] font-mono text-gray-500 block">ID: {comp.id}</span>
+                        <p className="text-[11px] text-[#172B50] opacity-80">
+                          Location: <strong>{comp.center || comp.location}</strong> • Missed: <strong>{comp.missedClass}</strong> on <strong>{comp.missedDate}</strong>
+                        </p>
+                        <p className="text-[11px] text-[#172B50] opacity-75">
+                          Reason: &quot;{comp.reason}&quot;
+                        </p>
+                        {comp.approvalNotes && (
+                          <p className="text-[11px] text-[#172B50] bg-[#FFF4E8]/60 px-2.5 py-1.5 rounded-lg inline-block mt-1">
+                            <strong>Admin Response:</strong> {comp.approvalNotes}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="lg:text-right shrink-0 space-y-1">
+                        {comp.replacementSlot ? (
+                          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-left lg:text-right space-y-0.5">
+                            <span className="text-[10px] font-black uppercase text-emerald-700 block">
+                              Scheduled Replacement Class
+                            </span>
+                            <span className="text-xs font-extrabold text-[#172B50] block">{comp.replacementSlot}</span>
+                            {comp.replacementCoach && (
+                              <span className="text-[11px] font-bold text-[#F4510B] block">
+                                Assigned Coach: {comp.replacementCoach}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-[#172B50]/60 block">
+                            Awaiting Admin slot assignment
+                          </span>
+                        )}
+                        <span className="text-[10px] font-mono text-gray-500 block">ID: {comp.id}</span>
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -1898,9 +2142,67 @@ export default function ParentPortalView() {
       {/* 6. PROGRESS & ACHIEVEMENTS */}
       {currentView === 'progress' && (
         <div className="space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-            Spartan Progress & Belt Milestones
-          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+                Spartan Progress &amp; Belt Milestones
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
+                Official athletic skills assessments, obstacle course ratings, and promotion milestones
+              </p>
+            </div>
+          </div>
+
+          {/* Top 4 KPI Cards matching Admin Certificates / Progress */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Medal className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Current Belt Rank</div>
+                <div className="text-base sm:text-lg font-black text-[#172B50] leading-none tracking-tight mt-0.5 truncate">
+                  {myChildren[0]?.rank || 'Spartan'}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Activity className="w-4 h-4 text-[#16A34A]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Skills Assessed</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  5 Disciplines
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
+                <Star className="w-4 h-4 text-[#0284C7]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Performance Index</div>
+                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  9.1 / 10
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Trophy className="w-4 h-4 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Academy Standing</div>
+                <div className="text-base sm:text-lg font-black text-[#172B50] leading-none tracking-tight mt-0.5">
+                  Level 3 Advanced
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {myChildren.map(child => (
