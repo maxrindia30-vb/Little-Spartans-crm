@@ -38,6 +38,7 @@ import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import { checkScheduleConflict } from '../../services/scheduleService';
 import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
+import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 
 export default function SuperCoachPortalView() {
   const {
@@ -315,41 +316,101 @@ export default function SuperCoachPortalView() {
     <div className="space-y-6">
 
       {/* ============================================================ */}
-      {/* 1. SUPER COACH COMMAND BAR & MULTI-LOCATION SCOPE            */}
+      {/* 1. TOP HEADER: Good Morning, Super Coach! & Action Icons     */}
       {/* ============================================================ */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#172B5014] shadow-card relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-7 rounded-full bg-[#F4510B]" />
-              <h1 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
-                Super Coach Command Portal
-              </h1>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] shadow-xs select-none">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A]"></span>
-                </span>
-                <span>MULTI-LOCATION OVERSIGHT</span>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-[#172B50] opacity-70 mt-1 ml-5">
-              Managing operations, coaching staff, class schedules &amp; sports equipment across authorized centers
-            </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+        {/* Left: Heading & Subtitle */}
+        <div className="text-left space-y-1">
+          <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
+            <span>Good Morning, Super Coach!</span>
+            <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
+          </h1>
+          <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
+            Dashboard • Multi-Location Operations Command
+          </p>
+        </div>
+
+        {/* Right: Quick Action Round Buttons */}
+        <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-center shrink-0">
+          {/* 1. Search */}
+          <button
+            type="button"
+            onClick={() => addToast('Search active roster and coaches')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+            title="Search"
+          >
+            <Search className="w-4 h-4 text-[#172B50]" />
+          </button>
+
+          {/* 2. Notification */}
+          <button
+            type="button"
+            onClick={() => addToast('Faculty and equipment alerts')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
+            title="Notifications"
+          >
+            <Bell className="w-4 h-4 text-[#172B50]" />
+            {kpis.pendingEquipmentReports > 0 && (
+              <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
+            )}
+          </button>
+
+          {/* 3. Profile */}
+          <div 
+            onClick={() => setActiveTab('coaches')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
+            title="Super Coach Profile"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+              alt="Super Coach"
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* 4. Action */}
+          <button
+            type="button"
+            onClick={() => setIsCreateScheduleModalOpen(true)}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+            title="Create Court Session"
+          >
+            <Plus className="w-4 h-4 text-[#172B50]" />
+          </button>
+
+          {/* 5. Live Calendar */}
+          <LiveCalendarButton 
+            classes={scopedSchedules} 
+            onViewSchedule={() => setActiveTab('schedules')} 
+          />
+        </div>
+      </div>
+
+      {/* Location Switcher Toolbar & Sub-Navigation */}
+      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#172B5014] shadow-xs space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-6 rounded-full bg-[#F4510B]" />
+            <h2 className="text-base font-black text-[#172B50]">
+              Authorized Multi-Center Network
+            </h2>
+            <span className="text-xs font-bold text-[#172B50]/60">
+              ({assignedLocations.length} Venues Active)
+            </span>
           </div>
 
           {/* Location Switcher Pills */}
-          <div className="flex flex-wrap items-center gap-2 bg-[#FFF4E8] p-1.5 rounded-2xl border border-[#172B5014]">
-            <span className="text-[11px] font-extrabold uppercase text-[#172B50] opacity-60 px-2 flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#FFF4E8] p-1 rounded-2xl border border-[#172B5012]">
+            <span className="text-[10.5px] font-extrabold uppercase text-[#172B50]/65 px-2 flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-              Location:
+              Filter:
             </span>
             <button
               type="button"
               onClick={() => setSelectedLocation('All')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                 selectedLocation === 'All'
-                  ? 'bg-[#172B50] text-white shadow-xs'
+                  ? 'bg-[#172B50] text-white shadow-2xs'
                   : 'text-[#172B50] hover:bg-white'
               }`}
             >
@@ -360,9 +421,9 @@ export default function SuperCoachPortalView() {
                 key={loc}
                 type="button"
                 onClick={() => setSelectedLocation(loc)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                   selectedLocation === loc
-                    ? 'bg-[#F4510B] text-white shadow-xs'
+                    ? 'bg-[#F4510B] text-white shadow-2xs'
                     : 'text-[#172B50] hover:bg-white'
                 }`}
               >
@@ -373,7 +434,7 @@ export default function SuperCoachPortalView() {
         </div>
 
         {/* Sub-navigation tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto mt-6 pt-4 border-t border-[#172B5010] no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pt-3 border-t border-[#172B500C] no-scrollbar">
           {[
             { id: 'dashboard', label: 'Operations Dashboard', icon: Activity },
             { id: 'locations', label: 'Multi-Location Hub', icon: MapPin },
@@ -393,9 +454,9 @@ export default function SuperCoachPortalView() {
                   setActiveTab(tab.id);
                   if (setCurrentView) setCurrentView(tab.id);
                 }}
-                className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                   isActive
-                    ? 'bg-[#172B50] text-white shadow-sm'
+                    ? 'bg-[#172B50] text-white shadow-xs'
                     : 'bg-[#FFF4E8] text-[#172B50] hover:bg-white border border-[#172B5010]'
                 }`}
               >
@@ -410,286 +471,763 @@ export default function SuperCoachPortalView() {
         </div>
       </div>
 
-      {/* ============================================================ */}
       {/* 2. TAB 1: OPERATIONS DASHBOARD                                */}
       {/* ============================================================ */}
       {activeTab === 'dashboard' && (
-        <div className="space-y-6">
-          {/* Row of 4 Primary KPIs with Floating 3D Physics */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
-                  Assigned Locations
-                </span>
-                <p className="text-2xl sm:text-3xl font-black text-[#172B50] mt-0.5">
-                  <AnimatedCounter value={kpis.assignedLocationsCount} />
-                </p>
-                <span className="text-[11px] font-semibold text-[#F4510B]">
-                  {assignedLocations.join(' · ')}
-                </span>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-                <MapPin className="w-6 h-6 text-[#F4510B]" />
-              </div>
-            </FloatingCard>
-
-            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
-                  Authorized Faculty
-                </span>
-                <p className="text-2xl sm:text-3xl font-black text-[#172B50] mt-0.5">
-                  <AnimatedCounter value={kpis.totalCoaches} />
-                </p>
-                <span className="text-[11px] font-semibold text-emerald-600">
-                  {kpis.totalStudents} enrolled athletes
-                </span>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#F0FDF4] text-emerald-600 flex items-center justify-center shrink-0">
-                <Users className="w-6 h-6 text-emerald-600" />
-              </div>
-            </FloatingCard>
-
-            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
-                  Today's Court Classes
-                </span>
-                <p className="text-2xl sm:text-3xl font-black text-[#172B50] mt-0.5">
-                  <AnimatedCounter value={kpis.todayClassesCount} />
-                </p>
-                <span className="text-[11px] font-semibold text-blue-600">
-                  {kpis.totalClasses} scheduled this term
-                </span>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <Clock className="w-6 h-6 text-blue-600" />
-              </div>
-            </FloatingCard>
-
-            <FloatingCard className="bg-white rounded-2xl p-5 border border-[#172B5014] shadow-card flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#172B50] opacity-70 block">
-                  Equipment Health
-                </span>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-700 mt-0.5">
-                  <AnimatedCounter value={`${kpis.equipmentHealth}%`} />
-                </p>
-                <span className="text-[11px] font-bold text-amber-600">
-                  {kpis.pendingEquipmentReports} reports pending review
-                </span>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <Package className="w-6 h-6 text-emerald-600" />
-              </div>
-            </FloatingCard>
-          </div>
-
-          {/* Center Operational Grid: Today's Class Timetable & Coach Performance */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* Left 7 cols: Today's Court Sessions & Assignments */}
-            <div className="lg:col-span-7 bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-5 rounded-full bg-[#F4510B]" />
-                    <h3 className="text-base font-black text-[#172B50]">
-                      Today's Classes &amp; Faculty Assignments
-                    </h3>
+        <div className="space-y-6 animate-slide-up">
+          
+          {/* ============================================================ */}
+          {/* 2. FOUR PIPELINE SECTIONS WITH SVG FORK / BRACKET CONNECTORS  */}
+          {/* ============================================================ */}
+          <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+              
+              {/* Card 1: Authorized Locations (Peach) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-[#FFF9F5] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                      <Inbox className="w-4 h-4 text-[#F4510B]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Authorized Locations
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        Multi-center jurisdiction
+                      </p>
+                    </div>
                   </div>
+
+                  {scopedLocations.length === 0 ? (
+                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-2 shadow-2xs">
+                        <MapPin className="w-5 h-5 text-[#F4510B]" />
+                      </div>
+                      <p className="text-xs font-black text-[#172B50]">No authorized centers</p>
+                    </div>
+                  ) : (
+                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                      {scopedLocations.map((loc) => {
+                        const locStudents = scopedStudents.filter(s => s.center === loc.name).length;
+                        const locCoaches = scopedCoaches.filter(c => c.center === loc.name).length;
+                        return (
+                          <div
+                            key={loc.id}
+                            className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#F4510B30] transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-black text-[#172B50] truncate leading-tight">{loc.name}</p>
+                              <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                                {locStudents} Athletes • {locCoaches} Coaches
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedLocation(loc.name)}
+                              className="px-2 py-1 rounded-lg text-[10px] font-extrabold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
+                            >
+                              Focus
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Location Scope
+                  </span>
                   <button
                     type="button"
-                    onClick={() => setIsCreateScheduleModalOpen(true)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F4510B] text-white hover:bg-[#E04505] transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                    onClick={() => setActiveTab('locations')}
+                    className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Create Session</span>
+                    <span>View Hub ({scopedLocations.length})</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
 
-                {todayClasses.length === 0 ? (
-                  <div className="py-12 text-center text-xs text-[#172B50] opacity-60">
-                    No active sessions scheduled for today at {selectedLocation === 'All' ? 'your assigned centers' : selectedLocation}.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {todayClasses.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-3.5 rounded-2xl bg-[#FFF4E8]/60 border border-[#172B5012] flex items-center justify-between hover:bg-[#FFF4E8] transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-white border border-[#172B5015] flex flex-col items-center justify-center font-mono shrink-0">
-                            <span className="text-[9px] font-bold text-[#F4510B]">START</span>
-                            <span className="text-xs font-black text-[#172B50]">{item.startTime}</span>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-black text-[#172B50]">{item.className || item.batch}</span>
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#172B5010] text-[#172B50]">
-                                {item.location}
-                              </span>
-                            </div>
-                            <span className="text-xs font-bold text-[#172B50] opacity-75 block mt-0.5">
-                              Assigned Coach: <strong className="text-[#F4510B]">{item.coachName}</strong> · Venue: {item.venue}
-                            </span>
-                          </div>
-                        </div>
+                {/* Desktop Connector 1 */}
+                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                  <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                    <path d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    <path d="M 14,52 L 24,52" stroke="#0284C7" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </FloatingCard>
 
-                        <div className="flex items-center gap-2">
+              {/* Card 2: Faculty & Coaches (Sky Blue) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-[#F4FAFF] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
+                      <UserCheck className="w-4 h-4 text-[#0284C7]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Faculty & Coaches
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        Supervised faculty team
+                      </p>
+                    </div>
+                  </div>
+
+                  {locationFilteredCoaches.length === 0 ? (
+                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-2 shadow-2xs">
+                        <Users className="w-5 h-5 text-[#0284C7]" />
+                      </div>
+                      <p className="text-xs font-black text-[#172B50]">No coaches assigned</p>
+                    </div>
+                  ) : (
+                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                      {locationFilteredCoaches.map((c) => (
+                        <div
+                          key={c.id}
+                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#0284C730] transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">{c.name}</p>
+                            <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                              {c.center} • {c.specialization} ({c.rating}★)
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenIssueModal(c)}
+                            className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+                            title="Report Faculty Issue"
+                          >
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Staff Oversight
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('coaches')}
+                    className="text-[11.5px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
+                  >
+                    <span>Manage Faculty ({locationFilteredCoaches.length})</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Desktop Connector 2 */}
+                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                  <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                    <path d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" stroke="#F4510B" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    <path d="M 0,52 L 24,52" stroke="#F4510B" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" stroke="#F4510B" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </FloatingCard>
+
+              {/* Card 3: Today's Court Sessions (Emerald) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-[#F4FDF7] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
+                      <Calendar className="w-4 h-4 text-[#16A34A]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Today's Court Sessions
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        Live arena schedule
+                      </p>
+                    </div>
+                  </div>
+
+                  {todayClasses.length === 0 ? (
+                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-2 shadow-2xs">
+                        <Clock className="w-5 h-5 text-[#16A34A]" />
+                      </div>
+                      <p className="text-xs font-black text-[#172B50]">No sessions today</p>
+                      <button
+                        type="button"
+                        onClick={() => setIsCreateScheduleModalOpen(true)}
+                        className="mt-3 px-3 py-1.5 text-xs font-bold text-[#16A34A] bg-white border border-[#16A34A30] hover:bg-[#16A34A] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                      >
+                        + Create Session
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                      {todayClasses.map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#16A34A30] transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">
+                              {item.startTime} • {item.className || item.batch}
+                            </p>
+                            <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                              {item.location} • Coach: {item.coachName}
+                            </p>
+                          </div>
                           <button
                             type="button"
                             onClick={() => handleOpenReassign(item)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-[#172B50] border border-[#172B5020] hover:border-[#F4510B] hover:text-[#F4510B] transition-all cursor-pointer shadow-2xs"
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[#172B500C] text-[#172B50] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer shrink-0"
                           >
-                            Reassign Coach
+                            Reassign
                           </button>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Court Operations
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('schedules')}
+                    className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
+                  >
+                    <span>View All ({todayClasses.length})</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Desktop Connector 3 */}
+                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                  <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                    <path d="M 0,82 C 10,82 12,30 24,30" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    <circle cx="2" cy="82" r="2" fill="#0284C7" />
+                    <circle cx="22" cy="30" r="2" fill="#0284C7" />
+                  </svg>
+                </div>
+              </FloatingCard>
+
+              {/* Card 4: Operations Command (White with 2x2 Action Tiles) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-white rounded-[24px] p-4 sm:p-4.5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                      <Activity className="w-4 h-4 text-[#F4510B]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Operations Command
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        Super Coach execution
+                      </p>
+                    </div>
                   </div>
-                )}
+
+                  <div className="min-h-[258px] max-h-[258px] flex flex-col justify-center">
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Tile 1: Create Session */}
+                      <button
+                        type="button"
+                        onClick={() => setIsCreateScheduleModalOpen(true)}
+                        className="bg-[#0B3B60] text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <Plus className="w-4.5 h-4.5 text-white" />
+                        </div>
+                        <span className="text-xs font-black text-white leading-tight">
+                          Create Session
+                        </span>
+                        <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
+                          New Timetable
+                        </span>
+                      </button>
+
+                      {/* Tile 2: Attendance */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('attendance')}
+                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <CheckCircle2 className="w-4.5 h-4.5 text-[#172B50]" />
+                        </div>
+                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                          Attendance
+                        </span>
+                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                          Coach Roll Call
+                        </span>
+                      </button>
+
+                      {/* Tile 3: Equipment */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('equipment')}
+                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#F0FDF4] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <Package className="w-4.5 h-4.5 text-emerald-600" />
+                        </div>
+                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                          Equipment
+                        </span>
+                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                          Health: {kpis.equipmentHealth}%
+                        </span>
+                      </button>
+
+                      {/* Tile 4: Locations */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('locations')}
+                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#F0F7FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <MapPin className="w-4.5 h-4.5 text-[#0284C7]" />
+                        </div>
+                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                          Location Hub
+                        </span>
+                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                          {assignedLocations.length} Centers
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Quick Access
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('reports')}
+                    className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+                  >
+                    <span>Reports & Analytics</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+              </FloatingCard>
+
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* 3. MIDDLE ROW: Today's Classes, Operational Performance & Network */}
+          {/* ============================================================ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            
+            {/* Card 1: Today's Classes Table */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                    <CalendarDays className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+                  </div>
+                  <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                    Today's Classes
+                  </h2>
+                </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-[#172B5010] flex items-center justify-between text-xs text-[#172B50] opacity-70">
-                <span>Showing schedules for authorized locations</span>
+              {todayClasses.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-4 my-auto">
+                  <div className="w-11 h-11 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-2.5 shadow-2xs">
+                    <CalendarDays className="w-5.5 h-5.5" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-black text-[#172B50]">
+                    No classes scheduled for today
+                  </p>
+                  <p className="text-[11px] text-[#172B50]/60 mt-1 max-w-[240px]">
+                    Active court sessions across your centers will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[300px] mt-1 pr-0.5 scrollbar-thin">
+                  <table className="w-full text-left text-xs whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
+                        <th className="py-2 px-2.5">TIME</th>
+                        <th className="py-2 px-2.5">PROGRAM</th>
+                        <th className="py-2 px-2.5">COACH</th>
+                        <th className="py-2 px-2.5">LOCATION</th>
+                        <th className="py-2 px-2.5 text-right">ACTION</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#172B500C]">
+                      {todayClasses.slice(0, 5).map((cls) => (
+                        <tr 
+                          key={cls.id} 
+                          className="hover:bg-[#FFF4E8]/30 transition-colors"
+                        >
+                          <td className="py-2.5 px-2.5">
+                            <div className="flex items-center gap-1.5 font-black text-[#172B50]">
+                              <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                              <span>{cls.startTime || '09:00 AM'}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2.5 font-extrabold text-[#172B50] max-w-[130px] truncate">
+                            {cls.className || cls.batch || 'Training Session'}
+                          </td>
+                          <td className="py-2.5 px-2.5">
+                            <div className="flex items-center gap-1 font-bold text-[#172B50]/85">
+                              <User className="w-3 h-3 text-[#172B50]/40 shrink-0" />
+                              <span className="truncate max-w-[90px]">{cls.coachName || 'Coach'}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2.5">
+                            <div className="flex items-center gap-1 font-bold text-[#172B50]/75">
+                              <MapPin className="w-3 h-3 text-[#F4510B] shrink-0" />
+                              <span>{cls.location}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2.5 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReassign(cls)}
+                              className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
+                            >
+                              Reassign
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+                  Daily Timetable
+                </span>
                 <button
                   type="button"
                   onClick={() => setActiveTab('schedules')}
-                  className="font-bold text-[#F4510B] hover:underline cursor-pointer"
+                  className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
                 >
-                  View Full Timetable →
+                  <span>Explore all classes</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
-            </div>
+            </FloatingCard>
 
-            {/* Right 5 cols: Coach Performance & Attendance Oversight */}
-            <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card flex flex-col justify-between">
+            {/* Card 2: Faculty & Equipment Performance */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-5 rounded-full bg-emerald-600" />
-                    <h3 className="text-base font-black text-[#172B50]">
-                      Coach Roster &amp; Compliance
-                    </h3>
+                <div className="flex items-center justify-between pb-3.5 border-b border-[#172B5010]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                      <BarChart2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+                    </div>
+                    <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                      Operations Performance
+                    </h2>
                   </div>
-                  <span className="text-xs font-bold text-[#172B50] opacity-60">
-                    {locationFilteredCoaches.length} Coaches
+                  <span className="text-[10.5px] font-extrabold text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-full border border-[#F4510B20] select-none">
+                    {kpis.totalClasses} Sessions
                   </span>
                 </div>
+              </div>
 
-                <div className="space-y-3">
-                  {locationFilteredCoaches.slice(0, 4).map((c) => (
-                    <div
-                      key={c.id}
-                      className="p-3 rounded-2xl bg-white border border-[#172B5015] shadow-2xs flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#172B50] text-white flex items-center justify-center font-black text-sm shrink-0">
-                          {c.name.slice(0, 2).toUpperCase()}
+              <div className="flex-1 flex flex-col justify-center py-2.5 my-auto">
+                <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
+                  {/* KPI 1 */}
+                  <div 
+                    onClick={() => setActiveTab('locations')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#F0F7FF] border border-[#0284C720] flex flex-col justify-between hover:border-[#0284C750] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
+                          <MapPin className="w-3.5 h-3.5 text-[#0284C7]" />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-black text-[#172B50]">{c.name}</span>
-                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              {c.center}
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-[#172B50] opacity-70 block">
-                            {c.specialization} · Rating {c.rating}★
-                          </span>
-                        </div>
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#0284C7] transition-colors">
+                          Locations
+                        </span>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenIssueModal(c)}
-                        className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
-                        title="Report issue to Admin"
-                      >
-                        <AlertTriangle className="w-4 h-4" />
-                      </button>
+                      <span className="w-2 h-2 rounded-full bg-[#0284C7]" />
                     </div>
-                  ))}
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {kpis.assignedLocationsCount}
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Centers
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 2 */}
+                  <div 
+                    onClick={() => setActiveTab('coaches')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF5FF] border border-[#9333EA20] flex flex-col justify-between hover:border-[#9333EA50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                          <Users className="w-3.5 h-3.5 text-[#9333EA]" />
+                        </div>
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#9333EA] transition-colors">
+                          Faculty
+                        </span>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-[#9333EA]" />
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {kpis.totalCoaches}
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Coaches
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 3 */}
+                  <div 
+                    onClick={() => setActiveTab('schedules')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#F0FDF4] border border-[#16A34A20] flex flex-col justify-between hover:border-[#16A34A50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
+                          <Clock className="w-3.5 h-3.5 text-[#16A34A]" />
+                        </div>
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#16A34A] transition-colors">
+                          Today
+                        </span>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-[#16A34A]" />
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {kpis.todayClassesCount}
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Classes
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 4 */}
+                  <div 
+                    onClick={() => setActiveTab('equipment')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#FFF5ED] border border-[#F4510B20] flex flex-col justify-between hover:border-[#F4510B50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
+                          <Package className="w-3.5 h-3.5 text-[#F4510B]" />
+                        </div>
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                          Equipment
+                        </span>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-[#F4510B]" />
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {kpis.equipmentHealth}%
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Health
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-[#172B500C] flex items-center justify-between text-xs px-1">
+                  <span className="text-[11px] font-bold text-[#172B50]/65">
+                    Equipment Alerts
+                  </span>
+                  <span className="text-[11px] font-black text-[#F4510B] bg-[#FFF5ED] px-2.5 py-0.5 rounded-lg border border-[#F4510B20]">
+                    {kpis.pendingEquipmentReports} pending reports
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-[#172B5010] flex items-center justify-between text-xs text-[#172B50] opacity-70">
-                <span>Compliance: 100% attendance submissions</span>
+              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+                  Operational Metrics
+                </span>
                 <button
                   type="button"
-                  onClick={() => setActiveTab('coaches')}
-                  className="font-bold text-[#F4510B] hover:underline cursor-pointer"
+                  onClick={() => setActiveTab('reports')}
+                  className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
                 >
-                  Manage Faculty →
+                  <span>Explore performance</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
-            </div>
+            </FloatingCard>
 
-          </div>
-
-          {/* Location-wise Operations & Performance comparative matrix */}
-          <div className="bg-white rounded-3xl p-6 border border-[#172B5014] shadow-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-5 rounded-full bg-[#172B50]" />
-                <h3 className="text-base font-black text-[#172B50]">
-                  Location-wise Operational Matrix
-                </h3>
-              </div>
-              <span className="text-xs text-[#172B50] opacity-65 font-bold">
-                Assigned Centers Comparative Analytics
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {scopedLocations.map((loc) => {
-                const locStudents = scopedStudents.filter(s => s.center === loc.name).length;
-                const locCoaches = scopedCoaches.filter(c => c.center === loc.name).length;
-                const locSchedules = scopedSchedules.filter(s => s.location === loc.name).length;
-                const locEq = scopedEquipment.filter(i => i.location === loc.name).length;
-
-                return (
-                  <div
-                    key={loc.id}
-                    className="p-5 rounded-2xl bg-[#FFF4E8]/60 border border-[#172B5015] hover:border-[#F4510B] transition-all"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-base font-black text-[#172B50]">{loc.name}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#F4510B] text-white">
-                        ACTIVE
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center justify-between py-1 border-b border-[#172B5010]">
-                        <span className="opacity-70">Enrolled Students:</span>
-                        <strong className="text-sm font-black text-[#172B50]">{locStudents}</strong>
-                      </div>
-                      <div className="flex items-center justify-between py-1 border-b border-[#172B5010]">
-                        <span className="opacity-70">Dedicated Faculty:</span>
-                        <strong className="text-sm font-black text-[#172B50]">{locCoaches} Coaches</strong>
-                      </div>
-                      <div className="flex items-center justify-between py-1 border-b border-[#172B5010]">
-                        <span className="opacity-70">Active Timetables:</span>
-                        <strong className="text-sm font-black text-[#172B50]">{locSchedules} Sessions</strong>
-                      </div>
-                      <div className="flex items-center justify-between py-1">
-                        <span className="opacity-70">Gear Inventory:</span>
-                        <strong className="text-sm font-black text-emerald-700">{locEq} Equipment types</strong>
-                      </div>
-                    </div>
+            {/* Card 3: Location Network & Centers */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center gap-3 pb-3.5 border-b border-[#172B5010]">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                    <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
                   </div>
-                );
-              })}
-            </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                      Academy Operations
+                    </h2>
+                    <p className="text-[11px] font-medium text-[#172B50]/60">
+                      Centers, faculty & equipment
+                    </p>
+                  </div>
+                </div>
+
+                <div className="min-h-[265px] flex flex-col justify-center mt-2.5">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Tile 1: Coaches & Staff */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('coaches')}
+                      className="bg-[#0B3B60] text-white rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <UserCheck className="w-4.5 h-4.5 text-white" />
+                      </div>
+                      <span className="text-xs font-black text-white leading-tight">
+                        Coaches & Staff
+                      </span>
+                      <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
+                        {locationFilteredCoaches.length} Faculty
+                      </span>
+                    </button>
+
+                    {/* Tile 2: Training Centers */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('locations')}
+                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <MapPin className="w-4.5 h-4.5 text-[#F4510B]" />
+                      </div>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">
+                        Training Centers
+                      </span>
+                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        {assignedLocations.length} Centers
+                      </span>
+                    </button>
+
+                    {/* Tile 3: Class Timetables */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('schedules')}
+                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <Calendar className="w-4.5 h-4.5 text-[#F4510B]" />
+                      </div>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">
+                        Class Schedules
+                      </span>
+                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        {scopedSchedules.length} Sessions
+                      </span>
+                    </button>
+
+                    {/* Tile 4: Equipment & Kits */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('equipment')}
+                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#0284C735] hover:bg-[#F0F9FF] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-[#F0F9FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <Package className="w-4.5 h-4.5 text-[#0284C7]" />
+                      </div>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">
+                        Equipment & Kits
+                      </span>
+                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        {scopedEquipment.length} Items Tracked
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                  Academy Network
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('locations')}
+                  className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+                >
+                  <span>View All Locations ({assignedLocations.length})</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            </FloatingCard>
+
           </div>
+
         </div>
       )}
 
-      {/* ============================================================ */}
       {/* 3. TAB 2: MULTI-LOCATION HUB                                  */}
       {/* ============================================================ */}
       {activeTab === 'locations' && (

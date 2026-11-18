@@ -27,7 +27,13 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  CalendarX
+  CalendarX,
+  Search,
+  Activity,
+  Building2,
+  User,
+  Zap,
+  BarChart2
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -40,6 +46,7 @@ import { COMPENSATION_REASONS } from '../../services/compensationService';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
 import Modal from '../../components/common/Modal';
+import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 import FeesPaymentsModule from '../admin/FeesPaymentsModule';
 import SportsEventsModule from '../admin/SportsEventsModule';
 
@@ -369,217 +376,923 @@ export default function ParentPortalView() {
   return (
     <div className="space-y-6">
       
-      {/* 1. PARENT DASHBOARD (Upgraded Brand UI/UX) */}
+      {/* 1. MASTER TOP HEADER (Admin Dashboard Reference System) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider flex items-center gap-1.5 shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+              </span>
+              <span>PARENT PORTAL • LIVE SYNC</span>
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#172B50]/5 text-[#172B50] border border-[#172B5010]">
+              {parentProfile.center || myChildren[0]?.center || 'Chennai Academy'} • 2026-27
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+            Good Morning, {parentProfile.name ? parentProfile.name.split(' ')[0] : 'Parent'}! 👋
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-[#172B50]/65 mt-0.5">
+            Dashboard • Little Spartans Family Hub • {myChildren.map(c => c.name).join(', ') || 'Parent Center'}
+          </p>
+        </div>
+
+        {/* Right: Quick Action Round Buttons */}
+        <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-center shrink-0">
+          {/* 1. Search */}
+          <button
+            type="button"
+            onClick={() => addToast('Search classes, coaches & records')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+            title="Search"
+          >
+            <Search className="w-4 h-4 text-[#172B50]" />
+          </button>
+
+          {/* 2. Notification */}
+          <button
+            type="button"
+            onClick={() => setCurrentView('communication')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
+            title="Academy Notifications"
+          >
+            <Bell className="w-4 h-4 text-[#172B50]" />
+            {(data.announcements || []).length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
+            )}
+          </button>
+
+          {/* 3. Profile */}
+          <div 
+            onClick={() => setCurrentView('children')}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
+            title="Parent & Athlete Profiles"
+          >
+            <img
+              src={myChildren[0]?.avatar || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80"}
+              alt="Parent Profile"
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* 4. Action: Request Makeup / Compensation */}
+          <button
+            type="button"
+            onClick={openParentCompModal}
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+            title="Request Makeup / Compensation"
+          >
+            <Plus className="w-4 h-4 text-[#172B50]" />
+          </button>
+
+          {/* 5. Live Calendar */}
+          <LiveCalendarButton 
+            classes={synchronizedChildSessions} 
+            onViewSchedule={() => setCurrentView('classes')} 
+          />
+        </div>
+      </div>
+
+      {/* Sub-navigation tabs */}
+      <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-[#172B5012] shadow-2xs flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        {[
+          { id: 'dashboard', label: 'Dashboard', icon: Activity },
+          { id: 'children', label: 'My Children', icon: GraduationCap },
+          { id: 'classes', label: 'Class Timetable', icon: Calendar },
+          { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: ClipboardCheck },
+          { id: 'fees_payments', label: 'Fees & Invoices', icon: CreditCard },
+          { id: 'progress', label: 'Progress & Badges', icon: Award },
+          { id: 'competitions', label: 'Sports & Events', icon: Trophy },
+          { id: 'communication', label: 'Notices & Feedback', icon: MessageSquare }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = currentView === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setCurrentView(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-[#172B50] text-white shadow-2xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#F4510B]' : 'text-[#172B50]/60'}`} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 2. PARENT DASHBOARD MAIN VIEW */}
       {currentView === 'dashboard' && (
         <div className="space-y-6 animate-slide-up">
-          {/* Hero Welcome Header */}
-          <div className="rounded-3xl bg-gradient-to-br from-[#172B50] via-[#1E3560] to-[#264275] p-6 sm:p-7 text-white shadow-card relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[#F4510B]/20 blur-2xl pointer-events-none" />
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider flex items-center gap-1.5 shadow-xs">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                    </span>
-                    <span>PARENT PORTAL • LIVE SYNC</span>
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/90 border border-white/15">
-                    {parentProfile.center || myChildren[0]?.center || 'Chennai Academy'} • Term 2026-27
-                  </span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                  Welcome, {parentProfile.name}
-                </h1>
-                <p className="text-xs sm:text-sm text-white/80 mt-1">
-                  Track your child&apos;s synchronized class timetables, attendance records, makeup requests &amp; fees at a glance.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={openParentCompModal}
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+          
+          {/* TOP 4 PIPELINE / FAMILY SUMMARY CARDS (MASTER ADMIN DESIGN) */}
+          <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+              
+              {/* CARD 1: My Spartan Athletes (Peach #FFF9F5) */}
+              <div className="relative flex flex-col">
+                <FloatingCard
+                  scale={1.01}
+                  maxTilt={2}
+                  className="rounded-[24px] p-5 bg-[#FFF9F5] border border-[#172B5014] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full relative"
                 >
-                  <RefreshCw className="w-4 h-4 text-white" />
-                  <span>Request Compensation</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsPayModalOpen(true)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-white text-[#172B50] rounded-xl shadow-sm hover:bg-[#FFF4E8] active:scale-95 transition-all cursor-pointer"
-                >
-                  <CreditCard className="w-4 h-4 text-[#F4510B]" />
-                  <span>Pay Fee</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsLeaveModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold bg-white/10 text-white border border-white/20 rounded-xl hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
-                >
-                  <CalendarOff className="w-4 h-4 text-[#FFA366]" />
-                  <span>Apply Leave</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Live Next Class Highlight Strip */}
-            <div className="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10">
-              {nextUpcomingSession ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#F4510B]/20 border border-[#F4510B]/40 flex items-center justify-center text-[#FFA366] shrink-0">
-                    <Calendar className="w-4 h-4" />
-                  </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#FFA366] block">
-                      Next Upcoming Class • {nextUpcomingSession.location}
-                    </span>
-                    <span className="font-bold text-white">
-                      {nextUpcomingSession.childName}: {nextUpcomingSession.className || nextUpcomingSession.batch} ({nextUpcomingSession.date} • {nextUpcomingSession.startTime} - {nextUpcomingSession.endTime}) with Coach {nextUpcomingSession.coachName}
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-[#F4510B]/10 border border-[#F4510B]/20 flex items-center justify-center text-[#F4510B]">
+                          <GraduationCap className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h2 className="text-sm font-black text-[#172B50] tracking-tight">
+                            My Spartan Athletes
+                          </h2>
+                          <p className="text-[11px] font-bold text-[#172B50]/60">
+                            {myChildren.length} Enrolled {myChildren.length === 1 ? 'Child' : 'Children'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-[#172B5012] text-[#172B50]">
+                        Active Roster
+                      </span>
+                    </div>
+
+                    {/* Children List */}
+                    <div className="space-y-2.5 min-h-[258px] max-h-[258px] overflow-y-auto pr-1">
+                      {myChildren.length === 0 ? (
+                        <div className="p-4 rounded-xl bg-white/70 border border-dashed border-[#172B5020] text-center text-xs text-[#172B50]/70">
+                          No enrolled children found linked to this account.
+                        </div>
+                      ) : (
+                        myChildren.map((child) => (
+                          <div
+                            key={child.id}
+                            className="p-3 rounded-2xl bg-white border border-[#172B5010] shadow-2xs hover:border-[#F4510B40] transition-all group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={child.avatar}
+                                alt={child.name}
+                                className="w-10 h-10 rounded-xl object-cover ring-1 ring-[#172B5015] group-hover:ring-[#F4510B] transition-all"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <h4 className="text-xs font-black text-[#172B50] truncate group-hover:text-[#F4510B] transition-colors">
+                                    {child.name}
+                                  </h4>
+                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#172B50] text-white shrink-0">
+                                    {child.rank || 'Spartan'}
+                                  </span>
+                                </div>
+                                <p className="text-[10.5px] font-bold text-[#172B50]/70 truncate mt-0.5">
+                                  {child.program} • {child.center}
+                                </p>
+                                <div className="flex items-center justify-between text-[10px] text-[#172B50]/60 mt-1 font-semibold">
+                                  <span>Coach: {child.coachName || 'Assigned'}</span>
+                                  <span className="text-emerald-700 font-bold">{child.attendanceRate}% Attendance</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Footer link */}
+                  <div className="pt-3 mt-3 border-t border-[#172B5010] flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('children')}
+                      className="text-xs font-extrabold text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>View Athlete Profiles</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-bold text-[#172B50]/50">
+                      Term 2026-27
                     </span>
                   </div>
+                </FloatingCard>
+
+                {/* SVG Bracket Connector 1 -> 2 */}
+                <div className="hidden xl:block absolute -top-4 right-[-14px] w-7 h-8 pointer-events-none z-10">
+                  <svg className="w-full h-full text-[#172B50]/20" viewBox="0 0 28 32" fill="none">
+                    <path d="M4 4 C 18 4, 18 28, 28 28" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+                  </svg>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2 text-white/80">
-                  <Sparkles className="w-4 h-4 text-[#FFA366]" />
-                  <span>Your upcoming location-synced sessions published by Admin will appear right here.</span>
+              </div>
+
+              {/* CARD 2: Upcoming Sessions (Sky Blue #F4FAFF) */}
+              <div className="relative flex flex-col">
+                <FloatingCard
+                  scale={1.01}
+                  maxTilt={2}
+                  className="rounded-[24px] p-5 bg-[#F4FAFF] border border-[#172B5014] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full relative"
+                >
+                  <div>
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-[#0B3B60]/10 border border-[#0B3B60]/20 flex items-center justify-center text-[#0B3B60]">
+                          <CalendarDays className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h2 className="text-sm font-black text-[#172B50] tracking-tight">
+                            Upcoming Classes
+                          </h2>
+                          <p className="text-[11px] font-bold text-[#172B50]/60">
+                            {upcomingChildSessions.length} Next Scheduled
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0B3B60] text-white">
+                        Live Timetable
+                      </span>
+                    </div>
+
+                    {/* Classes List */}
+                    <div className="space-y-2.5 min-h-[258px] max-h-[258px] overflow-y-auto pr-1">
+                      {upcomingChildSessions.length === 0 ? (
+                        <div className="p-4 rounded-xl bg-white/70 border border-dashed border-[#172B5020] text-center text-xs text-[#172B50]/70">
+                          No upcoming sessions published for your child&apos;s batch yet.
+                        </div>
+                      ) : (
+                        upcomingChildSessions.slice(0, 4).map((session, i) => (
+                          <div
+                            key={session.id || i}
+                            className="p-3 rounded-2xl bg-white border border-[#172B5010] shadow-2xs hover:border-[#0B3B60]/40 transition-all"
+                          >
+                            <div className="flex items-start justify-between gap-1">
+                              <span className="text-[10px] font-black uppercase text-[#0B3B60] bg-[#F4FAFF] px-2 py-0.5 rounded-md border border-[#0B3B60]/15">
+                                {session.date || 'Weekly'} • {session.startTime || '07:00'} - {session.endTime || '08:00'}
+                              </span>
+                              <span className="text-[10px] font-black text-[#F4510B]">
+                                {session.childName}
+                              </span>
+                            </div>
+                            <h4 className="text-xs font-black text-[#172B50] truncate mt-1">
+                              {session.className || session.program || 'Training Session'}
+                            </h4>
+                            <div className="flex items-center justify-between text-[10px] font-bold text-[#172B50]/65 mt-1">
+                              <span>Coach {session.coachName || 'Spartan Coach'}</span>
+                              <span className="text-[#0B3B60]">{session.location}</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Footer link */}
+                  <div className="pt-3 mt-3 border-t border-[#172B5010] flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('classes')}
+                      className="text-xs font-extrabold text-[#0B3B60] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Open Class Timetable</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-bold text-[#172B50]/50">
+                      {mySchedulesCount} Total Batches
+                    </span>
+                  </div>
+                </FloatingCard>
+
+                {/* SVG Bracket Connector 2 -> 3 */}
+                <div className="hidden xl:block absolute -top-4 right-[-14px] w-7 h-8 pointer-events-none z-10">
+                  <svg className="w-full h-full text-[#172B50]/20" viewBox="0 0 28 32" fill="none">
+                    <path d="M4 4 C 18 4, 18 28, 28 28" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+                  </svg>
                 </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setCurrentView('classes')}
-                className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
-              >
-                Open Class Timetable &rarr;
-              </button>
+              </div>
+
+              {/* CARD 3: Attendance & Makeups (Mint #F4FDF7) */}
+              <div className="relative flex flex-col">
+                <FloatingCard
+                  scale={1.01}
+                  maxTilt={2}
+                  className="rounded-[24px] p-5 bg-[#F4FDF7] border border-[#172B5014] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full relative"
+                >
+                  <div>
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 flex items-center justify-center text-[#10B981]">
+                          <ClipboardCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h2 className="text-sm font-black text-[#172B50] tracking-tight">
+                            Attendance & Makeups
+                          </h2>
+                          <p className="text-[11px] font-bold text-[#172B50]/60">
+                            {myAttendanceCount} Verified Check-ins
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#10B981] text-white">
+                        Verified
+                      </span>
+                    </div>
+
+                    {/* Attendance / Makeup Requests list */}
+                    <div className="space-y-2.5 min-h-[258px] max-h-[258px] overflow-y-auto pr-1">
+                      {parentCompRequests.length > 0 ? (
+                        parentCompRequests.slice(0, 3).map((req) => (
+                          <div
+                            key={req.id}
+                            className="p-3 rounded-2xl bg-white border border-[#172B5010] shadow-2xs"
+                          >
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[10px] font-black uppercase text-[#F4510B] bg-[#FFF4E8] px-2 py-0.5 rounded-md">
+                                Makeup: {req.studentName}
+                              </span>
+                              <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                                req.status === 'Scheduled' || req.status === 'Approved'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : req.status === 'Rejected'
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : 'bg-amber-100 text-amber-900'
+                              }`}>
+                                {req.status}
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-[#172B50] mt-1">
+                              Missed: {req.missedDate} ({req.program})
+                            </p>
+                            <p className="text-[10px] text-[#172B50]/60 mt-0.5">
+                              {req.replacementSlot ? `Scheduled: ${req.replacementSlot.date} (${req.replacementSlot.startTime})` : req.explanation || 'Pending review'}
+                            </p>
+                          </div>
+                        ))
+                      ) : null}
+
+                      {myAttendanceRecords.slice(0, 3).map((rec, i) => (
+                        <div
+                          key={rec.id || i}
+                          className="p-3 rounded-2xl bg-white border border-[#172B5010] shadow-2xs flex items-center justify-between gap-2"
+                        >
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-black text-[#172B50]">{rec.studentName}</span>
+                              <span className="text-[10px] text-[#172B50]/60">({rec.date})</span>
+                            </div>
+                            <p className="text-[10.5px] font-bold text-[#172B50]/70 mt-0.5">{rec.program} • {rec.location || rec.center}</p>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider ${
+                            rec.status === 'Present'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-rose-100 text-rose-800 border border-rose-300'
+                          }`}>
+                            {rec.status}
+                          </span>
+                        </div>
+                      ))}
+
+                      {myAttendanceRecords.length === 0 && parentCompRequests.length === 0 && (
+                        <div className="p-4 rounded-xl bg-white/70 border border-dashed border-[#172B5020] text-center text-xs text-[#172B50]/70">
+                          Attendance check-ins marked by coaches will appear here with live sync.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Footer link */}
+                  <div className="pt-3 mt-3 border-t border-[#172B5010] flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('attendance_compensation')}
+                      className="text-xs font-extrabold text-[#10B981] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Full Attendance History</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-bold text-[#172B50]/50">
+                      {parentCompRequests.length} Makeups
+                    </span>
+                  </div>
+                </FloatingCard>
+
+                {/* SVG Bracket Connector 3 -> 4 */}
+                <div className="hidden xl:block absolute -top-4 right-[-14px] w-7 h-8 pointer-events-none z-10">
+                  <svg className="w-full h-full text-[#172B50]/20" viewBox="0 0 28 32" fill="none">
+                    <path d="M4 4 C 18 4, 18 28, 28 28" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* CARD 4: Family Command Hub (White #FFFFFF) */}
+              <div className="relative flex flex-col">
+                <FloatingCard
+                  scale={1.01}
+                  maxTilt={2}
+                  className="rounded-[24px] p-5 bg-white border border-[#172B5014] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full relative"
+                >
+                  <div>
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-[#F4510B]/10 border border-[#F4510B]/20 flex items-center justify-center text-[#F4510B]">
+                          <Zap className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h2 className="text-sm font-black text-[#172B50] tracking-tight">
+                            Family Quick Hub
+                          </h2>
+                          <p className="text-[11px] font-bold text-[#172B50]/60">
+                            Direct Parent Actions
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#172B50]/5 text-[#172B50] border border-[#172B5012]">
+                        Quick Link
+                      </span>
+                    </div>
+
+                    {/* 2x2 Quick Action Tiles */}
+                    <div className="grid grid-cols-2 gap-2.5 min-h-[258px]">
+                      {/* Tile 1: Request Compensation (Featured Navy) */}
+                      <button
+                        type="button"
+                        onClick={openParentCompModal}
+                        className="p-3.5 rounded-2xl bg-[#0B3B60] text-white flex flex-col justify-between text-left hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer group"
+                      >
+                        <div className="w-7 h-7 rounded-xl bg-white/15 flex items-center justify-center text-white mb-2">
+                          <RefreshCw className="w-4 h-4 group-hover:rotate-45 transition-transform" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-white/70 block">Missed Class?</span>
+                          <span className="text-xs font-black text-white leading-tight">Request Makeup</span>
+                        </div>
+                      </button>
+
+                      {/* Tile 2: Class Timetable */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentView('classes')}
+                        className="p-3.5 rounded-2xl bg-white border border-[#172B5015] hover:border-[#F4510B] hover:bg-[#FFF4E8]/40 flex flex-col justify-between text-left active:scale-95 transition-all shadow-2xs cursor-pointer group"
+                      >
+                        <div className="w-7 h-7 rounded-xl bg-[#FFF4E8] flex items-center justify-center text-[#F4510B] mb-2">
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#172B50]/60 block">Batches</span>
+                          <span className="text-xs font-black text-[#172B50] leading-tight">Class Timetable</span>
+                        </div>
+                      </button>
+
+                      {/* Tile 3: Apply Leave */}
+                      <button
+                        type="button"
+                        onClick={() => setIsLeaveModalOpen(true)}
+                        className="p-3.5 rounded-2xl bg-white border border-[#172B5015] hover:border-[#F4510B] hover:bg-[#FFF4E8]/40 flex flex-col justify-between text-left active:scale-95 transition-all shadow-2xs cursor-pointer group"
+                      >
+                        <div className="w-7 h-7 rounded-xl bg-[#FFF4E8] flex items-center justify-center text-[#F4510B] mb-2">
+                          <CalendarOff className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#172B50]/60 block">Planned Off</span>
+                          <span className="text-xs font-black text-[#172B50] leading-tight">Apply Leave</span>
+                        </div>
+                      </button>
+
+                      {/* Tile 4: Coach Feedback */}
+                      <button
+                        type="button"
+                        onClick={() => setIsFeedbackModalOpen(true)}
+                        className="p-3.5 rounded-2xl bg-white border border-[#172B5015] hover:border-[#F4510B] hover:bg-[#FFF4E8]/40 flex flex-col justify-between text-left active:scale-95 transition-all shadow-2xs cursor-pointer group"
+                      >
+                        <div className="w-7 h-7 rounded-xl bg-[#F4FAFF] flex items-center justify-center text-[#0B3B60] mb-2">
+                          <MessageSquare className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#172B50]/60 block">Review</span>
+                          <span className="text-xs font-black text-[#172B50] leading-tight">Coach Feedback</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Footer link */}
+                  <div className="pt-3 mt-3 border-t border-[#172B5010] flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('attendance_compensation')}
+                      className="text-xs font-extrabold text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Compensation Requests</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-bold text-[#172B50]/50">
+                      Family Desk
+                    </span>
+                  </div>
+                </FloatingCard>
+              </div>
+
             </div>
           </div>
 
-          {/* Summary KPI Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            <KpiCard
-              title="Registered Children"
-              value={myChildren.length}
-              subtitle={parentProfile.center || 'Active Academy'}
-              icon={GraduationCap}
-              color="orange"
-              onClick={() => setCurrentView('children')}
-            />
+          {/* MIDDLE ROW: 3 DYNAMIC MASTER CARDS (h-[440px] matching Admin Reference) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            
+            {/* COLUMN 1: Weekly Class Timetable (Table format) */}
+            <FloatingCard
+              scale={1.006}
+              maxTilt={2}
+              className="rounded-[28px] p-5 sm:p-6 bg-white border border-[#172B5014] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between h-[440px] min-h-[440px]"
+            >
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="flex items-center justify-between mb-3 shrink-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#F4510B]/10 border border-[#F4510B]/20 flex items-center justify-center text-[#F4510B]">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Weekly Training Timetable
+                      </h3>
+                      <p className="text-[11px] font-bold text-[#172B50]/60">
+                        {myChildren.map(c => c.name).join(', ')}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white">
+                    {mySchedulesCount} Sessions
+                  </span>
+                </div>
 
-            <KpiCard
-              title="Upcoming Classes"
-              value={String(upcomingChildSessions.length).padStart(2, '0')}
-              subtitle={`${mySchedulesCount} Total Synced`}
-              icon={CalendarDays}
-              color="blue"
-              onClick={() => setCurrentView('classes')}
-            />
+                {/* Table of synchronized sessions */}
+                <div className="flex-1 overflow-y-auto pr-1">
+                  {synchronizedChildSessions.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                      <Calendar className="w-10 h-10 text-[#172B50]/20 mb-2" />
+                      <p className="text-xs font-bold text-[#172B50]/70">No synchronized schedules found.</p>
+                      <p className="text-[11px] text-[#172B50]/50 mt-1">Schedules published by Admin will automatically appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-[#172B5010] text-[10px] font-black uppercase text-[#172B50]/50 tracking-wider">
+                            <th className="pb-2">TIME</th>
+                            <th className="pb-2">ATHLETE</th>
+                            <th className="pb-2">PROGRAM</th>
+                            <th className="pb-2">LOCATION</th>
+                            <th className="pb-2 text-right">COACH</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#172B5008] text-xs">
+                          {synchronizedChildSessions.slice(0, 6).map((sch, idx) => (
+                            <tr key={sch.id || idx} className="hover:bg-[#FFF4E8]/30 transition-colors">
+                              <td className="py-2.5 font-bold text-[#172B50]">
+                                <span className="block">{sch.day || sch.date || 'Weekly'}</span>
+                                <span className="text-[10px] text-[#172B50]/60">{sch.startTime}</span>
+                              </td>
+                              <td className="py-2.5 font-black text-[#F4510B]">
+                                {sch.childName}
+                              </td>
+                              <td className="py-2.5 font-bold text-[#172B50]">
+                                {sch.program || sch.className}
+                              </td>
+                              <td className="py-2.5 text-[#172B50]/70 font-semibold text-[11px]">
+                                {sch.location}
+                              </td>
+                              <td className="py-2.5 text-right font-bold text-[#172B50] text-[11px]">
+                                {sch.coachName || 'Spartan Coach'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <KpiCard
-              title="Attendance Records"
-              value={myAttendanceCount}
-              subtitle="Verified coach check-ins"
-              icon={ClipboardCheck}
-              color="green"
-              onClick={() => setCurrentView('attendance')}
-            />
+              {/* Bottom bar */}
+              <div className="pt-3 mt-2 border-t border-[#172B5010] flex items-center justify-between shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('classes')}
+                  className="text-xs font-extrabold text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Open Full Timetable View</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10.5px] font-bold text-[#172B50]/50">
+                  Live Synced
+                </span>
+              </div>
+            </FloatingCard>
 
-            <KpiCard
-              title="Compensation Status"
-              value={String(parentCompRequests.length).padStart(2, '0')}
-              subtitle={`${parentCompRequests.filter(r => r.status === 'Scheduled').length} Scheduled Makeup(s)`}
-              icon={RefreshCw}
-              color="purple"
-              onClick={() => setCurrentView('compensation')}
-            />
+            {/* COLUMN 2: Athlete Attendance & Health (2x2 KPI + Progress) */}
+            <FloatingCard
+              scale={1.006}
+              maxTilt={2}
+              className="rounded-[28px] p-5 sm:p-6 bg-white border border-[#172B5014] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between h-[440px] min-h-[440px]"
+            >
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="flex items-center justify-between mb-3 shrink-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#0B3B60]/10 border border-[#0B3B60]/20 flex items-center justify-center text-[#0B3B60]">
+                      <BarChart2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Athlete Health & Performance
+                      </h3>
+                      <p className="text-[11px] font-bold text-[#172B50]/60">
+                        Attendance & Turnout Metrics
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#10B981] text-white">
+                    Verified Sync
+                  </span>
+                </div>
+
+                {/* 2x2 Metric Cards */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="p-3.5 rounded-2xl bg-[#FFF9F5] border border-[#172B5010] flex flex-col justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#F4510B]">
+                      Children
+                    </span>
+                    <span className="text-2xl font-black text-[#172B50] my-1">
+                      {myChildren.length}
+                    </span>
+                    <span className="text-[10px] font-bold text-[#172B50]/60 truncate">
+                      {parentProfile.center || 'Active Center'}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#F4FAFF] border border-[#172B5010] flex flex-col justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#0B3B60]">
+                      Upcoming
+                    </span>
+                    <span className="text-2xl font-black text-[#172B50] my-1">
+                      {String(upcomingChildSessions.length).padStart(2, '0')}
+                    </span>
+                    <span className="text-[10px] font-bold text-[#172B50]/60 truncate">
+                      {mySchedulesCount} Total Batches
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#F4FDF7] border border-[#172B5010] flex flex-col justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                      Check-ins
+                    </span>
+                    <span className="text-2xl font-black text-[#172B50] my-1">
+                      {myAttendanceCount}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-700/80 truncate">
+                      Coach Verified
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#FAF5FF] border border-[#172B5010] flex flex-col justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-700">
+                      Makeups
+                    </span>
+                    <span className="text-2xl font-black text-[#172B50] my-1">
+                      {parentCompRequests.length}
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-700/80 truncate">
+                      {parentCompRequests.filter(r => r.status === 'Scheduled').length} Scheduled
+                    </span>
+                  </div>
+                </div>
+
+                {/* Turnout & Next Session Banner */}
+                <div className="p-3 rounded-2xl bg-[#FFF4E8] border border-[#F4510B20] shrink-0">
+                  <div className="flex items-center justify-between text-xs font-black text-[#172B50] mb-1">
+                    <span>Average Attendance Health</span>
+                    <span className="text-[#F4510B]">
+                      {myChildren.length > 0 
+                        ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 90), 0) / myChildren.length)
+                        : 92}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-white overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#F4510B] to-[#10B981] rounded-full" 
+                      style={{ 
+                        width: `${myChildren.length > 0 
+                          ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 90), 0) / myChildren.length)
+                          : 92}%` 
+                      }} 
+                    />
+                  </div>
+                  <p className="text-[10px] text-[#172B50]/70 mt-1.5 font-semibold">
+                    {nextUpcomingSession 
+                      ? `Next: ${nextUpcomingSession.childName} on ${nextUpcomingSession.date || 'Weekly'} at ${nextUpcomingSession.startTime || '07:00'}`
+                      : 'All scheduled sessions are up to date!'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom bar */}
+              <div className="pt-3 mt-2 border-t border-[#172B5010] flex items-center justify-between shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('attendance_compensation')}
+                  className="text-xs font-extrabold text-[#0B3B60] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Attendance History</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10.5px] font-bold text-[#172B50]/50">
+                  Performance Hub
+                </span>
+              </div>
+            </FloatingCard>
+
+            {/* COLUMN 3: Parent Hub & Quick Services (Action Tiles matching Admin) */}
+            <FloatingCard
+              scale={1.006}
+              maxTilt={2}
+              className="rounded-[28px] p-5 sm:p-6 bg-white border border-[#172B5014] shadow-[0_4px_25px_rgba(23,43,80,0.03)] flex flex-col justify-between h-[440px] min-h-[440px]"
+            >
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="flex items-center justify-between mb-3 shrink-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#F4510B]/10 border border-[#F4510B]/20 flex items-center justify-center text-[#F4510B]">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Family Services & Operations
+                      </h3>
+                      <p className="text-[11px] font-bold text-[#172B50]/60">
+                        Direct Access Center
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white">
+                    Self-Service
+                  </span>
+                </div>
+
+                {/* 2x2 Action Tiles */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {/* Action 1: Request Compensation (Featured Navy #0B3B60) */}
+                  <button
+                    type="button"
+                    onClick={openParentCompModal}
+                    className="p-3.5 rounded-2xl bg-[#0B3B60] text-white flex flex-col justify-between text-left hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-white mb-2">
+                      <RefreshCw className="w-4 h-4 group-hover:rotate-45 transition-transform" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-white/70 block">Makeup Class</span>
+                      <span className="text-xs font-black text-white leading-tight">Request Makeups</span>
+                    </div>
+                  </button>
+
+                  {/* Action 2: Class Timetable */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('classes')}
+                    className="p-3.5 rounded-2xl bg-white border border-[#172B5015] hover:border-[#F4510B] hover:bg-[#FFF4E8]/40 flex flex-col justify-between text-left active:scale-95 transition-all shadow-2xs cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-[#FFF4E8] flex items-center justify-center text-[#F4510B] mb-2">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-[#172B50]/60 block">Schedules</span>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">Class Timetable</span>
+                    </div>
+                  </button>
+
+                  {/* Action 3: Progress & Badges */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('progress')}
+                    className="p-3.5 rounded-2xl bg-white border border-[#172B5015] hover:border-[#F4510B] hover:bg-[#FFF4E8]/40 flex flex-col justify-between text-left active:scale-95 transition-all shadow-2xs cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-[#FFF4E8] flex items-center justify-center text-[#F4510B] mb-2">
+                      <Award className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-[#172B50]/60 block">Milestones</span>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">Badges & Ranks</span>
+                    </div>
+                  </button>
+
+                  {/* Action 4: Notices & Feedback */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('communication')}
+                    className="p-3.5 rounded-2xl bg-white border border-[#172B5015] hover:border-[#F4510B] hover:bg-[#FFF4E8]/40 flex flex-col justify-between text-left active:scale-95 transition-all shadow-2xs cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-[#F4FAFF] flex items-center justify-center text-[#0B3B60] mb-2">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-[#172B50]/60 block">Academy Desk</span>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">Notices & Feedback</span>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Notice Banner */}
+                <div className="p-3 rounded-2xl bg-[#F4FAFF] border border-[#0B3B60]/15 shrink-0 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#F4510B] shrink-0" />
+                    <p className="text-[11px] font-bold text-[#172B50]">
+                      {(data.announcements && data.announcements[0]?.title) || 'Term 2026-27 Registrations Open'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('communication')}
+                    className="text-[10.5px] font-black text-[#0B3B60] hover:underline shrink-0 cursor-pointer"
+                  >
+                    Read
+                  </button>
+                </div>
+              </div>
+
+              {/* Bottom bar */}
+              <div className="pt-3 mt-2 border-t border-[#172B5010] flex items-center justify-between shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsFeedbackModalOpen(true)}
+                  className="text-xs font-extrabold text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Share Coach Feedback</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10.5px] font-bold text-[#172B50]/50">
+                  Direct Line
+                </span>
+              </div>
+            </FloatingCard>
+
           </div>
 
-          {/* All Parent Navbar Modules Inside Dashboard */}
+          {/* ATHLETE ROSTER SUMMARY STRIP */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#172B50]">
-                Parent Portal Modules
+                Registered Spartan Athletes
               </h2>
-              <span className="text-xs font-semibold text-[#172B50] opacity-65">
-                Quick access to every section
-              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentView('children')}
+                className="text-xs font-bold text-[#F4510B] hover:underline cursor-pointer"
+              >
+                View Full Profiles &rarr;
+              </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {parentDashboardModules.map((mod) => {
-                const Icon = mod.icon;
-                return (
-                  <FloatingCard
-                    key={mod.id}
-                    onClick={() => setCurrentView(mod.id)}
-                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] group flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#FFF4E8] border border-[#F4510B25] flex items-center justify-center text-[#F4510B] group-hover:bg-[#F4510B] group-hover:text-white transition-colors">
-                          <Icon className="w-5 h-5" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {myChildren.map(child => (
+                <div key={child.id} className="interactive-card bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card group">
+                  <div className="flex items-start gap-4">
+                    <img
+                      src={child.avatar}
+                      alt={child.name}
+                      className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#F4510B] group-hover:scale-105 transition-transform duration-300 shadow-sm"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-base font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                            {child.name}
+                          </h3>
+                          <span className="text-xs font-bold text-[#F4510B]">{child.rank}</span>
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5012]">
-                          {mod.stat}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white shadow-xs">
+                          {child.feeStatus}
                         </span>
                       </div>
-                      <h3 className="text-sm font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
-                        {mod.label}
-                      </h3>
-                      <p className="text-[11px] text-[#172B50] opacity-70 mt-1 line-clamp-2">
-                        {mod.desc}
+                      <p className="text-xs text-[#172B50] opacity-75 mt-1">
+                        {child.program} • {child.center}
                       </p>
-                    </div>
-                    <div className="mt-3 pt-2.5 border-t border-[#172B5010] flex items-center justify-between text-[11px] font-extrabold text-[#F4510B]">
-                      <span>Open {mod.label}</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </FloatingCard>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Children Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {myChildren.map(child => (
-              <div key={child.id} className="interactive-card bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card group">
-                <div className="flex items-start gap-4">
-                  <img
-                    src={child.avatar}
-                    alt={child.name}
-                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#F4510B] group-hover:scale-105 transition-transform duration-300 shadow-sm"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-base font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
-                          {child.name}
-                        </h3>
-                        <span className="text-xs font-bold text-[#F4510B]">{child.rank}</span>
+                      <div className="mt-3 flex items-center gap-3 text-xs">
+                        <span className="font-bold text-[#172B50]">Attendance: {child.attendanceRate}%</span>
+                        <span className="text-[#172B50] opacity-40">•</span>
+                        <span className="font-bold text-[#172B50]">Coach: {child.coachName}</span>
                       </div>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#172B50] text-white shadow-xs">
-                        {child.feeStatus}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#172B50] opacity-75 mt-1">
-                      {child.program} • {child.center}
-                    </p>
-                    <div className="mt-3 flex items-center gap-3 text-xs">
-                      <span className="font-bold text-[#172B50]">Attendance: {child.attendanceRate}%</span>
-                      <span className="text-[#172B50] opacity-40">•</span>
-                      <span className="font-bold text-[#172B50]">Coach: {child.coachName}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
         </div>
       )}
 
-      {/* 2. MY CHILDREN */}
+      {/* 3. MY CHILDREN */}
       {currentView === 'children' && (
         <div className="space-y-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">

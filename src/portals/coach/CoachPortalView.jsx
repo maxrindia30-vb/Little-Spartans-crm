@@ -32,7 +32,12 @@ import {
   Info,
   Users,
   X,
-  ArrowRight
+  ArrowRight,
+  Inbox,
+  User,
+  Building2,
+  BarChart2,
+  Search
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -47,6 +52,7 @@ import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
 import Modal from '../../components/common/Modal';
 import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import SportsEventsModule from '../admin/SportsEventsModule';
+import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 
 export default function CoachPortalView() {
   const { 
@@ -361,182 +367,818 @@ export default function CoachPortalView() {
   return (
     <div className="space-y-6">
       
-      {/* 1. COACH DASHBOARD (Upgraded Brand UI/UX) */}
+      {/* 1. COACH DASHBOARD */}
       {currentView === 'dashboard' && (
-        <div className="space-y-6 animate-slide-up">
-          {/* Hero Command Header */}
-          <div className="rounded-3xl bg-gradient-to-br from-[#172B50] via-[#1E3560] to-[#264275] p-6 sm:p-7 text-white shadow-card relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[#F4510B]/20 blur-2xl pointer-events-none" />
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#F4510B] text-white tracking-wider flex items-center gap-1.5 shadow-xs">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                    </span>
-                    <span>COACH WORKSPACE • LIVE SYNC</span>
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/90 border border-white/15">
-                    {coachProfile.certification || 'Certified Coach'} • {coachProfile.center}
-                  </span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                  Coach Command: {coachProfile.name}
-                </h1>
-                <p className="text-xs sm:text-sm text-white/80 mt-1">
-                  {coachProfile.specialization} • Assigned Schedules, Daily Attendance &amp; Replacement Sessions synced live from Admin.
-                </p>
+        <div className="space-y-6 animate-slide-up pb-8">
+          
+          {/* ============================================================ */}
+          {/* 1. TOP HEADER: Good Morning, Coach! & Action Icons            */}
+          {/* ============================================================ */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            <div className="text-left space-y-1">
+              <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
+                <span>Good Morning, Coach {coachFirstName ? coachFirstName.charAt(0).toUpperCase() + coachFirstName.slice(1) : 'Coach'}!</span>
+                <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
+              </h1>
+              <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
+                Dashboard • {coachProfile.center} • {coachProfile.specialization}
+              </p>
+            </div>
+
+            {/* Right: Quick Action Round Buttons */}
+            <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-center shrink-0">
+              {/* 1. Search */}
+              <button
+                type="button"
+                onClick={() => addToast('Search my assigned athletes')}
+                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+                title="Search Athletes"
+              >
+                <Search className="w-4 h-4 text-[#172B50]" />
+              </button>
+
+              {/* 2. Notification */}
+              <button
+                type="button"
+                onClick={() => addToast('No unread coach notices')}
+                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
+                title="Notifications"
+              >
+                <Bell className="w-4 h-4 text-[#172B50]" />
+                <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
+              </button>
+
+              {/* 3. Profile */}
+              <div 
+                onClick={() => setCurrentView('workspace')}
+                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
+                title="Coach Workspace & Profile"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
+                  alt="Coach"
+                  className="w-full h-full object-cover"
+                />
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('attendance')}
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-                >
-                  <ClipboardCheck className="w-4 h-4 text-white" />
-                  <span>Mark Attendance</span>
-                </button>
+              {/* 4. Action: Coach Leave */}
+              <button
+                type="button"
+                onClick={() => setIsLeaveOpen(true)}
+                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+                title="Apply Leave"
+              >
+                <CalendarOff className="w-4 h-4 text-[#172B50]" />
+              </button>
+
+              {/* 5. Live Calendar */}
+              <LiveCalendarButton 
+                classes={mySchedules} 
+                onViewSchedule={() => setCurrentView('classes')} 
+              />
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* 2. FOUR PIPELINE SECTIONS WITH SVG FORK / BRACKET CONNECTORS  */}
+          {/* ============================================================ */}
+          <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+              
+              {/* Card 1: Assigned Batches (Peach) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-[#FFF9F5] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                      <Inbox className="w-4 h-4 text-[#F4510B]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Assigned Batches
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        My active training groups
+                      </p>
+                    </div>
+                  </div>
+
+                  {coachAssignedBatches.length === 0 ? (
+                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-2 shadow-2xs">
+                        <Inbox className="w-5 h-5 text-[#F4510B]" />
+                      </div>
+                      <p className="text-xs font-black text-[#172B50]">No batches assigned</p>
+                    </div>
+                  ) : (
+                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                      {coachAssignedBatches.map((b) => (
+                        <div
+                          key={b.id}
+                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#F4510B30] transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">{b.name}</p>
+                            <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                              {b.program} • {b.center} ({b.enrolledCount || 0}/{b.capacity || 20})
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setClassesSubView('batches');
+                              setCurrentView('classes');
+                            }}
+                            className="px-2 py-1 rounded-lg text-[10px] font-extrabold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
+                          >
+                            View
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Batch Management
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClassesSubView('batches');
+                      setCurrentView('classes');
+                    }}
+                    className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
+                  >
+                    <span>View All ({coachAssignedBatches.length})</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Desktop Connector 1 */}
+                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                  <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                    <path d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    <path d="M 14,52 L 24,52" stroke="#0284C7" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </FloatingCard>
+
+              {/* Card 2: Athlete Roll Call (Sky Blue) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-[#F4FAFF] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
+                      <GraduationCap className="w-4 h-4 text-[#0284C7]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Athlete Roll Call
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        Assigned spartan students
+                      </p>
+                    </div>
+                  </div>
+
+                  {myStudents.length === 0 ? (
+                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-2 shadow-2xs">
+                        <GraduationCap className="w-5 h-5 text-[#0284C7]" />
+                      </div>
+                      <p className="text-xs font-black text-[#172B50]">No athletes enrolled</p>
+                    </div>
+                  ) : (
+                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                      {myStudents.map((s) => (
+                        <div
+                          key={s.id}
+                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#0284C730] transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">{s.name}</p>
+                            <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                              {s.program || 'Athlete'} • Age {s.age || '6'} ({s.center})
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentView('attendance')}
+                            className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                            title="Mark Attendance"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Roster Oversight
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('students')}
+                    className="text-[11.5px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
+                  >
+                    <span>View Athletes ({myStudents.length})</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Desktop Connector 2 */}
+                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                  <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                    <path d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" stroke="#F4510B" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    <path d="M 0,52 L 24,52" stroke="#F4510B" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" stroke="#F4510B" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </FloatingCard>
+
+              {/* Card 3: Replacement Sessions (Emerald) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-[#F4FDF7] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
+                      <RefreshCw className="w-4 h-4 text-[#16A34A]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Replacement Sessions
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        Assigned makeup classes
+                      </p>
+                    </div>
+                  </div>
+
+                  {assignedStudentReplacements.length === 0 ? (
+                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-2 shadow-2xs">
+                        <RefreshCw className="w-5 h-5 text-[#16A34A]" />
+                      </div>
+                      <p className="text-xs font-black text-[#172B50]">No makeup sessions</p>
+                      <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Admin-assigned slots appear here</p>
+                    </div>
+                  ) : (
+                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                      {assignedStudentReplacements.map((r) => (
+                        <div
+                          key={r.id}
+                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#16A34A30] transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">
+                              {r.studentName}
+                            </p>
+                            <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                              {r.replacementSlot || `${r.replacementDate} (${r.replacementStartTime})`}
+                            </p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[9.5px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {r.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Compensation
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('compensation')}
+                    className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
+                  >
+                    <span>View All ({assignedStudentReplacements.length})</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Desktop Connector 3 */}
+                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                  <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
+                    <path d="M 0,82 C 10,82 12,30 24,30" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    <circle cx="2" cy="82" r="2" fill="#0284C7" />
+                    <circle cx="22" cy="30" r="2" fill="#0284C7" />
+                  </svg>
+                </div>
+              </FloatingCard>
+
+              {/* Card 4: Coach Operations (White with 2x2 Action Tiles) */}
+              <FloatingCard 
+                maxTilt={3} 
+                scale={1.01} 
+                glare={false}
+                className="relative bg-white rounded-[24px] p-4 sm:p-4.5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-full"
+                contentClassName="flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3.5">
+                    <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                      <Activity className="w-4 h-4 text-[#F4510B]" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                        Coach Operations
+                      </h3>
+                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                        Daily faculty workflow
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="min-h-[258px] max-h-[258px] flex flex-col justify-center">
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Tile 1: Mark Attendance */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentView('attendance')}
+                        className="bg-[#0B3B60] text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <ClipboardCheck className="w-4.5 h-4.5 text-white" />
+                        </div>
+                        <span className="text-xs font-black text-white leading-tight">
+                          Mark Attendance
+                        </span>
+                        <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
+                          Daily Register
+                        </span>
+                      </button>
+
+                      {/* Tile 2: Class Timetable */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentView('classes')}
+                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <CalendarDays className="w-4.5 h-4.5 text-[#172B50]" />
+                        </div>
+                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                          My Timetable
+                        </span>
+                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                          {mySchedules.length} Sessions
+                        </span>
+                      </button>
+
+                      {/* Tile 3: Coach Leave */}
+                      <button
+                        type="button"
+                        onClick={() => setIsLeaveOpen(true)}
+                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <CalendarOff className="w-4.5 h-4.5 text-[#F4510B]" />
+                        </div>
+                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                          Apply Leave
+                        </span>
+                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                          Faculty Time-off
+                        </span>
+                      </button>
+
+                      {/* Tile 4: Equipment */}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentView('equipment')}
+                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#F0F7FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                          <Shield className="w-4.5 h-4.5 text-[#0284C7]" />
+                        </div>
+                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                          Equipment
+                        </span>
+                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                          Inspection & Gear
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
+                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                    Quick Operations
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('workspace')}
+                    className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+                  >
+                    <span>My Workspace</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+              </FloatingCard>
+
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* 3. MIDDLE ROW: Today's Classes, Performance & Faculty Toolkit */}
+          {/* ============================================================ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            
+            {/* Card 1: Today's Training Sessions Table */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                    <CalendarDays className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+                  </div>
+                  <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                    Today's Training Schedule
+                  </h2>
+                </div>
+              </div>
+
+              {mySchedules.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-4 my-auto">
+                  <div className="w-11 h-11 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-2.5 shadow-2xs">
+                    <CalendarDays className="w-5.5 h-5.5" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-black text-[#172B50]">
+                    No classes assigned today
+                  </p>
+                  <p className="text-[11px] text-[#172B50]/60 mt-1 max-w-[240px]">
+                    Classes assigned to you will automatically appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[300px] mt-1 pr-0.5 scrollbar-thin">
+                  <table className="w-full text-left text-xs whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
+                        <th className="py-2 px-2.5">TIME</th>
+                        <th className="py-2 px-2.5">BATCH</th>
+                        <th className="py-2 px-2.5">LOCATION</th>
+                        <th className="py-2 px-2.5">STUDENTS</th>
+                        <th className="py-2 px-2.5 text-right">ACTION</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#172B500C]">
+                      {mySchedules.slice(0, 5).map((cls) => (
+                        <tr 
+                          key={cls.id} 
+                          className="hover:bg-[#FFF4E8]/30 transition-colors"
+                        >
+                          <td className="py-2.5 px-2.5">
+                            <div className="flex items-center gap-1.5 font-black text-[#172B50]">
+                              <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                              <span>{cls.startTime || '09:00 AM'}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2.5 font-extrabold text-[#172B50] max-w-[130px] truncate">
+                            {cls.className || cls.batch || 'Training Batch'}
+                          </td>
+                          <td className="py-2.5 px-2.5">
+                            <div className="flex items-center gap-1 font-bold text-[#172B50]/75">
+                              <MapPin className="w-3 h-3 text-[#F4510B] shrink-0" />
+                              <span>{cls.location}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2.5">
+                            <span className="font-bold text-[#172B50]/80">
+                              {cls.enrolledCount ?? 15} athletes
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2.5 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setCurrentView('attendance')}
+                              className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#F4510B] text-white hover:bg-[#d94103] transition-colors cursor-pointer"
+                            >
+                              Attendance
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+                  Daily Timetable
+                </span>
                 <button
                   type="button"
                   onClick={() => setCurrentView('classes')}
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-white text-[#172B50] rounded-xl shadow-sm hover:bg-[#FFF4E8] active:scale-95 transition-all cursor-pointer"
+                  className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
                 >
-                  <CalendarDays className="w-4 h-4 text-[#F4510B]" />
-                  <span>My Schedules ({mySchedules.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsLeaveOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold bg-white/10 text-white border border-white/20 rounded-xl hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
-                >
-                  <CalendarOff className="w-4 h-4 text-[#FFA366]" />
-                  <span>Coach Leave</span>
+                  <span>Explore all sessions</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
-            </div>
+            </FloatingCard>
 
-            {/* Synchronized Next Class Highlight */}
-            <div className="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10">
-              {nextScheduledClass ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#F4510B]/20 border border-[#F4510B]/40 flex items-center justify-center text-[#FFA366] shrink-0">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-[#FFA366]">
-                        Next Synchronized Session • {nextScheduledClass.location}
-                      </span>
-                      {nextScheduledClass.isCompensationReplacement && (
-                        <span className="px-1.5 py-0.2 rounded bg-[#F4510B] text-white text-[9px] font-bold">REPLACEMENT</span>
-                      )}
+            {/* Card 2: Coaching Performance & Turnout */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center justify-between pb-3.5 border-b border-[#172B5010]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                      <BarChart2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
                     </div>
-                    <span className="font-bold text-white block">
-                      {nextScheduledClass.className || nextScheduledClass.batch} • {nextScheduledClass.date} ({nextScheduledClass.startTime} – {nextScheduledClass.endTime})
-                    </span>
+                    <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                      Coaching Performance
+                    </h2>
                   </div>
+                  <span className="text-[10.5px] font-extrabold text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-full border border-[#F4510B20] select-none">
+                    {mySchedules.length} Sessions
+                  </span>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2 text-white/80">
-                  <Sparkles className="w-4 h-4 text-[#FFA366]" />
-                  <span>No upcoming classes scheduled yet. Sessions assigned by Admin appear here automatically.</span>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setCurrentView('classes')}
-                className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
-              >
-                View Full Schedule &rarr;
-              </button>
-            </div>
-          </div>
+              </div>
 
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            <KpiCard
-              title="Published Schedules"
-              value={String(mySchedules.length).padStart(2, '0')}
-              subtitle="Synced from Admin"
-              icon={CalendarDays}
-              color="orange"
-              onClick={() => setCurrentView('schedules')}
-            />
-
-            <KpiCard
-              title="Assigned Athletes"
-              value={myStudents.length}
-              subtitle={`Across ${coachAssignedBatches.length} Batches`}
-              icon={GraduationCap}
-              color="blue"
-              onClick={() => setCurrentView('batches')}
-            />
-
-            <KpiCard
-              title="Compensation Slots"
-              value={String(totalCompSlotCount).padStart(2, '0')}
-              subtitle={`${assignedStudentReplacements.filter(r => r.status === 'Scheduled').length} Upcoming Replacements`}
-              icon={RefreshCw}
-              color="green"
-              onClick={() => setCurrentView('compensation')}
-            />
-
-            <KpiCard
-              title="Faculty Rating"
-              value={`${coachProfile.rating || '0.0'}`}
-              subtitle={`${coachProfile.experience || 'Faculty'} • 5.0 Scale`}
-              icon={Star}
-              color="purple"
-              onClick={() => setCurrentView('evaluations')}
-            />
-          </div>
-
-          {/* All Coach Navbar Modules Inside Dashboard */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#172B50]">
-                Coach Portal Modules
-              </h2>
-              <span className="text-xs font-semibold text-[#172B50] opacity-65">
-                Quick access to every section
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {coachDashboardModules.map((mod) => {
-                const Icon = mod.icon;
-                return (
-                  <FloatingCard
-                    key={mod.id}
-                    onClick={() => setCurrentView(mod.id)}
-                    className="text-left bg-white rounded-2xl p-4 border border-[#172B501A] shadow-card hover:border-[#F4510B] group flex flex-col justify-between"
+              <div className="flex-1 flex flex-col justify-center py-2.5 my-auto">
+                <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
+                  {/* KPI 1 */}
+                  <div 
+                    onClick={() => setCurrentView('schedules')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#F0F7FF] border border-[#0284C720] flex flex-col justify-between hover:border-[#0284C750] transition-all cursor-pointer group shadow-2xs"
                   >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#FFF4E8] border border-[#F4510B25] flex items-center justify-center text-[#F4510B] group-hover:bg-[#F4510B] group-hover:text-white transition-colors">
-                          <Icon className="w-5 h-5" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
+                          <CalendarDays className="w-3.5 h-3.5 text-[#0284C7]" />
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF4E8] text-[#172B50] border border-[#172B5012]">
-                          {mod.stat}
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#0284C7] transition-colors">
+                          Schedules
                         </span>
                       </div>
-                      <h3 className="text-sm font-extrabold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
-                        {mod.label}
-                      </h3>
-                      <p className="text-[11px] text-[#172B50] opacity-70 mt-1 line-clamp-2">
-                        {mod.desc}
-                      </p>
+                      <span className="w-2 h-2 rounded-full bg-[#0284C7]" />
                     </div>
-                    <div className="mt-3 pt-2.5 border-t border-[#172B5010] flex items-center justify-between text-[11px] font-extrabold text-[#F4510B]">
-                      <span>Open {mod.label}</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {mySchedules.length}
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Timetables
+                      </span>
                     </div>
-                  </FloatingCard>
-                );
-              })}
-            </div>
+                  </div>
+
+                  {/* KPI 2 */}
+                  <div 
+                    onClick={() => setCurrentView('batches')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF5FF] border border-[#9333EA20] flex flex-col justify-between hover:border-[#9333EA50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-3.5 h-3.5 text-[#9333EA]" />
+                        </div>
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#9333EA] transition-colors">
+                          Athletes
+                        </span>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-[#9333EA]" />
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {myStudents.length}
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Assigned
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 3 */}
+                  <div 
+                    onClick={() => setCurrentView('compensation')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#F0FDF4] border border-[#16A34A20] flex flex-col justify-between hover:border-[#16A34A50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
+                          <RefreshCw className="w-3.5 h-3.5 text-[#16A34A]" />
+                        </div>
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#16A34A] transition-colors">
+                          Makeups
+                        </span>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-[#16A34A]" />
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {totalCompSlotCount}
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Slots
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 4 */}
+                  <div 
+                    onClick={() => setCurrentView('evaluations')}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#FFF5ED] border border-[#F4510B20] flex flex-col justify-between hover:border-[#F4510B50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
+                          <Star className="w-3.5 h-3.5 text-[#F4510B]" />
+                        </div>
+                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                          Rating
+                        </span>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-[#F4510B]" />
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
+                        {coachProfile.rating || '4.9'}★
+                      </span>
+                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        5.0 Scale
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-[#172B500C] flex items-center justify-between text-xs px-1">
+                  <span className="text-[11px] font-bold text-[#172B50]/65">
+                    Faculty Status
+                  </span>
+                  <span className="text-[11px] font-black text-[#F4510B] bg-[#FFF5ED] px-2.5 py-0.5 rounded-lg border border-[#F4510B20]">
+                    Active • {coachProfile.center}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+                  Evaluations & Logs
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('evaluations')}
+                  className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+                >
+                  <span>Explore evaluations</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            </FloatingCard>
+
+            {/* Card 3: Coach Faculty Toolkit */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center gap-3 pb-3.5 border-b border-[#172B5010]">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                    <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                      Coach Faculty Toolkit
+                    </h2>
+                    <p className="text-[11px] font-medium text-[#172B50]/60">
+                      Operations, safety & workspace
+                    </p>
+                  </div>
+                </div>
+
+                <div className="min-h-[265px] flex flex-col justify-center mt-2.5">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Tile 1: Mark Attendance */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('attendance')}
+                      className="bg-[#0B3B60] text-white rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <ClipboardCheck className="w-4.5 h-4.5 text-white" />
+                      </div>
+                      <span className="text-xs font-black text-white leading-tight">
+                        Mark Attendance
+                      </span>
+                      <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
+                        Roll Call Register
+                      </span>
+                    </button>
+
+                    {/* Tile 2: Class Timetables */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('classes')}
+                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <CalendarDays className="w-4.5 h-4.5 text-[#F4510B]" />
+                      </div>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">
+                        Class Schedules
+                      </span>
+                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        {mySchedules.length} Sessions
+                      </span>
+                    </button>
+
+                    {/* Tile 3: Equipment Inspection */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('equipment')}
+                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <Shield className="w-4.5 h-4.5 text-[#F4510B]" />
+                      </div>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">
+                        Gear Inspection
+                      </span>
+                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        Condition Reports
+                      </span>
+                    </button>
+
+                    {/* Tile 4: My Workspace */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('workspace')}
+                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#0284C735] hover:bg-[#F0F9FF] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                    >
+                      <div className="w-8.5 h-8.5 rounded-xl bg-[#F0F9FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
+                        <UserCheck className="w-4.5 h-4.5 text-[#0284C7]" />
+                      </div>
+                      <span className="text-xs font-black text-[#172B50] leading-tight">
+                        My Workspace
+                      </span>
+                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        Profile & Leave
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                  Faculty Workspace
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('workspace')}
+                  className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+                >
+                  <span>Open Workspace</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            </FloatingCard>
+
           </div>
+
         </div>
       )}
 
