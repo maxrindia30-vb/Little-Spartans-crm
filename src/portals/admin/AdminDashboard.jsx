@@ -591,9 +591,12 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
-                          onClick={() => addToast(`${enq.childName} enquiry verified`)}
+                          onClick={() => {
+                            addToast(`${enq.childName} enquiry verified`);
+                            setCurrentView('enquiries');
+                          }}
                           className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="Verify"
+                          title="Verify & Go to Enquiries"
                         >
                           <Check className="w-3.5 h-3.5" />
                         </button>
@@ -722,9 +725,12 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
-                          onClick={() => addToast(`${demo.childName} demo verified`)}
+                          onClick={() => {
+                            addToast(`${demo.childName} demo verified`);
+                            setCurrentView('demos');
+                          }}
                           className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="Verify Demo"
+                          title="Verify & Go to Demos"
                         >
                           <Check className="w-3.5 h-3.5" />
                         </button>
@@ -858,9 +864,13 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
-                          onClick={() => addToast(`${stu.name} attendance recorded`)}
+                          onClick={() => {
+                            addToast(`${stu.name} attendance recorded`);
+                            setCurrentView('people');
+                            if (setActiveSubTab) setActiveSubTab('students');
+                          }}
                           className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="Active Student"
+                          title="Active Student & Go to Students"
                         >
                           <Check className="w-3.5 h-3.5" />
                         </button>
@@ -1050,13 +1060,13 @@ export default function AdminDashboard() {
           maxTilt={2} 
           scale={1.006} 
           glare={false}
-          className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+          className="w-full bg-[#FFE5D3] rounded-[28px] p-5 sm:p-6 border border-[#F4510B]/20 shadow-[0_4px_25px_rgba(244,81,11,0.06)] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
             {/* Header */}
-            <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+            <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#F4510B15]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] flex items-center justify-center shrink-0 shadow-2xs">
                 <CalendarDays className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
               </div>
               <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
@@ -1068,7 +1078,7 @@ export default function AdminDashboard() {
           {/* Live Classes Table or Clean Zero State */}
           {liveClasses.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-4 my-auto">
-              <div className="w-11 h-11 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-2.5 shadow-2xs">
+              <div className="w-11 h-11 rounded-2xl bg-white text-[#F4510B] border border-[#F4510B25] flex items-center justify-center mb-2.5 shadow-2xs">
                 <CalendarDays className="w-5.5 h-5.5" />
               </div>
               <p className="text-xs sm:text-sm font-black text-[#172B50]">
@@ -1080,7 +1090,7 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => setCurrentView('schedules')}
-                className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-[#FFF5ED] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all cursor-pointer shadow-2xs group"
+                className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all cursor-pointer shadow-2xs group"
               >
                 <span>Open Class Schedules</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -1090,7 +1100,7 @@ export default function AdminDashboard() {
             <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[300px] mt-1 pr-0.5 scrollbar-thin">
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead>
-                  <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-[#F4510B15] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
                     <th className="py-2 px-2.5">TIME</th>
                     <th className="py-2 px-2.5">PROGRAM</th>
                     <th className="py-2 px-2.5">COACH</th>
@@ -1098,7 +1108,7 @@ export default function AdminDashboard() {
                     <th className="py-2 px-2.5 text-right">CAPACITY</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#172B500C]">
+                <tbody className="divide-y divide-[#F4510B10]">
                   {liveClasses.slice(0, 5).map((cls) => {
                     const enrolled = cls.enrolledCount ?? (cls.enrolledStudents ? cls.enrolledStudents.length : 0);
                     const capacity = cls.capacity || 20;
@@ -1108,7 +1118,7 @@ export default function AdminDashboard() {
                     return (
                       <tr 
                         key={cls.id} 
-                        className="hover:bg-[#FFF4E8]/30 transition-colors cursor-pointer" 
+                        className="hover:bg-white/70 transition-colors cursor-pointer" 
                         onClick={() => setCurrentView('schedules')}
                       >
                         <td className="py-2.5 px-2.5">
@@ -1156,7 +1166,7 @@ export default function AdminDashboard() {
           )}
 
           {/* Bottom Footer matching Priority Tasks */}
-          <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+          <div className="pt-2.5 border-t border-[#F4510B15] flex items-center justify-between text-xs mt-auto shrink-0">
             <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
               Daily Timetable
             </span>
@@ -1178,21 +1188,21 @@ export default function AdminDashboard() {
           maxTilt={2} 
           scale={1.006} 
           glare={false}
-          className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+          className="w-full bg-[#D9EFFE] rounded-[28px] p-5 sm:p-6 border border-[#0284C7]/20 shadow-[0_4px_25px_rgba(2,132,199,0.06)] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
             {/* Header matching Image 2 */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-[#172B5010]">
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#0284C715]">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
-                  <BarChart2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] flex items-center justify-center shrink-0 shadow-2xs">
+                  <BarChart2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#0284C7]" />
                 </div>
                 <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
                   Demo Performance
                 </h2>
               </div>
-              <span className="text-[10.5px] font-extrabold text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-full border border-[#F4510B20] select-none">
+              <span className="text-[10.5px] font-extrabold text-[#0284C7] bg-white px-2.5 py-1 rounded-full border border-[#0284C725] select-none shadow-2xs">
                 {demoMetrics.totalDemos || 0} Demos
               </span>
             </div>
@@ -1307,25 +1317,25 @@ export default function AdminDashboard() {
             </div>
 
             {/* Subtle Conversion Rate Summary Banner */}
-            <div className="mt-3 pt-3 border-t border-[#172B500C] flex items-center justify-between text-xs px-1">
+            <div className="mt-3 pt-3 border-t border-[#0284C715] flex items-center justify-between text-xs px-1">
               <span className="text-[11px] font-bold text-[#172B50]/65">
                 Conversion Rate
               </span>
-              <span className="text-[11px] font-black text-[#F4510B] bg-[#FFF5ED] px-2.5 py-0.5 rounded-lg border border-[#F4510B20]">
+              <span className="text-[11px] font-black text-[#0284C7] bg-white px-2.5 py-0.5 rounded-lg border border-[#0284C720] shadow-2xs">
                 {demoMetrics.totalDemos > 0 ? Math.round((demoMetrics.studentConversions / demoMetrics.totalDemos) * 100) : 0}% success
               </span>
             </div>
           </div>
 
           {/* Bottom Footer matching Image 2 */}
-          <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+          <div className="pt-2.5 border-t border-[#0284C715] flex items-center justify-between text-xs mt-auto shrink-0">
             <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
               Demo Performance
             </span>
             <button
               type="button"
               onClick={() => setCurrentView('demos')}
-              className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+              className="text-[11.5px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
             >
               <span>Explore all demos</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -1340,14 +1350,14 @@ export default function AdminDashboard() {
           maxTilt={2} 
           scale={1.006} 
           glare={false}
-          className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
+          className="w-full bg-[#DEF7E6] rounded-[28px] p-5 sm:p-6 border border-[#16A34A]/20 shadow-[0_4px_25px_rgba(22,163,74,0.06)] h-[440px] min-h-[440px]"
           contentClassName="flex flex-col justify-between h-full"
         >
           <div>
             {/* Header matching Image 3 */}
-            <div className="flex items-center gap-3 pb-3.5 border-b border-[#172B5010]">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
-                <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+            <div className="flex items-center gap-3 pb-3.5 border-b border-[#16A34A15]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] flex items-center justify-center shrink-0 shadow-2xs">
+                <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#16A34A]" />
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
@@ -1437,7 +1447,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Bottom Footer matching Image 3 */}
-          <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+          <div className="pt-2.5 border-t border-[#16A34A15] flex items-center justify-between text-xs mt-auto shrink-0">
             <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
               Academy Network
             </span>
@@ -1447,7 +1457,7 @@ export default function AdminDashboard() {
                 setCurrentView('people');
                 if (setActiveSubTab) setActiveSubTab('students');
               }}
-              className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+              className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
             >
               <span>View All ({(data.coaches?.length || 6) + (commonLocations?.length || 5)})</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
