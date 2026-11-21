@@ -147,7 +147,7 @@ export default function App() {
           <img 
             src="/assets/zenconnect-bg-watermark.png" 
             alt="" 
-            className="w-[320px] sm:w-[480px] lg:w-[600px] max-w-[85%] h-auto object-contain opacity-[0.12] mix-blend-multiply"
+            className="w-[320px] sm:w-[480px] lg:w-[600px] max-w-[85%] h-auto object-contain opacity-[0.035] mix-blend-multiply"
           />
         </div>
 

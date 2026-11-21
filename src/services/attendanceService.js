@@ -105,19 +105,46 @@ export function getCoachAssignedBatches({ coachProfile, classes = [], classSched
     }
   });
 
+  const matchingClasses = classes.filter((cls) => matchingBatchIds.has(cls.id));
+  const resultBatches = [...matchingClasses];
+
   classSchedules.forEach((sch) => {
-    if (
-      sch.status !== 'Cancelled' &&
-      sch.batchId &&
-      (sch.coachId === coachProfile.id ||
-        (sch.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
-        (sch.coachName && coachFirstName && sch.coachName.toLowerCase().includes(coachFirstName)))
-    ) {
-      matchingBatchIds.add(sch.batchId);
+    if (sch.status === 'Cancelled') return;
+
+    const isAssigned =
+      sch.coachId === coachProfile.id ||
+      (sch.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
+      (sch.coachName && coachFirstName && sch.coachName.toLowerCase().includes(coachFirstName)) ||
+      (sch.replacement &&
+        sch.replacement.status === 'Active' &&
+        (sch.replacement.replacementCoachId === coachProfile.id ||
+          (coachFirstName && sch.replacement.replacementCoachName?.toLowerCase().includes(coachFirstName))));
+
+    if (isAssigned) {
+      if (sch.batchId) {
+        matchingBatchIds.add(sch.batchId);
+      }
+      const batchIdentifier = sch.batchId || sch.batch;
+      const alreadyInList = resultBatches.some((b) => b.id === batchIdentifier || b.name === sch.batch);
+      if (!alreadyInList) {
+        resultBatches.push({
+          id: sch.batchId || `SCH_BATCH_${sch.id}`,
+          name: sch.batch || sch.className,
+          center: sch.location,
+          program: sch.program,
+          timing: `${sch.startTime} - ${sch.endTime}`,
+          isEmergencyCover: Boolean(
+            sch.replacement &&
+              sch.replacement.status === 'Active' &&
+              (sch.replacement.replacementCoachId === coachProfile.id ||
+                (coachFirstName && sch.replacement.replacementCoachName?.toLowerCase().includes(coachFirstName)))
+          ),
+        });
+      }
     }
   });
 
-  return classes.filter((cls) => matchingBatchIds.has(cls.id));
+  return resultBatches;
 }
 
 /**

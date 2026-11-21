@@ -47,8 +47,27 @@ import {
 
 const CrmContext = createContext();
 
-const LOCAL_STORAGE_KEY = 'little_spartans_crm_v4_clean';
+const LOCAL_STORAGE_KEY = 'little_spartans_crm_v5_clean';
 const CURRENT_ROLE_KEY = 'little_spartans_current_portal';
+
+const LEGACY_STORAGE_KEYS = [
+  'little_spartans_crm_data',
+  'little_spartans_crm_v1',
+  'little_spartans_crm_v2',
+  'little_spartans_crm_v3',
+  'little_spartans_crm_v4',
+  'little_spartans_crm_v4_clean',
+  'little_spartans_crm_backup'
+];
+
+// Clean out legacy test/dummy data keys on startup
+if (typeof window !== 'undefined' && window.localStorage) {
+  LEGACY_STORAGE_KEYS.forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
+  });
+}
 
 export function CrmProvider({ children }) {
   // Load data from localStorage or fallback to initial data
@@ -232,6 +251,21 @@ export function CrmProvider({ children }) {
             : Array.isArray(parsed.leaveRequests)
             ? parsed.leaveRequests
             : (initialAcademyData.leaveRequests || []),
+          coachReplacements: Array.isArray(parsed.coachReplacements)
+            ? parsed.coachReplacements
+            : (initialAcademyData.coachReplacements || []),
+          conversations: Array.isArray(parsed.conversations) && parsed.conversations.length > 0
+            ? parsed.conversations
+            : (initialAcademyData.conversations || []),
+          broadcasts: Array.isArray(parsed.broadcasts)
+            ? parsed.broadcasts
+            : (initialAcademyData.broadcasts || []),
+          messageTemplates: Array.isArray(parsed.messageTemplates)
+            ? parsed.messageTemplates
+            : (initialAcademyData.messageTemplates || []),
+          scheduledMessages: Array.isArray(parsed.scheduledMessages)
+            ? parsed.scheduledMessages
+            : (initialAcademyData.scheduledMessages || []),
         };
       }
     } catch (e) {
@@ -315,12 +349,54 @@ export function CrmProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // Reset to default mock data
+  // Reset to default clean state
   const resetAllData = () => {
-    setData(initialAcademyData);
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    addToast('Academy CRM data reset to default demo dataset.', 'info');
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      LEGACY_STORAGE_KEYS.forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) {}
+      });
+      sessionStorage.clear();
+    } catch (e) {}
+    setData({
+      ...initialAcademyData,
+      classes: [],
+      coaches: [],
+      students: [],
+      parents: [],
+      enquiries: [],
+      demos: [],
+      payments: [],
+      competitions: [],
+      leaveRequests: [],
+      coachLeaveRequests: [],
+      feedback: [],
+      certificates: [],
+      supportTickets: [],
+      followups: [],
+      announcements: [],
+      feeStructures: [],
+      studentFeeAssignments: [],
+      compensationRequests: [],
+      compensationHistory: [],
+      coachCompensationClasses: [],
+      classSchedules: [],
+      attendanceRecords: [],
+      notifications: [],
+      equipment: [],
+      equipmentReports: [],
+      coachReplacements: [],
+      conversations: initialAcademyData.conversations || [],
+      broadcasts: initialAcademyData.broadcasts || [],
+      messageTemplates: initialAcademyData.messageTemplates || [],
+      scheduledMessages: initialAcademyData.scheduledMessages || [],
+      userAccounts: [initialAcademyData.userAccounts[0]],
+      locations: initialAcademyData.locations,
+      programs: initialAcademyData.programs,
+    });
+    addToast('All dummy records cleared across all portals');
   };
+  const resetToCleanSlate = resetAllData;
 
   // Current logged in user credentials per portal
   const currentUserProfiles = {
@@ -1106,6 +1182,16 @@ export function CrmProvider({ children }) {
       compensationRequests: updatedCompensationRequests,
       notifications: [...newNotifications, ...(prev.notifications || [])].slice(0, 80),
       compensationHistory: [...newHistoryLogs, ...(prev.compensationHistory || [])],
+      coachReplacements: (prev.coachReplacements || []).map((r) => {
+        if (
+          r.date === date &&
+          (!location || location === 'All' || r.location === location) &&
+          (!batchId || batchId === 'All' || r.batch === batchId || r.batchId === batchId)
+        ) {
+          return { ...r, attendanceStatus: 'Marked' };
+        }
+        return r;
+      }),
       students: Object.keys(studentPackageUpdates).length > 0
         ? (prev.students || []).map(s => studentPackageUpdates[s.id] ? { ...s, ...studentPackageUpdates[s.id] } : s)
         : prev.students
@@ -2118,6 +2204,7 @@ export function CrmProvider({ children }) {
       location: candidate.location,
       program: candidate.program,
       programId: candidate.programId || '',
+      programType: candidate.programType || '',
       batch: candidate.batch,
       batchId: candidate.batchId || matchedBatch?.id || '',
       coachId: candidate.coachId,
@@ -2127,6 +2214,7 @@ export function CrmProvider({ children }) {
       date: candidate.date,
       startTime: candidate.startTime,
       endTime: candidate.endTime,
+      timingDisplay: candidate.timingDisplay || '',
       venue: candidate.venue || '',
       capacity: parseInt(candidate.capacity, 10) || matchedBatch?.capacity || 20,
       enrolledCount: candidate.enrolledCount ?? dynamicStudents.length,
@@ -2135,6 +2223,7 @@ export function CrmProvider({ children }) {
       recurringGroupId: candidate.recurringGroupId || '',
       scheduleType: candidate.scheduleType || 'one-time',
       notes: candidate.notes || '',
+      attachment: candidate.attachment || null,
       status: 'Scheduled',
       createdAt: new Date().toISOString(),
       publishedBy: 'Admin Vikramaditya',
@@ -2323,8 +2412,18 @@ export function CrmProvider({ children }) {
       ...prev,
       classSchedules: (prev.classSchedules || []).map(s => 
         s.id === id 
-          ? { ...s, status: 'Completed', completedAt: new Date().toISOString() } 
+          ? { 
+              ...s, 
+              status: 'Completed', 
+              completedAt: new Date().toISOString(),
+              replacement: s.replacement ? { ...s.replacement, status: 'Completed' } : s.replacement,
+            } 
           : s
+      ),
+      coachReplacements: (prev.coachReplacements || []).map(r =>
+        r.scheduleId === id
+          ? { ...r, status: 'Completed', attendanceStatus: 'Marked' }
+          : r
       ),
       compensationRequests: existing?.compensationRequestId
         ? (prev.compensationRequests || []).map(r =>
@@ -2340,6 +2439,188 @@ export function CrmProvider({ children }) {
 
   const checkScheduleConflictLive = (candidate, excludeId = null) => {
     return checkScheduleConflict(candidate, data.classSchedules || [], excludeId);
+  };
+
+  // --- Module 3: Emergency Coach Replacement Logic ---
+  const assignEmergencyCoachReplacement = (scheduleId, payload) => {
+    const { replacementCoachId, replacementCoachName, replacementCoachAvatar, reason } = payload || {};
+
+    if (!scheduleId) {
+      addToast('Invalid class schedule identifier.', 'error');
+      return { success: false, error: 'Schedule ID is required' };
+    }
+    if (!replacementCoachId || !replacementCoachName) {
+      addToast('Please select an eligible replacement coach.', 'error');
+      return { success: false, error: 'Replacement coach is required' };
+    }
+    if (!reason || !reason.trim()) {
+      addToast('Reason for replacement is mandatory.', 'error');
+      return { success: false, error: 'Reason is required' };
+    }
+
+    const schedule = (data.classSchedules || []).find((s) => s.id === scheduleId);
+    if (!schedule) {
+      addToast('Class schedule not found.', 'error');
+      return { success: false, error: 'Schedule not found' };
+    }
+
+    // 1. Prevent assigning same coach as original primary coach
+    if (schedule.coachId === replacementCoachId) {
+      const msg = 'Replacement coach cannot be the original primary coach.';
+      addToast(msg, 'error');
+      return { success: false, error: msg };
+    }
+
+    // 2. Validate replacement coach does not have approved leave on this date
+    const approvedLeave = getCoachApprovedLeaveForDate(
+      data.coachLeaveRequests || [],
+      replacementCoachId,
+      schedule.date
+    );
+    if (approvedLeave) {
+      const msg = `Conflict: ${replacementCoachName} has approved leave on ${schedule.date} (${approvedLeave.leaveType || 'Leave'}).`;
+      addToast(msg, 'error');
+      return { success: false, error: msg };
+    }
+
+    // 3. Validate replacement coach has no conflicting schedule on that date and time
+    const conflictCheck = checkScheduleConflict(
+      {
+        coachId: replacementCoachId,
+        coachName: replacementCoachName,
+        date: schedule.date,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+      },
+      data.classSchedules || [],
+      scheduleId
+    );
+    if (conflictCheck.hasConflict) {
+      const msg = `Conflict: ${replacementCoachName} is already scheduled for another session during this time.`;
+      addToast(msg, 'error');
+      return { success: false, error: msg };
+    }
+
+    const replacementId = `REP-${schedule.id}-${Date.now().toString().slice(-6)}`;
+    const assignedBy = currentUserProfiles[currentPortal]?.name || 'Super Admin';
+    const assignedAt = new Date().toISOString();
+
+    const replacementObj = {
+      replacementId,
+      scheduleId: schedule.id,
+      originalCoachId: schedule.coachId,
+      originalCoachName: schedule.coachName,
+      originalAdditionalCoaches: schedule.additionalCoaches || [],
+      replacementCoachId,
+      replacementCoachName,
+      replacementCoachAvatar: replacementCoachAvatar || null,
+      reason: reason.trim(),
+      assignedBy,
+      assignedAt,
+      status: 'Active',
+      date: schedule.date,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      location: schedule.location,
+      batch: schedule.batch,
+      program: schedule.program,
+    };
+
+    const historyRecord = {
+      id: replacementId,
+      scheduleId: schedule.id,
+      date: schedule.date,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      location: schedule.location,
+      batch: schedule.batch,
+      program: schedule.program,
+      originalCoachId: schedule.coachId,
+      originalCoachName: schedule.coachName,
+      originalCoach2Name: schedule.additionalCoaches?.[0]?.coachName || null,
+      replacementCoachId,
+      replacementCoachName,
+      replacementCoachAvatar: replacementCoachAvatar || null,
+      reason: reason.trim(),
+      assignedBy,
+      assignedAt,
+      status: 'Active',
+      attendanceStatus: 'Pending',
+    };
+
+    const coachNotification = createNotificationRecord({
+      targetRole: 'coach',
+      targetLocation: schedule.location,
+      title: 'Emergency Cover Assignment',
+      message: `You are assigned as emergency replacement coach for ${schedule.batch} at ${schedule.location} on ${schedule.date} (${schedule.startTime} - ${schedule.endTime}). Reason: ${reason.trim()}`,
+      type: 'warning',
+    });
+
+    setData((prev) => ({
+      ...prev,
+      classSchedules: (prev.classSchedules || []).map((s) =>
+        s.id === scheduleId
+          ? {
+              ...s,
+              replacement: replacementObj,
+              status: s.status === 'Completed' ? 'Completed' : 'Updated',
+              updatedAt: assignedAt,
+            }
+          : s
+      ),
+      coachReplacements: [historyRecord, ...(prev.coachReplacements || [])],
+      notifications: [coachNotification, ...(prev.notifications || [])].slice(0, 80),
+    }));
+
+    addToast(`Replacement coach ${replacementCoachName} assigned for ${schedule.batch}!`, 'success');
+    return { success: true, replacement: replacementObj };
+  };
+
+  const revokeEmergencyCoachReplacement = (scheduleId, revokeReason = '') => {
+    const schedule = (data.classSchedules || []).find((s) => s.id === scheduleId);
+    if (!schedule || !schedule.replacement) {
+      addToast('No active replacement found for this schedule.', 'error');
+      return { success: false, error: 'No replacement found' };
+    }
+
+    const revokedAt = new Date().toISOString();
+    const revokedBy = currentUserProfiles[currentPortal]?.name || 'Super Admin';
+
+    const notif = createNotificationRecord({
+      targetRole: 'coach',
+      targetLocation: schedule.location,
+      title: 'Emergency Cover Revoked',
+      message: `Your emergency cover assignment for ${schedule.batch} at ${schedule.location} on ${schedule.date} has been revoked.${revokeReason ? ` Reason: ${revokeReason}` : ''}`,
+      type: 'info',
+    });
+
+    setData((prev) => ({
+      ...prev,
+      classSchedules: (prev.classSchedules || []).map((s) =>
+        s.id === scheduleId
+          ? {
+              ...s,
+              replacement: null,
+              updatedAt: revokedAt,
+            }
+          : s
+      ),
+      coachReplacements: (prev.coachReplacements || []).map((r) =>
+        r.scheduleId === scheduleId && r.status === 'Active'
+          ? {
+              ...r,
+              status: 'Revoked',
+              revokedAt,
+              revokedBy,
+              revokeReason: revokeReason.trim() || 'Revoked by Admin',
+            }
+          : r
+      ),
+      notifications: [notif, ...(prev.notifications || [])].slice(0, 80),
+    }));
+
+    addToast('Emergency coach replacement revoked.', 'info');
+    return { success: true };
   };
 
   // --- Module 1: Academy Locations & Sports Programs Management ---
@@ -3160,6 +3441,220 @@ export function CrmProvider({ children }) {
     return { success: true, ticket: newTicket };
   };
 
+  // --- Module 8: Communication Center Operations ---
+  const sendConversationMessage = (conversationId, text, attachment = null) => {
+    if (!conversationId || (!text?.trim() && !attachment)) return { success: false };
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const msgId = `MSG-${Date.now()}`;
+
+    const newMsg = {
+      id: msgId,
+      sender: 'admin',
+      senderName: 'Little Spartans Admin',
+      text: text?.trim() || '',
+      attachment: attachment || null,
+      time: formattedTime,
+      date: 'Today',
+      status: 'read'
+    };
+
+    setData(prev => ({
+      ...prev,
+      conversations: (prev.conversations || []).map(conv => {
+        if (conv.id === conversationId) {
+          return {
+            ...conv,
+            lastMessage: text?.trim() || (attachment ? `📎 ${attachment.name}` : ''),
+            lastTime: formattedTime,
+            messages: [...(conv.messages || []), newMsg]
+          };
+        }
+        return conv;
+      })
+    }));
+
+    return { success: true, message: newMsg };
+  };
+
+  const markConversationRead = (conversationId) => {
+    setData(prev => ({
+      ...prev,
+      conversations: (prev.conversations || []).map(conv => {
+        if (conv.id === conversationId && conv.unread > 0) {
+          return {
+            ...conv,
+            unread: 0,
+            messages: (conv.messages || []).map(m => ({ ...m, status: 'read' }))
+          };
+        }
+        return conv;
+      })
+    }));
+  };
+
+  const toggleConversationStar = (conversationId) => {
+    setData(prev => ({
+      ...prev,
+      conversations: (prev.conversations || []).map(conv => {
+        if (conv.id === conversationId) {
+          return { ...conv, starred: !conv.starred };
+        }
+        return conv;
+      })
+    }));
+  };
+
+  const createOrOpenConversation = (parentPayload) => {
+    const { parentName, childName, phone, location, initialText } = parentPayload;
+    if (!parentName?.trim()) return { success: false, error: 'Parent name is required' };
+
+    const existing = (data.conversations || []).find(
+      c => c.parentName.toLowerCase() === parentName.trim().toLowerCase() || (phone && c.phone === phone)
+    );
+
+    if (existing) {
+      if (initialText?.trim()) {
+        sendConversationMessage(existing.id, initialText.trim());
+      }
+      return { success: true, conversation: existing };
+    }
+
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const colors = [
+      'bg-emerald-100 text-emerald-800',
+      'bg-purple-100 text-purple-800',
+      'bg-amber-100 text-amber-800',
+      'bg-sky-100 text-sky-800',
+      'bg-pink-100 text-pink-800',
+    ];
+    const initial = parentName.trim().charAt(0).toUpperCase();
+    const avatarColor = colors[Math.floor(Math.random() * colors.length)];
+
+    const newConvId = `CONV-${Date.now().toString().slice(-6)}`;
+    const initialMsg = initialText?.trim() ? [{
+      id: `MSG-${Date.now()}`,
+      sender: 'admin',
+      senderName: 'Little Spartans Admin',
+      text: initialText.trim(),
+      time: formattedTime,
+      date: 'Today',
+      status: 'read'
+    }] : [];
+
+    const newConv = {
+      id: newConvId,
+      parentId: `PAR-${Date.now().toString().slice(-4)}`,
+      parentName: parentName.trim(),
+      childName: childName?.trim() || 'Student',
+      avatarColor,
+      initial,
+      lastMessage: initialText?.trim() || 'Conversation started',
+      lastTime: formattedTime,
+      unread: 0,
+      starred: false,
+      online: true,
+      phone: phone || '',
+      location: location || 'KK Nagar',
+      messages: initialMsg
+    };
+
+    setData(prev => ({
+      ...prev,
+      conversations: [newConv, ...(prev.conversations || [])]
+    }));
+
+    return { success: true, conversation: newConv };
+  };
+
+  const sendBroadcastMessage = (broadcastData) => {
+    const { title, target, content } = broadcastData;
+    if (!title?.trim() || !content?.trim()) {
+      addToast('Title and content are required for broadcast.', 'error');
+      return { success: false };
+    }
+
+    const now = new Date();
+    const sentAt = now.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+    const newBc = {
+      id: `BC-${Date.now().toString().slice(-5)}`,
+      title: title.trim(),
+      target: target || 'All Centers',
+      sentAt,
+      recipientsCount: 45,
+      deliveredCount: 45,
+      readCount: 0,
+      content: content.trim()
+    };
+
+    setData(prev => ({
+      ...prev,
+      broadcasts: [newBc, ...(prev.broadcasts || [])],
+      notifications: [
+        {
+          id: `NTF-BC-${Date.now()}`,
+          title: `Broadcast: ${title.trim()}`,
+          message: content.trim().slice(0, 80) + '...',
+          targetRole: 'parent',
+          read: false,
+          createdAt: new Date().toISOString()
+        },
+        ...(prev.notifications || [])
+      ]
+    }));
+
+    addToast(`Broadcast "${title.trim()}" dispatched!`, 'success');
+    return { success: true, broadcast: newBc };
+  };
+
+  const scheduleNewMessage = (scheduleData) => {
+    const { title, target, content, scheduledDate } = scheduleData;
+    if (!title?.trim() || !content?.trim() || !scheduledDate) {
+      addToast('Please provide title, content and scheduled date.', 'error');
+      return { success: false };
+    }
+
+    const newSch = {
+      id: `SCH-${Date.now().toString().slice(-5)}`,
+      title: title.trim(),
+      target: target || 'All Centers',
+      scheduledDate,
+      content: content.trim(),
+      status: 'Scheduled'
+    };
+
+    setData(prev => ({
+      ...prev,
+      scheduledMessages: [newSch, ...(prev.scheduledMessages || [])]
+    }));
+
+    addToast(`Message "${title.trim()}" scheduled!`, 'success');
+    return { success: true, scheduledMessage: newSch };
+  };
+
+  const publishAnnouncementRecord = (annPayload) => {
+    const { title, target, content } = annPayload;
+    if (!title?.trim() || !content?.trim()) return { success: false };
+
+    const newAnn = {
+      id: `ANN-${Date.now().toString().slice(-4)}`,
+      title: title.trim(),
+      date: new Date().toISOString().split('T')[0],
+      target: target || 'All Parents & Students',
+      content: content.trim()
+    };
+
+    setData(prev => ({
+      ...prev,
+      announcements: [newAnn, ...(prev.announcements || [])]
+    }));
+
+    addToast(`Announcement "${title.trim()}" published!`, 'success');
+    return { success: true, announcement: newAnn };
+  };
+
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
     if (subTab) {
@@ -3290,7 +3785,19 @@ export function CrmProvider({ children }) {
         adminApproveEquipmentReport,
         updateSuperCoachLocations,
         reassignScheduleCoach,
-        reportCoachIssue
+        reportCoachIssue,
+        // Emergency Coach Replacement Actions
+        assignEmergencyCoachReplacement,
+        revokeEmergencyCoachReplacement,
+        // Module 8 Communication Center Actions
+        sendConversationMessage,
+        markConversationRead,
+        toggleConversationStar,
+        createOrOpenConversation,
+        sendBroadcastMessage,
+        scheduleNewMessage,
+        publishAnnouncementRecord,
+        resetToCleanSlate
       }}
     >
       {children}

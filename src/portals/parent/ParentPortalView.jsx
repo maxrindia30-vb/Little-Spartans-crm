@@ -1087,8 +1087,8 @@ export default function ParentPortalView() {
                     <span>Average Attendance Health</span>
                     <span className="text-[#F4510B]">
                       {myChildren.length > 0 
-                        ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 90), 0) / myChildren.length)
-                        : 92}%
+                        ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 0), 0) / myChildren.length)
+                        : 0}%
                     </span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-white overflow-hidden">
@@ -1096,8 +1096,8 @@ export default function ParentPortalView() {
                       className="h-full bg-gradient-to-r from-[#F4510B] to-[#10B981] rounded-full" 
                       style={{ 
                         width: `${myChildren.length > 0 
-                          ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 90), 0) / myChildren.length)
-                          : 92}%` 
+                          ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 0), 0) / myChildren.length)
+                          : 0}%` 
                       }} 
                     />
                   </div>
@@ -1548,7 +1548,7 @@ export default function ParentPortalView() {
               <div>
                 <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Overall Turnout</div>
                 <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  {myChildren.length > 0 ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 95), 0) / myChildren.length) : 95}%
+                  {myChildren.length > 0 ? Math.round(myChildren.reduce((acc, c) => acc + (c.attendanceRate || 0), 0) / myChildren.length) : 0}%
                 </div>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   CreditCard, 
   Receipt, 
@@ -27,7 +27,14 @@ import {
   Phone,
   Hash,
   Download,
-  AlertCircle
+  AlertCircle,
+  RotateCcw,
+  X,
+  MoreVertical,
+  ChevronRight,
+  UserCheck,
+  Zap,
+  Info
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -46,6 +53,8 @@ export default function FeesPaymentsModule() {
   const { 
     data, 
     setCurrentView, 
+    activeSubTab,
+    setActiveSubTab,
     updateStudent,
     activateStudentPackage, 
     renewStudentPackage, 
@@ -57,7 +66,23 @@ export default function FeesPaymentsModule() {
   const todayYmd = new Date().toISOString().split('T')[0];
 
   // Primary Subtab: 'packages' (Default) | 'gateway' (Upcoming Online Invoices)
-  const [activeTab, setActiveTab] = useState('packages');
+  const [activeTab, setActiveTab] = useState(() => {
+    return activeSubTab === 'gateway' ? 'gateway' : 'packages';
+  });
+
+  // Sync activeTab when activeSubTab changes from sidebar
+  useEffect(() => {
+    if (activeSubTab === 'gateway' || activeSubTab === 'packages') {
+      setActiveTab(activeSubTab);
+    }
+  }, [activeSubTab]);
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (setActiveSubTab) {
+      setActiveSubTab(tabId);
+    }
+  };
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,8 +92,9 @@ export default function FeesPaymentsModule() {
   const [filterPackageStatus, setFilterPackageStatus] = useState('All');
   const [filterReminderStatus, setFilterReminderStatus] = useState('All');
 
-  // Interactive Fee Status Dropdown State
+  // Interactive Fee Status & Action Dropdown States
   const [openFeeDropdownId, setOpenFeeDropdownId] = useState(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
   // Modals state
   const [activateTargetStudent, setActivateTargetStudent] = useState(null);
@@ -88,11 +114,14 @@ export default function FeesPaymentsModule() {
     addToast('You have been subscribed for Little Spartans Fees & Payment Gateway launch updates!', 'success');
   };
 
-  // Close fee status dropdown on outside click
-  React.useEffect(() => {
+  // Close dropdowns on outside click
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.fee-status-dropdown-container')) {
         setOpenFeeDropdownId(null);
+      }
+      if (!e.target.closest('.action-menu-container')) {
+        setOpenActionMenuId(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -180,6 +209,24 @@ export default function FeesPaymentsModule() {
     });
   }, [studentPackageList, searchTerm, filterLocation, filterProgram, filterBatch, filterPackageStatus, filterReminderStatus]);
 
+  const hasActiveFilters = Boolean(
+    searchTerm || 
+    filterLocation !== 'All' || 
+    filterProgram !== 'All' || 
+    filterBatch !== 'All' || 
+    filterPackageStatus !== 'All' || 
+    filterReminderStatus !== 'All'
+  );
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilterLocation('All');
+    setFilterProgram('All');
+    setFilterBatch('All');
+    setFilterPackageStatus('All');
+    setFilterReminderStatus('All');
+  };
+
   // Handle Fee Status Change
   const handleSelectFeeStatus = (student, newStatus) => {
     updateStudent(student.id, { feeStatus: newStatus });
@@ -191,6 +238,7 @@ export default function FeesPaymentsModule() {
   const handleOpenActivate = (student) => {
     setActivateTargetStudent(student);
     setActivationDateInput(todayYmd);
+    setOpenActionMenuId(null);
   };
 
   // Confirm Activation
@@ -204,6 +252,7 @@ export default function FeesPaymentsModule() {
   const handleOpenRenew = (student) => {
     setRenewTargetStudent(student);
     setRenewDateInput(todayYmd);
+    setOpenActionMenuId(null);
   };
 
   // Confirm Renewal
@@ -213,11 +262,26 @@ export default function FeesPaymentsModule() {
     setRenewTargetStudent(null);
   };
 
+  // Open Manual Reminder Modal
+  const handleOpenManualReminder = (student) => {
+    setManualReminderTarget(student);
+    setOpenActionMenuId(null);
+  };
+
   // Confirm Manual Reminder
   const handleConfirmSendReminder = () => {
     if (!manualReminderTarget) return;
     sendManualPackageReminder(manualReminderTarget.id);
     setManualReminderTarget(null);
+  };
+
+  // Copy Kid ID
+  const handleCopyId = (id) => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(id);
+      addToast(`Kid ID ${id} copied to clipboard!`, 'info');
+    }
+    setOpenActionMenuId(null);
   };
 
   // Export CSV
@@ -277,189 +341,276 @@ export default function FeesPaymentsModule() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 pb-12">
-      {/* 1. Module Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#172B5012]">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#172B50]/60 mb-1">
-            <span>ZenConnect</span>
-            <span>/</span>
-            <span className="text-[#F4510B]">Fees &amp; Payments</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center">
-              <CreditCard className="w-6 h-6 text-[#F4510B]" />
+    <div className="space-y-5 animate-in fade-in duration-300 pb-16">
+      
+      {/* ============================================================ */}
+      {/* 1. PAGE HEADER                                              */}
+      {/* ============================================================ */}
+      <div className="bg-white rounded-2xl border border-[#172B5012] p-4 sm:p-5 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#172B50]/60 tracking-wide uppercase">
+              <span>ZenConnect</span>
+              <ChevronRight className="w-3 h-3 text-[#172B50]/40" />
+              <span className="text-[#F4510B]">Fees &amp; Payments</span>
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
-                Fees &amp; Class Package Tracking
-              </h1>
-              <p className="text-xs sm:text-sm font-medium text-[#172B50]/65 mt-0.5">
-                Individual 24-class packages, 3-month validity tracking, automated renewal alerts &amp; tuition governance
-              </p>
-            </div>
-          </div>
-        </div>
 
-        {/* Header Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            className="px-3.5 py-2 rounded-xl bg-white border border-[#172B5018] text-[#172B50] text-xs font-bold flex items-center gap-2 hover:bg-[#FFF4E8] hover:border-[#F4510B30] transition-all shadow-2xs cursor-pointer active:scale-95"
-          >
-            <Download className="w-3.5 h-3.5 text-[#172B50]" />
-            <span>Export Report</span>
-          </button>
+            {/* Title & Icon */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFF5ED] to-[#FFE8D6] text-[#F4510B] border border-[#F4510B30] shadow-2xs flex items-center justify-center shrink-0">
+                <CreditCard className="w-5 h-5 text-[#F4510B]" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-[#172B50] tracking-tight">
+                  Fees &amp; Class Package Tracking
+                </h1>
+                <p className="text-xs text-[#172B50]/70 font-medium mt-0.5 leading-snug">
+                  Individual 24-class packages, 3-month validity tracking, automated renewal alerts &amp; tuition governance
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Header Action Button */}
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="px-3.5 py-2 rounded-xl bg-white border border-[#172B5018] text-[#172B50] text-xs font-bold flex items-center gap-2 hover:bg-[#FFF4E8] hover:border-[#F4510B30] transition-all shadow-2xs cursor-pointer active:scale-95"
+              title="Export filtered packages to CSV spreadsheet"
+            >
+              <Download className="w-3.5 h-3.5 text-[#F4510B]" />
+              <span>Export Report</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 2. Module Subtabs Navigation */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-[#172B500C]">
-        <button
-          type="button"
-          onClick={() => setActiveTab('packages')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'packages'
-              ? 'bg-[#172B50] text-white shadow-sm'
-              : 'bg-white text-[#172B50]/70 hover:bg-[#FFF4E8] hover:text-[#172B50] border border-[#172B5010]'
-          }`}
-        >
-          <Layers className={`w-4 h-4 ${activeTab === 'packages' ? 'text-[#F4510B]' : 'text-[#172B50]/60'}`} />
-          <span>Student Class Packages</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-            activeTab === 'packages' ? 'bg-white/20 text-white' : 'bg-[#172B500C] text-[#172B50]'
-          }`}>
-            {data.students?.length || 0}
-          </span>
-        </button>
+      {/* ============================================================ */}
+      {/* 2. NAVIGATION TABS (PREMIUM SEGMENTED STYLE)                */}
+      {/* ============================================================ */}
+      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div className="inline-flex items-center p-1 bg-[#172B50]/[0.05] rounded-2xl border border-[#172B50]/10">
+          <button
+            type="button"
+            onClick={() => handleTabChange('packages')}
+            className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'packages'
+                ? 'bg-[#172B50] text-white shadow-xs'
+                : 'text-[#172B50]/70 hover:text-[#172B50] hover:bg-white/60'
+            }`}
+          >
+            <Layers className={`w-3.5 h-3.5 ${activeTab === 'packages' ? 'text-[#F4510B]' : 'text-[#172B50]/60'}`} />
+            <span>Student Class Packages</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide ${
+              activeTab === 'packages' ? 'bg-[#F4510B] text-white' : 'bg-[#172B50]/10 text-[#172B50]'
+            }`}>
+              {studentPackageList.length}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('gateway')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'gateway'
-              ? 'bg-[#172B50] text-white shadow-sm'
-              : 'bg-white text-[#172B50]/70 hover:bg-[#FFF4E8] hover:text-[#172B50] border border-[#172B5010]'
-          }`}
-        >
-          <Receipt className={`w-4 h-4 ${activeTab === 'gateway' ? 'text-[#F4510B]' : 'text-[#172B50]/60'}`} />
-          <span>Payment Gateway &amp; Invoices</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F4510B18] text-[#F4510B]">
-            Coming Soon
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={() => handleTabChange('gateway')}
+            className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'gateway'
+                ? 'bg-[#172B50] text-white shadow-xs'
+                : 'text-[#172B50]/70 hover:text-[#172B50] hover:bg-white/60'
+            }`}
+          >
+            <Receipt className={`w-3.5 h-3.5 ${activeTab === 'gateway' ? 'text-[#F4510B]' : 'text-[#172B50]/60'}`} />
+            <span>Payment Gateway &amp; Invoices</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F4510B]/15 text-[#F4510B] border border-[#F4510B]/25">
+              Coming Soon
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* ============================================================ */}
       {/* 3. TAB 1: INDIVIDUAL STUDENT CLASS PACKAGE TRACKING          */}
       {/* ============================================================ */}
       {activeTab === 'packages' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           
-          {/* Summary KPI Cards (5 Cards) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+          {/* Summary KPI Cards (5 Cards in 1 Row on Desktop) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
             
             {/* Card 1 – Active Packages */}
             <div 
-              onClick={() => setFilterPackageStatus('Active')}
-              className="bg-gradient-to-br from-[#F0FDF4] to-white rounded-[22px] p-4.5 border border-[#BBF7D0] shadow-2xs flex flex-col justify-between hover:border-[#16A34A] transition-all cursor-pointer group"
+              onClick={() => {
+                setFilterPackageStatus(filterPackageStatus === 'Active' ? 'All' : 'Active');
+                setFilterReminderStatus('All');
+              }}
+              className={`bg-white rounded-2xl p-4 sm:p-4.5 border transition-all cursor-pointer group flex flex-col justify-between shadow-2xs hover:shadow-xs hover:-translate-y-0.5 ${
+                filterPackageStatus === 'Active' 
+                  ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/20' 
+                  : 'border-[#172B5014] hover:border-emerald-300'
+              }`}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Active Packages</span>
-                <div className="w-8 h-8 rounded-xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center">
-                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider">
+                  Active Packages
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 </div>
               </div>
               <div className="mt-3">
-                <p className="text-2xl sm:text-3xl font-black text-emerald-900 tracking-tight">{metrics.activePackages}</p>
-                <p className="text-[10.5px] font-medium text-emerald-700/70 mt-0.5">Consuming 24 sessions</p>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-950 tracking-tight">
+                  {metrics.activePackages}
+                </p>
+                <p className="text-[11px] font-medium text-emerald-700/80 mt-0.5 truncate">
+                  Consuming 24 sessions
+                </p>
               </div>
             </div>
 
-            {/* Card 2 – 20-Class Reminder Due */}
+            {/* Card 2 – 20-Class Reminder */}
             <div 
-              onClick={() => { setFilterPackageStatus('All'); setFilterReminderStatus('Reminder Due'); }}
-              className="bg-gradient-to-br from-[#FFFBEB] to-white rounded-[22px] p-4.5 border border-[#FDE68A] shadow-2xs flex flex-col justify-between hover:border-[#D97706] transition-all cursor-pointer group"
+              onClick={() => {
+                setFilterPackageStatus('All');
+                setFilterReminderStatus(filterReminderStatus === 'Reminder Due' ? 'All' : 'Reminder Due');
+              }}
+              className={`bg-white rounded-2xl p-4 sm:p-4.5 border transition-all cursor-pointer group flex flex-col justify-between shadow-2xs hover:shadow-xs hover:-translate-y-0.5 ${
+                filterReminderStatus === 'Reminder Due' 
+                  ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/20' 
+                  : 'border-[#172B5014] hover:border-amber-300'
+              }`}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">20-Class Reminder</span>
-                <div className="w-8 h-8 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center">
-                  <Bell className="w-4 h-4 text-[#D97706]" />
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-extrabold text-amber-800 uppercase tracking-wider">
+                  20-Class Reminder
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+                  <Bell className="w-4 h-4 text-amber-600" />
                 </div>
               </div>
               <div className="mt-3">
-                <p className="text-2xl sm:text-3xl font-black text-amber-900 tracking-tight">{metrics.reminderDueCount}</p>
-                <p className="text-[10.5px] font-medium text-amber-700/70 mt-0.5">20 of 24 attended (4 left)</p>
+                <p className="text-2xl sm:text-3xl font-black text-amber-950 tracking-tight">
+                  {metrics.reminderDueCount}
+                </p>
+                <p className="text-[11px] font-medium text-amber-700/80 mt-0.5 truncate">
+                  20 of 24 attended (4 left)
+                </p>
               </div>
             </div>
 
-            {/* Card 3 – 1-4 Classes Remaining */}
+            {/* Card 3 – 1–4 Left */}
             <div 
-              onClick={() => { setFilterPackageStatus('All'); setFilterReminderStatus('All'); }}
-              className="bg-gradient-to-br from-[#FFF4E8] to-white rounded-[22px] p-4.5 border border-[#FED7AA] shadow-2xs flex flex-col justify-between hover:border-[#F4510B] transition-all cursor-pointer group"
+              onClick={() => {
+                // Clicking 1-4 left filters low classes approaching term completion
+                setFilterPackageStatus('All');
+                setFilterReminderStatus('All');
+              }}
+              className="bg-white rounded-2xl p-4 sm:p-4.5 border border-[#172B5014] hover:border-orange-300 transition-all cursor-pointer group flex flex-col justify-between shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-[#F4510B] uppercase tracking-wider">1–4 Left</span>
-                <div className="w-8 h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-extrabold text-[#F4510B] uppercase tracking-wider">
+                  1–4 Left
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#F4510B] border border-orange-100 flex items-center justify-center shrink-0">
                   <Clock className="w-4 h-4 text-[#F4510B]" />
                 </div>
               </div>
               <div className="mt-3">
-                <p className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">{metrics.lowClassesCount}</p>
-                <p className="text-[10.5px] font-medium text-[#172B50]/60 mt-0.5">Approaching term completion</p>
+                <p className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
+                  {metrics.lowClassesCount}
+                </p>
+                <p className="text-[11px] font-medium text-[#172B50]/65 mt-0.5 truncate">
+                  Approaching term completion
+                </p>
               </div>
             </div>
 
-            {/* Card 4 – Completed Packages */}
+            {/* Card 4 – Completed */}
             <div 
-              onClick={() => setFilterPackageStatus('Completed')}
-              className="bg-gradient-to-br from-[#EEF2FF] to-white rounded-[22px] p-4.5 border border-[#C7D2FE] shadow-2xs flex flex-col justify-between hover:border-indigo-600 transition-all cursor-pointer group"
+              onClick={() => {
+                setFilterPackageStatus(filterPackageStatus === 'Completed' ? 'All' : 'Completed');
+                setFilterReminderStatus('All');
+              }}
+              className={`bg-white rounded-2xl p-4 sm:p-4.5 border transition-all cursor-pointer group flex flex-col justify-between shadow-2xs hover:shadow-xs hover:-translate-y-0.5 ${
+                filterPackageStatus === 'Completed' 
+                  ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/20' 
+                  : 'border-[#172B5014] hover:border-indigo-300'
+              }`}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider">Completed</span>
-                <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
-                  <Trophy className="w-4 h-4 text-indigo-700" />
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-extrabold text-indigo-800 uppercase tracking-wider">
+                  Completed
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+                  <Trophy className="w-4 h-4 text-indigo-600" />
                 </div>
               </div>
               <div className="mt-3">
-                <p className="text-2xl sm:text-3xl font-black text-indigo-950 tracking-tight">{metrics.completedPackages}</p>
-                <p className="text-[10.5px] font-medium text-indigo-700/70 mt-0.5">24 of 24 finished (Renewal Due)</p>
+                <p className="text-2xl sm:text-3xl font-black text-indigo-950 tracking-tight">
+                  {metrics.completedPackages}
+                </p>
+                <p className="text-[11px] font-medium text-indigo-700/80 mt-0.5 truncate">
+                  24 of 24 finished (Renewal Due)
+                </p>
               </div>
             </div>
 
-            {/* Card 5 – Expired Packages */}
+            {/* Card 5 – Expired */}
             <div 
-              onClick={() => setFilterPackageStatus('Expired')}
-              className="bg-gradient-to-br from-[#FFF1F2] to-white rounded-[22px] p-4.5 border border-[#FECDD3] shadow-2xs flex flex-col justify-between hover:border-[#E11D48] transition-all cursor-pointer group"
+              onClick={() => {
+                setFilterPackageStatus(filterPackageStatus === 'Expired' ? 'All' : 'Expired');
+                setFilterReminderStatus('All');
+              }}
+              className={`bg-white rounded-2xl p-4 sm:p-4.5 border transition-all cursor-pointer group flex flex-col justify-between shadow-2xs hover:shadow-xs hover:-translate-y-0.5 ${
+                filterPackageStatus === 'Expired' 
+                  ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20' 
+                  : 'border-[#172B5014] hover:border-rose-300'
+              }`}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-rose-800 uppercase tracking-wider">Expired</span>
-                <div className="w-8 h-8 rounded-xl bg-[#FFE4E6] text-[#E11D48] flex items-center justify-center">
-                  <AlertTriangle className="w-4 h-4 text-[#E11D48]" />
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-extrabold text-rose-800 uppercase tracking-wider">
+                  Expired
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-rose-600" />
                 </div>
               </div>
               <div className="mt-3">
-                <p className="text-2xl sm:text-3xl font-black text-rose-900 tracking-tight">{metrics.expiredPackages}</p>
-                <p className="text-[10.5px] font-medium text-rose-700/70 mt-0.5">Passed 3-month window</p>
+                <p className="text-2xl sm:text-3xl font-black text-rose-950 tracking-tight">
+                  {metrics.expiredPackages}
+                </p>
+                <p className="text-[11px] font-medium text-rose-700/80 mt-0.5 truncate">
+                  Passed 3-month window
+                </p>
               </div>
             </div>
 
           </div>
 
-          {/* Filters & Search Toolbar */}
-          <div className="bg-white rounded-2xl p-4 border border-[#172B5012] shadow-2xs space-y-3">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
+          {/* ============================================================ */}
+          {/* 4. SEARCH AND FILTERS (CLEAN COMPACT TOOLBAR)                */}
+          {/* ============================================================ */}
+          <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#172B5012] shadow-2xs">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+              
+              {/* Search by Kid ID, student name, or parent */}
+              <div className="relative flex-1 min-w-[240px] max-w-md">
                 <Search className="w-4 h-4 text-[#172B50]/40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search by Kid ID, student name, or parent..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-[#FFF4E8]/40 border border-[#172B5015] rounded-xl text-xs font-bold text-[#172B50] placeholder:text-[#172B50]/40 focus:outline-none focus:border-[#F4510B]"
+                  className="w-full pl-9 pr-8 py-2 bg-[#FFF4E8]/30 border border-[#172B5015] rounded-xl text-xs font-semibold text-[#172B50] placeholder:text-[#172B50]/40 focus:outline-none focus:border-[#F4510B] focus:ring-2 focus:ring-[#F4510B]/10 transition-all"
                 />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-[#172B50]/40 hover:text-[#172B50] cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Filter Controls */}
@@ -468,7 +619,7 @@ export default function FeesPaymentsModule() {
                 <select
                   value={filterLocation}
                   onChange={(e) => setFilterLocation(e.target.value)}
-                  className="px-3 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer"
+                  className="px-2.5 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-semibold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer hover:border-[#172B5030] transition-colors"
                 >
                   <option value="All">All Locations</option>
                   {commonLocations.map((loc) => (
@@ -482,7 +633,7 @@ export default function FeesPaymentsModule() {
                 <select
                   value={filterProgram}
                   onChange={(e) => setFilterProgram(e.target.value)}
-                  className="px-3 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer"
+                  className="px-2.5 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-semibold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer hover:border-[#172B5030] transition-colors"
                 >
                   <option value="All">All Programs</option>
                   {(data.programs || []).map((p) => (
@@ -496,7 +647,7 @@ export default function FeesPaymentsModule() {
                 <select
                   value={filterBatch}
                   onChange={(e) => setFilterBatch(e.target.value)}
-                  className="px-3 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer max-w-[150px] truncate"
+                  className="px-2.5 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-semibold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer hover:border-[#172B5030] transition-colors max-w-[140px] truncate"
                 >
                   <option value="All">All Batches</option>
                   {availableBatches.map((b) => (
@@ -510,7 +661,7 @@ export default function FeesPaymentsModule() {
                 <select
                   value={filterPackageStatus}
                   onChange={(e) => setFilterPackageStatus(e.target.value)}
-                  className="px-3 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer"
+                  className="px-2.5 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-semibold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer hover:border-[#172B5030] transition-colors"
                 >
                   <option value="All">All Package Statuses</option>
                   <option value="Active">Active</option>
@@ -524,7 +675,7 @@ export default function FeesPaymentsModule() {
                 <select
                   value={filterReminderStatus}
                   onChange={(e) => setFilterReminderStatus(e.target.value)}
-                  className="px-3 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-bold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer"
+                  className="px-2.5 py-2 bg-white border border-[#172B5015] rounded-xl text-xs font-semibold text-[#172B50] focus:outline-none focus:border-[#F4510B] cursor-pointer hover:border-[#172B5030] transition-colors"
                 >
                   <option value="All">All Reminders</option>
                   <option value="Reminder Due">Reminder Due (4 Left)</option>
@@ -532,32 +683,30 @@ export default function FeesPaymentsModule() {
                   <option value="On Track">On Track</option>
                 </select>
 
-                {(searchTerm || filterLocation !== 'All' || filterProgram !== 'All' || filterBatch !== 'All' || filterPackageStatus !== 'All' || filterReminderStatus !== 'All') && (
+                {/* Clear / Reset Filter Button */}
+                {hasActiveFilters && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setFilterLocation('All');
-                      setFilterProgram('All');
-                      setFilterBatch('All');
-                      setFilterPackageStatus('All');
-                      setFilterReminderStatus('All');
-                    }}
-                    className="px-3 py-2 text-xs font-black text-[#F4510B] hover:underline cursor-pointer"
+                    onClick={handleClearFilters}
+                    className="px-2.5 py-2 text-xs font-bold text-[#F4510B] bg-[#FFF5ED] border border-[#F4510B30] rounded-xl hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                    title="Reset all active search and filter criteria"
                   >
-                    Reset
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset</span>
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Student Class Package Table */}
-          <div className="bg-white rounded-3xl border border-[#172B5015] shadow-sm overflow-hidden relative">
-            <div className="overflow-x-auto min-h-[380px] pb-24">
+          {/* ============================================================ */}
+          {/* 5. STUDENT PACKAGE TABLE                                     */}
+          {/* ============================================================ */}
+          <div className="bg-white rounded-2xl border border-[#172B5014] shadow-2xs overflow-hidden relative">
+            <div className="overflow-x-auto min-h-[360px] pb-32">
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead>
-                  <tr className="bg-[#FFF4E8] text-[#172B50] border-b border-[#172B5012] font-black uppercase tracking-wider text-[10.5px]">
+                  <tr className="bg-[#FFF4E8] text-[#172B50] border-b border-[#172B5014] font-black uppercase tracking-wider text-[10.5px] sticky top-0 z-10">
                     <th className="py-3.5 px-4"># Kid ID</th>
                     <th className="py-3.5 px-4">Athlete &amp; Parent</th>
                     <th className="py-3.5 px-4">Location &amp; Program</th>
@@ -574,25 +723,42 @@ export default function FeesPaymentsModule() {
                 <tbody className="divide-y divide-[#172B500C]">
                   {filteredPackages.length === 0 ? (
                     <tr>
-                      <td colSpan="11" className="py-16 text-center text-[#172B50]/60">
-                        <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
-                          <Layers className="w-10 h-10 text-[#F4510B]/50" />
-                          <p className="font-black text-sm text-[#172B50]">No student packages found</p>
-                          <p className="text-xs text-[#172B50]/60">
+                      <td colSpan="11" className="py-14 px-4 text-center">
+                        {/* 6. REDESIGNED COMPACT EMPTY STATE */}
+                        <div className="max-w-md mx-auto flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-[#FFF5ED]/50 to-white border border-[#F4510B15]">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFF5ED] to-[#FFE8D6] text-[#F4510B] border border-[#F4510B30] shadow-xs flex items-center justify-center mb-3">
+                            <Layers className="w-7 h-7 text-[#F4510B]" />
+                          </div>
+                          <h3 className="text-base font-black text-[#172B50] tracking-tight">
+                            No student packages found
+                          </h3>
+                          <p className="text-xs text-[#172B50]/65 font-medium mt-1 max-w-xs leading-relaxed">
                             No enrolled students match your active filters. Try adjusting search or filter options.
                           </p>
+                          {hasActiveFilters && (
+                            <button
+                              type="button"
+                              onClick={handleClearFilters}
+                              className="mt-4 px-4 py-2 rounded-xl bg-[#F4510B] hover:bg-[#d94406] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Clear Filters</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
                   ) : (
                     filteredPackages.map(({ student, pkg }) => {
                       const cfg = PACKAGE_STATUS_CONFIG[pkg.status] || PACKAGE_STATUS_CONFIG['Active'];
+                      const isActionMenuOpen = openActionMenuId === student.id;
 
                       return (
-                        <tr key={student.id} className="hover:bg-[#FFF4E8]/35 transition-colors">
+                        <tr key={student.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                          
                           {/* 1. Kid ID */}
                           <td className="py-3 px-4">
-                            <span className="inline-flex items-center gap-1 font-black text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-lg border border-[#F4510B30] text-xs font-mono shadow-2xs">
+                            <span className="inline-flex items-center gap-1 font-mono font-bold text-xs text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-lg border border-[#F4510B30] shadow-2xs">
                               {student.id}
                             </span>
                           </td>
@@ -600,15 +766,29 @@ export default function FeesPaymentsModule() {
                           {/* 2. Athlete & Parent */}
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
-                              <img
-                                src={student.avatar || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80'}
-                                alt={student.name}
-                                className="w-8 h-8 rounded-xl object-cover ring-1 ring-[#172B5015] shrink-0"
-                              />
+                              {student.avatar ? (
+                                <img
+                                  src={student.avatar}
+                                  alt={student.name}
+                                  className="w-8 h-8 rounded-xl object-cover ring-1 ring-[#172B5015] shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#172B50] to-[#25427b] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                                  {(student.name || 'S').charAt(0).toUpperCase()}
+                                </div>
+                              )}
                               <div className="min-w-0">
-                                <p className="font-black text-[#172B50] truncate">{student.name}</p>
-                                <p className="text-[10.5px] font-medium text-[#172B50]/60 truncate">
-                                  {student.parentName || 'Guardian'} {student.parentPhone ? `• ${student.parentPhone}` : ''}
+                                <p className="font-black text-[#172B50] text-xs sm:text-sm truncate">
+                                  {student.name}
+                                </p>
+                                <p className="text-[11px] font-medium text-[#172B50]/60 truncate flex items-center gap-1">
+                                  <span>{student.parentName || 'Guardian'}</span>
+                                  {student.parentPhone && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{student.parentPhone}</span>
+                                    </>
+                                  )}
                                 </p>
                               </div>
                             </div>
@@ -617,15 +797,15 @@ export default function FeesPaymentsModule() {
                           {/* 3. Location & Program */}
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-1 text-xs font-bold text-[#F4510B]">
-                              <MapPin className="w-3.5 h-3.5" />
-                              <span>{student.center}</span>
+                              <MapPin className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">{student.center}</span>
                             </div>
-                            <p className="text-[10.5px] text-[#172B50]/70 font-semibold truncate max-w-[180px]">
+                            <p className="text-[11px] text-[#172B50]/70 font-semibold truncate max-w-[180px] mt-0.5">
                               {student.program} {student.batchName ? `• ${student.batchName}` : ''}
                             </p>
                           </td>
 
-                          {/* 4. Fee Status (With Interactive Pill Dropdown) */}
+                          {/* 4. Fee Status (With Interactive Dropdown) */}
                           <td className="py-3 px-4">
                             <div className="relative inline-block text-left fee-status-dropdown-container">
                               <button
@@ -633,69 +813,64 @@ export default function FeesPaymentsModule() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenFeeDropdownId((prev) => (prev === student.id ? null : student.id));
+                                  setOpenActionMenuId(null);
                                 }}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-extrabold border transition-all cursor-pointer shadow-2xs hover:opacity-90 active:scale-95 ${
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold border transition-all cursor-pointer shadow-2xs hover:opacity-90 active:scale-95 ${
                                   (student.feeStatus || 'Pending') === 'Paid'
-                                    ? 'bg-[#DCFCE7] text-[#16A34A] border-[#BBF7D0]'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                     : (student.feeStatus || 'Pending') === 'Unpaid'
-                                    ? 'bg-[#FFE4E6] text-[#E11D48] border-[#FECDD3]'
+                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
                                     : 'bg-[#FFF5ED] text-[#F4510B] border-[#F4510B30]'
                                 } ${
                                   openFeeDropdownId === student.id ? 'ring-2 ring-offset-1 ring-[#172B5020]' : ''
                                 }`}
-                                title="Click to change Fee Status"
+                                title="Click to toggle Fee Status"
                               >
                                 <span>{student.feeStatus || 'Pending'}</span>
                                 <ChevronDown
                                   className={`w-3 h-3 stroke-[2.5] transition-transform duration-200 ${
                                     openFeeDropdownId === student.id ? 'rotate-180' : ''
-                                  } ${
-                                    (student.feeStatus || 'Pending') === 'Paid'
-                                      ? 'text-[#16A34A]'
-                                      : (student.feeStatus || 'Pending') === 'Unpaid'
-                                      ? 'text-[#E11D48]'
-                                      : 'text-[#F4510B]'
                                   }`}
                                 />
                               </button>
 
                               {openFeeDropdownId === student.id && (
                                 <div 
-                                  className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-2xl border border-[#172B5018] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 backdrop-blur-sm"
+                                  className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-2xl border border-[#172B5018] shadow-xl py-1.5 z-40 animate-in fade-in zoom-in-95"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#172B50]/50 border-b border-[#172B500C] mb-1">
-                                    Fee Status
+                                    Set Fee Status
                                   </div>
                                   <button
                                     type="button"
-                                    onClick={() => handleSelectFeeStatus(student, 'Unpaid')}
-                                    className={`w-full px-3 py-2 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
-                                      student.feeStatus === 'Unpaid'
-                                        ? 'bg-[#FFE4E6]/70 text-[#E11D48] font-black'
-                                        : 'text-[#172B50] hover:bg-rose-50 hover:text-[#E11D48]'
+                                    onClick={() => handleSelectFeeStatus(student, 'Paid')}
+                                    className={`w-full px-3 py-1.5 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                                      student.feeStatus === 'Paid'
+                                        ? 'bg-emerald-50 text-emerald-700 font-black'
+                                        : 'text-[#172B50] hover:bg-emerald-50 hover:text-emerald-700'
                                     }`}
                                   >
                                     <div className="flex items-center gap-2">
-                                      <span className="w-2 h-2 rounded-full bg-[#E11D48] shrink-0" />
-                                      <span>Unpaid</span>
+                                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                                      <span>Paid</span>
                                     </div>
-                                    {student.feeStatus === 'Unpaid' && <Check className="w-3.5 h-3.5 text-[#E11D48] stroke-[2.5]" />}
+                                    {student.feeStatus === 'Paid' && <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />}
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => handleSelectFeeStatus(student, 'Paid')}
-                                    className={`w-full px-3 py-2 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
-                                      student.feeStatus === 'Paid'
-                                        ? 'bg-[#DCFCE7]/70 text-[#16A34A] font-black'
-                                        : 'text-[#172B50] hover:bg-emerald-50 hover:text-[#16A34A]'
+                                    onClick={() => handleSelectFeeStatus(student, 'Unpaid')}
+                                    className={`w-full px-3 py-1.5 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                                      student.feeStatus === 'Unpaid'
+                                        ? 'bg-rose-50 text-rose-700 font-black'
+                                        : 'text-[#172B50] hover:bg-rose-50 hover:text-rose-700'
                                     }`}
                                   >
                                     <div className="flex items-center gap-2">
-                                      <span className="w-2 h-2 rounded-full bg-[#16A34A] shrink-0" />
-                                      <span>Paid</span>
+                                      <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                                      <span>Unpaid</span>
                                     </div>
-                                    {student.feeStatus === 'Paid' && <Check className="w-3.5 h-3.5 text-[#16A34A] stroke-[2.5]" />}
+                                    {student.feeStatus === 'Unpaid' && <Check className="w-3.5 h-3.5 text-rose-600 stroke-[2.5]" />}
                                   </button>
                                 </div>
                               )}
@@ -739,9 +914,9 @@ export default function FeesPaymentsModule() {
                           <td className="py-3 px-4 text-center">
                             <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-xl text-xs font-black border ${
                               pkg.classesRemaining === 0
-                                ? 'bg-indigo-100 text-indigo-900 border-indigo-200'
+                                ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
                                 : pkg.classesRemaining <= 4
-                                ? 'bg-amber-100 text-amber-900 border-amber-200 font-extrabold animate-pulse'
+                                ? 'bg-amber-50 text-amber-900 border-amber-300 font-extrabold animate-pulse'
                                 : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                             }`}>
                               {pkg.classesRemaining} Left
@@ -781,27 +956,28 @@ export default function FeesPaymentsModule() {
                           {/* 10. Reminder Status */}
                           <td className="py-3 px-4">
                             {pkg.status === PACKAGE_STATUSES.COMPLETED ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-800 border border-indigo-200">
                                 <Trophy className="w-3 h-3 text-indigo-700" />
-                                Renewal Due
+                                <span>Renewal Due</span>
                               </span>
                             ) : pkg.status === PACKAGE_STATUSES.REMINDER_DUE ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-300 animate-pulse">
                                 <Bell className="w-3 h-3 text-amber-700" />
-                                Reminder Due (4 Left)
+                                <span>Reminder Due (4 Left)</span>
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#172B50]/70">
                                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                On Track
+                                <span>On Track</span>
                               </span>
                             )}
                           </td>
 
-                          {/* 11. Actions */}
+                          {/* 11. Actions (Quick Actions + Unclipped Three-Dot Menu) */}
                           <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {/* View Classes History */}
+                            <div className="flex items-center justify-end gap-1.5 relative action-menu-container">
+                              
+                              {/* Quick Action: View Attended Classes Breakdown */}
                               <button
                                 type="button"
                                 onClick={() => setViewHistoryStudent(student)}
@@ -811,12 +987,12 @@ export default function FeesPaymentsModule() {
                                 <Eye className="w-3.5 h-3.5" />
                               </button>
 
-                              {/* Activate or Renew Action */}
+                              {/* Quick Action: Primary Lifecycle Action */}
                               {!pkg.packageActivated ? (
                                 <button
                                   type="button"
                                   onClick={() => handleOpenActivate(student)}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-black bg-[#F4510B] text-white hover:bg-[#d94406] transition-all cursor-pointer shadow-2xs"
+                                  className="px-2.5 py-1 rounded-lg text-xs font-black bg-[#F4510B] text-white hover:bg-[#d94406] transition-all cursor-pointer shadow-2xs active:scale-95"
                                   title="Activate Package"
                                 >
                                   Activate
@@ -825,7 +1001,7 @@ export default function FeesPaymentsModule() {
                                 <button
                                   type="button"
                                   onClick={() => handleOpenRenew(student)}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs"
+                                  className="px-2.5 py-1 rounded-lg text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs active:scale-95"
                                   title="Renew 24-Class Package"
                                 >
                                   Renew
@@ -833,15 +1009,97 @@ export default function FeesPaymentsModule() {
                               ) : (
                                 <button
                                   type="button"
-                                  onClick={() => setManualReminderTarget(student)}
+                                  onClick={() => handleOpenManualReminder(student)}
                                   className="p-1.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 transition-colors cursor-pointer shadow-2xs"
                                   title="Send Parent Renewal Reminder"
                                 >
                                   <Bell className="w-3.5 h-3.5" />
                                 </button>
                               )}
+
+                              {/* Three-Dot Menu Button */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenActionMenuId(isActionMenuOpen ? null : student.id);
+                                  setOpenFeeDropdownId(null);
+                                }}
+                                className={`p-1.5 rounded-lg border border-[#172B5018] bg-white hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] transition-colors cursor-pointer shadow-2xs ${
+                                  isActionMenuOpen ? 'ring-2 ring-[#F4510B]/30 border-[#F4510B]' : ''
+                                }`}
+                                title="More Actions"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* Three-Dot Context Menu Dropdown */}
+                              {isActionMenuOpen && (
+                                <div 
+                                  className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-2xl border border-[#172B5018] shadow-xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#172B50]/50 border-b border-[#172B500C] mb-1">
+                                    Package Actions
+                                  </div>
+                                  
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setViewHistoryStudent(student);
+                                      setOpenActionMenuId(null);
+                                    }}
+                                    className="w-full px-3 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] flex items-center gap-2 transition-colors cursor-pointer"
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-[#172B50]/60" />
+                                    <span>View Attendance Breakdown</span>
+                                  </button>
+
+                                  {!pkg.packageActivated ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenActivate(student)}
+                                      className="w-full px-3 py-2 text-xs font-bold text-[#F4510B] hover:bg-[#FFF5ED] flex items-center gap-2 transition-colors cursor-pointer"
+                                    >
+                                      <Sparkles className="w-3.5 h-3.5 text-[#F4510B]" />
+                                      <span>Activate Package</span>
+                                    </button>
+                                  ) : pkg.status === PACKAGE_STATUSES.COMPLETED ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenRenew(student)}
+                                      className="w-full px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                    >
+                                      <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+                                      <span>Renew 24-Class Cycle</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenManualReminder(student)}
+                                      className="w-full px-3 py-2 text-xs font-bold text-amber-800 hover:bg-amber-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                    >
+                                      <Bell className="w-3.5 h-3.5 text-amber-600" />
+                                      <span>Send Renewal Reminder</span>
+                                    </button>
+                                  )}
+
+                                  <div className="my-1 border-t border-[#172B500C]" />
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyId(student.id)}
+                                    className="w-full px-3 py-2 text-xs font-semibold text-[#172B50]/70 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                  >
+                                    <Hash className="w-3.5 h-3.5 text-[#172B50]/50" />
+                                    <span>Copy Kid ID</span>
+                                  </button>
+                                </div>
+                              )}
+
                             </div>
                           </td>
+
                         </tr>
                       );
                     })
@@ -851,9 +1109,11 @@ export default function FeesPaymentsModule() {
             </div>
 
             {/* Table Footer */}
-            <div className="p-3 bg-[#FFF4E8]/20 border-t border-[#172B500C] flex items-center justify-between text-xs text-[#172B50]/65 font-bold">
+            <div className="p-3 bg-[#FFF4E8]/20 border-t border-[#172B500C] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#172B50]/65 font-bold">
               <span>Showing {filteredPackages.length} of {studentPackageList.length} student packages</span>
-              <span>All packages calculated from real attendance records (Present only • 24 classes • 3 months)</span>
+              <span className="text-[11px] font-medium text-[#172B50]/50">
+                All packages calculated from real attendance records (Present only • 24 classes • 3 months)
+              </span>
             </div>
           </div>
 
@@ -864,13 +1124,13 @@ export default function FeesPaymentsModule() {
       {/* 4. TAB 2: PAYMENT GATEWAY & INVOICES SHOWCASE (COMING SOON)  */}
       {/* ============================================================ */}
       {activeTab === 'gateway' && (
-        <div className="bg-white rounded-3xl border border-[#172B5014] shadow-xs relative overflow-hidden p-6 sm:p-10 lg:p-12">
+        <div className="bg-white rounded-2xl border border-[#172B5014] shadow-xs relative overflow-hidden p-6 sm:p-10 lg:p-12">
           <div className="max-w-2xl mx-auto text-center relative z-10 space-y-6">
             <div className="relative inline-flex items-center justify-center">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-[#FFF0E6] via-[#FFE4D1] to-[#FFF5ED] flex items-center justify-center shadow-inner relative">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#FFF0E6] via-[#FFE4D1] to-[#FFF5ED] flex items-center justify-center shadow-inner relative">
                 <Sparkles className="w-5 h-5 text-[#F4510B] absolute -top-1 -right-1 animate-bounce" />
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border border-[#F4510B25] shadow-md flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-                  <CreditCard className="w-10 h-10 sm:w-12 sm:h-12 text-[#F4510B]" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white border border-[#F4510B25] shadow-md flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-[#F4510B]" />
                 </div>
               </div>
             </div>
@@ -880,7 +1140,7 @@ export default function FeesPaymentsModule() {
                 <Sparkles className="w-3 h-3 text-[#F4510B]" />
                 <span>Coming Soon</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#172B50] tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-black text-[#172B50] tracking-tight">
                 Online Payment Gateway &amp; Tax Invoices
               </h2>
               <p className="text-xs sm:text-sm text-[#172B50]/75 font-medium max-w-lg mx-auto mt-2 leading-relaxed">
@@ -1100,7 +1360,7 @@ export default function FeesPaymentsModule() {
 
                           <div className="flex items-center gap-2">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                              r.status === 'Present' ? 'bg-[#DCFCE7] text-[#16A34A]' : 'bg-[#FFE4E6] text-[#E11D48]'
+                              r.status === 'Present' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
                             }`}>
                               {r.status}
                             </span>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, 
+  UserPlus,
   GraduationCap, 
   UserCheck, 
   User,
@@ -28,16 +29,27 @@ import {
   ChevronRight,
   X,
   Building2,
-  Package
+  Package,
+  Settings,
+  LogOut,
+  Target
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
-import FloatingCard from '../../components/common/FloatingCard';
 import { getCommonLocations } from '../../services/locationService';
 import { calculateDemoMetrics } from '../../services/demoService';
 
 export default function AdminDashboard() {
-  const { data, setCurrentView, setActiveSubTab, addStudent, addEnquiry, addPayment, addToast } = useCrm();
+  const { 
+    data, 
+    setCurrentView, 
+    setActiveSubTab, 
+    addStudent, 
+    addEnquiry, 
+    addPayment, 
+    addToast,
+    logout 
+  } = useCrm();
   const commonLocations = getCommonLocations(data);
 
   const [modalType, setModalType] = useState(null); // 'student' | 'enquiry' | 'payment'
@@ -86,6 +98,52 @@ export default function AdminDashboard() {
   const allStudents = getLatestRecords(data.students || []);
   const liveClasses = data.classSchedules || [];
 
+  const todayYmd = new Date().toISOString().slice(0, 10);
+  const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayWeekday = weekdayNames[new Date().getDay()];
+
+  // Row 1 KPI Calculations (Connected dynamically to live data)
+  const totalEnquiriesCount = allEnquiries.length;
+  const todayEnquiriesCount = allEnquiries.filter(e => {
+    const d = e.createdAt || e.date || e.enquiryDate || '';
+    return d.startsWith(todayYmd);
+  }).length;
+
+  const totalDemosCount = allDemos.length;
+  const scheduledDemosCount = allDemos.filter(d => 
+    d.status === 'Scheduled' || d.status === 'Confirmed' || d.status === 'Upcoming' || !d.status
+  ).length;
+
+  const assignedDemosCount = allDemos.filter(d => 
+    Boolean(d.coachId || d.coachName || d.assignedCoach)
+  ).length;
+  const inProgressAssignsCount = allDemos.filter(d => 
+    Boolean(d.coachId || d.coachName || d.assignedCoach) && 
+    (d.status === 'Scheduled' || d.status === 'Confirmed' || d.status === 'In Progress' || !d.completed)
+  ).length;
+
+  const totalEnrolledCount = allStudents.length;
+  const todayEnrolledCount = allStudents.filter(s => {
+    const d = s.createdAt || s.date || s.joinDate || s.enrollmentDate || '';
+    return d.startsWith(todayYmd);
+  }).length;
+
+  // Row 2 Demo Performance Calculations
+  const completedDemosCount = allDemos.filter(d => 
+    d.status === 'Completed' || d.completed === true
+  ).length;
+  const cancelledDemosCount = allDemos.filter(d => 
+    d.status === 'Cancelled' || d.status === 'Declined' || d.status === 'No Show'
+  ).length;
+  const demoConversionPct = totalDemosCount > 0 
+    ? ((completedDemosCount / totalDemosCount) * 100).toFixed(1)
+    : '0.0';
+
+  // Row 2 Today's Classes
+  const todayClasses = liveClasses.filter(cls => 
+    cls.date === todayYmd || cls.weekday === todayWeekday || cls.dayOfWeek === todayWeekday
+  );
+
   // ============================================================
   // LIVE CALENDAR POPOVER STATE & HELPERS
   // ============================================================
@@ -128,7 +186,6 @@ export default function AdminDashboard() {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-  const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   const handlePrevMonth = () => {
     if (calViewMonth === 0) {
@@ -309,23 +366,7 @@ export default function AdminDashboard() {
             <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
           </button>
 
-          {/* 3. Profile */}
-          <div 
-            onClick={() => {
-              setCurrentView('people');
-              if (setActiveSubTab) setActiveSubTab('students');
-            }}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
-            title="Admin Profile"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"
-              alt="Admin"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* 4. Upload */}
+          {/* 3. Upload */}
           <button
             type="button"
             onClick={() => setCurrentView('export')}
@@ -518,938 +559,688 @@ export default function AdminDashboard() {
       </div>
 
       {/* ============================================================ */}
-      {/* 2. FOUR PIPELINE SECTIONS WITH SVG FORK / BRACKET CONNECTORS  */}
+      {/* ROW 1: FOUR KPI SUMMARY CARDS                                */}
       {/* ============================================================ */}
-      <div className="relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
-          
-          {/* ---------------------------------------------------- */}
-          {/* Card 1: Enquiry Intake (Lead Capture)                 */}
-          {/* ---------------------------------------------------- */}
-          <FloatingCard 
-            maxTilt={3} 
-            scale={1.01} 
-            glare={false}
-            className="relative bg-[#FFE5D3] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B]/20 shadow-[0_4px_25px_rgba(244,81,11,0.06)] h-full"
-            contentClassName="flex flex-col justify-between h-full"
-          >
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between gap-2 mb-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
-                    <Inbox className="w-4 h-4 text-[#F4510B]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                      Enquiry Intake
-                    </h3>
-                    <p className="text-[11px] font-medium text-[#172B50]/60">
-                      Capture and qualify new leads
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setModalType('enquiry')}
-                  title="Add Enquiry"
-                  className="w-7 h-7 rounded-lg bg-[#F4510B] text-white flex items-center justify-center shadow-xs hover:bg-[#d44105] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
-                >
-                  <Plus className="w-4 h-4 stroke-[2.5]" />
-                </button>
-              </div>
-
-              {/* Dynamic Enquiries (5 Visible, Scroll if > 5) or Clean Zero State */}
-              {allEnquiries.length === 0 ? (
-                <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
-                  <div className="w-10 h-10 rounded-xl bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-2 shadow-2xs">
-                    <Inbox className="w-5 h-5 text-[#F4510B]" />
-                  </div>
-                  <p className="text-xs font-black text-[#172B50]">No enquiries logged yet</p>
-                  <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Capture new leads to start pipeline</p>
-                  <button
-                    type="button"
-                    onClick={() => setModalType('enquiry')}
-                    className="mt-3 px-3 py-1.5 text-xs font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
-                  >
-                    + Add Enquiry
-                  </button>
-                </div>
-              ) : (
-                <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
-                  {allEnquiries.map((enq) => (
-                    <div
-                      key={enq.id}
-                      className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#F4510B30] transition-colors"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-black text-[#172B50] truncate leading-tight">{enq.childName}</p>
-                        <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
-                          {enq.interestedProgram || 'Sports'} • {enq.center || 'KK NAGAR'}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addToast(`${enq.childName} enquiry verified`);
-                            setCurrentView('enquiries');
-                          }}
-                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="Verify & Go to Enquiries"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCurrentView('demos')}
-                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
-                          title="Schedule Trial"
-                        >
-                          <Calendar className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        
+        {/* Card 1: New Enquiries (Green Theme) */}
+        <div 
+          onClick={() => setCurrentView('enquiries')}
+          className="bg-white rounded-[22px] p-4.5 sm:p-5 border border-emerald-200/90 shadow-2xs flex items-center justify-between hover:border-emerald-400 hover:shadow-xs transition-all cursor-pointer group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-[#DCFCE7] text-[#10B981] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <UserPlus className="w-5.5 h-5.5 text-[#10B981]" strokeWidth={2.25} />
             </div>
-
-            {/* Bottom Footer: Workflow Stage & View All Link */}
-            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
-                Lead Capture
+            <div className="min-w-0">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/70 block truncate">
+                NEW ENQUIRIES
               </span>
-              <button
-                type="button"
-                onClick={() => setCurrentView('enquiries')}
-                className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
-              >
-                <span>View All ({allEnquiries.length})</span>
-                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-
-            {/* Desktop Connector 1 to Card 2: Cyan/Blue Bracket Curve */}
-            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                <path 
-                  d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 14,52 L 24,52" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 0,77 C 9,77 10,52 14,52 C 18,52 19,82 24,82" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-              </svg>
-            </div>
-          </FloatingCard>
-
-          {/* ---------------------------------------------------- */}
-          {/* Card 2: Demo & Assessment (Demo Management)           */}
-          {/* ---------------------------------------------------- */}
-          <FloatingCard 
-            maxTilt={3} 
-            scale={1.01} 
-            glare={false}
-            className="relative bg-[#D9EFFE] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C7]/20 shadow-[0_4px_25px_rgba(2,132,199,0.06)] h-full"
-            contentClassName="flex flex-col justify-between h-full"
-          >
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between gap-2 mb-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
-                    <Mail className="w-4 h-4 text-[#0284C7]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                      Demo &amp; Assessment
-                    </h3>
-                    <p className="text-[11px] font-medium text-[#172B50]/60">
-                      Schedule and track demo sessions
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('demos')}
-                  title="Demo Register"
-                  className="w-7 h-7 rounded-lg bg-[#0284C7] text-white flex items-center justify-center shadow-xs hover:bg-[#0369a1] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
-                >
-                  <Plus className="w-4 h-4 stroke-[2.5]" />
-                </button>
-              </div>
-
-              {/* Dynamic Demos (5 Visible, Scroll if > 5) or Clean Zero State */}
-              {allDemos.length === 0 ? (
-                <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
-                  <div className="w-10 h-10 rounded-xl bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-2 shadow-2xs">
-                    <Mail className="w-5 h-5 text-[#0284C7]" />
-                  </div>
-                  <p className="text-xs font-black text-[#172B50]">No demos scheduled</p>
-                  <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Trials will appear here once booked</p>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView('demos')}
-                    className="mt-3 px-3 py-1.5 text-xs font-bold text-[#0284C7] bg-white border border-[#0284C730] hover:bg-[#0284C7] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
-                  >
-                    Demo Register
-                  </button>
-                </div>
-              ) : (
-                <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
-                  {allDemos.map((demo) => (
-                    <div
-                      key={demo.id}
-                      className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#0284C730] transition-colors"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-black text-[#172B50] truncate leading-tight">{demo.childName}</p>
-                        <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
-                          {demo.program || demo.className || 'Trial'} Demo
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addToast(`${demo.childName} demo verified`);
-                            setCurrentView('demos');
-                          }}
-                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="Verify & Go to Demos"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCurrentView('demos')}
-                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
-                          title="View Slot"
-                        >
-                          <Calendar className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Bottom Footer: Workflow Stage & View All Link */}
-            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
-                Demo Management
+              <span className="text-2xl sm:text-[30px] font-black text-[#172B50] leading-none mt-1 block tracking-tight">
+                {totalEnquiriesCount}
               </span>
-              <button
-                type="button"
-                onClick={() => setCurrentView('demos')}
-                className="text-[11.5px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
-              >
-                <span>View All ({allDemos.length})</span>
-                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </button>
             </div>
-
-            {/* Desktop Connector 2 to Card 3: Orange Bracket Curve */}
-            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                <path 
-                  d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" 
-                  stroke="#F4510B" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 0,52 L 24,52" 
-                  stroke="#F4510B" 
-                  strokeWidth="1.8" 
-                  strokeLinecap="round" 
-                />
-                <path 
-                  d="M 0,82 C 9,82 10,52 14,52 C 18,52 19,82 24,82" 
-                  stroke="#F4510B" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-              </svg>
-            </div>
-          </FloatingCard>
-
-          {/* ---------------------------------------------------- */}
-          {/* Card 3: Admission & Enrollment (Enrollment)          */}
-          {/* ---------------------------------------------------- */}
-          <FloatingCard 
-            maxTilt={3} 
-            scale={1.01} 
-            glare={false}
-            className="relative bg-[#DEF7E6] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A]/20 shadow-[0_4px_25px_rgba(22,163,74,0.06)] h-full"
-            contentClassName="flex flex-col justify-between h-full"
-          >
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between gap-2 mb-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
-                    <GraduationCap className="w-4 h-4 text-[#16A34A]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                      Admission &amp; Enrollment
-                    </h3>
-                    <p className="text-[11px] font-medium text-[#172B50]/60">
-                      Convert demo to enrollment
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setModalType('student')}
-                  title="Enroll Student"
-                  className="w-7 h-7 rounded-lg bg-[#16A34A] text-white flex items-center justify-center shadow-xs hover:bg-[#15803d] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
-                >
-                  <Plus className="w-4 h-4 stroke-[2.5]" />
-                </button>
-              </div>
-
-              {/* Dynamic Students (5 Visible, Scroll if > 5) or Clean Zero State */}
-              {allStudents.length === 0 ? (
-                <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
-                  <div className="w-10 h-10 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-2 shadow-2xs">
-                    <GraduationCap className="w-5 h-5 text-[#16A34A]" />
-                  </div>
-                  <p className="text-xs font-black text-[#172B50]">No enrolled students yet</p>
-                  <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Enrolled recruits will appear here</p>
-                  <button
-                    type="button"
-                    onClick={() => setModalType('student')}
-                    className="mt-3 px-3 py-1.5 text-xs font-bold text-[#16A34A] bg-white border border-[#16A34A30] hover:bg-[#16A34A] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
-                  >
-                    + Enroll Student
-                  </button>
-                </div>
-              ) : (
-                <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
-                  {allStudents.map((stu) => (
-                    <div
-                      key={stu.id}
-                      className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#16A34A30] transition-colors"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-black text-[#172B50] truncate leading-tight">{stu.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="inline-block px-1.5 py-0.2 rounded-full text-[9px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]">
-                            {stu.status || 'Enrolled'}
-                          </span>
-                          <span className="text-[9.5px] font-medium text-[#172B50]/55 truncate">
-                            {stu.program || 'Junior Football'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addToast(`${stu.name} attendance recorded`);
-                            setCurrentView('people');
-                            if (setActiveSubTab) setActiveSubTab('students');
-                          }}
-                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="Active Student & Go to Students"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCurrentView('people');
-                            if (setActiveSubTab) setActiveSubTab('students');
-                          }}
-                          className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
-                          title="View Profile"
-                        >
-                          <User className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Bottom Footer: Workflow Stage & View All Link */}
-            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
-                Enrollment
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrentView('people');
-                  if (setActiveSubTab) setActiveSubTab('students');
-                }}
-                className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
-              >
-                <span>View All ({allStudents.length})</span>
-                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-
-            {/* Desktop Connector 3 to Card 4: S-curve line directly to Class Schedule tile */}
-            <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
-              <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
-                <path 
-                  d="M 0,82 C 10,82 12,30 24,30" 
-                  stroke="#0284C7" 
-                  strokeWidth="1.8" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                />
-                <circle cx="2" cy="82" r="2" fill="#0284C7" />
-                <circle cx="22" cy="30" r="2" fill="#0284C7" />
-              </svg>
-            </div>
-          </FloatingCard>
-
-          {/* ---------------------------------------------------- */}
-          {/* Card 4: Student Engagement (After Enrollment)        */}
-          {/* ---------------------------------------------------- */}
-          <FloatingCard 
-            maxTilt={3} 
-            scale={1.01} 
-            glare={false}
-            className="relative bg-[#FEF7D6] rounded-[24px] p-4 sm:p-4.5 border border-[#EAB308]/25 shadow-[0_4px_25px_rgba(202,138,4,0.06)] h-full"
-            contentClassName="flex flex-col justify-between h-full"
-          >
-            <div>
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-3.5">
-                <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#CA8A04] border border-[#EAB30835] shadow-2xs flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4 text-[#CA8A04]" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                    Student Engagement
-                  </h3>
-                  <p className="text-[11px] font-medium text-[#172B50]/60">
-                    Ongoing student lifecycle
-                  </p>
-                </div>
-              </div>
-
-              {/* 4 Action Tiles: 2x2 grid aligned with 5-record height */}
-              <div className="min-h-[258px] max-h-[258px] flex flex-col justify-center">
-                <div className="grid grid-cols-2 gap-2">
-                  {/* Tile 1: Class Schedule (Active dark blue) */}
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView('schedules')}
-                    className="bg-[#0B3B60] text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                      <Calendar className="w-4.5 h-4.5 text-white" />
-                    </div>
-                    <span className="text-xs font-black text-white leading-tight">
-                      Class Schedule
-                    </span>
-                    <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
-                      Daily Sessions
-                    </span>
-                  </button>
-
-                  {/* Tile 2: Attendance */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (setActiveSubTab) setActiveSubTab('student_attendance');
-                      setCurrentView('attendance_compensation');
-                    }}
-                    className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                      <BarChart2 className="w-4.5 h-4.5 text-[#172B50]" />
-                    </div>
-                    <span className="text-xs font-black text-[#172B50] leading-tight">
-                      Attendance
-                    </span>
-                    <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                      Roll Call & Logs
-                    </span>
-                  </button>
-
-                  {/* Tile 3: Performance */}
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView('sports_events')}
-                    className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                      <Star className="w-4.5 h-4.5 text-[#F4510B]" />
-                    </div>
-                    <span className="text-xs font-black text-[#172B50] leading-tight">
-                      Performance
-                    </span>
-                    <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                      Badges & Skills
-                    </span>
-                  </button>
-
-                  {/* Tile 4: Parent Updates */}
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView('communication')}
-                    className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-[#F0F7FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                      <Users className="w-4.5 h-4.5 text-[#0284C7]" />
-                    </div>
-                    <span className="text-xs font-black text-[#172B50] leading-tight">
-                      Parent Updates
-                    </span>
-                    <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                      Broadcasts
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Footer: Workflow Stage & View All Link */}
-            <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-              <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
-                After Enrollment
-              </span>
-              <button
-                type="button"
-                onClick={() => setCurrentView('schedules')}
-                className="text-[11.5px] font-black text-[#B45309] hover:text-[#92400E] flex items-center gap-1 group cursor-pointer transition-colors"
-              >
-                <span>View All ({liveClasses.length})</span>
-                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-          </FloatingCard>
-
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0] shrink-0 select-none">
+            +{todayEnquiriesCount} today
+          </span>
         </div>
+
+        {/* Card 2: New Demos (Purple Theme) */}
+        <div 
+          onClick={() => setCurrentView('demos')}
+          className="bg-white rounded-[22px] p-4.5 sm:p-5 border border-purple-200/90 shadow-2xs flex items-center justify-between hover:border-purple-400 hover:shadow-xs transition-all cursor-pointer group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <Calendar className="w-5.5 h-5.5 text-[#9333EA]" strokeWidth={2.25} />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/70 block truncate">
+                NEW DEMOS
+              </span>
+              <span className="text-2xl sm:text-[30px] font-black text-[#172B50] leading-none mt-1 block tracking-tight">
+                {totalDemosCount}
+              </span>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#F3E8FF] text-[#9333EA] border border-[#E9D5FF] shrink-0 select-none">
+            {scheduledDemosCount} scheduled
+          </span>
+        </div>
+
+        {/* Card 3: Demo Assigns (Teal Theme) */}
+        <div 
+          onClick={() => setCurrentView('demos')}
+          className="bg-white rounded-[22px] p-4.5 sm:p-5 border border-teal-200/90 shadow-2xs flex items-center justify-between hover:border-teal-400 hover:shadow-xs transition-all cursor-pointer group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <UserCheck className="w-5.5 h-5.5 text-[#0D9488]" strokeWidth={2.25} />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/70 block truncate">
+                DEMO ASSIGNS
+              </span>
+              <span className="text-2xl sm:text-[30px] font-black text-[#172B50] leading-none mt-1 block tracking-tight">
+                {assignedDemosCount}
+              </span>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#CCFBF1] text-[#0F766E] border border-[#99F6E4] shrink-0 select-none">
+            {inProgressAssignsCount} in progress
+          </span>
+        </div>
+
+        {/* Card 4: Enrolled (Coral/Red Theme) */}
+        <div 
+          onClick={() => {
+            setCurrentView('people');
+            if (setActiveSubTab) setActiveSubTab('students');
+          }}
+          className="bg-white rounded-[22px] p-4.5 sm:p-5 border border-rose-200/90 shadow-2xs flex items-center justify-between hover:border-rose-400 hover:shadow-xs transition-all cursor-pointer group"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-[#FFE4E6] text-[#F43F5E] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <GraduationCap className="w-5.5 h-5.5 text-[#F43F5E]" strokeWidth={2.25} />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/70 block truncate">
+                ENROLLED
+              </span>
+              <span className="text-2xl sm:text-[30px] font-black text-[#172B50] leading-none mt-1 block tracking-tight">
+                {totalEnrolledCount}
+              </span>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#FFE4E6] text-[#E11D48] border border-[#FECDD3] shrink-0 select-none">
+            +{todayEnrolledCount} today
+          </span>
+        </div>
+
       </div>
 
       {/* ============================================================ */}
-      {/* 3. MIDDLE ROW: Today's Classes, Demo Performance & Academy Operations */}
+      {/* ROW 2: MAIN DASHBOARD CARDS (3 Equal Compact Cards)          */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
         
         {/* ---------------------------------------------------- */}
-        {/* Card 1: Today's Classes                              */}
+        {/* Card A: Today's Classes (Light Orange Pastel)         */}
         {/* ---------------------------------------------------- */}
-        <FloatingCard 
-          maxTilt={2} 
-          scale={1.006} 
-          glare={false}
-          className="w-full bg-[#FFE5D3] rounded-[28px] p-5 sm:p-6 border border-[#F4510B]/20 shadow-[0_4px_25px_rgba(244,81,11,0.06)] h-[440px] min-h-[440px]"
-          contentClassName="flex flex-col justify-between h-full"
-        >
+        <div className="bg-[#FFE5D3] rounded-[22px] p-3.5 sm:p-4 border border-[#F4510B]/20 shadow-[0_4px_20px_rgba(244,81,11,0.05)] flex flex-col justify-between h-[235px] sm:h-[240px]">
           <div>
             {/* Header */}
-            <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#F4510B15]">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] flex items-center justify-center shrink-0 shadow-2xs">
-                <CalendarDays className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
+            <div className="flex items-center gap-2 pb-2 border-b border-[#F4510B15]">
+              <div className="w-6.5 h-6.5 rounded-lg bg-white text-[#F4510B] border border-[#F4510B25] flex items-center justify-center shrink-0 shadow-2xs">
+                <CalendarDays className="w-3.5 h-3.5 text-[#F4510B]" />
               </div>
-              <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+              <h2 className="text-sm sm:text-[15px] font-black text-[#172B50] tracking-tight">
                 Today's Classes
               </h2>
             </div>
           </div>
 
-          {/* Live Classes Table or Clean Zero State */}
-          {liveClasses.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-4 my-auto">
-              <div className="w-11 h-11 rounded-2xl bg-white text-[#F4510B] border border-[#F4510B25] flex items-center justify-center mb-2.5 shadow-2xs">
-                <CalendarDays className="w-5.5 h-5.5" />
+          {/* Body: Empty State or Scheduled Classes */}
+          {todayClasses.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-1 my-auto">
+              <div className="w-8 h-8 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] flex items-center justify-center mb-1 shadow-2xs">
+                <CalendarDays className="w-4 h-4 text-[#F4510B]" />
               </div>
-              <p className="text-xs sm:text-sm font-black text-[#172B50]">
+              <p className="text-xs sm:text-[12.5px] font-black text-[#172B50] leading-tight">
                 No classes scheduled for today
               </p>
-              <p className="text-[11px] text-[#172B50]/60 mt-1 max-w-[240px]">
-                Scheduled training sessions will appear here live
+              <p className="text-[10px] sm:text-[10.5px] font-medium text-[#172B50]/65 mt-0.5 max-w-[240px] leading-tight">
+                All classes for today are completed or not yet scheduled.
               </p>
               <button
                 type="button"
                 onClick={() => setCurrentView('schedules')}
-                className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all cursor-pointer shadow-2xs group"
+                className="mt-2 inline-flex items-center gap-1 px-3 py-1 text-[11px] font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
               >
-                <span>Open Class Schedules</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                <span>Create Class Schedule +</span>
               </button>
             </div>
           ) : (
-            <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[300px] mt-1 pr-0.5 scrollbar-thin">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead>
-                  <tr className="border-b border-[#F4510B15] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
-                    <th className="py-2 px-2.5">TIME</th>
-                    <th className="py-2 px-2.5">PROGRAM</th>
-                    <th className="py-2 px-2.5">COACH</th>
-                    <th className="py-2 px-2.5">LOCATION</th>
-                    <th className="py-2 px-2.5 text-right">CAPACITY</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F4510B10]">
-                  {liveClasses.slice(0, 5).map((cls) => {
-                    const enrolled = cls.enrolledCount ?? (cls.enrolledStudents ? cls.enrolledStudents.length : 0);
-                    const capacity = cls.capacity || 20;
-                    const isFull = enrolled >= capacity;
-                    const isNearlyFull = !isFull && (enrolled / capacity >= 0.8);
-
-                    return (
-                      <tr 
-                        key={cls.id} 
-                        className="hover:bg-white/70 transition-colors cursor-pointer" 
-                        onClick={() => setCurrentView('schedules')}
-                      >
-                        <td className="py-2.5 px-2.5">
-                          <div className="flex items-center gap-1.5 font-black text-[#172B50]">
-                            <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                            <span>{cls.startTime || cls.time || '09:00 AM'}</span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-2.5 font-extrabold text-[#172B50] max-w-[130px] truncate">
-                          {cls.className || cls.program || 'Sports Session'}
-                        </td>
-                        <td className="py-2.5 px-2.5">
-                          <div className="flex items-center gap-1 font-bold text-[#172B50]/85">
-                            <User className="w-3 h-3 text-[#172B50]/40 shrink-0" />
-                            <span className="truncate max-w-[90px]">{cls.coachName || cls.coach || 'Coach'}</span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-2.5">
-                          <div className="flex items-center gap-1 font-bold text-[#172B50]/75">
-                            <MapPin className="w-3 h-3 text-[#F4510B] shrink-0" />
-                            <span>{cls.location || cls.center || 'KK NAGAR'}</span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-2.5 text-right">
-                          {isFull ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-[#F4510B] text-white">
-                              Full {enrolled}/{capacity}
-                            </span>
-                          ) : isNearlyFull ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                              {enrolled}/{capacity}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              {enrolled}/{capacity}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="flex-1 overflow-y-auto max-h-[140px] my-1 pr-1 space-y-1.5 scrollbar-thin">
+              {todayClasses.slice(0, 3).map((cls) => (
+                <div
+                  key={cls.id}
+                  onClick={() => setCurrentView('schedules')}
+                  className="bg-white rounded-lg px-2.5 py-1.5 border border-[#F4510B15] shadow-2xs flex items-center justify-between text-xs hover:border-[#F4510B40] transition-colors cursor-pointer"
+                >
+                  <div className="min-w-0 pr-1.5">
+                    <p className="font-black text-[#172B50] text-[11px] truncate leading-tight">{cls.className || cls.program}</p>
+                    <p className="text-[9.5px] text-[#172B50]/60 truncate leading-tight">{cls.location || cls.center} • {cls.coachName || 'Coach'}</p>
+                  </div>
+                  <span className="font-extrabold text-[#F4510B] text-[10px] shrink-0 bg-[#FFF5ED] px-1.5 py-0.5 rounded border border-[#F4510B20]">
+                    {cls.startTime || cls.time || '09:00 AM'}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Bottom Footer matching Priority Tasks */}
-          <div className="pt-2.5 border-t border-[#F4510B15] flex items-center justify-between text-xs mt-auto shrink-0">
-            <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
-              Daily Timetable
+          {/* Footer */}
+          <div className="pt-2 border-t border-[#F4510B15] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[10px] sm:text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              DAILY SCHEDULE
             </span>
             <button
               type="button"
               onClick={() => setCurrentView('schedules')}
-              className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+              className="text-[11px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
             >
-              <span>Explore all classes</span>
+              <span>View Full Schedule</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
-        </FloatingCard>
+        </div>
 
         {/* ---------------------------------------------------- */}
-        {/* Card 2: Demo Performance (UI/UX Ref: Image 2)        */}
+        {/* Card B: Demo Performance (Light Blue Pastel)          */}
         {/* ---------------------------------------------------- */}
-        <FloatingCard 
-          maxTilt={2} 
-          scale={1.006} 
-          glare={false}
-          className="w-full bg-[#D9EFFE] rounded-[28px] p-5 sm:p-6 border border-[#0284C7]/20 shadow-[0_4px_25px_rgba(2,132,199,0.06)] h-[440px] min-h-[440px]"
-          contentClassName="flex flex-col justify-between h-full"
-        >
+        <div className="bg-[#D9EFFE] rounded-[22px] p-3.5 sm:p-4 border border-[#0284C7]/20 shadow-[0_4px_20px_rgba(2,132,199,0.05)] flex flex-col justify-between h-[235px] sm:h-[240px]">
           <div>
-            {/* Header matching Image 2 */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-[#0284C715]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] flex items-center justify-center shrink-0 shadow-2xs">
-                  <BarChart2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#0284C7]" />
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-[#0284C715]">
+              <div className="flex items-center gap-2">
+                <div className="w-6.5 h-6.5 rounded-lg bg-white text-[#0284C7] border border-[#0284C725] flex items-center justify-center shrink-0 shadow-2xs">
+                  <BarChart2 className="w-3.5 h-3.5 text-[#0284C7]" />
                 </div>
-                <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                <h2 className="text-sm sm:text-[15px] font-black text-[#172B50] tracking-tight">
                   Demo Performance
                 </h2>
               </div>
-              <span className="text-[10.5px] font-extrabold text-[#0284C7] bg-white px-2.5 py-1 rounded-full border border-[#0284C725] select-none shadow-2xs">
-                {demoMetrics.totalDemos || 0} Demos
+              <span className="text-[10px] font-extrabold text-[#0284C7] bg-white px-2 py-0.5 rounded-full border border-[#0284C725] select-none shadow-2xs">
+                {totalDemosCount} Demos
               </span>
+            </div>
+
+            {/* Two KPI sub-cards side by side */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {/* Completed Sub-card */}
+              <div 
+                onClick={() => setCurrentView('demos')}
+                className="bg-white rounded-xl p-2 border border-[#0284C715] shadow-2xs hover:border-[#16A34A40] transition-all cursor-pointer group flex flex-col justify-between h-[62px]"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-[#16A34A]" />
+                    <span className="text-[10.5px] font-black text-[#172B50]">Completed</span>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                </div>
+                <div className="flex items-baseline justify-between mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none">
+                    {completedDemosCount}
+                  </span>
+                  <span className="text-[8.5px] font-bold text-[#172B50]/50 tracking-wider uppercase">
+                    FINALIZED
+                  </span>
+                </div>
+              </div>
+
+              {/* Cancelled Sub-card */}
+              <div 
+                onClick={() => setCurrentView('demos')}
+                className="bg-white rounded-xl p-2 border border-[#0284C715] shadow-2xs hover:border-[#EA580C40] transition-all cursor-pointer group flex flex-col justify-between h-[62px]"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2.5 h-2.5 rounded-full border border-[#EA580C] flex items-center justify-center">
+                      <X className="w-2 h-2 text-[#EA580C] stroke-[3]" />
+                    </div>
+                    <span className="text-[10.5px] font-black text-[#172B50]">Cancelled</span>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#EA580C]" />
+                </div>
+                <div className="flex items-baseline justify-between mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none">
+                    {cancelledDemosCount}
+                  </span>
+                  <span className="text-[8.5px] font-bold text-[#172B50]/50 tracking-wider uppercase">
+                    DECLINED
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Metric Rows */}
+            <div className="space-y-1 mt-2 px-0.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1.5 text-[#172B50]/75 font-bold">
+                  <div className="w-3 h-3 rounded-full border border-[#0284C7] flex items-center justify-center">
+                    <div className="w-1 h-1 rounded-full bg-[#0284C7]" />
+                  </div>
+                  <span>Conversion Rate</span>
+                </div>
+                <span className="text-[11px] font-black text-[#0284C7]">
+                  {demoConversionPct}% Success
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1.5 text-[#172B50]/75 font-bold">
+                  <div className="w-3 h-3 rounded-full border border-[#0284C7] flex items-center justify-center">
+                    <div className="w-1 h-1 rounded-full bg-[#0284C7]" />
+                  </div>
+                  <span>Demo to Admission</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('demos')}
+                  className="text-[11px] font-black text-[#0284C7] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>View Detailed Report</span>
+                  <ArrowRight className="w-2.5 h-2.5" />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* 4 KPI metrics in a 2-column grid matching Image 2 inner cards style */}
-          <div className="flex-1 flex flex-col justify-center py-2.5 my-auto">
-            <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
-              {/* KPI 1: Total Demos */}
-              <div 
-                onClick={() => setCurrentView('demos')}
-                className="p-3.5 sm:p-4 rounded-2xl bg-[#F0F7FF] border border-[#0284C720] flex flex-col justify-between hover:border-[#0284C750] transition-all cursor-pointer group shadow-2xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
-                      <Calendar className="w-3.5 h-3.5 text-[#0284C7]" />
-                    </div>
-                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#0284C7] transition-colors">
-                      Total Demos
-                    </span>
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-[#0284C7]" />
-                </div>
-                <div className="mt-3 flex items-baseline justify-between">
-                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                    {demoMetrics.totalDemos || 0}
-                  </span>
-                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                    Scheduled
-                  </span>
-                </div>
-              </div>
-
-              {/* KPI 2: Upcoming */}
-              <div 
-                onClick={() => setCurrentView('demos')}
-                className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF5FF] border border-[#9333EA20] flex flex-col justify-between hover:border-[#9333EA50] transition-all cursor-pointer group shadow-2xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
-                      <Clock className="w-3.5 h-3.5 text-[#9333EA]" />
-                    </div>
-                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#9333EA] transition-colors">
-                      Upcoming
-                    </span>
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-[#9333EA]" />
-                </div>
-                <div className="mt-3 flex items-baseline justify-between">
-                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                    {demoMetrics.upcomingDemos || 0}
-                  </span>
-                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                    Pending
-                  </span>
-                </div>
-              </div>
-
-              {/* KPI 3: Completed */}
-              <div 
-                onClick={() => setCurrentView('demos')}
-                className="p-3.5 sm:p-4 rounded-2xl bg-[#F0FDF4] border border-[#16A34A20] flex flex-col justify-between hover:border-[#16A34A50] transition-all cursor-pointer group shadow-2xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-lg bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
-                    </div>
-                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#16A34A] transition-colors">
-                      Completed
-                    </span>
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-[#16A34A]" />
-                </div>
-                <div className="mt-3 flex items-baseline justify-between">
-                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                    {demoMetrics.completedDemos || 0}
-                  </span>
-                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                    Evaluated
-                  </span>
-                </div>
-              </div>
-
-              {/* KPI 4: Conversions */}
-              <div 
-                onClick={() => setCurrentView('demos')}
-                className="p-3.5 sm:p-4 rounded-2xl bg-[#FFF5ED] border border-[#F4510B20] flex flex-col justify-between hover:border-[#F4510B50] transition-all cursor-pointer group shadow-2xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-lg bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
-                      <Trophy className="w-3.5 h-3.5 text-[#F4510B]" />
-                    </div>
-                    <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#F4510B] transition-colors">
-                      Conversions
-                    </span>
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-[#F4510B]" />
-                </div>
-                <div className="mt-3 flex items-baseline justify-between">
-                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                    {demoMetrics.studentConversions || 0}
-                  </span>
-                  <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                    Enrolled
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Subtle Conversion Rate Summary Banner */}
-            <div className="mt-3 pt-3 border-t border-[#0284C715] flex items-center justify-between text-xs px-1">
-              <span className="text-[11px] font-bold text-[#172B50]/65">
-                Conversion Rate
-              </span>
-              <span className="text-[11px] font-black text-[#0284C7] bg-white px-2.5 py-0.5 rounded-lg border border-[#0284C720] shadow-2xs">
-                {demoMetrics.totalDemos > 0 ? Math.round((demoMetrics.studentConversions / demoMetrics.totalDemos) * 100) : 0}% success
-              </span>
-            </div>
-          </div>
-
-          {/* Bottom Footer matching Image 2 */}
-          <div className="pt-2.5 border-t border-[#0284C715] flex items-center justify-between text-xs mt-auto shrink-0">
-            <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
-              Demo Performance
+          <div className="pt-2 border-t border-[#0284C715] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[10px] sm:text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              DEMO ANALYTICS
             </span>
             <button
               type="button"
               onClick={() => setCurrentView('demos')}
-              className="text-[11.5px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
+              className="text-[11px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
             >
-              <span>Explore all demos</span>
+              <span>Explore All Demos</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
-        </FloatingCard>
+        </div>
 
         {/* ---------------------------------------------------- */}
-        {/* Card 3: Academy Operations (UI/UX Ref: Image 3)      */}
+        {/* Card C: Academy Operations (Light Green Pastel)       */}
         {/* ---------------------------------------------------- */}
-        <FloatingCard 
-          maxTilt={2} 
-          scale={1.006} 
-          glare={false}
-          className="w-full bg-[#DEF7E6] rounded-[28px] p-5 sm:p-6 border border-[#16A34A]/20 shadow-[0_4px_25px_rgba(22,163,74,0.06)] h-[440px] min-h-[440px]"
-          contentClassName="flex flex-col justify-between h-full"
-        >
+        <div className="bg-[#DEF7E6] rounded-[22px] p-3.5 sm:p-4 border border-[#16A34A]/20 shadow-[0_4px_20px_rgba(22,163,74,0.05)] flex flex-col justify-between h-[235px] sm:h-[240px]">
           <div>
-            {/* Header matching Image 3 */}
-            <div className="flex items-center gap-3 pb-3.5 border-b border-[#16A34A15]">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] flex items-center justify-center shrink-0 shadow-2xs">
-                <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#16A34A]" />
+            {/* Header */}
+            <div className="flex items-center gap-2 pb-2 border-b border-[#16A34A15]">
+              <div className="w-6.5 h-6.5 rounded-lg bg-white text-[#16A34A] border border-[#16A34A25] flex items-center justify-center shrink-0 shadow-2xs">
+                <Building2 className="w-3.5 h-3.5 text-[#16A34A]" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
+                <h2 className="text-sm sm:text-[15px] font-black text-[#172B50] tracking-tight leading-tight">
                   Academy Operations
                 </h2>
-                <p className="text-[11px] font-medium text-[#172B50]/60">
-                  Centers, faculty & equipment
+                <p className="text-[10px] font-medium text-[#172B50]/60 leading-tight">
+                  Centers, faculty &amp; equipment
                 </p>
               </div>
             </div>
 
-            {/* 4 Action Tiles: 2-column grid matching Image 3 */}
-            <div className="min-h-[265px] flex flex-col justify-center mt-2.5">
-              <div className="grid grid-cols-2 gap-2.5">
-                {/* Tile 1: Coaches & Staff (Featured dark blue tile) */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentView('people');
-                    if (setActiveSubTab) setActiveSubTab('coaches');
-                  }}
-                  className="bg-[#0B3B60] text-white rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                >
-                  <div className="w-8.5 h-8.5 rounded-xl bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                    <UserCheck className="w-4.5 h-4.5 text-white" />
-                  </div>
-                  <span className="text-xs font-black text-white leading-tight">
-                    Coaches & Staff
-                  </span>
-                  <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
-                    {data.coaches?.length || 6} Active Coaches
-                  </span>
-                </button>
+            {/* Two tiles: Competitions & Equipment & Kits */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {/* Tile 1: Competitions */}
+              <button
+                type="button"
+                onClick={() => setCurrentView('sports_events')}
+                className="bg-white rounded-xl p-2 border border-[#16A34A15] shadow-2xs hover:border-[#F4510B35] hover:shadow-xs active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center text-center group h-[96px] sm:h-[100px]"
+              >
+                <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                  <Trophy className="w-3.5 h-3.5 text-[#F4510B]" />
+                </div>
+                <span className="text-[11px] font-black text-[#172B50] leading-tight">
+                  Competitions
+                </span>
+                <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5 leading-tight">
+                  {data.competitions?.length || 0} Upcoming Events
+                </span>
+              </button>
 
-                {/* Tile 2: Training Centers */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('people')}
-                  className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                >
-                  <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                    <MapPin className="w-4.5 h-4.5 text-[#F4510B]" />
-                  </div>
-                  <span className="text-xs font-black text-[#172B50] leading-tight">
-                    Training Centers
-                  </span>
-                  <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                    {commonLocations?.length || data.academy?.centers?.length || 5} Venues
-                  </span>
-                </button>
-
-                {/* Tile 3: Competitions */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('sports_events')}
-                  className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                >
-                  <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                    <Trophy className="w-4.5 h-4.5 text-[#F4510B]" />
-                  </div>
-                  <span className="text-xs font-black text-[#172B50] leading-tight">
-                    Competitions
-                  </span>
-                  <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                    {data.competitions?.length || 0} Fixtures & Cups
-                  </span>
-                </button>
-
-                {/* Tile 4: Equipment & Kits */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('equipment')}
-                  className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#0284C735] hover:bg-[#F0F9FF] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                >
-                  <div className="w-8.5 h-8.5 rounded-xl bg-[#F0F9FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                    <Package className="w-4.5 h-4.5 text-[#0284C7]" />
-                  </div>
-                  <span className="text-xs font-black text-[#172B50] leading-tight">
-                    Equipment & Kits
-                  </span>
-                  <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                    {data.equipment?.length || 0} Tracked Items
-                  </span>
-                </button>
-              </div>
+              {/* Tile 2: Equipment & Kits */}
+              <button
+                type="button"
+                onClick={() => setCurrentView('equipment')}
+                className="bg-white rounded-xl p-2 border border-[#16A34A15] shadow-2xs hover:border-[#0284C735] hover:shadow-xs active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center text-center group h-[96px] sm:h-[100px]"
+              >
+                <div className="w-7 h-7 rounded-lg bg-[#F0F9FF] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                  <Package className="w-3.5 h-3.5 text-[#0284C7]" />
+                </div>
+                <span className="text-[11px] font-black text-[#172B50] leading-tight">
+                  Equipment &amp; Kits
+                </span>
+                <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5 leading-tight">
+                  {data.equipment?.length || 0} Active Items
+                </span>
+              </button>
             </div>
           </div>
 
-          {/* Bottom Footer matching Image 3 */}
-          <div className="pt-2.5 border-t border-[#16A34A15] flex items-center justify-between text-xs mt-auto shrink-0">
-            <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
-              Academy Network
+          {/* Footer */}
+          <div className="pt-2 border-t border-[#16A34A15] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[10px] sm:text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              ACADEMY RESOURCES
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentView('people');
+                if (setActiveSubTab) setActiveSubTab('coaches');
+              }}
+              className="text-[11px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>View All ({(data.coaches?.length || 0) + (commonLocations?.length || 0)})</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ============================================================ */}
+      {/* ROW 3: WORKFLOW CARDS (4 Equal Cards)                        */}
+      {/* ============================================================ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+        
+        {/* ---------------------------------------------------- */}
+        {/* Card 1: Enquiry Intake (Lead Capture)                 */}
+        {/* ---------------------------------------------------- */}
+        <div className="bg-[#FFE5D3] rounded-[22px] p-3.5 sm:p-4 border border-[#F4510B]/20 shadow-[0_4px_20px_rgba(244,81,11,0.05)] flex flex-col justify-between h-[245px] sm:h-[250px]">
+          <div>
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                  <Inbox className="w-3.5 h-3.5 text-[#F4510B]" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-[13px] font-black text-[#172B50] tracking-tight truncate">
+                    Enquiry Intake
+                  </h3>
+                  <p className="text-[10px] font-medium text-[#172B50]/60 truncate leading-none">
+                    Capture and qualify new leads
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalType('enquiry')}
+                title="Add Enquiry"
+                className="w-6 h-6 rounded-lg bg-[#F4510B] text-white flex items-center justify-center shadow-xs hover:bg-[#d44105] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* Exactly 3 Recent Enquiries or Empty State */}
+            {allEnquiries.length === 0 ? (
+              <div className="py-2.5 text-center flex flex-col items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-1 shadow-2xs">
+                  <Inbox className="w-3.5 h-3.5 text-[#F4510B]" />
+                </div>
+                <p className="text-xs font-black text-[#172B50]">No enquiries logged yet</p>
+                <p className="text-[9.5px] font-medium text-[#172B50]/55 mt-0.5">Capture new leads to start pipeline</p>
+                <button
+                  type="button"
+                  onClick={() => setModalType('enquiry')}
+                  className="mt-1.5 px-2.5 py-0.5 text-[10.5px] font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-lg transition-all shadow-2xs cursor-pointer active:scale-95"
+                >
+                  + Add Enquiry
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {allEnquiries.slice(0, 3).map((enq) => (
+                  <div
+                    key={enq.id}
+                    className="bg-white rounded-xl px-2.5 py-1.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-1.5 shrink-0 hover:border-[#F4510B30] transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-[#172B50] truncate leading-tight">{enq.childName}</p>
+                      <p className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                        {enq.interestedProgram || 'Spartan Gymnastics & Agility'} • {enq.center || 'KK NAGAR'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addToast(`${enq.childName} enquiry verified`);
+                          setCurrentView('enquiries');
+                        }}
+                        className="w-5.5 h-5.5 rounded-md bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                        title="Verify & Go to Enquiries"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentView('demos')}
+                        className="w-5.5 h-5.5 rounded-md bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-all cursor-pointer"
+                        title="Schedule Trial"
+                      >
+                        <Calendar className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Footer */}
+          <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[10px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              LEAD CAPTURE
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentView('enquiries')}
+              className="text-[11px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>View All ({allEnquiries.length})</span>
+              <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* ---------------------------------------------------- */}
+        {/* Card 2: Demo & Assessment (Demo Management)           */}
+        {/* ---------------------------------------------------- */}
+        <div className="bg-[#D9EFFE] rounded-[22px] p-3.5 sm:p-4 border border-[#0284C7]/20 shadow-[0_4px_20px_rgba(2,132,199,0.05)] flex flex-col justify-between h-[245px] sm:h-[250px]">
+          <div>
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
+                  <Mail className="w-3.5 h-3.5 text-[#0284C7]" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-[13px] font-black text-[#172B50] tracking-tight truncate">
+                    Demo &amp; Assessment
+                  </h3>
+                  <p className="text-[10px] font-medium text-[#172B50]/60 truncate leading-none">
+                    Schedule and track demo sessions
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentView('demos')}
+                title="Demo Register"
+                className="w-6 h-6 rounded-lg bg-[#0284C7] text-white flex items-center justify-center shadow-xs hover:bg-[#0369a1] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* Exactly 3 Recent Demos or Empty State */}
+            {allDemos.length === 0 ? (
+              <div className="py-2.5 text-center flex flex-col items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-1 shadow-2xs">
+                  <Mail className="w-3.5 h-3.5 text-[#0284C7]" />
+                </div>
+                <p className="text-xs font-black text-[#172B50]">No demos scheduled</p>
+                <p className="text-[9.5px] font-medium text-[#172B50]/55 mt-0.5">Trials will appear here once booked</p>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('demos')}
+                  className="mt-1.5 px-2.5 py-0.5 text-[10.5px] font-bold text-[#0284C7] bg-white border border-[#0284C730] hover:bg-[#0284C7] hover:text-white rounded-lg transition-all shadow-2xs cursor-pointer active:scale-95"
+                >
+                  Demo Register
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {allDemos.slice(0, 3).map((demo) => (
+                  <div
+                    key={demo.id}
+                    className="bg-white rounded-xl px-2.5 py-1.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-1.5 shrink-0 hover:border-[#0284C730] transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-[#172B50] truncate leading-tight">{demo.childName}</p>
+                      <p className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
+                        {demo.program || demo.className || 'Spartan Gymnastics & Agility'} Demo
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addToast(`${demo.childName} demo verified`);
+                          setCurrentView('demos');
+                        }}
+                        className="w-5.5 h-5.5 rounded-md bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                        title="Verify & Go to Demos"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentView('demos')}
+                        className="w-5.5 h-5.5 rounded-md bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-[#F0F7FF] hover:text-[#0284C7] transition-all cursor-pointer"
+                        title="View Slot"
+                      >
+                        <Calendar className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Footer */}
+          <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[10px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              DEMO MANAGEMENT
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentView('demos')}
+              className="text-[11px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>View All ({allDemos.length})</span>
+              <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* ---------------------------------------------------- */}
+        {/* Card 3: Admission & Enrollment (Enrollment)          */}
+        {/* ---------------------------------------------------- */}
+        <div className="bg-[#DEF7E6] rounded-[22px] p-3.5 sm:p-4 border border-[#16A34A]/20 shadow-[0_4px_20px_rgba(22,163,74,0.05)] flex flex-col justify-between h-[245px] sm:h-[250px]">
+          <div>
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-3.5 h-3.5 text-[#16A34A]" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-[13px] font-black text-[#172B50] tracking-tight truncate">
+                    Admission &amp; Enrollment
+                  </h3>
+                  <p className="text-[10px] font-medium text-[#172B50]/60 truncate leading-none">
+                    Convert demo to enrollment
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalType('student')}
+                title="Enroll Student"
+                className="w-6 h-6 rounded-lg bg-[#16A34A] text-white flex items-center justify-center shadow-xs hover:bg-[#15803d] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* Exactly 3 Recent Students or Empty State */}
+            {allStudents.length === 0 ? (
+              <div className="py-2.5 text-center flex flex-col items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-1 shadow-2xs">
+                  <GraduationCap className="w-3.5 h-3.5 text-[#16A34A]" />
+                </div>
+                <p className="text-xs font-black text-[#172B50]">No enrolled students yet</p>
+                <p className="text-[9.5px] font-medium text-[#172B50]/55 mt-0.5">Enrolled recruits will appear here</p>
+                <button
+                  type="button"
+                  onClick={() => setModalType('student')}
+                  className="mt-1.5 px-2.5 py-0.5 text-[10.5px] font-bold text-[#16A34A] bg-white border border-[#16A34A30] hover:bg-[#16A34A] hover:text-white rounded-lg transition-all shadow-2xs cursor-pointer active:scale-95"
+                >
+                  + Enroll Student
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {allStudents.slice(0, 3).map((stu) => (
+                  <div
+                    key={stu.id}
+                    className="bg-white rounded-xl px-2.5 py-1.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-1.5 shrink-0 hover:border-[#16A34A30] transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-[#172B50] truncate leading-tight">{stu.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="inline-block px-1.5 py-0.2 rounded-full text-[8.5px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]">
+                          {stu.status || 'Active'}
+                        </span>
+                        <span className="text-[9.5px] font-medium text-[#172B50]/55 truncate">
+                          {stu.program || 'Spartan Gymnastics & Agility'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addToast(`${stu.name} attendance recorded`);
+                          setCurrentView('people');
+                          if (setActiveSubTab) setActiveSubTab('students');
+                        }}
+                        className="w-5.5 h-5.5 rounded-md bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                        title="Active Student & Go to Students"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentView('people');
+                          if (setActiveSubTab) setActiveSubTab('students');
+                        }}
+                        className="w-5.5 h-5.5 rounded-md bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                        title="View Profile"
+                      >
+                        <User className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Footer */}
+          <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[10px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              ENROLLMENT
             </span>
             <button
               type="button"
@@ -1457,13 +1248,124 @@ export default function AdminDashboard() {
                 setCurrentView('people');
                 if (setActiveSubTab) setActiveSubTab('students');
               }}
-              className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
+              className="text-[11px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
             >
-              <span>View All ({(data.coaches?.length || 6) + (commonLocations?.length || 5)})</span>
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              <span>View All ({allStudents.length})</span>
+              <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
-        </FloatingCard>
+        </div>
+
+        {/* ---------------------------------------------------- */}
+        {/* Card 4: Student Engagement (After Enrollment)        */}
+        {/* ---------------------------------------------------- */}
+        <div className="bg-[#FEF7D6] rounded-[22px] p-3.5 sm:p-4 border border-[#EAB308]/25 shadow-[0_4px_20px_rgba(202,138,4,0.05)] flex flex-col justify-between h-[245px] sm:h-[250px]">
+          <div>
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-white text-[#CA8A04] border border-[#EAB30835] shadow-2xs flex items-center justify-center shrink-0">
+                <Calendar className="w-3.5 h-3.5 text-[#CA8A04]" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-xs sm:text-[13px] font-black text-[#172B50] tracking-tight truncate">
+                  Student Engagement
+                </h3>
+                <p className="text-[10px] font-medium text-[#172B50]/60 truncate leading-none">
+                  Ongoing student lifecycle
+                </p>
+              </div>
+            </div>
+
+            {/* 4 Action Tiles: 2x2 grid */}
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mt-0.5">
+              {/* Tile 1: Class Schedule (Active dark blue) */}
+              <button
+                type="button"
+                onClick={() => setCurrentView('schedules')}
+                className="bg-[#0B3B60] text-white rounded-xl p-1.5 sm:p-2 flex flex-col items-center justify-center text-center shadow-xs hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer h-[56px] sm:h-[58px] group"
+              >
+                <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center mb-0.5 group-hover:scale-105 transition-transform">
+                  <Calendar className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-[10.5px] font-black text-white leading-tight">
+                  Class Schedule
+                </span>
+                <span className="text-[8.5px] font-medium text-white/70 leading-none mt-0.5">
+                  Daily Timetable
+                </span>
+              </button>
+
+              {/* Tile 2: Attendance */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (setActiveSubTab) setActiveSubTab('student_attendance');
+                  setCurrentView('attendance_compensation');
+                }}
+                className="bg-white text-[#172B50] rounded-xl p-1.5 sm:p-2 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer h-[56px] sm:h-[58px] group"
+              >
+                <div className="w-5 h-5 rounded-md bg-[#FFF4E8] flex items-center justify-center mb-0.5 group-hover:scale-105 transition-transform">
+                  <BarChart2 className="w-3 h-3 text-[#172B50]" />
+                </div>
+                <span className="text-[10.5px] font-black text-[#172B50] leading-tight">
+                  Attendance
+                </span>
+                <span className="text-[8.5px] font-medium text-[#172B50]/60 leading-none mt-0.5">
+                  Roll Call &amp; Logs
+                </span>
+              </button>
+
+              {/* Tile 3: Performance */}
+              <button
+                type="button"
+                onClick={() => setCurrentView('sports_events')}
+                className="bg-white text-[#172B50] rounded-xl p-1.5 sm:p-2 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer h-[56px] sm:h-[58px] group"
+              >
+                <div className="w-5 h-5 rounded-md bg-[#FFF5ED] flex items-center justify-center mb-0.5 group-hover:scale-105 transition-transform">
+                  <Star className="w-3 h-3 text-[#F4510B]" />
+                </div>
+                <span className="text-[10.5px] font-black text-[#172B50] leading-tight">
+                  Performance
+                </span>
+                <span className="text-[8.5px] font-medium text-[#172B50]/60 leading-none mt-0.5">
+                  Badges &amp; Skills
+                </span>
+              </button>
+
+              {/* Tile 4: Parent Updates */}
+              <button
+                type="button"
+                onClick={() => setCurrentView('communication')}
+                className="bg-white text-[#172B50] rounded-xl p-1.5 sm:p-2 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer h-[56px] sm:h-[58px] group"
+              >
+                <div className="w-5 h-5 rounded-md bg-[#F0F7FF] flex items-center justify-center mb-0.5 group-hover:scale-105 transition-transform">
+                  <Users className="w-3.5 h-3.5 text-[#0284C7]" />
+                </div>
+                <span className="text-[10.5px] font-black text-[#172B50] leading-tight">
+                  Parent Updates
+                </span>
+                <span className="text-[8.5px] font-medium text-[#172B50]/60 leading-none mt-0.5">
+                  Broadcasts
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Footer */}
+          <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+            <span className="text-[10px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+              AFTER ENROLLMENT
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentView('schedules')}
+              className="text-[11px] font-black text-[#B45309] hover:text-[#92400E] flex items-center gap-1 group cursor-pointer transition-colors"
+            >
+              <span>View All ({liveClasses.length || 0})</span>
+              <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
 
       </div>
 

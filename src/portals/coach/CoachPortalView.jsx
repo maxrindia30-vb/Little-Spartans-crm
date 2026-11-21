@@ -38,7 +38,10 @@ import {
   Building2,
   BarChart2,
   Layers,
-  Search
+  Search,
+  Paperclip,
+  FileText,
+  Download
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -84,6 +87,10 @@ export default function CoachPortalView() {
   const isCoachAssignedToItem = (item) =>
     item.coachId === coachProfile.id ||
     (item.additionalCoaches || []).some((c) => c.coachId === coachProfile.id) ||
+    (item.replacement &&
+      item.replacement.status === 'Active' &&
+      (item.replacement.replacementCoachId === coachProfile.id ||
+        (coachFirstName && item.replacement.replacementCoachName?.toLowerCase().includes(coachFirstName)))) ||
     (coachFirstName && (item.coach || item.coachName)?.toLowerCase().includes(coachFirstName));
 
   const myClasses = coachProfile.id ? data.classes.filter(isCoachAssignedToItem) : [];
@@ -97,10 +104,19 @@ export default function CoachPortalView() {
     : [];
 
   // Automatic Coach Portal Synchronization:
-  // Strict role-based filter: Coach ONLY sees schedules assigned to them (primary or additional)!
+  // Strict role-based filter: Coach ONLY sees schedules assigned to them (primary, additional, or emergency replacement)!
   const mySchedules = coachProfile.id
     ? (data.classSchedules || []).filter(isCoachAssignedToItem)
     : [];
+
+  // Emergency Cover sessions where this coach is assigned as replacement
+  const emergencyCoverSchedules = (mySchedules || []).filter(
+    (s) =>
+      s.replacement &&
+      s.replacement.status === 'Active' &&
+      (s.replacement.replacementCoachId === coachProfile.id ||
+        (coachFirstName && s.replacement.replacementCoachName?.toLowerCase().includes(coachFirstName)))
+  );
 
   // Sub-view toggle in "My Classes": 'schedules' | 'batches'
   const [classesSubView, setClassesSubView] = useState('schedules');
@@ -1331,6 +1347,29 @@ export default function CoachPortalView() {
               </div>
 
               {/* Schedules Card Grid */}
+              {emergencyCoverSchedules.length > 0 && (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300/80 rounded-2xl p-4 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#F4510B] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                        <AlertTriangle className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-black text-[#172B50]">
+                          Emergency Cover Assignments ({emergencyCoverSchedules.length})
+                        </h4>
+                        <p className="text-[10.5px] text-[#172B50]/70">
+                          You have temporary authorization to conduct and mark attendance for these sessions.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-200 text-amber-900 uppercase tracking-wider">
+                      Temporary Session Access
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {filteredMySchedules.length === 0 ? (
                   <div className="col-span-full bg-white rounded-2xl p-8 text-center border border-[#172B501A] shadow-card space-y-2">
@@ -1451,11 +1490,59 @@ export default function CoachPortalView() {
                             </p>
                           )}
 
+                          {/* Drill / Session Notes Attachment */}
+                          {sch.attachment && (
+                            <div className="mt-2.5 flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white border border-[#172B5015] shadow-2xs">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="w-4 h-4 text-[#F4510B] shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-black text-[#172B50] truncate">{sch.attachment.name}</p>
+                                  <p className="text-[9.5px] text-[#172B50]/60">
+                                    {sch.attachment.size ? `${(sch.attachment.size / 1024).toFixed(1)} KB` : 'Drill Document'}
+                                  </p>
+                                </div>
+                              </div>
+                              {sch.attachment.dataUrl && (
+                                <a
+                                  href={sch.attachment.dataUrl}
+                                  download={sch.attachment.name}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2.5 py-1 rounded-lg text-[10.5px] font-bold bg-[#FFF5ED] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Download className="w-3 h-3" />
+                                  <span>Download</span>
+                                </a>
+                              )}
+                            </div>
+                          )}
+
                           {/* Cancellation Note if cancelled */}
                           {isCancelled && sch.cancellationReason && (
                             <p className="mt-2 text-[11px] text-rose-700 bg-rose-50 p-2 rounded-lg font-bold">
                               Cancellation Reason: {sch.cancellationReason}
                             </p>
+                          )}
+
+                          {/* Emergency Cover Badge & Details */}
+                          {sch.replacement && sch.replacement.status === 'Active' && (
+                            <div className="mt-2.5 p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 text-xs space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="font-extrabold text-amber-900 flex items-center gap-1.5">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-[#F4510B]" />
+                                  <span>Emergency Cover Assignment</span>
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-[#F4510B] text-white">
+                                  Cover Coach
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-[#172B50]/80">
+                                Original Coach: <strong>{sch.coachName}</strong>
+                              </p>
+                              <p className="text-[10.5px] text-[#172B50]/90 italic">
+                                Reason: "{sch.replacement.reason}"
+                              </p>
+                            </div>
                           )}
                         </div>
 
@@ -1479,8 +1566,11 @@ export default function CoachPortalView() {
                               <button
                                 type="button"
                                 onClick={() => {
+                                  if (sch.location) setCoachAttLocation(sch.location);
+                                  if (sch.batchId || sch.batch) setCoachAttBatchId(sch.batchId || sch.batch);
+                                  if (sch.date) setCoachAttDate(sch.date);
                                   setCurrentView('attendance');
-                                  addToast(`Opening attendance register for ${sch.batch}`);
+                                  addToast(`Opening attendance register for ${sch.batch} (${sch.location})`);
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#172B50] text-white text-xs font-bold rounded-lg hover:bg-[#F4510B] transition-colors cursor-pointer"
                               >
@@ -1584,7 +1674,7 @@ export default function CoachPortalView() {
               <div>
                 <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Average Turnout</div>
                 <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  {myStudents.length > 0 ? Math.round(myStudents.reduce((acc, s) => acc + (s.attendanceRate || 95), 0) / myStudents.length) : 95}%
+                  {myStudents.length > 0 ? Math.round(myStudents.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / myStudents.length) : 0}%
                 </div>
               </div>
             </div>
@@ -1633,48 +1723,56 @@ export default function CoachPortalView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#172B5010]">
-                  {myStudents
-                    .filter(s => !athleteSearch || s.name.toLowerCase().includes(athleteSearch.toLowerCase()) || (s.id && s.id.toLowerCase().includes(athleteSearch.toLowerCase())))
-                    .map(s => (
-                    <tr key={s.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
-                      <td className="p-3.5 font-mono text-[11px] font-black text-[#F4510B]">{s.id}</td>
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <img src={s.avatar} alt={s.name} className="w-8 h-8 rounded-full object-cover ring-1 ring-[#172B5020]" />
-                          <div>
-                            <span className="font-extrabold text-[#172B50] block">{s.name}</span>
-                            <span className="text-[10px] text-[#172B50]/60 block">{s.parentName} ({s.parentPhone})</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3.5">
-                        <span className="font-bold text-[#172B50] block">{s.program}</span>
-                        <span className="text-[10.5px] font-semibold text-[#F4510B] block">{s.batchName || 'General Batch'}</span>
-                      </td>
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-emerald-700">{s.attendanceRate || 95}%</span>
-                          <div className="w-16 h-1.5 bg-[#172B5010] rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${s.attendanceRate || 95}%` }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3.5 text-[11px] text-[#172B50] opacity-80 max-w-xs truncate">
-                        {s.medicalNote || 'Fit for full athletic drills'}
-                      </td>
-                      <td className="p-3.5 text-right">
-                        <button 
-                          onClick={() => {
-                            setEvalStudent(s.id);
-                            setCurrentView('evaluations');
-                          }}
-                          className="px-3 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-xl hover:bg-[#F4510B] transition-colors cursor-pointer shadow-2xs"
-                        >
-                          Evaluate Athlete
-                        </button>
+                  {myStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="py-12 text-center text-xs font-semibold text-[#172B50]/55">
+                        No athletes currently assigned to Coach {coachProfile.name}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    myStudents
+                      .filter(s => !athleteSearch || s.name.toLowerCase().includes(athleteSearch.toLowerCase()) || (s.id && s.id.toLowerCase().includes(athleteSearch.toLowerCase())))
+                      .map(s => (
+                      <tr key={s.id} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                        <td className="p-3.5 font-mono text-[11px] font-black text-[#F4510B]">{s.id}</td>
+                        <td className="p-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <img src={s.avatar} alt={s.name} className="w-8 h-8 rounded-full object-cover ring-1 ring-[#172B5020]" />
+                            <div>
+                              <span className="font-extrabold text-[#172B50] block">{s.name}</span>
+                              <span className="text-[10px] text-[#172B50]/60 block">{s.parentName} ({s.parentPhone})</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3.5">
+                          <span className="font-bold text-[#172B50] block">{s.program}</span>
+                          <span className="text-[10.5px] font-semibold text-[#F4510B] block">{s.batchName || 'General Batch'}</span>
+                        </td>
+                        <td className="p-3.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-emerald-700">{s.attendanceRate || 0}%</span>
+                            <div className="w-16 h-1.5 bg-[#172B5010] rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${s.attendanceRate || 0}%` }} />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3.5 text-[11px] text-[#172B50] opacity-80 max-w-xs truncate">
+                          {s.medicalNote || 'Fit for full athletic drills'}
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <button 
+                            onClick={() => {
+                              setEvalStudent(s.id);
+                              setCurrentView('evaluations');
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold bg-[#172B50] text-white rounded-xl hover:bg-[#F4510B] transition-colors cursor-pointer shadow-2xs"
+                          >
+                            Evaluate Athlete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

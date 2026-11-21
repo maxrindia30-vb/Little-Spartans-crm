@@ -53,11 +53,29 @@ export default function EquipmentManagementModule({
     verifyEquipmentReport,
     adminApproveEquipmentReport,
     currentUser,
-    addToast
+    addToast,
+    activeSubTab,
+    setActiveSubTab
   } = useCrm();
 
   // Active view tab: 'inventory' | 'reports' | 'audit'
-  const [activeTab, setActiveTab] = useState('inventory');
+  const [activeTab, setActiveTab] = useState(() => {
+    return activeSubTab === 'reports' ? 'reports' : 'inventory';
+  });
+
+  // Sync activeTab when activeSubTab changes from sidebar
+  useEffect(() => {
+    if (activeSubTab === 'reports' || activeSubTab === 'inventory') {
+      setActiveTab(activeSubTab);
+    }
+  }, [activeSubTab]);
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (setActiveSubTab) {
+      setActiveSubTab(tabId);
+    }
+  };
 
   // Filter states
   const [selectedLocation, setSelectedLocation] = useState('All');
@@ -492,7 +510,7 @@ export default function EquipmentManagementModule({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setActiveTab('inventory')}
+              onClick={() => handleTabChange('inventory')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'inventory'
                   ? 'bg-[#172B50] text-white shadow-sm'
@@ -508,7 +526,7 @@ export default function EquipmentManagementModule({
 
             <button
               type="button"
-              onClick={() => setActiveTab('reports')}
+              onClick={() => handleTabChange('reports')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'reports'
                   ? 'bg-[#172B50] text-white shadow-sm'

@@ -103,16 +103,6 @@ export default function ProgramsClassesModule() {
             </span>
           </div>
 
-          {/* User Profile Avatar */}
-          <div className="relative">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
-              alt="Admin Profile"
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-[#F4510B30] shadow-2xs cursor-pointer hover:ring-[#F4510B] transition-all"
-              title="Commander Vikramaditya"
-            />
-          </div>
-
           {/* Upload Icon */}
           <button
             type="button"

@@ -33,6 +33,7 @@ import {
   TrendingUp,
   PieChart,
   ChevronRight,
+  ChevronDown,
   Pin,
   PinOff,
   Database,
@@ -43,154 +44,10 @@ import {
   Package,
   MapPin,
   Activity,
-  Sparkles
+  Sparkles,
+  LifeBuoy
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
-
-// Comprehensive submenu configuration matching the Master Specification
-const submenuConfig = {
-  // 1. Dashboard
-  dashboard: {
-    title: 'Command Center',
-    items: [
-      { parentId: 'dashboard', subTab: '', label: 'Live Operations', desc: 'Real-time KPIs & operational metrics', icon: Zap },
-      { parentId: 'dashboard', subTab: '', label: 'Ongoing Batches', desc: 'Current court sessions & attendance %', icon: Clock },
-      { parentId: 'dashboard', subTab: '', label: 'Revenue Velocity', desc: 'Monthly tuition growth & new admissions', icon: TrendingUp },
-    ]
-  },
-
-  // 2. Enquiries
-  enquiries: {
-    title: 'Enquiry Management',
-    items: [
-      { parentId: 'enquiries', subTab: 'all', label: 'Active Pipeline', desc: 'Track prospective spartans & conversion', icon: Users },
-      { parentId: 'demos', subTab: 'all', label: 'Demo Classes', desc: 'Booked demo trials & student conversion', icon: CalendarDays },
-      { parentId: 'enquiries', subTab: 'new', label: 'Capture New Lead', desc: 'Website, Instagram, WhatsApp & walk-ins', icon: PlusCircle },
-    ]
-  },
-
-  // Demo Management
-  demos: {
-    title: 'Demo Management',
-    items: [
-      { parentId: 'demos', subTab: 'all', label: 'Demo Register', desc: 'All scheduled & completed demo classes', icon: CalendarDays },
-      { parentId: 'demos', subTab: 'upcoming', label: 'Upcoming Demos', desc: 'Booked sessions & coach assignments', icon: Clock },
-      { parentId: 'demos', subTab: 'completed', label: 'Completed Trials', desc: 'Ready for student conversion', icon: CheckCircle2 },
-    ]
-  },
-
-  // 3. People Management (Students, Parents, Coaches)
-  people: {
-    title: 'People Management',
-    items: [
-      { parentId: 'people', subTab: 'students', label: 'Students Roster', desc: 'Full active roster, contacts & medical records', icon: GraduationCap },
-      { parentId: 'people', subTab: 'parents', label: 'Parents Directory', desc: 'Guardian records & linked children', icon: Users },
-      { parentId: 'people', subTab: 'coaches', label: 'Coaching Roster', desc: 'Head coaches & discipline specialists', icon: UserCheck },
-    ]
-  },
-
-  // 4. Programs & Classes (Batches, Class Schedules, Coach Assignments)
-  programs: {
-    title: 'Programs & Classes',
-    items: [
-      { parentId: 'programs', subTab: 'batches', label: 'Training Batches', desc: 'Capacities, enrolled athletes & waitlists', icon: Users },
-      { parentId: 'programs', subTab: 'schedules', label: 'Class Schedules', desc: 'Daily, weekly & calendar timetable', icon: Clock },
-      { parentId: 'programs', subTab: 'coach_assignments', label: 'Coach Assignments', desc: 'Lead & assistant trainer allocations', icon: UserCheck },
-    ]
-  },
-
-  // 5. Attendance & Compensation (Student Attendance, Coach Attendance, Compensation Classes)
-  attendance_compensation: {
-    title: 'Attendance & Compensation',
-    items: [
-      { parentId: 'attendance_compensation', subTab: 'student_attendance', label: 'Student Attendance', desc: 'Daily check-in register & absence alerts', icon: CalendarCheck },
-      { parentId: 'attendance_compensation', subTab: 'coach_attendance', label: 'Coach Attendance', desc: 'Staff check-ins & arena punch-ins', icon: UserCheck },
-      { parentId: 'attendance_compensation', subTab: 'student_compensation', label: 'Student Compensation', desc: 'Book replacement slots for missed classes', icon: RefreshCw },
-    ]
-  },
-
-  // Equipment Management (Multi-Location Inventory & Maintenance Reports)
-  equipment: {
-    title: 'Equipment Management',
-    items: [
-      { parentId: 'equipment', subTab: 'inventory', label: 'Location Inventory', desc: 'All gear, quantities, health & audit logs', icon: Package },
-      { parentId: 'equipment', subTab: 'reports', label: 'Condition Reports Queue', desc: 'Review coach reports & authorize maintenance', icon: AlertCircle },
-    ]
-  },
-
-  // 6. Fees & Payments (Fee Structures, Student Fee Assignments, Invoices, Payments, Pending Fees)
-  fees_payments: {
-    title: 'Fees & Payments',
-    items: [
-      { parentId: 'fees_payments', subTab: 'structures', label: 'Fee Structures', desc: 'Monthly, quarterly, admission & kit fees', icon: CreditCard },
-      { parentId: 'fees_payments', subTab: 'assignments', label: 'Student Assignments', desc: 'Assigned plans, sibling & custom discounts', icon: Users },
-      { parentId: 'fees_payments', subTab: 'invoices', label: 'Invoices & Receipts', desc: 'Official Little Spartans receipts', icon: FileText },
-      { parentId: 'fees_payments', subTab: 'pending', label: 'Pending Dues Recovery', desc: 'Outstanding balances & payment reminders', icon: AlertCircle },
-    ]
-  },
-
-  // 7. Sports & Events (Competitions, Registrations, Results, Certificates)
-  sports_events: {
-    title: 'Sports & Events',
-    items: [
-      { parentId: 'sports_events', subTab: 'competitions', label: 'Championships & Cups', desc: 'State tournaments & inter-branch cups', icon: Trophy },
-      { parentId: 'sports_events', subTab: 'registrations', label: 'Squad Registrations', desc: 'Participant rosters & weight categories', icon: Users },
-      { parentId: 'sports_events', subTab: 'results', label: 'Podium & Results', desc: 'Medal tallies & leaderboard rankings', icon: Medal },
-      { parentId: 'sports_events', subTab: 'certificates', label: 'Official Certificates', desc: 'Issue verifiable branded diplomas', icon: Award },
-    ]
-  },
-
-  // 8. Communication (Announcements, Feedback, Parent Communication, Support Requests)
-  communication: {
-    title: 'Academy Communication',
-    items: [
-      { parentId: 'communication', subTab: 'announcements', label: 'Announcements & Circulars', desc: 'Broadcast academy notices & alerts', icon: MessageSquare },
-      { parentId: 'communication', subTab: 'feedback', label: 'Feedback & Reviews', desc: 'Parent satisfaction & coach notes', icon: Star },
-      { parentId: 'communication', subTab: 'parent_comm', label: 'Parent Direct Chat', desc: 'Direct guardian messaging channel', icon: Users },
-      { parentId: 'communication', subTab: 'support', label: 'Support & Tickets', desc: 'Operational assistance desk', icon: CheckCircle2 },
-    ]
-  },
-
-  // 9. Access Management (User Governance, Location Access, Roles & Permissions, Activity History)
-  access_management: {
-    title: 'Access Management',
-    items: [
-      { parentId: 'access_management', subTab: 'overview', label: 'Access Overview', desc: 'KPI summaries & active account directory', icon: ShieldCheck },
-      { parentId: 'access_management', subTab: 'accounts', label: 'Accounts', desc: 'Manage Admin, Coach & Parent accounts and logins', icon: ShieldCheck },
-      { parentId: 'access_management', subTab: 'locations', label: 'Location Access', desc: 'Multi-center clearances & linked entities', icon: MapPin },
-      { parentId: 'access_management', subTab: 'permissions', label: 'Roles & Permissions', desc: '13-module RBAC clearance matrix', icon: CheckSquare },
-      { parentId: 'access_management', subTab: 'activity', label: 'Activity History', desc: 'Audit log of logins, role updates & actions', icon: History },
-    ]
-  },
-
-  // 10. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
-  reports_settings: {
-    title: 'Reports & Settings',
-    items: [
-      { parentId: 'reports_settings', subTab: 'analytics', label: 'Academy Analytics', desc: 'Retention rates, revenues & funnel KPIs', icon: BarChart2 },
-      { parentId: 'reports_settings', subTab: 'export', label: 'Raw Data Export', desc: 'Download CSV, Excel or PDF datasets', icon: Download },
-      { parentId: 'reports_settings', subTab: 'backup', label: 'Backup & Recovery', desc: 'Daily automated snapshots & manual backup', icon: HardDrive },
-      { parentId: 'reports_settings', subTab: 'permissions', label: 'Permissions (RBAC)', desc: 'Role clearance matrix & security governance', icon: ShieldCheck },
-      { parentId: 'reports_settings', subTab: 'settings', label: 'Academy Settings', desc: 'Little Spartans branding & center config', icon: Settings },
-    ]
-  },
-
-  // Parent Portal Submenus
-  children: {
-    title: 'My Children',
-    items: [
-      { parentId: 'children', subTab: '', label: 'Child Profiles', desc: 'View details, health & emergency contacts', icon: GraduationCap },
-      { parentId: 'progress', subTab: '', label: 'Skill Progression', desc: 'Belt milestones & physical assessments', icon: Award },
-    ]
-  },
-  classes: {
-    title: 'Classes & Batches',
-    items: [
-      { parentId: 'classes', subTab: '', label: 'Weekly Timetable', desc: 'Schedule, arena courts & lead coaches', icon: Calendar },
-      { parentId: 'attendance_compensation', subTab: '', label: 'Makeup Sessions', desc: 'Book compensation classes for absences', icon: RefreshCw },
-    ]
-  }
-};
 
 export default function Sidebar() {
   const { 
@@ -204,7 +61,8 @@ export default function Sidebar() {
     setSidebarOpen, 
     logout, 
     resetAllData,
-    addToast
+    addToast,
+    currentUser
   } = useCrm();
 
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -216,24 +74,202 @@ export default function Sidebar() {
   // Is full view currently visible? (on hover, or if user pins it, or on mobile)
   const isFullView = isHovered || isPinned;
 
-  // Interactive hover states for floating submenu
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [submenuPos, setSubmenuPos] = useState({ top: 0, left: 260 });
-  
-  const closeTimerRef = useRef(null);
   const navbarLeaveTimerRef = useRef(null);
 
-  // Clear timers on unmount
+  // Clear timer on unmount
   useEffect(() => {
     return () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
       if (navbarLeaveTimerRef.current) clearTimeout(navbarLeaveTimerRef.current);
     };
   }, []);
 
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.profile-section-container')) {
+        setProfileMenuOpen(false);
+      }
+    };
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [profileMenuOpen]);
+
+  // Check if current portal is Admin Portal for targeted Blue+Teal styling
+  const isAdminPortal = currentPortal === 'admin';
+
   // =========================================================================
-  // 1. ADMIN NAVIGATION (Master Operations)
+  // 1. ADMIN HIERARCHICAL NAVIGATION (9 Master Modules with Submenus)
   // =========================================================================
+  const adminNavStructure = [
+    {
+      id: 'academy_management',
+      label: 'Academy Management',
+      icon: Sparkles,
+      children: [
+        { id: 'enquiries', label: 'Enquiries', view: 'enquiries' },
+        { id: 'demos', label: 'Demo', view: 'demos' },
+      ],
+    },
+    {
+      id: 'people',
+      label: 'People Management',
+      icon: Users,
+      children: [
+        { id: 'students', label: 'Kids', view: 'people', subTab: 'students' },
+        { id: 'parents', label: 'Parents', view: 'people', subTab: 'parents' },
+        { id: 'coaches', label: 'Coaches', view: 'people', subTab: 'coaches' },
+      ],
+    },
+    {
+      id: 'programs',
+      label: 'Programs & Classes',
+      icon: Calendar,
+      children: [
+        { id: 'batches', label: 'Create Batch', view: 'programs', subTab: 'batches' },
+        { id: 'schedules', label: 'Class Schedule', view: 'programs', subTab: 'schedules' },
+      ],
+    },
+    {
+      id: 'attendance_compensation',
+      label: 'Attendance Management',
+      icon: CalendarCheck,
+      children: [
+        { id: 'student_attendance', label: 'Kids Attendance', view: 'attendance_compensation', subTab: 'student_attendance' },
+        { id: 'coach_attendance', label: 'Coach Attendance', view: 'attendance_compensation', subTab: 'coach_attendance' },
+        { id: 'coach_leaves', label: 'Leave Approvals', view: 'attendance_compensation', subTab: 'coach_leaves' },
+        { id: 'student_compensation', label: 'Kids Compensation', view: 'attendance_compensation', subTab: 'student_compensation' },
+      ],
+    },
+    {
+      id: 'fees_payments',
+      label: 'Fees & Payments',
+      icon: CreditCard,
+      children: [
+        { id: 'packages', label: 'Students Class Packages', view: 'fees_payments', subTab: 'packages' },
+        { id: 'gateway', label: 'Payments Features', view: 'fees_payments', subTab: 'gateway' },
+      ],
+    },
+    {
+      id: 'equipment',
+      label: 'Equipment Management',
+      icon: Package,
+      children: [
+        { id: 'inventory', label: 'Location Inventory', view: 'equipment', subTab: 'inventory' },
+        { id: 'reports', label: 'Condition Reports', view: 'equipment', subTab: 'reports' },
+      ],
+    },
+    {
+      id: 'access_management',
+      label: 'Access Management',
+      icon: ShieldCheck,
+      children: [
+        { id: 'overview', label: 'Access Overview', view: 'access_management', subTab: 'overview' },
+        { id: 'accounts', label: 'Accounts Directory', view: 'access_management', subTab: 'accounts' },
+        { id: 'locations', label: 'Location Access', view: 'access_management', subTab: 'locations' },
+        { id: 'permissions', label: 'Roles & Permissions', view: 'access_management', subTab: 'permissions' },
+        { id: 'activity', label: 'Activity History', view: 'access_management', subTab: 'activity' },
+      ],
+    },
+    {
+      id: 'communication',
+      label: 'Communication',
+      icon: MessageSquare,
+      children: [
+        { id: 'inbox', label: 'Inbox', view: 'communication', subTab: 'inbox' },
+        { id: 'announcements', label: 'Announcements', view: 'communication', subTab: 'announcements' },
+        { id: 'broadcasts', label: 'Broadcasts', view: 'communication', subTab: 'broadcasts' },
+        { id: 'templates', label: 'Templates', view: 'communication', subTab: 'templates' },
+        { id: 'sent', label: 'Sent Messages', view: 'communication', subTab: 'sent' },
+        { id: 'scheduled', label: 'Scheduled Messages', view: 'communication', subTab: 'scheduled' },
+        { id: 'reports', label: 'Message Reports', view: 'communication', subTab: 'reports' },
+      ],
+    },
+    {
+      id: 'reports_settings',
+      label: 'Reports & Settings',
+      icon: BarChart2,
+      children: [
+        { id: 'analytics', label: 'Academy Analytics', view: 'reports_settings', subTab: 'analytics' },
+        { id: 'export', label: 'Raw Data Export', view: 'reports_settings', subTab: 'export' },
+        { id: 'backup', label: 'Backup & Recovery', view: 'reports_settings', subTab: 'backup' },
+        { id: 'permissions', label: 'Permissions Audit', view: 'reports_settings', subTab: 'permissions' },
+        { id: 'settings', label: 'Academy Settings', view: 'reports_settings', subTab: 'settings' },
+      ],
+    },
+  ];
+
+  const isChildActive = (child) => {
+    if (child.view === 'people' && ['students', 'parents', 'coaches'].includes(currentView)) {
+      return (child.subTab || child.id) === currentView;
+    }
+    if (child.view === 'programs' && ['batches', 'schedules'].includes(currentView)) {
+      return (child.subTab || child.id) === currentView;
+    }
+    if (child.view === 'attendance_compensation' && ['student_attendance', 'coach_attendance', 'coach_leaves', 'student_compensation'].includes(currentView)) {
+      return (child.subTab || child.id) === currentView;
+    }
+    if (child.view !== currentView) return false;
+    if (child.subTab) {
+      if (child.view === 'people' && !activeSubTab) return child.subTab === 'students';
+      if (child.view === 'programs' && !activeSubTab) return child.subTab === 'batches';
+      if (child.view === 'attendance_compensation' && !activeSubTab) return child.subTab === 'student_attendance';
+      if (child.view === 'fees_payments' && !activeSubTab) return child.subTab === 'packages';
+      if (child.view === 'equipment' && !activeSubTab) return child.subTab === 'inventory';
+      if (child.view === 'access_management' && !activeSubTab) return child.subTab === 'overview';
+      if (child.view === 'communication' && !activeSubTab) return child.subTab === 'inbox';
+      if (child.view === 'reports_settings' && !activeSubTab) return child.subTab === 'analytics';
+      return activeSubTab === child.subTab;
+    }
+    return true;
+  };
+
+  const isParentActive = (parent) => {
+    return parent.children.some(child => isChildActive(child));
+  };
+
+  // Accordion state: only one parent submenu open at a time
+  const [expandedMenu, setExpandedMenu] = useState(() => {
+    if (!isAdminPortal || currentView === 'dashboard') return null;
+    const activeParent = adminNavStructure.find(p => isParentActive(p));
+    return activeParent ? activeParent.id : null;
+  });
+
+  // Auto-expand the active section whenever navigation occurs
+  const lastNavKeyRef = useRef(`${currentView}_${activeSubTab}`);
+  useEffect(() => {
+    const navKey = `${currentView}_${activeSubTab}`;
+    if (lastNavKeyRef.current !== navKey) {
+      lastNavKeyRef.current = navKey;
+      if (isAdminPortal && currentView !== 'dashboard') {
+        const activeParent = adminNavStructure.find(p => isParentActive(p));
+        if (activeParent) {
+          setExpandedMenu(activeParent.id);
+        }
+      }
+    }
+  }, [currentView, activeSubTab, isAdminPortal]);
+
+  const handleParentClick = (parent) => {
+    if (!isFullView) {
+      setIsHovered(true);
+      setExpandedMenu(parent.id);
+      return;
+    }
+    // Accordion: clicking expands its submenu, clicking again collapses that submenu
+    setExpandedMenu(prev => prev === parent.id ? null : parent.id);
+  };
+
+  const handleSubItemClick = (parent, child) => {
+    if (child.subTab && setActiveSubTab) {
+      setActiveSubTab(child.subTab);
+    }
+    setCurrentView(child.view);
+    setSidebarOpen(false);
+  };
+
+  // Fallback flat navigation items for legacy compatibility
   const adminNavItems = [
     { id: 'enquiries', label: 'Enquiries', icon: Users },
     { id: 'demos', label: 'Demo Management', icon: CalendarDays },
@@ -291,28 +327,32 @@ export default function Sidebar() {
   // Section title & items depending on active portal
   let sectionTitle = 'ACADEMY MANAGEMENT';
   let navItems = adminNavItems;
-  let profileInitials = 'LS';
-  let profileName = 'Little Spartans';
-  let profileRole = 'Admin / Super Admin';
+  let profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80";
+  let profileInitials = 'BS';
+  let profileName = currentUser?.name || 'Balavivek S';
+  let profileRole = currentUser?.badge || 'Super Admin';
 
   if (currentPortal === 'super_coach') {
     sectionTitle = 'SUPER COACH PORTAL';
     navItems = superCoachNavItems;
+    profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80";
     profileInitials = 'KR';
-    profileName = 'Senior Coach Kabir Rao';
-    profileRole = 'Super Coach · Area Lead';
+    profileName = currentUser?.name || 'Senior Coach Kabir Rao';
+    profileRole = currentUser?.role || 'Super Coach · Area Lead';
   } else if (currentPortal === 'parent') {
     sectionTitle = 'PARENT PORTAL';
     navItems = parentNavItems;
+    profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80";
     profileInitials = 'RS';
-    profileName = 'Dr. Rohan Sharma';
-    profileRole = 'Parent Account';
+    profileName = currentUser?.name || 'Dr. Rohan Sharma';
+    profileRole = currentUser?.role || 'Parent Account';
   } else if (currentPortal === 'coach') {
     sectionTitle = 'COACH PORTAL';
     navItems = coachNavItems;
+    profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80";
     profileInitials = 'VS';
-    profileName = 'Coach Vikram Singh';
-    profileRole = 'Head Coach - Athletics';
+    profileName = currentUser?.name || 'Coach Vikram Singh';
+    profileRole = currentUser?.role || 'Head Coach - Athletics';
   }
 
   // Navbar mouse enter: opens full view
@@ -328,77 +368,53 @@ export default function Sidebar() {
   const handleNavbarMouseLeave = () => {
     navbarLeaveTimerRef.current = setTimeout(() => {
       setIsHovered(false);
-      setHoveredItem(null);
     }, 180);
   };
 
-  // Hover handlers for menu item
-  const handleItemMouseEnter = (itemId, event) => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
+  // Direct navigation handler on click
+  const handleNavItemClick = (itemId) => {
+    if (itemId === 'people' && setActiveSubTab) {
+      setActiveSubTab('students');
+    } else if (itemId === 'programs' && setActiveSubTab) {
+      const validProgramTabs = ['batches', 'schedules', 'coach_assignments'];
+      if (!validProgramTabs.includes(activeSubTab)) {
+        setActiveSubTab('batches');
+      }
+    } else if ((itemId === 'attendance_compensation' || itemId === 'attendance') && setActiveSubTab) {
+      const validAttendanceTabs = ['student_attendance', 'coach_attendance', 'student_compensation', 'coach_leaves'];
+      if (!validAttendanceTabs.includes(activeSubTab)) {
+        setActiveSubTab('student_attendance');
+      }
+    } else if (itemId === 'fees_payments' && setActiveSubTab) {
+      const validFeeTabs = ['packages', 'gateway'];
+      if (!validFeeTabs.includes(activeSubTab)) {
+        setActiveSubTab('packages');
+      }
+    } else if (itemId === 'access_management' && setActiveSubTab) {
+      const validAccessTabs = ['overview', 'accounts', 'locations', 'permissions', 'activity'];
+      if (!validAccessTabs.includes(activeSubTab)) {
+        setActiveSubTab('overview');
+      }
+    } else if (itemId === 'reports_settings' && setActiveSubTab) {
+      const validReportTabs = ['analytics', 'export', 'backup', 'permissions', 'settings'];
+      if (!validReportTabs.includes(activeSubTab)) {
+        setActiveSubTab('analytics');
+      }
+    } else if (itemId === 'communication' && setActiveSubTab) {
+      const validCommTabs = ['inbox', 'announcements', 'broadcasts', 'templates', 'sent', 'scheduled', 'reports', 'feedback', 'support_requests'];
+      if (!validCommTabs.includes(activeSubTab)) {
+        setActiveSubTab('inbox');
+      }
+    } else if (itemId === 'equipment' && setActiveSubTab) {
+      const validEquipTabs = ['inventory', 'reports'];
+      if (!validEquipTabs.includes(activeSubTab)) {
+        setActiveSubTab('inventory');
+      }
     }
-    if (navbarLeaveTimerRef.current) {
-      clearTimeout(navbarLeaveTimerRef.current);
-      navbarLeaveTimerRef.current = null;
-    }
-    setIsHovered(true);
 
-    const rect = event.currentTarget.getBoundingClientRect();
-    const estimatedHeight = 260;
-    const top = Math.max(12, Math.min(rect.top - 6, window.innerHeight - estimatedHeight - 16));
-    
-    // Position floating panel cleanly adjacent to the current sidebar edge
-    const leftEdge = isFullView ? 260 : 76;
-    setSubmenuPos({ top, left: leftEdge });
-    setHoveredItem(itemId);
+    setCurrentView(itemId);
+    setSidebarOpen(false);
   };
-
-  const handleItemMouseLeave = () => {
-    closeTimerRef.current = setTimeout(() => {
-      setHoveredItem(null);
-    }, 180);
-  };
-
-  // Hover handlers for floating submenu panel
-  const handleSubmenuMouseEnter = () => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-    if (navbarLeaveTimerRef.current) {
-      clearTimeout(navbarLeaveTimerRef.current);
-      navbarLeaveTimerRef.current = null;
-    }
-    setIsHovered(true);
-  };
-
-  const handleSubmenuMouseLeave = () => {
-    closeTimerRef.current = setTimeout(() => {
-      setHoveredItem(null);
-    }, 180);
-    navbarLeaveTimerRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 220);
-  };
-
-  // Submenu click handler (supports both parent view & target sub-tab)
-  const handleSubmenuClick = (parentId, subTab, label) => {
-    if (navigateTo) {
-      navigateTo(parentId, subTab);
-    } else {
-      setCurrentView(parentId);
-      if (subTab && setActiveSubTab) setActiveSubTab(subTab);
-      setSidebarOpen(false);
-    }
-    setHoveredItem(null);
-    if (addToast) {
-      addToast(`Opened ${label}`);
-    }
-  };
-
-  // Active submenu data
-  const currentSubmenu = hoveredItem ? submenuConfig[hoveredItem] : null;
 
   return (
     <>
@@ -411,21 +427,46 @@ export default function Sidebar() {
       )}
 
       {/* 
-        LEFT SIDEBAR:
-        - When mouse enters: OPENS FULL VIEW (w-64 = 256px).
-        - When mouse leaves: CLOSES (w-[72px]).
-        - In flex layout (shrink-0): right side smoothly adapts without EVER overlapping or cutting off content!
-        - Between nav bar and right side: transparent vertical dividing line (border-r border-white/10).
+        PREMIUM BLUE + TEAL GRADIENT SIDEBAR (No Floating Hover Popovers):
+        - Exact Palette:
+            Deep Blue:   #082B49 (Top)
+            Ocean Blue:  #064B68 (Middle)
+            Teal Glow:   #00AFA3 (Bottom subtle flowing aura)
+        - Active Dashboard & Active Navigation: #F4510B (Spartan Orange) with subtle glow
+        - Rounded outer corners (lg:rounded-2xl) with elevation shadow (shadow-2xl)
+        - Expanded width: 256px (w-64) | Collapsed width: 72px (w-[72px])
+        - Independent vertical scrolling strictly for navigation area
+        - Fixed Brand Header at top (shrink-0)
+        - Fixed User Profile Section at bottom (shrink-0)
       */}
       <aside 
         onMouseEnter={handleNavbarMouseEnter}
         onMouseLeave={handleNavbarMouseLeave}
-        className={`fixed inset-y-0 left-0 z-40 bg-[#0B0F17] text-white border-r border-white/10 flex flex-col font-sans transition-[width,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none lg:static lg:inset-auto lg:h-full lg:shrink-0 lg:z-auto ${
-          isFullView ? 'w-64' : 'w-[72px]'
-        } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        className={`fixed inset-y-0 left-0 z-40 text-white flex flex-col font-sans transition-[width,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none lg:static lg:inset-auto lg:h-[calc(100vh-16px)] lg:my-2 lg:ml-2.5 lg:rounded-2xl border shadow-2xl overflow-hidden lg:shrink-0 lg:z-auto relative ${
+          isAdminPortal
+            ? 'bg-gradient-to-b from-[#082B49] via-[#064B68] to-[#043347] border-white/12'
+            : 'bg-[#0B0F17] border-white/10'
+        } ${isFullView ? 'w-64' : 'w-[72px]'} ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        {/* Top Header: Full Brand Logo + ZenConnect Badge when full, Compact LS Emblem when closed */}
-        <div className="px-3.5 py-3.5 flex items-center justify-between border-b border-white/10 shrink-0 h-16 overflow-hidden">
+        {/* Subtle flowing Teal glow near the bottom (Elegant & professional) */}
+        {isAdminPortal && (
+          <div 
+            aria-hidden="true" 
+            className="absolute -bottom-10 -left-12 -right-12 h-64 pointer-events-none select-none z-0 overflow-hidden"
+          >
+            {/* Soft radial teal aura */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_rgba(0,175,163,0.30)_0%,_rgba(6,75,104,0.12)_45%,_transparent_72%)] blur-xl" />
+            {/* Flowing bottom curved shimmer */}
+            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-72 h-32 rounded-[100%] bg-gradient-to-t from-[#00AFA3]/22 via-[#00AFA3]/6 to-transparent blur-lg" />
+          </div>
+        )}
+
+        {/* ============================================================ */}
+        {/* 1. FIXED BRAND HEADER: Logo + ZenConnect Title + Pin Toggle  */}
+        {/* ============================================================ */}
+        <div className={`px-3.5 py-3.5 flex items-center justify-between border-b border-white/12 shrink-0 h-16 overflow-hidden relative z-10 ${
+          isAdminPortal ? 'bg-[#082B49]/50 backdrop-blur-xs' : 'bg-[#0B0F17]'
+        }`}>
           {isFullView ? (
             <div className="flex items-center justify-between w-full animate-in fade-in duration-200">
               <div className="flex items-center gap-2 min-w-0">
@@ -452,18 +493,18 @@ export default function Sidebar() {
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="px-2 py-0.5 rounded-full border border-[#F4510B] text-white text-[10.5px] font-semibold tracking-wide bg-transparent shadow-xs select-none">
+                <span className="px-2 py-0.5 rounded-full border border-[#F4510B] text-white text-[10.5px] font-semibold tracking-wide bg-[#F4510B]/15 shadow-xs select-none">
                   ZenConnect
                 </span>
                 {/* Pin toggle to lock full view permanently if desired */}
                 <button
                   type="button"
                   onClick={() => setIsPinned(!isPinned)}
-                  className={`p-1 rounded-md transition-colors ${
-                    isPinned ? 'text-[#F4510B] bg-white/10' : 'text-white/40 hover:text-white hover:bg-white/5'
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    isPinned ? 'text-[#F4510B] bg-white/10' : 'text-white/60 hover:text-white hover:bg-white/10'
                   }`}
-                  title={isPinned ? "Unpin navbar (closes when mouse leaves)" : "Pin navbar permanently in full view"}
-                  aria-label="Pin navbar"
+                  title={isPinned ? "Unpin sidebar (auto-collapses when mouse leaves)" : "Pin sidebar permanently expanded"}
+                  aria-label="Pin sidebar"
                 >
                   {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
                 </button>
@@ -480,159 +521,289 @@ export default function Sidebar() {
             </div>
           ) : (
             <div className="w-full flex items-center justify-center animate-in fade-in duration-200">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1A2234] to-[#0E131F] border border-[#F4510B]/40 flex items-center justify-center shadow-sm hover:border-[#F4510B] transition-colors">
+              <div className={`w-10 h-10 rounded-xl ${
+                isAdminPortal 
+                  ? 'bg-gradient-to-br from-[#082B49] to-[#064B68] border border-[#F4510B]/60' 
+                  : 'bg-gradient-to-br from-[#1A2234] to-[#0E131F] border border-[#F4510B]/50'
+              } flex items-center justify-center shadow-sm hover:border-[#F4510B] transition-colors cursor-pointer`}>
                 <span className="text-[#F4510B] font-black text-sm tracking-tighter">LS</span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Scrollable Navigation Area with independent vertical scroll */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-1">
+        {/* ============================================================ */}
+        {/* 2. SCROLLABLE NAVIGATION AREA (Independent Vertical Scroll)  */}
+        {/* ============================================================ */}
+        <div className={`flex-1 overflow-y-auto py-3 overscroll-contain relative z-10 transition-all duration-200 ${
+          isFullView 
+            ? 'px-2.5 space-y-1 [&::-webkit-scrollbar]:w-1.5' 
+            : 'px-0 space-y-1.5 [&::-webkit-scrollbar]:w-0 flex flex-col items-center'
+        } [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/15 hover:[&::-webkit-scrollbar-thumb]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded-full`}>
+          
+          {/* Section 1 Header: DASHBOARD */}
+          {isFullView ? (
+            <div className="pb-1 px-2">
+              <span className={`text-[10px] font-bold tracking-widest uppercase block truncate animate-in fade-in duration-200 select-none ${
+                isAdminPortal ? 'text-[#9BB8D3]' : 'text-[#8A99AD]'
+              }`}>
+                DASHBOARD
+              </span>
+            </div>
+          ) : (
+            <div className="w-full flex items-center justify-center pb-0.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+            </div>
+          )}
+
           {/* Item 1: Dashboard (Always First Item) */}
           <button
             type="button"
-            onClick={() => {
-              setCurrentView('dashboard');
-              setSidebarOpen(false);
-            }}
-            onMouseEnter={(e) => handleItemMouseEnter('dashboard', e)}
-            onMouseLeave={handleItemMouseLeave}
-            className={`w-full flex items-center ${isFullView ? 'justify-between px-3' : 'justify-center px-0'} py-2.5 rounded-xl text-[13.5px] transition-all duration-200 group cursor-pointer ${
+            onClick={() => handleNavItemClick('dashboard')}
+            className={`flex items-center transition-all duration-200 group cursor-pointer ${
+              isFullView
+                ? 'w-full px-3 py-2 justify-start rounded-xl text-[13.5px]'
+                : 'w-11 h-11 justify-center mx-auto rounded-xl shrink-0'
+            } ${
               currentView === 'dashboard'
-                ? 'bg-[#F4510B] text-white font-semibold shadow-md shadow-[#F4510B]/30'
-                : hoveredItem === 'dashboard'
-                ? 'bg-white/10 text-white'
-                : 'text-white/80 hover:text-white hover:bg-white/5'
+                ? 'bg-[#F4510B] text-white font-semibold shadow-md shadow-[#F4510B]/35'
+                : 'text-white/85 hover:text-white hover:bg-white/10'
             }`}
             title={!isFullView ? "Dashboard" : undefined}
           >
             <div className={`flex items-center ${isFullView ? 'gap-3 min-w-0' : 'justify-center'}`}>
-              <Home 
-                className={`w-5 h-5 shrink-0 transition-colors ${
-                  currentView === 'dashboard' ? 'text-white' : 'text-white/80 group-hover:text-white'
-                }`} 
-                strokeWidth={1.75} 
-              />
+              <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                <Home 
+                  className={`w-5 h-5 shrink-0 transition-colors ${
+                    currentView === 'dashboard' ? 'text-white' : 'text-white/80 group-hover:text-white'
+                  }`} 
+                  strokeWidth={1.75} 
+                />
+              </div>
               {isFullView && (
-                <span className="truncate whitespace-nowrap animate-in fade-in duration-200">
+                <span className="truncate whitespace-nowrap animate-in fade-in duration-200 font-medium text-white">
                   Dashboard
                 </span>
               )}
             </div>
-            {isFullView && (
-              <ChevronRight 
-                className={`w-3.5 h-3.5 transition-all ${
-                  hoveredItem === 'dashboard' ? 'opacity-100 translate-x-0 text-white' : 'opacity-0 -translate-x-1'
-                }`}
-              />
-            )}
           </button>
 
-          {/* Section Divider & Header: ACADEMY MANAGEMENT */}
-          <div className={`pt-2.5 pb-1 ${isFullView ? 'px-2' : 'px-1'}`}>
-            <div className="border-t border-white/10 mb-2" />
-            {isFullView ? (
-              <span className="text-[10.5px] font-bold tracking-widest text-[#8A99AD] uppercase block truncate animate-in fade-in duration-200">
+          {/* ============================================================ */}
+          {/* Section Divider & Header: ACADEMY MANAGEMENT                 */}
+          {/* ============================================================ */}
+          {isFullView ? (
+            <div className="pt-3 pb-1 px-2">
+              <div className="border-t border-white/12 mb-2.5" />
+              <span className={`text-[10px] font-bold tracking-widest uppercase block truncate animate-in fade-in duration-200 select-none ${
+                isAdminPortal ? 'text-[#9BB8D3]' : 'text-[#8A99AD]'
+              }`}>
                 {sectionTitle}
               </span>
-            ) : (
-              <div className="w-1.5 h-1.5 rounded-full bg-white/20 mx-auto my-0.5" />
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="w-full flex items-center justify-center py-1">
+              <div className="w-6 border-t border-white/15" />
+            </div>
+          )}
 
-          {/* Navigation Items (The remaining items: strictly max 8 items here + Dashboard = max 9 total) */}
-          {navItems.map(item => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-            const isHoveredItem = hoveredItem === item.id;
+          {/* Navigation Items: Accordion Hierarchy for Admin Portal, Flat for other portals */}
+          {isAdminPortal ? (
+            <div className={isFullView ? 'space-y-1 w-full' : 'space-y-1.5 w-full flex flex-col items-center'}>
+              {adminNavStructure.map((parent) => {
+                const ParentIcon = parent.icon;
+                const isExpanded = expandedMenu === parent.id;
+                const parentActive = isParentActive(parent);
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={(e) => {
-                  if (item.id === 'people' && setActiveSubTab) {
-                    setActiveSubTab('students');
-                  }
-                  if (item.id === 'programs' && setActiveSubTab) {
-                    const validProgramTabs = ['batches', 'schedules', 'coach_assignments'];
-                    if (!validProgramTabs.includes(activeSubTab)) {
-                      setActiveSubTab('batches');
-                    }
-                  }
-                  if ((item.id === 'attendance_compensation' || item.id === 'attendance') && setActiveSubTab) {
-                    const validAttendanceTabs = ['student_attendance', 'coach_attendance', 'student_compensation'];
-                    if (!validAttendanceTabs.includes(activeSubTab)) {
-                      setActiveSubTab('student_attendance');
-                    }
-                  }
-                  setCurrentView(item.id);
-                  if (submenuConfig[item.id]) {
-                    handleItemMouseEnter(item.id, e);
-                  }
-                  setSidebarOpen(false);
-                }}
-                onMouseEnter={(e) => handleItemMouseEnter(item.id, e)}
-                onMouseLeave={handleItemMouseLeave}
-                className={`w-full flex items-center ${isFullView ? 'justify-between px-3' : 'justify-center px-0'} py-2 rounded-xl text-[13.5px] transition-all duration-200 group cursor-pointer ${
-                  isActive
-                    ? 'bg-[#F4510B] text-white font-semibold shadow-md shadow-[#F4510B]/30'
-                    : isHoveredItem
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/80 hover:text-white hover:bg-white/5'
-                }`}
-                title={!isFullView ? item.label : undefined}
-              >
-                <div className={`flex items-center ${isFullView ? 'gap-3 min-w-0' : 'justify-center'}`}>
-                  <Icon 
-                    className={`w-5 h-5 shrink-0 transition-colors ${
-                      isActive ? 'text-white' : 'text-white/75 group-hover:text-white'
-                    }`} 
-                    strokeWidth={1.75} 
-                  />
-                  {isFullView && (
-                    <span className="truncate whitespace-nowrap animate-in fade-in duration-200">
-                      {item.label}
-                    </span>
-                  )}
-                </div>
-                {isFullView && (
-                  <ChevronRight 
-                    className={`w-3.5 h-3.5 transition-all ${
-                      isHoveredItem ? 'opacity-100 translate-x-0 text-white' : 'opacity-0 -translate-x-1'
-                    }`}
-                  />
-                )}
-              </button>
-            );
-          })}
+                return (
+                  <div key={parent.id} className={`flex flex-col ${isFullView ? 'w-full' : 'items-center'}`}>
+                    {/* Parent Menu Item */}
+                    <button
+                      type="button"
+                      onClick={() => handleParentClick(parent)}
+                      className={`flex items-center transition-all duration-200 group cursor-pointer ${
+                        isFullView
+                          ? 'w-full px-3 py-2 justify-between rounded-xl text-[13.5px]'
+                          : 'w-11 h-11 justify-center mx-auto rounded-xl shrink-0'
+                      } ${
+                        parentActive
+                          ? 'bg-white/12 text-white font-medium'
+                          : 'text-white/85 hover:text-white hover:bg-white/10'
+                      }`}
+                      title={!isFullView ? parent.label : undefined}
+                      aria-expanded={isExpanded}
+                    >
+                      <div className={`flex items-center ${isFullView ? 'gap-3 min-w-0' : 'justify-center'}`}>
+                        <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                          <ParentIcon
+                            className={`w-5 h-5 shrink-0 transition-colors ${
+                              parentActive ? 'text-white' : 'text-white/80 group-hover:text-white'
+                            }`}
+                            strokeWidth={1.75}
+                          />
+                        </div>
+                        {isFullView && (
+                          <span className="truncate whitespace-nowrap animate-in fade-in duration-200 font-medium text-white">
+                            {parent.label}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Expand/Collapse Chevron (Rotates 180° when expanded, hidden in collapsed rail) */}
+                      {isFullView && (
+                        <div 
+                          className="shrink-0 ml-1.5 p-0.5 text-white/70 group-hover:text-white transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleParentClick(parent);
+                          }}
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform duration-200 ease-in-out ${
+                              isExpanded ? 'rotate-180 text-white' : 'rotate-0 text-white/60'
+                            }`}
+                          />
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Submenu Accordion Container */}
+                    {isFullView && (
+                      <div
+                        className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                          isExpanded
+                            ? 'max-h-96 opacity-100 py-1 space-y-0.5'
+                            : 'max-h-0 opacity-0 pointer-events-none'
+                        }`}
+                      >
+                        {parent.children.map((child) => {
+                          const childActive = isChildActive(child);
+                          return (
+                            <button
+                              key={child.id}
+                              type="button"
+                              onClick={() => handleSubItemClick(parent, child)}
+                              className={`w-full flex items-center pl-9 pr-3 py-1.5 rounded-lg text-[12.5px] transition-all duration-150 group/sub cursor-pointer ${
+                                childActive
+                                  ? 'bg-[#F4510B] text-white font-semibold shadow-xs'
+                                  : 'text-white/80 hover:text-white hover:bg-white/10'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full mr-2.5 shrink-0 transition-colors ${
+                                  childActive ? 'bg-white' : 'bg-white/40 group-hover/sub:bg-white'
+                                }`}
+                              />
+                              <span className="truncate whitespace-nowrap">
+                                {child.label}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            navItems.map(item => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleNavItemClick(item.id)}
+                  className={`flex items-center transition-all duration-200 group cursor-pointer ${
+                    isFullView
+                      ? 'w-full px-3 py-2 rounded-xl text-[13.5px]'
+                      : 'w-11 h-11 justify-center mx-auto rounded-xl shrink-0'
+                  } ${
+                    isActive
+                      ? 'bg-[#F4510B] text-white font-semibold shadow-md shadow-[#F4510B]/35'
+                      : 'text-white/85 hover:text-white hover:bg-white/10'
+                  }`}
+                  title={!isFullView ? item.label : undefined}
+                >
+                  <div className={`flex items-center ${isFullView ? 'gap-3 min-w-0' : 'justify-center'}`}>
+                    <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                      <Icon 
+                        className={`w-5 h-5 shrink-0 transition-colors ${
+                          isActive ? 'text-white' : 'text-white/80 group-hover:text-white'
+                        }`} 
+                        strokeWidth={1.75} 
+                      />
+                    </div>
+                    {isFullView && (
+                      <span className="truncate whitespace-nowrap animate-in fade-in duration-200 font-medium text-white">
+                        {item.label}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })
+          )}
+
+          {/* Bottom safety spacer to prevent clipping */}
+          <div className="h-4" />
         </div>
 
-        {/* Bottom Profile Footer: LS Teal circle + Little Spartans + Admin / Super Admin + 3 dots */}
-        <div className="p-3 border-t border-white/10 bg-[#0B0F17] relative shrink-0">
-          <div className={`flex items-center ${isFullView ? 'justify-between gap-2.5' : 'justify-center'}`}>
+        {/* ============================================================ */}
+        {/* 3. FIXED BOTTOM PROFILE SECTION: Avatar + Name/Role + 3-Dots */}
+        {/* ============================================================ */}
+        <div className={`border-t border-white/12 relative shrink-0 select-none profile-section-container z-10 ${
+          isAdminPortal ? 'bg-transparent' : 'bg-[#0B0F17]'
+        } ${isFullView ? 'p-3' : 'py-3 px-0 flex justify-center'}`}>
+          <div className={`flex items-center ${isFullView ? 'justify-between gap-2.5 w-full' : 'justify-center'}`}>
+            
+            {/* User Profile Avatar with Online Status */}
             <div 
               onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-              className="w-9 h-9 rounded-full bg-[#00D1C1] text-[#0A0E17] font-black text-sm flex items-center justify-center shrink-0 shadow-sm cursor-pointer hover:ring-2 hover:ring-white/20 transition-all"
+              className="relative shrink-0 cursor-pointer group flex items-center justify-center"
               title={profileName}
             >
-              {profileInitials}
+              <img 
+                src={profilePhoto} 
+                alt={profileName}
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-white/20 group-hover:ring-[#F4510B] transition-all"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+              <div 
+                className="hidden w-10 h-10 rounded-full bg-gradient-to-br from-[#082B49] to-[#064B68] border border-[#F4510B]/60 text-white font-bold text-xs items-center justify-center shadow-xs"
+              >
+                {profileInitials}
+              </div>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 ring-2 ring-[#064B68]" />
             </div>
+
+            {/* Admin Name & Role (Rendered when expanded) */}
             {isFullView && (
               <>
-                <div className="flex-1 min-w-0 animate-in fade-in duration-200">
-                  <p className="text-[13px] font-bold text-white truncate leading-tight">
+                <div 
+                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                  className="flex-1 min-w-0 cursor-pointer animate-in fade-in duration-200"
+                >
+                  <p className="text-[13px] font-bold text-white truncate leading-tight hover:text-[#F4510B] transition-colors">
                     {profileName}
                   </p>
-                  <p className="text-[11px] text-[#8A99AD] truncate leading-tight mt-0.5">
+                  <p className={`text-[11px] truncate leading-tight mt-0.5 ${
+                    isAdminPortal ? 'text-[#9BB8D3]' : 'text-[#8A99AD]'
+                  }`}>
                     {profileRole}
                   </p>
                 </div>
+
+                {/* Three-dot menu button */}
                 <button 
                   type="button"
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className="text-[#8A99AD] hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                  className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer shrink-0"
                   title="Profile Options"
                   aria-label="Profile Options"
                 >
@@ -644,7 +815,13 @@ export default function Sidebar() {
 
           {/* Quick profile popup */}
           {profileMenuOpen && (
-            <div className={`absolute bottom-16 ${isFullView ? 'right-3 w-52' : 'left-14 w-52'} bg-[#161B26] border border-white/15 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95`}>
+            <div className={`absolute bottom-16 ${isFullView ? 'right-3 w-56' : 'left-14 w-56'} ${
+              isAdminPortal ? 'bg-[#06334D]' : 'bg-[#161B26]'
+            } border border-white/15 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95`}>
+              <div className="px-3 py-2 border-b border-white/12 mb-1">
+                <p className="text-xs font-bold text-white truncate">{profileName}</p>
+                <p className="text-[10px] text-[#9BB8D3] truncate">{profileRole}</p>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -653,7 +830,7 @@ export default function Sidebar() {
                 }}
                 className="w-full text-left px-3 py-2 text-xs text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-2 cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#55CDB3]" />
+                <Sparkles className="w-3.5 h-3.5 text-[#00AFA3]" />
                 <span>Daily Motivation</span>
               </button>
               <button
@@ -673,7 +850,7 @@ export default function Sidebar() {
                   logout();
                   setProfileMenuOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-xs text-[#F4510B] hover:bg-white/10 rounded-lg flex items-center gap-2 mt-1 border-t border-white/10 cursor-pointer"
+                className="w-full text-left px-3 py-2 text-xs text-[#F4510B] hover:bg-white/10 rounded-lg flex items-center gap-2 mt-1 border-t border-white/12 cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out</span>
@@ -682,65 +859,6 @@ export default function Sidebar() {
           )}
         </div>
       </aside>
-
-      {/* ============================================================ */}
-      {/* FLOATING SUBMENU PANEL: Dark Glassmorphism with Smooth Hover  */}
-      {/* ============================================================ */}
-      {currentSubmenu && (
-        <div 
-          className="fixed z-50 min-w-[280px] max-w-[340px] bg-[#0E131F]/95 backdrop-blur-xl border border-white/12 rounded-2xl shadow-2xl p-2.5 animate-submenu pointer-events-auto hidden lg:block"
-          style={{ 
-            top: `${submenuPos.top}px`, 
-            left: `${submenuPos.left}px` 
-          }}
-          onMouseEnter={handleSubmenuMouseEnter}
-          onMouseLeave={handleSubmenuMouseLeave}
-        >
-          {/* Invisible hover bridge connecting sidebar item to submenu to prevent cursor drop */}
-          <div className="absolute -left-3 top-0 bottom-0 w-3.5 bg-transparent" />
-
-          {/* Submenu Header */}
-          <div className="px-3 pt-2 pb-2.5 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F4510B] animate-pulse" />
-              <span className="text-[12px] font-bold text-white tracking-wide uppercase">
-                {currentSubmenu.title}
-              </span>
-            </div>
-            <span className="text-[10px] text-white/50 font-semibold tracking-wider uppercase">
-              Submenu
-            </span>
-          </div>
-
-          {/* Submenu Child Items */}
-          <div className="py-1.5 space-y-1">
-            {currentSubmenu.items.map((sub, idx) => {
-              const SubIcon = sub.icon;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSubmenuClick(sub.parentId, sub.subTab, sub.label)}
-                  className="w-full text-left p-2.5 rounded-xl transition-all duration-200 group flex items-start gap-3 hover:bg-[#F4510B] text-white cursor-pointer"
-                >
-                  <div className="p-1.5 rounded-lg bg-white/10 group-hover:bg-white/20 text-white shrink-0 transition-colors mt-0.5">
-                    <SubIcon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-white group-hover:text-white flex items-center justify-between">
-                      <span>{sub.label}</span>
-                      <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-white/80" />
-                    </div>
-                    <p className="text-[11px] text-white/70 group-hover:text-white/90 leading-tight mt-0.5 truncate">
-                      {sub.desc}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </>
   );
 }

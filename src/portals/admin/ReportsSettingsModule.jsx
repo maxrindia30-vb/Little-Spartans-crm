@@ -65,7 +65,7 @@ export default function ReportsSettingsModule() {
           ParentName: s.parentName,
           ParentPhone: s.parentPhone,
           JoinDate: s.joinDate,
-          AttendanceRate: `${s.attendanceRate || 95}%`
+          AttendanceRate: s.attendanceRate ? `${s.attendanceRate}%` : '0%'
         }));
       } else if (exportEntity === 'parents') {
         exportData = data.parents.map(p => ({

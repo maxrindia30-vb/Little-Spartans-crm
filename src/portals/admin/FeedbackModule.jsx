@@ -33,7 +33,10 @@ export default function FeedbackModule() {
     setComment('');
   };
 
-  const avgRating = (data.feedback.reduce((sum, f) => sum + f.rating, 0) / (data.feedback.length || 1)).toFixed(1);
+  const hasFeedback = Array.isArray(data.feedback) && data.feedback.length > 0;
+  const avgRating = hasFeedback
+    ? (data.feedback.reduce((sum, f) => sum + f.rating, 0) / data.feedback.length).toFixed(1)
+    : '0.0';
 
   return (
     <div className="space-y-6">
@@ -70,7 +73,9 @@ export default function FeedbackModule() {
               <span className="text-xs font-bold text-[#172B50] opacity-60">/ 5.0 Overall Rating</span>
             </div>
             <p className="text-xs text-[#172B50] opacity-80 mt-1">
-              Based on {data.feedback.length} parent evaluations this term. 98% would recommend Little Spartans.
+              {hasFeedback
+                ? `Based on ${data.feedback.length} parent evaluations this term. 98% would recommend Little Spartans.`
+                : 'No evaluations submitted yet this term.'}
             </p>
           </div>
         </div>
@@ -78,56 +83,74 @@ export default function FeedbackModule() {
         <div className="flex items-center gap-2">
           <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-center">
             <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">Coaching</span>
-            <span className="text-sm font-extrabold text-[#F4510B]">4.9 / 5</span>
+            <span className="text-sm font-extrabold text-[#F4510B]">{hasFeedback ? '4.9 / 5' : '0.0 / 5'}</span>
           </div>
           <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-center">
             <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">Safety</span>
-            <span className="text-sm font-extrabold text-[#172B50]">5.0 / 5</span>
+            <span className="text-sm font-extrabold text-[#172B50]">{hasFeedback ? '5.0 / 5' : '0.0 / 5'}</span>
           </div>
           <div className="px-3.5 py-2 rounded-xl bg-[#FFF4E8] border border-[#172B5015] text-center">
             <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block">Facilities</span>
-            <span className="text-sm font-extrabold text-[#172B50]">4.8 / 5</span>
+            <span className="text-sm font-extrabold text-[#172B50]">{hasFeedback ? '4.8 / 5' : '0.0 / 5'}</span>
           </div>
         </div>
       </div>
 
-      {/* Reviews Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {data.feedback.map(fb => (
-          <div key={fb.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
-            <div>
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
-                    {fb.category}
-                  </span>
-                  <h4 className="text-sm font-extrabold text-[#172B50] mt-0.5">{fb.parentName}</h4>
-                  <p className="text-[11px] text-[#172B50] opacity-70">
-                    Athlete: {fb.studentName} • {fb.coachName}
-                  </p>
+      {/* Reviews Grid or Clean Empty State */}
+      {!hasFeedback ? (
+        <div className="bg-white rounded-2xl p-12 border border-[#172B501A] shadow-card text-center flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFF4E8] flex items-center justify-center text-[#F4510B] mb-3">
+            <Star className="w-6 h-6 text-[#F4510B]" />
+          </div>
+          <h3 className="text-base font-bold text-[#172B50]">No Feedback Logged Yet</h3>
+          <p className="text-xs text-[#172B50]/60 max-w-sm mt-1">
+            Parent testimonials, coach reviews and athlete satisfaction notes will appear here once submitted.
+          </p>
+          <button
+            onClick={() => setIsAddOpen(true)}
+            className="mt-4 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            + Add Testimonial
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {data.feedback.map(fb => (
+            <div key={fb.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
+              <div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
+                      {fb.category}
+                    </span>
+                    <h4 className="text-sm font-extrabold text-[#172B50] mt-0.5">{fb.parentName}</h4>
+                    <p className="text-[11px] text-[#172B50] opacity-70">
+                      Athlete: {fb.studentName} • {fb.coachName}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1 bg-[#FFF4E8] px-2 py-1 rounded-lg border border-[#172B5015]">
+                    <Star className="w-3.5 h-3.5 text-[#F4510B] fill-[#F4510B]" />
+                    <span className="text-xs font-black text-[#172B50]">{fb.rating}.0</span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1 bg-[#FFF4E8] px-2 py-1 rounded-lg border border-[#172B5015]">
-                  <Star className="w-3.5 h-3.5 text-[#F4510B] fill-[#F4510B]" />
-                  <span className="text-xs font-black text-[#172B50]">{fb.rating}.0</span>
-                </div>
+                <p className="mt-3 text-xs text-[#172B50] opacity-85 leading-relaxed italic bg-[#FFF4E8]/50 p-3 rounded-xl border border-[#172B5010]">
+                  "{fb.comment}"
+                </p>
               </div>
 
-              <p className="mt-3 text-xs text-[#172B50] opacity-85 leading-relaxed italic bg-[#FFF4E8]/50 p-3 rounded-xl border border-[#172B5010]">
-                "{fb.comment}"
-              </p>
+              <div className="mt-4 pt-3 border-t border-[#172B5015] flex items-center justify-between text-[10px] text-[#172B50] opacity-60">
+                <span>Date: {fb.date}</span>
+                <span className="font-bold text-[#172B50] flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#F4510B]" />
+                  <span>Verified Academy Parent</span>
+                </span>
+              </div>
             </div>
-
-            <div className="mt-4 pt-3 border-t border-[#172B5015] flex items-center justify-between text-[10px] text-[#172B50] opacity-60">
-              <span>Date: {fb.date}</span>
-              <span className="font-bold text-[#172B50] flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#F4510B]" />
-                <span>Verified Academy Parent</span>
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Add Feedback Modal */}
       <Modal

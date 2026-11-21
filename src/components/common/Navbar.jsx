@@ -162,55 +162,57 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* User Profile dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                setProfileOpen(!profileOpen);
-                setNotificationsOpen(false);
-              }}
-              className="flex items-center gap-2.5 p-1 pl-1.5 pr-3 rounded-full bg-white border border-[#172B5018] hover:bg-[#FFF4E8] hover:border-[#F4510B35] transition-all shadow-xs cursor-pointer select-none active:scale-95 group"
-            >
-              <div className="relative">
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-1 ring-[#172B5018]"
-                />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
-              </div>
-              <div className="text-left hidden sm:block">
-                <span className="text-xs font-black text-[#172B50] block leading-tight">{currentUser.name}</span>
-                <span className="text-[10.5px] font-bold text-[#F4510B] block leading-tight tracking-wide">{currentUser.badge || 'SuperAdmin'}</span>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-[#172B50] opacity-60 group-hover:opacity-100 group-hover:translate-y-0.5 transition-all" />
-            </button>
-
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-dropdown border border-[#172B501A] p-2.5 z-50">
-                <div className="px-3 py-2.5 bg-[#FFF4E8] rounded-lg">
-                  <p className="text-xs font-bold text-[#172B50]">{currentUser.name}</p>
-                  <p className="text-[11px] font-medium text-[#172B50] opacity-80 truncate mt-0.5">
-                    {currentUser.email}
-                  </p>
+          {/* User Profile dropdown - Conditionally excluded in Admin Portal only */}
+          {currentPortal !== 'admin' && (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setProfileOpen(!profileOpen);
+                  setNotificationsOpen(false);
+                }}
+                className="flex items-center gap-2.5 p-1 pl-1.5 pr-3 rounded-full bg-white border border-[#172B5018] hover:bg-[#FFF4E8] hover:border-[#F4510B35] transition-all shadow-xs cursor-pointer select-none active:scale-95 group"
+              >
+                <div className="relative">
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-1 ring-[#172B5018]"
+                  />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                 </div>
-
-                <div className="pt-2 mt-2 border-t border-[#172B5015]">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      logout();
-                      setProfileOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#F4510B] font-bold hover:bg-[#FFF4E8] rounded-lg flex items-center gap-2 cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>Sign Out</span>
-                  </button>
+                <div className="text-left hidden sm:block">
+                  <span className="text-xs font-black text-[#172B50] block leading-tight">{currentUser.name}</span>
+                  <span className="text-[10.5px] font-bold text-[#F4510B] block leading-tight tracking-wide">{currentUser.badge || 'SuperAdmin'}</span>
                 </div>
-              </div>
-            )}
-          </div>
+                <ChevronDown className="w-3.5 h-3.5 text-[#172B50] opacity-60 group-hover:opacity-100 group-hover:translate-y-0.5 transition-all" />
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-dropdown border border-[#172B501A] p-2.5 z-50">
+                  <div className="px-3 py-2.5 bg-[#FFF4E8] rounded-lg">
+                    <p className="text-xs font-bold text-[#172B50]">{currentUser.name}</p>
+                    <p className="text-[11px] font-medium text-[#172B50] opacity-80 truncate mt-0.5">
+                      {currentUser.email}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 mt-2 border-t border-[#172B5015]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setProfileOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs text-[#F4510B] font-bold hover:bg-[#FFF4E8] rounded-lg flex items-center gap-2 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5 text-[#F4510B]" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
 
