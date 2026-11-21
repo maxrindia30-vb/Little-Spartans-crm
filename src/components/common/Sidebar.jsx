@@ -61,6 +61,7 @@ export default function Sidebar() {
     setSidebarOpen, 
     logout, 
     resetAllData,
+    resetTermsAcceptanceForTesting,
     addToast,
     currentUser
   } = useCrm();
@@ -198,6 +199,16 @@ export default function Sidebar() {
         { id: 'settings', label: 'Academy Settings', view: 'reports_settings', subTab: 'settings' },
       ],
     },
+    {
+      id: 'terms_policies',
+      label: 'Terms & Policies',
+      icon: FileText,
+      children: [
+        { id: 'terms', label: 'Terms & Conditions', view: 'terms_policies', subTab: 'terms' },
+        { id: 'dos_donts', label: 'Parent Do’s & Don’ts', view: 'terms_policies', subTab: 'dos_donts' },
+        { id: 'acceptances', label: 'Parent Acceptances', view: 'terms_policies', subTab: 'acceptances' },
+      ],
+    },
   ];
 
   const isChildActive = (child) => {
@@ -220,6 +231,7 @@ export default function Sidebar() {
       if (child.view === 'access_management' && !activeSubTab) return child.subTab === 'overview';
       if (child.view === 'communication' && !activeSubTab) return child.subTab === 'inbox';
       if (child.view === 'reports_settings' && !activeSubTab) return child.subTab === 'analytics';
+      if (child.view === 'terms_policies' && !activeSubTab) return child.subTab === 'terms';
       return activeSubTab === child.subTab;
     }
     return true;
@@ -854,6 +866,30 @@ export default function Sidebar() {
                 <Sparkles className="w-3.5 h-3.5 text-[#00AFA3]" />
                 <span>Daily Motivation</span>
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('little-spartans:open-terms-modal'));
+                  setProfileMenuOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 text-xs text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-2 cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#F4510B]" />
+                <span>Terms &amp; Policies</span>
+              </button>
+              {resetTermsAcceptanceForTesting && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetTermsAcceptanceForTesting(currentUser?.email);
+                    setProfileMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-2 cursor-pointer"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Reset Terms for Testing</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {

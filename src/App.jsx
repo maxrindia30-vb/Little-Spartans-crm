@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { useCrm } from './context/CrmContext';
 import Sidebar from './components/common/Sidebar';
@@ -7,6 +7,7 @@ import LoginModal from './components/common/LoginModal';
 import SpartzenLoginPage from './components/auth/SpartzenLoginPage';
 import MouseFloatingGlow from './components/common/MouseFloatingGlow';
 import DailyMotivationalModal from './components/common/DailyMotivationalModal';
+import FirstTimeTermsModal from './components/auth/FirstTimeTermsModal';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Admin Portal Master Modules
@@ -21,6 +22,7 @@ import SportsEventsModule from './portals/admin/SportsEventsModule';
 import CommunicationModule from './portals/admin/CommunicationModule';
 import ReportsSettingsModule from './portals/admin/ReportsSettingsModule';
 import AccessManagementModule from './portals/admin/AccessManagementModule';
+import TermsManagementModule from './portals/admin/TermsManagementModule';
 
 // Other Portals
 import ParentPortalView from './portals/parent/ParentPortalView';
@@ -30,8 +32,25 @@ import SupportPortalView from './portals/support/SupportPortalView';
 import EquipmentManagementModule from './portals/common/EquipmentManagementModule';
 
 export default function App() {
-  const { currentPortal, currentView, setCurrentPortal, isLoggedIn, sidebarOpen, setSidebarOpen } = useCrm();
+  const {
+    currentPortal,
+    currentView,
+    setCurrentPortal,
+    isLoggedIn,
+    sidebarOpen,
+    setSidebarOpen,
+    currentUser,
+    checkUserTermsAcceptance,
+  } = useCrm();
+
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [forceShowTermsModal, setForceShowTermsModal] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setForceShowTermsModal(true);
+    window.addEventListener('little-spartans:open-terms-modal', handler);
+    return () => window.removeEventListener('little-spartans:open-terms-modal', handler);
+  }, []);
 
   // If logged out, display exact Little Spartans Spartzen login screen matching reference
   if (!isLoggedIn) {
@@ -42,6 +61,13 @@ export default function App() {
       </>
     );
   }
+
+  const isParentPortal = currentPortal === 'parent';
+  const hasAcceptedTerms = checkUserTermsAcceptance
+    ? checkUserTermsAcceptance(currentUser?.id, currentUser?.email, currentPortal)
+    : true;
+  // First-Time Terms & Conditions mandatory popup is strictly for the Parent Portal
+  const shouldShowTermsModal = (isParentPortal && !hasAcceptedTerms) || forceShowTermsModal;
 
   // Render view for Admin Portal (Strictly 9 Master Modules + backwards-compatible routing)
   const renderAdminView = () => {
@@ -119,6 +145,12 @@ export default function App() {
       case 'equipment_management':
         return <EquipmentManagementModule role="admin" />;
 
+      // 12. Terms & Policies Governance (Admin Edit, Add, Versioning & Acceptance Audits)
+      case 'terms_policies':
+      case 'terms':
+      case 'policies':
+        return <TermsManagementModule />;
+
       default:
         return <AdminDashboard />;
     }
@@ -191,8 +223,17 @@ export default function App() {
         onClose={() => setIsLoginModalOpen(false)} 
       />
 
-      {/* Daily Sports Motivational Welcome Modal (Displays once per day immediately after login) */}
-      <DailyMotivationalModal />
+      {/* Mandatory First-Time Account Login Terms & Conditions Modal */}
+      {shouldShowTermsModal && (
+        <FirstTimeTermsModal
+          isOpen={true}
+          currentUser={currentUser}
+          currentPortal={currentPortal}
+        />
+      )}
+
+      {/* Daily Sports Motivational Welcome Modal (Displays once per day immediately after terms acceptance) */}
+      {!shouldShowTermsModal && <DailyMotivationalModal />}
 
     </div>
   );

@@ -266,6 +266,11 @@ export function CrmProvider({ children }) {
           scheduledMessages: Array.isArray(parsed.scheduledMessages)
             ? parsed.scheduledMessages
             : (initialAcademyData.scheduledMessages || []),
+          termsDocument: parsed.termsDocument || initialAcademyData.termsDocument,
+          dosDontsDocument: parsed.dosDontsDocument || initialAcademyData.dosDontsDocument,
+          termsAcceptances: Array.isArray(parsed.termsAcceptances)
+            ? parsed.termsAcceptances
+            : (initialAcademyData.termsAcceptances || []),
         };
       }
     } catch (e) {
@@ -390,6 +395,9 @@ export function CrmProvider({ children }) {
       broadcasts: initialAcademyData.broadcasts || [],
       messageTemplates: initialAcademyData.messageTemplates || [],
       scheduledMessages: initialAcademyData.scheduledMessages || [],
+      termsDocument: initialAcademyData.termsDocument,
+      dosDontsDocument: initialAcademyData.dosDontsDocument,
+      termsAcceptances: [],
       userAccounts: [initialAcademyData.userAccounts[0]],
       locations: initialAcademyData.locations,
       programs: initialAcademyData.programs,
@@ -3672,6 +3680,312 @@ export function CrmProvider({ children }) {
     setSidebarOpen(false);
   };
 
+  // First-Time Login Terms & Conditions Acceptance (Strictly for Parent Portal)
+  const checkUserTermsAcceptance = (userId, userEmail, userRole) => {
+    const activeTermsVersion = data.termsDocument?.version || '1.0';
+    const activeDosDontsVersion = data.dosDontsDocument?.version || '1.0';
+
+    const acceptances = data.termsAcceptances || [];
+    const normalizedEmail = (userEmail || '').toLowerCase().trim();
+
+    const hasAccepted = acceptances.some((rec) => {
+      const matchUser =
+        (normalizedEmail && rec.userEmail && rec.userEmail.toLowerCase().trim() === normalizedEmail) ||
+        (userId && rec.userId === userId) ||
+        (userRole && rec.userRole === userRole && (!userEmail || rec.userEmail === userEmail));
+
+      return (
+        matchUser &&
+        rec.termsVersion === activeTermsVersion &&
+        rec.dosDontsVersion === activeDosDontsVersion &&
+        rec.termsAccepted === true &&
+        rec.dosDontsAccepted === true
+      );
+    });
+
+    return hasAccepted;
+  };
+
+  const recordTermsAcceptance = async (payload) => {
+    const activeTermsVersion = data.termsDocument?.version || '1.0';
+    const activeDosDontsVersion = data.dosDontsDocument?.version || '1.0';
+
+    const {
+      userId,
+      userEmail,
+      userName,
+      userRole,
+      termsVersion = activeTermsVersion,
+      dosDontsVersion = activeDosDontsVersion
+    } = payload || {};
+    const timestamp = new Date().toISOString();
+
+    const newRecord = {
+      id: `ACK-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      userId: userId || userEmail || 'ACC-PARENT',
+      userEmail: userEmail || currentUserProfiles[currentPortal]?.email || '',
+      userName: userName || currentUserProfiles[currentPortal]?.name || 'Academy Parent',
+      userRole: userRole || currentPortal || 'parent',
+      termsVersion,
+      termsAccepted: true,
+      termsAcceptedAt: timestamp,
+      dosDontsVersion,
+      dosDontsAccepted: true,
+      dosDontsAcceptedAt: timestamp,
+      ipAddress: '127.0.0.1 (Verified Session)',
+      status: 'Active',
+      createdAt: timestamp,
+    };
+
+    setData((prev) => {
+      const existing = prev.termsAcceptances || [];
+      const updatedAcceptances = [newRecord, ...existing];
+      const updatedAccounts = (prev.userAccounts || []).map((acc) => {
+        const match =
+          (newRecord.userEmail && acc.email && acc.email.toLowerCase() === newRecord.userEmail.toLowerCase()) ||
+          (newRecord.userId && acc.id === newRecord.userId);
+        if (match) {
+          return {
+            ...acc,
+            termsAccepted: true,
+            termsVersion,
+            termsAcceptedAt: timestamp,
+            dosDontsAccepted: true,
+            dosDontsVersion,
+            dosDontsAcceptedAt: timestamp,
+          };
+        }
+        return acc;
+      });
+
+      return {
+        ...prev,
+        termsAcceptances: updatedAcceptances,
+        userAccounts: updatedAccounts,
+      };
+    });
+
+    return { success: true, record: newRecord };
+  };
+
+  // =========================================================================
+  // ADMIN TERMS & POLICIES GOVERNANCE METHODS
+  // =========================================================================
+
+  // Add new section to Terms & Conditions
+  const addTermsSection = (newSection) => {
+    setData((prev) => {
+      const currentDoc = prev.termsDocument || initialAcademyData.termsDocument;
+      const currentSections = currentDoc.sections || [];
+      const nextNumber = currentSections.length > 0 
+        ? Math.max(...currentSections.map(s => s.number)) + 1 
+        : 1;
+
+      const sectionToAdd = {
+        number: newSection.number || nextNumber,
+        title: newSection.title || `Section ${nextNumber}`,
+        points: Array.isArray(newSection.points) && newSection.points.length > 0 
+          ? newSection.points 
+          : [newSection.text || 'Policy terms details.']
+      };
+
+      const updatedSections = [...currentSections, sectionToAdd];
+      return {
+        ...prev,
+        termsDocument: {
+          ...currentDoc,
+          lastUpdated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          sections: updatedSections
+        }
+      };
+    });
+    addToast('New Terms & Conditions section added successfully.', 'success');
+  };
+
+  // Update existing section in Terms & Conditions
+  const updateTermsSection = (sectionNumber, updatedFields) => {
+    setData((prev) => {
+      const currentDoc = prev.termsDocument || initialAcademyData.termsDocument;
+      const updatedSections = (currentDoc.sections || []).map((sec) => {
+        if (sec.number === sectionNumber) {
+          return {
+            ...sec,
+            ...updatedFields,
+            points: Array.isArray(updatedFields.points) ? updatedFields.points : sec.points
+          };
+        }
+        return sec;
+      });
+
+      return {
+        ...prev,
+        termsDocument: {
+          ...currentDoc,
+          lastUpdated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          sections: updatedSections
+        }
+      };
+    });
+    addToast(`Section ${sectionNumber} updated successfully.`, 'success');
+  };
+
+  // Delete section from Terms & Conditions
+  const deleteTermsSection = (sectionNumber) => {
+    setData((prev) => {
+      const currentDoc = prev.termsDocument || initialAcademyData.termsDocument;
+      const filtered = (currentDoc.sections || []).filter(s => s.number !== sectionNumber);
+      // Re-index section numbers
+      const reindexed = filtered.map((sec, idx) => ({
+        ...sec,
+        number: idx + 1
+      }));
+
+      return {
+        ...prev,
+        termsDocument: {
+          ...currentDoc,
+          lastUpdated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          sections: reindexed
+        }
+      };
+    });
+    addToast(`Section ${sectionNumber} deleted and list re-indexed.`, 'info');
+  };
+
+  // Add rule to Parent Do's or Don'ts
+  const addConductRule = (type, ruleText) => {
+    if (!ruleText || !ruleText.trim()) return;
+    setData((prev) => {
+      const currentDoc = prev.dosDontsDocument || initialAcademyData.dosDontsDocument;
+      const listKey = type === 'dos' ? 'dos' : 'donts';
+      const existingList = currentDoc[listKey] || [];
+      const updatedList = [...existingList, ruleText.trim()];
+
+      return {
+        ...prev,
+        dosDontsDocument: {
+          ...currentDoc,
+          lastUpdated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          [listKey]: updatedList
+        }
+      };
+    });
+    addToast(`New Parent ${type === 'dos' ? 'Do' : "Don't"} guideline added.`, 'success');
+  };
+
+  // Update rule in Parent Do's or Don'ts
+  const updateConductRule = (type, index, ruleText) => {
+    if (!ruleText || !ruleText.trim()) return;
+    setData((prev) => {
+      const currentDoc = prev.dosDontsDocument || initialAcademyData.dosDontsDocument;
+      const listKey = type === 'dos' ? 'dos' : 'donts';
+      const updatedList = [...(currentDoc[listKey] || [])];
+      updatedList[index] = ruleText.trim();
+
+      return {
+        ...prev,
+        dosDontsDocument: {
+          ...currentDoc,
+          lastUpdated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          [listKey]: updatedList
+        }
+      };
+    });
+    addToast(`Parent guideline updated.`, 'success');
+  };
+
+  // Delete rule in Parent Do's or Don'ts
+  const deleteConductRule = (type, index) => {
+    setData((prev) => {
+      const currentDoc = prev.dosDontsDocument || initialAcademyData.dosDontsDocument;
+      const listKey = type === 'dos' ? 'dos' : 'donts';
+      const updatedList = (currentDoc[listKey] || []).filter((_, i) => i !== index);
+
+      return {
+        ...prev,
+        dosDontsDocument: {
+          ...currentDoc,
+          lastUpdated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          [listKey]: updatedList
+        }
+      };
+    });
+    addToast(`Guideline removed.`, 'info');
+  };
+
+  // Update Parent Acknowledgement Text
+  const updateParentAcknowledgementText = (newText) => {
+    setData((prev) => {
+      const currentDoc = prev.dosDontsDocument || initialAcademyData.dosDontsDocument;
+      return {
+        ...prev,
+        dosDontsDocument: {
+          ...currentDoc,
+          acknowledgement: newText,
+          lastUpdated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        }
+      };
+    });
+    addToast('Parent acknowledgement statement updated.', 'success');
+  };
+
+  // Publish new version (forces re-acknowledgement for parents)
+  const publishNewTermsVersion = ({ termsVersion, dosDontsVersion, changeNotes }) => {
+    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    setData((prev) => {
+      const currentTerms = prev.termsDocument || initialAcademyData.termsDocument;
+      const currentDosDonts = prev.dosDontsDocument || initialAcademyData.dosDontsDocument;
+
+      return {
+        ...prev,
+        termsDocument: {
+          ...currentTerms,
+          version: termsVersion || currentTerms.version,
+          lastUpdated: today
+        },
+        dosDontsDocument: {
+          ...currentDosDonts,
+          version: dosDontsVersion || currentDosDonts.version,
+          lastUpdated: today
+        }
+      };
+    });
+    addToast(`Published new Terms & Policies Version ${termsVersion || 'update'}! Parents will be prompted on next login.`, 'success');
+  };
+
+  // Reset terms to academy default template
+  const resetTermsDataToDefault = () => {
+    setData((prev) => ({
+      ...prev,
+      termsDocument: initialAcademyData.termsDocument,
+      dosDontsDocument: initialAcademyData.dosDontsDocument,
+    }));
+    addToast('Terms & Policies restored to academy default.', 'info');
+  };
+
+  const resetTermsAcceptanceForTesting = (userEmail) => {
+    const normalized = (userEmail || '').toLowerCase().trim();
+    setData((prev) => ({
+      ...prev,
+      termsAcceptances: (prev.termsAcceptances || []).filter(
+        (r) => normalized && r.userEmail && r.userEmail.toLowerCase().trim() !== normalized
+      ),
+      userAccounts: (prev.userAccounts || []).map((acc) => {
+        if (!normalized || (acc.email && acc.email.toLowerCase().trim() === normalized)) {
+          return {
+            ...acc,
+            termsAccepted: false,
+            termsAcceptedAt: null,
+            dosDontsAccepted: false,
+            dosDontsAcceptedAt: null,
+          };
+        }
+        return acc;
+      }),
+    }));
+    addToast('Terms & Conditions acceptance reset for testing.', 'info');
+  };
+
   return (
     <CrmContext.Provider
       value={{
@@ -3797,7 +4111,23 @@ export function CrmProvider({ children }) {
         sendBroadcastMessage,
         scheduleNewMessage,
         publishAnnouncementRecord,
-        resetToCleanSlate
+        resetToCleanSlate,
+        // First-Time Login Terms & Conditions & Admin Governance
+        termsDocument: data.termsDocument || initialAcademyData.termsDocument,
+        dosDontsDocument: data.dosDontsDocument || initialAcademyData.dosDontsDocument,
+        termsAcceptances: data.termsAcceptances || [],
+        checkUserTermsAcceptance,
+        recordTermsAcceptance,
+        resetTermsAcceptanceForTesting,
+        addTermsSection,
+        updateTermsSection,
+        deleteTermsSection,
+        addConductRule,
+        updateConductRule,
+        deleteConductRule,
+        updateParentAcknowledgementText,
+        publishNewTermsVersion,
+        resetTermsDataToDefault,
       }}
     >
       {children}

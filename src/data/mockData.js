@@ -2,6 +2,11 @@
 // All dummy student, coach, parent, enquiry, payment, and schedule records removed
 // so locations and operational records can be entered and verified manually.
 
+import {
+  TERMS_AND_CONDITIONS_DOC,
+  PARENT_DOS_AND_DONTS_DOC,
+} from './termsAndPoliciesContent';
+
 export const initialAcademyData = {
   academy: {
     name: "Little Spartans Sports Academy",
@@ -370,6 +375,7 @@ export const initialAcademyData = {
   ],
 
   backups: [],
+  termsAcceptances: [],
 
   // Shared Academy Branches (Chennai)
   locations: [
@@ -464,5 +470,10 @@ export const initialAcademyData = {
   equipment: [],
 
   // Coach-submitted Equipment Condition & Damage Reports
-  equipmentReports: []
+  equipmentReports: [],
+
+  // Terms & Conditions and Parent Conduct Guidelines Governance
+  termsDocument: TERMS_AND_CONDITIONS_DOC,
+  dosDontsDocument: PARENT_DOS_AND_DONTS_DOC,
+  termsAcceptances: []
 };

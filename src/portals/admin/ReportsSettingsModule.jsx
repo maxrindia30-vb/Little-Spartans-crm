@@ -27,7 +27,7 @@ import ReportsAnalytics from './ReportsAnalytics';
 import AcademySettings from './AcademySettings';
 
 export default function ReportsSettingsModule() {
-  const { data, activeSubTab, setActiveSubTab, addToast, createBackup, restoreBackup } = useCrm();
+  const { data, activeSubTab, setActiveSubTab, setCurrentView, addToast, createBackup, restoreBackup } = useCrm();
 
   // Active sub-tab defaults to 'analytics' if not specified
   const currentTab = ['analytics', 'export', 'backup', 'permissions', 'settings'].includes(activeSubTab) 
@@ -302,6 +302,18 @@ export default function ReportsSettingsModule() {
             >
               <Settings className="w-3.5 h-3.5" />
               <span>Academy Settings</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (setCurrentView) setCurrentView('terms_policies');
+                if (setActiveSubTab) setActiveSubTab('terms');
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-[#F4510B] hover:bg-[#FFF4E8] border border-[#F4510B20] transition-all cursor-pointer shadow-xs ml-auto"
+              title="Navigate to dedicated Terms & Policies Governance Module"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Terms &amp; Policies Governance</span>
             </button>
           </div>
         </div>
