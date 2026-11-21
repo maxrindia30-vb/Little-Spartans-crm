@@ -252,12 +252,36 @@ export default function Sidebar() {
   }, [currentView, activeSubTab, isAdminPortal]);
 
   const handleParentClick = (parent) => {
-    if (!isFullView) {
-      setIsHovered(true);
-      setExpandedMenu(parent.id);
+    const parentActive = isParentActive(parent);
+
+    // If already active and in full view, clicking parent row toggles accordion
+    if (parentActive && isFullView) {
+      setExpandedMenu(prev => prev === parent.id ? null : parent.id);
       return;
     }
-    // Accordion: clicking expands its submenu, clicking again collapses that submenu
+
+    // Otherwise navigate to this module's primary view & subTab
+    const firstChild = parent.children && parent.children.length > 0 ? parent.children[0] : null;
+    if (firstChild) {
+      if (firstChild.subTab && setActiveSubTab) {
+        setActiveSubTab(firstChild.subTab);
+      }
+      setCurrentView(firstChild.view);
+    } else {
+      setCurrentView(parent.id);
+    }
+
+    // Keep the clicked section expanded
+    setExpandedMenu(parent.id);
+
+    if (!isFullView) {
+      setIsHovered(true);
+    }
+  };
+
+  const handleChevronClick = (e, parent) => {
+    e.stopPropagation();
+    // Clicking chevron only toggles accordion without navigating
     setExpandedMenu(prev => prev === parent.id ? null : parent.id);
   };
 
@@ -422,7 +446,7 @@ export default function Sidebar() {
       {sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-black/60 z-50 lg:hidden backdrop-blur-xs transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-xs transition-opacity duration-300"
         />
       )}
 
@@ -442,7 +466,7 @@ export default function Sidebar() {
       <aside 
         onMouseEnter={handleNavbarMouseEnter}
         onMouseLeave={handleNavbarMouseLeave}
-        className={`fixed inset-y-0 left-0 z-40 text-white flex flex-col font-sans transition-[width,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none lg:static lg:inset-auto lg:h-[calc(100vh-16px)] lg:my-2 lg:ml-2.5 lg:rounded-2xl border shadow-2xl overflow-hidden lg:shrink-0 lg:z-auto relative ${
+        className={`fixed inset-y-0 left-0 z-50 text-white flex flex-col font-sans transition-[width,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none lg:static lg:inset-auto lg:h-[calc(100vh-16px)] lg:my-2 lg:ml-2.5 lg:rounded-2xl border shadow-2xl overflow-hidden lg:shrink-0 lg:z-auto relative ${
           isAdminPortal
             ? 'bg-gradient-to-b from-[#082B49] via-[#064B68] to-[#043347] border-white/12'
             : 'bg-[#0B0F17] border-white/10'
@@ -652,10 +676,7 @@ export default function Sidebar() {
                       {isFullView && (
                         <div 
                           className="shrink-0 ml-1.5 p-0.5 text-white/70 group-hover:text-white transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleParentClick(parent);
-                          }}
+                          onClick={(e) => handleChevronClick(e, parent)}
                         >
                           <ChevronDown
                             className={`w-4 h-4 transition-transform duration-200 ease-in-out ${

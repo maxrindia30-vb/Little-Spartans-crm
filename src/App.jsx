@@ -116,6 +116,7 @@ export default function App() {
 
       // 11. Sports Equipment Management (Academy-Wide Inventory & Sanctions)
       case 'equipment':
+      case 'equipment_management':
         return <EquipmentManagementModule role="admin" />;
 
       default:

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Package,
   ShieldAlert,
@@ -135,11 +135,13 @@ export default function EquipmentManagementModule({
 
   // Available locations scoped to allowedLocations
   const availableLocations = useMemo(() => {
-    const all = data.locations ? data.locations.map((l) => l.name) : data.academy?.centers || [];
+    const rawLocations = data.locations || data.academy?.centers || ['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM'];
+    const all = rawLocations.map((l) => (typeof l === 'object' && l ? (l.name || l.id) : l)).filter(Boolean);
+    const finalLocations = all.length > 0 ? all : ['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM'];
     if (allowedLocations && Array.isArray(allowedLocations) && allowedLocations.length > 0) {
-      return all.filter((loc) => allowedLocations.includes(loc));
+      return finalLocations.filter((loc) => allowedLocations.includes(loc));
     }
-    return all;
+    return finalLocations;
   }, [data.locations, data.academy, allowedLocations]);
 
   // Scoped equipment list based on allowed locations
