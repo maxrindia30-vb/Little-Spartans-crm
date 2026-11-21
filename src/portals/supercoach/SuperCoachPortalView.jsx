@@ -382,7 +382,7 @@ export default function SuperCoachPortalView() {
             type="button"
             onClick={() => setIsCreateScheduleModalOpen(true)}
             className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
-            title="Create Court Session"
+            title="Create Class"
           >
             <Plus className="w-4 h-4 text-[#172B50]" />
           </button>
@@ -571,7 +571,7 @@ export default function SuperCoachPortalView() {
                 </div>
               </FloatingCard>
 
-              {/* Card 3: Today's Court Sessions (Emerald) */}
+              {/* Card 3: Class Schedule (Emerald) */}
               <FloatingCard 
                 maxTilt={3} 
                 scale={1.01} 
@@ -586,11 +586,8 @@ export default function SuperCoachPortalView() {
                     </div>
                     <div>
                       <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                        Today's Court Sessions
+                        Class Schedule
                       </h3>
-                      <p className="text-[11px] font-medium text-[#172B50]/60">
-                        Live arena schedule
-                      </p>
                     </div>
                   </div>
 
@@ -599,13 +596,13 @@ export default function SuperCoachPortalView() {
                       <div className="w-10 h-10 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-2 shadow-2xs">
                         <Clock className="w-5 h-5 text-[#16A34A]" />
                       </div>
-                      <p className="text-xs font-black text-[#172B50]">No sessions today</p>
+                      <p className="text-xs font-black text-[#172B50]">No classes today</p>
                       <button
                         type="button"
                         onClick={() => setIsCreateScheduleModalOpen(true)}
                         className="mt-3 px-3 py-1.5 text-xs font-bold text-[#16A34A] bg-white border border-[#16A34A30] hover:bg-[#16A34A] hover:text-white rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
                       >
-                        + Create Session
+                        + Create Class
                       </button>
                     </div>
                   ) : (
@@ -638,7 +635,7 @@ export default function SuperCoachPortalView() {
 
                 <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
                   <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
-                    Court Operations
+                    Class Schedule
                   </span>
                   <button
                     type="button"
@@ -685,7 +682,7 @@ export default function SuperCoachPortalView() {
 
                   <div className="min-h-[258px] max-h-[258px] flex flex-col justify-center">
                     <div className="grid grid-cols-2 gap-2">
-                      {/* Tile 1: Create Session */}
+                      {/* Tile 1: Create Class */}
                       <button
                         type="button"
                         onClick={() => setIsCreateScheduleModalOpen(true)}
@@ -695,7 +692,7 @@ export default function SuperCoachPortalView() {
                           <Plus className="w-4.5 h-4.5 text-white" />
                         </div>
                         <span className="text-xs font-black text-white leading-tight">
-                          Create Session
+                          Create Class
                         </span>
                         <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
                           New Timetable
@@ -807,7 +804,7 @@ export default function SuperCoachPortalView() {
                     No classes scheduled for today
                   </p>
                   <p className="text-[11px] text-[#172B50]/60 mt-1 max-w-[240px]">
-                    Active court sessions across your centers will appear here
+                    Active classes across your centers will appear here
                   </p>
                 </div>
               ) : (
@@ -2083,13 +2080,13 @@ export default function SuperCoachPortalView() {
       <Modal
         isOpen={isCreateScheduleModalOpen}
         onClose={() => setIsCreateScheduleModalOpen(false)}
-        title="Schedule Class Session"
-        subtitle="Schedule a session in an authorized location"
+        title="Create Class Schedule"
+        subtitle="Schedule a class in an authorized location"
         maxWidth="max-w-lg"
       >
         <form onSubmit={handleCreateScheduleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Class / Session Title</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Class Title</label>
             <input
               type="text"
               required
