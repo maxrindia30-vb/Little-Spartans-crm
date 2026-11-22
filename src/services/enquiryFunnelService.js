@@ -319,13 +319,64 @@ export function getDonutChartData(kpis) {
  */
 const AUTOMATION_LOGS_STORAGE_KEY = 'little_spartans_lead_automation_logs';
 
+export const INITIAL_AUTOMATION_LOGS = [
+  {
+    id: 'LOG-001',
+    timestamp: '2026-11-22T09:30:00Z',
+    childName: 'Aarav Sharma',
+    enquiryId: 'ENQ-001',
+    fromStatus: 'New',
+    toStatus: 'Active',
+    rule: 'Active: 0-5 days',
+    reason: 'Initial phone follow-up logged by Support within 24 hours',
+  },
+  {
+    id: 'LOG-002',
+    timestamp: '2026-11-21T16:45:00Z',
+    childName: 'Diya Raman',
+    enquiryId: 'ENQ-003',
+    fromStatus: 'Demo Requested',
+    toStatus: 'Demo Attended',
+    rule: 'Trial Session Completion',
+    reason: 'Coach marked attendance for trial session at KK Nagar',
+  },
+  {
+    id: 'LOG-003',
+    timestamp: '2026-11-20T11:20:00Z',
+    childName: 'Siddharth Verma',
+    enquiryId: 'ENQ-004',
+    fromStatus: 'Active',
+    toStatus: 'Lost',
+    rule: 'Lost: No response for 5 days',
+    reason: 'Lead automatically marked as Lost after 5 days with no response from parent',
+  },
+  {
+    id: 'LOG-004',
+    timestamp: '2026-11-19T14:10:00Z',
+    childName: 'Ananya Patel',
+    enquiryId: 'ENQ-002',
+    fromStatus: 'Demo Attended',
+    toStatus: 'Converted',
+    rule: 'Admission Enrollment',
+    reason: 'Student enrolled and fee receipt generated (LS-KKN-2026-001)',
+  },
+];
+
 export function getStoredAutomationLogs() {
   try {
     const raw = localStorage.getItem(AUTOMATION_LOGS_STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (!raw) {
+      localStorage.setItem(AUTOMATION_LOGS_STORAGE_KEY, JSON.stringify(INITIAL_AUTOMATION_LOGS));
+      return INITIAL_AUTOMATION_LOGS;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(AUTOMATION_LOGS_STORAGE_KEY, JSON.stringify(INITIAL_AUTOMATION_LOGS));
+      return INITIAL_AUTOMATION_LOGS;
+    }
+    return parsed;
   } catch {
-    return [];
+    return INITIAL_AUTOMATION_LOGS;
   }
 }
 

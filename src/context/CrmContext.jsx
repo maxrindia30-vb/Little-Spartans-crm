@@ -216,8 +216,9 @@ export function CrmProvider({ children }) {
         return {
           ...initialAcademyData,
           ...parsed,
-          students: migratedStudents,
-          parents: migratedParents,
+          students: migratedStudents.length > 0 ? migratedStudents : (initialAcademyData.students || []),
+          parents: migratedParents.length > 0 ? migratedParents : (initialAcademyData.parents || []),
+          classes: Array.isArray(parsed.classes) && parsed.classes.length > 0 ? parsed.classes : (initialAcademyData.classes || []),
           academy: {
             ...initialAcademyData.academy,
             ...(parsed.academy || {}),
@@ -232,25 +233,22 @@ export function CrmProvider({ children }) {
               }))
             : (initialAcademyData.enquiries || []),
           demos: Array.isArray(parsed.demos) && parsed.demos.length > 0 ? parsed.demos : (initialAcademyData.demos || []),
-          classSchedules: Array.isArray(parsed.classSchedules) ? parsed.classSchedules : initialAcademyData.classSchedules,
-          attendanceRecords: Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
-          compensationRequests: Array.isArray(parsed.compensationRequests) ? parsed.compensationRequests : (initialAcademyData.compensationRequests || []),
-          compensationHistory: Array.isArray(parsed.compensationHistory) ? parsed.compensationHistory : (initialAcademyData.compensationHistory || []),
-          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : (initialAcademyData.notifications || []),
+          payments: Array.isArray(parsed.payments) && parsed.payments.length > 0 ? parsed.payments : (initialAcademyData.payments || []),
+          classSchedules: Array.isArray(parsed.classSchedules) && parsed.classSchedules.length > 0 ? parsed.classSchedules : initialAcademyData.classSchedules,
+          attendanceRecords: Array.isArray(parsed.attendanceRecords) && parsed.attendanceRecords.length > 0 ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
+          compensationRequests: Array.isArray(parsed.compensationRequests) && parsed.compensationRequests.length > 0 ? parsed.compensationRequests : (initialAcademyData.compensationRequests || []),
+          compensationHistory: Array.isArray(parsed.compensationHistory) && parsed.compensationHistory.length > 0 ? parsed.compensationHistory : (initialAcademyData.compensationHistory || []),
+          notifications: Array.isArray(parsed.notifications) && parsed.notifications.length > 0 ? parsed.notifications : (initialAcademyData.notifications || []),
           superCoaches: Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : initialAcademyData.superCoaches,
           equipment: Array.isArray(parsed.equipment) && parsed.equipment.length > 0 ? parsed.equipment : initialEquipmentInventory,
           equipmentReports: Array.isArray(parsed.equipmentReports) && parsed.equipmentReports.length > 0 ? parsed.equipmentReports : initialEquipmentReports,
           userAccounts: mergedAccounts,
-          coachLeaveRequests: Array.isArray(parsed.coachLeaveRequests)
+          coachLeaveRequests: Array.isArray(parsed.coachLeaveRequests) && parsed.coachLeaveRequests.length > 0
             ? parsed.coachLeaveRequests
-            : Array.isArray(parsed.leaveRequests)
-            ? parsed.leaveRequests
             : (initialAcademyData.coachLeaveRequests || []),
-          leaveRequests: Array.isArray(parsed.coachLeaveRequests)
+          leaveRequests: Array.isArray(parsed.coachLeaveRequests) && parsed.coachLeaveRequests.length > 0
             ? parsed.coachLeaveRequests
-            : Array.isArray(parsed.leaveRequests)
-            ? parsed.leaveRequests
-            : (initialAcademyData.leaveRequests || []),
+            : (initialAcademyData.coachLeaveRequests || []),
           coachReplacements: Array.isArray(parsed.coachReplacements)
             ? parsed.coachReplacements
             : (initialAcademyData.coachReplacements || []),
@@ -268,7 +266,7 @@ export function CrmProvider({ children }) {
             : (initialAcademyData.scheduledMessages || []),
           termsDocument: parsed.termsDocument || initialAcademyData.termsDocument,
           dosDontsDocument: parsed.dosDontsDocument || initialAcademyData.dosDontsDocument,
-          termsAcceptances: Array.isArray(parsed.termsAcceptances)
+          termsAcceptances: Array.isArray(parsed.termsAcceptances) && parsed.termsAcceptances.length > 0
             ? parsed.termsAcceptances
             : (initialAcademyData.termsAcceptances || []),
           academicCalendar: parsed.academicCalendar || initialAcademyData.academicCalendar,

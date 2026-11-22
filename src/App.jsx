@@ -140,21 +140,18 @@ export default function App() {
       case 'analytics':
         return <ReportsSettingsModule />;
 
-      // Settings & Configuration (Academy Settings, Brand & Identity, Center Management, Academic Calendar, Audit Log)
+      // 11. Settings & Configuration (Academy Settings, Brand & Identity, Center Management, Academic Calendar, Terms & Conditions, Audit Log)
       case 'settings':
       case 'academy_settings':
-        return <AcademySettings />;
-
-      // 11. Sports Equipment Management (Academy-Wide Inventory & Sanctions)
-      case 'equipment':
-      case 'equipment_management':
-        return <EquipmentManagementModule role="admin" />;
-
-      // 12. Terms & Policies Governance (Admin Edit, Add, Versioning & Acceptance Audits)
       case 'terms_policies':
       case 'terms':
       case 'policies':
-        return <TermsManagementModule />;
+        return <AcademySettings />;
+
+      // 12. Sports Equipment Management (Academy-Wide Inventory & Sanctions)
+      case 'equipment':
+      case 'equipment_management':
+        return <EquipmentManagementModule role="admin" />;
 
       default:
         return <AdminDashboard />;

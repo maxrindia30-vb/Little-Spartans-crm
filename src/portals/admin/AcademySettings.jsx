@@ -32,11 +32,23 @@ import {
   FileText
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
+import TermsManagementModule from './TermsManagementModule';
+
+const SETTINGS_TABS = [
+  { id: 'academy', label: 'Academy Settings', icon: Home },
+  { id: 'brand', label: 'Brand & Identity', icon: Palette },
+  { id: 'centers', label: 'Center Management', icon: MapPin },
+  { id: 'calendar', label: 'Academic Calendar', icon: Calendar },
+  { id: 'terms', label: 'Terms & Conditions', icon: FileText },
+  { id: 'audit', label: 'Settings Audit Log', icon: History },
+];
 
 export default function AcademySettings() {
   const {
     data,
     currentUser,
+    activeSubTab,
+    setActiveSubTab,
     setCurrentPortal,
     setCurrentView,
     addLocation,
@@ -51,8 +63,31 @@ export default function AcademySettings() {
   } = useCrm();
 
   // Active Navigation Tab:
-  // 'academy' | 'brand' | 'centers' | 'calendar' | 'audit'
-  const [activeTab, setActiveTab] = useState('academy');
+  // 'academy' | 'brand' | 'centers' | 'calendar' | 'terms' | 'audit'
+  const [activeTab, setActiveTab] = useState(() => {
+    if (activeSubTab) {
+      if (['terms', 'dos_donts', 'acceptances'].includes(activeSubTab)) return 'terms';
+      if (['academy', 'brand', 'centers', 'calendar', 'audit'].includes(activeSubTab)) return activeSubTab;
+    }
+    return 'academy';
+  });
+
+  useEffect(() => {
+    if (activeSubTab) {
+      if (['terms', 'dos_donts', 'acceptances'].includes(activeSubTab)) {
+        setActiveTab('terms');
+      } else if (['academy', 'brand', 'centers', 'calendar', 'audit'].includes(activeSubTab)) {
+        setActiveTab(activeSubTab);
+      }
+    }
+  }, [activeSubTab]);
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (setActiveSubTab) {
+      setActiveSubTab(tabId);
+    }
+  };
 
   // General Information State
   const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -307,78 +342,28 @@ export default function AcademySettings() {
       </div>
 
       {/* ============================================================ */}
-      {/* 2. FIVE HORIZONTAL NAVIGATION TABS                           */}
+      {/* 2. SIX HORIZONTAL NAVIGATION TABS (Settings & Configuration) */}
       {/* ============================================================ */}
       <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 no-scrollbar">
-        {/* Tab 1: Academy Settings */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('academy')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'academy'
-              ? 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B] shadow-2xs'
-              : 'bg-white text-[#172B50] border border-[#172B5015] hover:bg-[#FFF4E8]/60 hover:text-[#F4510B]'
-          }`}
-        >
-          <Home className="w-4 h-4" />
-          <span>Academy Settings</span>
-        </button>
-
-        {/* Tab 2: Brand & Identity */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('brand')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'brand'
-              ? 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B] shadow-2xs'
-              : 'bg-white text-[#172B50] border border-[#172B5015] hover:bg-[#FFF4E8]/60 hover:text-[#F4510B]'
-          }`}
-        >
-          <Palette className="w-4 h-4" />
-          <span>Brand &amp; Identity</span>
-        </button>
-
-        {/* Tab 3: Center Management */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('centers')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'centers'
-              ? 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B] shadow-2xs'
-              : 'bg-white text-[#172B50] border border-[#172B5015] hover:bg-[#FFF4E8]/60 hover:text-[#F4510B]'
-          }`}
-        >
-          <MapPin className="w-4 h-4" />
-          <span>Center Management</span>
-        </button>
-
-        {/* Tab 4: Academic Calendar */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('calendar')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'calendar'
-              ? 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B] shadow-2xs'
-              : 'bg-white text-[#172B50] border border-[#172B5015] hover:bg-[#FFF4E8]/60 hover:text-[#F4510B]'
-          }`}
-        >
-          <Calendar className="w-4 h-4" />
-          <span>Academic Calendar</span>
-        </button>
-
-        {/* Tab 5: Settings Audit Log */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('audit')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'audit'
-              ? 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B] shadow-2xs'
-              : 'bg-white text-[#172B50] border border-[#172B5015] hover:bg-[#FFF4E8]/60 hover:text-[#F4510B]'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          <span>Settings Audit Log</span>
-        </button>
+        {SETTINGS_TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B] shadow-2xs'
+                  : 'bg-white text-[#172B50] border border-[#172B5015] hover:bg-[#FFF4E8]/60 hover:text-[#F4510B]'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ============================================================ */}
@@ -765,7 +750,7 @@ export default function AcademySettings() {
                 {/* Action 2: Set Academic Calendar */}
                 <button
                   type="button"
-                  onClick={() => setActiveTab('calendar')}
+                  onClick={() => handleTabChange('calendar')}
                   className="bg-white rounded-2xl p-3.5 border border-[#172B5014] hover:border-[#F4510B50] hover:bg-[#FFF4E8]/40 transition-all flex flex-col items-center justify-center text-center cursor-pointer shadow-2xs group"
                 >
                   <div className="w-8 h-8 rounded-xl bg-[#F0F7FF] text-[#172B50] flex items-center justify-center border border-[#172B5015] group-hover:scale-105 transition-transform">
@@ -779,7 +764,7 @@ export default function AcademySettings() {
                 {/* Action 3: Configuration Audit Log */}
                 <button
                   type="button"
-                  onClick={() => setActiveTab('audit')}
+                  onClick={() => handleTabChange('audit')}
                   className="bg-white rounded-2xl p-3.5 border border-[#172B5014] hover:border-[#F4510B50] hover:bg-[#FFF4E8]/40 transition-all flex flex-col items-center justify-center text-center cursor-pointer shadow-2xs group"
                 >
                   <div className="w-8 h-8 rounded-xl bg-[#FFF4E8] text-[#172B50] flex items-center justify-center border border-[#172B5015] group-hover:scale-105 transition-transform">
@@ -1050,7 +1035,14 @@ export default function AcademySettings() {
       )}
 
       {/* ============================================================ */}
-      {/* 7. TAB 5: SETTINGS AUDIT LOG VIEW                            */}
+      {/* 7. TAB 5: TERMS & CONDITIONS (Governance & Policies)         */}
+      {/* ============================================================ */}
+      {activeTab === 'terms' && (
+        <TermsManagementModule embedded={true} />
+      )}
+
+      {/* ============================================================ */}
+      {/* 8. TAB 6: SETTINGS AUDIT LOG VIEW                            */}
       {/* ============================================================ */}
       {activeTab === 'audit' && (
         <div className="space-y-6">

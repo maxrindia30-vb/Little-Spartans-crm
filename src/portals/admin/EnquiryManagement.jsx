@@ -207,6 +207,9 @@ export default function EnquiryManagement() {
   const [importPreview, setImportPreview] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
 
+  // 10. Lead Funnel Popup Modal
+  const [isLeadFunnelModalOpen, setIsLeadFunnelModalOpen] = useState(false);
+
   // Load automation logs
   useEffect(() => {
     setAutomationLogs(getStoredAutomationLogs());
@@ -927,6 +930,17 @@ export default function EnquiryManagement() {
 
         {/* Top-Right Action Buttons */}
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          {/* Lead Funnel Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setIsLeadFunnelModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B35] rounded-xl shadow-2xs hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer group active:scale-95"
+            title="Open Lead Funnel & Conversion Analytics"
+          >
+            <Filter className="w-4 h-4 text-[#F4510B] group-hover:text-white transition-colors" />
+            <span>Lead Funnel</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsImportModalOpen(true)}
@@ -1055,266 +1069,7 @@ export default function EnquiryManagement() {
       </div>
 
       {/* ======================================================== */}
-      {/* 3. Lead Analytics Section: Funnel & Status Donut        */}
-      {/* ======================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-        {/* Card A: Lead Funnel */}
-        <div className="bg-white rounded-2xl border border-[#172B5015] p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between pb-3 border-b border-[#172B500C] mb-4">
-            <h3 className="text-sm font-black text-[#172B50] tracking-tight flex items-center gap-2">
-              <span>Lead Funnel</span>
-            </h3>
-            <div className="text-[#172B50]/40 hover:text-[#172B50] cursor-pointer" title="Visual progression from Initial Enquiry to Enrollment">
-              <Info className="w-4 h-4" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 items-center">
-            {/* Visual Funnel Stack */}
-            <div className="sm:col-span-7 space-y-2 py-1">
-              {/* Funnel Stage 1: Enquiries */}
-              <div
-                className="w-full py-2.5 px-3 bg-[#FCD5B5] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-transform hover:scale-[1.01]"
-                style={{ clipPath: 'polygon(2% 0%, 98% 0%, 95% 100%, 5% 100%)' }}
-              >
-                <span>
-                  <strong className="text-sm font-black mr-2">{funnelData.stages.enquiries}</strong> Enquiries (100%)
-                </span>
-              </div>
-
-              {/* Funnel Stage 2: Demo Requested */}
-              <div
-                className="w-[88%] mx-auto py-2.5 px-3 bg-[#DCEEFA] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-transform hover:scale-[1.01]"
-                style={{ clipPath: 'polygon(3% 0%, 97% 0%, 93% 100%, 7% 100%)' }}
-              >
-                <span>
-                  <strong className="text-sm font-black mr-2">{funnelData.stages.demoRequested}</strong> Demo Requested ({funnelData.percentages.demoRequested}%)
-                </span>
-              </div>
-
-              {/* Funnel Stage 3: Demo Attended */}
-              <div
-                className="w-[76%] mx-auto py-2.5 px-3 bg-[#CCE3F7] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-transform hover:scale-[1.01]"
-                style={{ clipPath: 'polygon(4% 0%, 96% 0%, 91% 100%, 9% 100%)' }}
-              >
-                <span>
-                  <strong className="text-sm font-black mr-2">{funnelData.stages.demoAttended}</strong> Demo Attended ({funnelData.percentages.demoAttended}%)
-                </span>
-              </div>
-
-              {/* Funnel Stage 4: Converted */}
-              <div
-                className="w-[64%] mx-auto py-2.5 px-3 bg-[#D4F4DD] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-transform hover:scale-[1.01]"
-                style={{ clipPath: 'polygon(5% 0%, 95% 0%, 90% 100%, 10% 100%)' }}
-              >
-                <span>
-                  <strong className="text-sm font-black mr-2">{funnelData.stages.converted}</strong> Converted ({funnelData.percentages.converted}%)
-                </span>
-              </div>
-            </div>
-
-            {/* Funnel Insights */}
-            <div className="sm:col-span-5 space-y-3 pl-0 sm:pl-2 border-t sm:border-t-0 sm:border-l border-[#172B500C] pt-3 sm:pt-0">
-              <h4 className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/60">
-                Funnel Insights
-              </h4>
-
-              <div className="space-y-3 text-xs">
-                {/* Metric 1 */}
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[#FFF4E8] flex items-center justify-center text-[#F4510B] shrink-0">
-                    <BarChart2 className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <div className="font-black text-[#172B50] text-sm">
-                      {funnelData.insights.enquiryToDemoRate}%
-                    </div>
-                    <div className="text-[11px] text-[#172B50]/70 font-semibold">
-                      Enquiry → Demo Request
-                    </div>
-                  </div>
-                </div>
-
-                {/* Metric 2 */}
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] flex items-center justify-center text-[#2563EB] shrink-0">
-                    <PlayCircle className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <div className="font-black text-[#172B50] text-sm">
-                      {funnelData.insights.demoToAttendedRate}%
-                    </div>
-                    <div className="text-[11px] text-[#172B50]/70 font-semibold">
-                      Demo Request → Attended
-                    </div>
-                  </div>
-                </div>
-
-                {/* Metric 3 */}
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[#ECFDF5] flex items-center justify-center text-[#10B981] shrink-0">
-                    <GraduationCap className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <div className="font-black text-[#172B50] text-sm">
-                      {funnelData.insights.attendedToConvertedRate}%
-                    </div>
-                    <div className="text-[11px] text-[#172B50]/70 font-semibold">
-                      Attended → Converted
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card B: Lead Status Overview */}
-        <div className="bg-white rounded-2xl border border-[#172B5015] p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between pb-3 border-b border-[#172B500C] mb-4">
-            <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-              Lead Status Overview
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-            {/* SVG Donut Chart with Center Total */}
-            <div className="sm:col-span-5 flex items-center justify-center relative">
-              <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 100 100">
-                {/* Background Ring if total is 0 */}
-                {donutData.total === 0 ? (
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r={donutData.radius}
-                    fill="transparent"
-                    stroke="#E2E8F0"
-                    strokeWidth="12"
-                  />
-                ) : (
-                  donutData.slices.map((slice, idx) => (
-                    <circle
-                      key={idx}
-                      cx="50"
-                      cy="50"
-                      r={donutData.radius}
-                      fill="transparent"
-                      stroke={slice.color}
-                      strokeWidth="12"
-                      strokeDasharray={slice.strokeDasharray}
-                      strokeDashoffset={slice.strokeDashoffset}
-                      className="transition-all duration-500"
-                    />
-                  ))
-                )}
-              </svg>
-              {/* Donut Center Text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                <span className="text-2xl font-black text-[#172B50] leading-none">
-                  {donutData.total}
-                </span>
-                <span className="text-[10px] font-bold text-[#172B50]/60 mt-0.5">
-                  Total Leads
-                </span>
-              </div>
-            </div>
-
-            {/* Status Legend Table */}
-            <div className="sm:col-span-7 space-y-2 text-xs">
-              {donutData.slices.map((slice, idx) => (
-                <div key={idx} className="flex items-center justify-between py-0.5">
-                  <div className="flex items-center gap-2 truncate pr-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: slice.color }}
-                    />
-                    <span className="text-[#172B50] font-semibold truncate text-[11.5px]">
-                      {slice.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="font-extrabold text-[#172B50]">{slice.count}</span>
-                    <span className="text-[11px] text-[#172B50]/60 font-semibold w-11 text-right">
-                      {slice.percentage}%
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ======================================================== */}
-      {/* 4. Automatic Lead Status Rules Horizontal Strip         */}
-      {/* ======================================================== */}
-      <div className="bg-[#FFF9F5] rounded-2xl border border-[#F4510B20] p-3 sm:px-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs shadow-2xs">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-5 flex-1">
-          {/* Header Tag */}
-          <div className="flex items-center gap-2 font-black text-[#172B50] shrink-0">
-            <Calendar className="w-4 h-4 text-[#F4510B]" />
-            <span>Lead Status Rule (Auto)</span>
-          </div>
-
-          <div className="hidden lg:block w-px h-6 bg-[#172B5018]" />
-
-          {/* Rule 1: Active 0-5 days */}
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-[#E8F8F0] flex items-center justify-center text-[#10B981] shrink-0">
-              <Zap className="w-3 h-3" />
-            </div>
-            <div>
-              <span className="font-extrabold text-[#172B50]">Active: 0 – 5 days</span>
-              <span className="text-[11px] text-[#172B50]/60 block sm:inline sm:ml-1.5">
-                New enquiry, under follow-up
-              </span>
-            </div>
-          </div>
-
-          <div className="hidden lg:block w-px h-6 bg-[#172B5018]" />
-
-          {/* Rule 2: Stale > 5 days */}
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B] shrink-0">
-              <Clock className="w-3 h-3" />
-            </div>
-            <div>
-              <span className="font-extrabold text-[#172B50]">Stale: &gt; 5 days</span>
-              <span className="text-[11px] text-[#172B50]/60 block sm:inline sm:ml-1.5">
-                No response after 5 days
-              </span>
-            </div>
-          </div>
-
-          <div className="hidden lg:block w-px h-6 bg-[#172B5018]" />
-
-          {/* Rule 3: Lost */}
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-[#FEE2E2] flex items-center justify-center text-[#EF4444] shrink-0">
-              <XCircle className="w-3 h-3" />
-            </div>
-            <div>
-              <span className="font-extrabold text-[#172B50]">Lost: No response for 5 days</span>
-              <span className="text-[11px] text-[#172B50]/60 block sm:inline sm:ml-1.5">
-                Automatically marked as Lost
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* View Automation Logs Button */}
-        <button
-          type="button"
-          onClick={() => setIsAutomationLogsModalOpen(true)}
-          className="px-3.5 py-1.5 bg-white border border-[#172B5018] rounded-xl text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] hover:border-[#F4510B40] transition-colors flex items-center gap-1.5 shrink-0 self-start lg:self-center cursor-pointer shadow-2xs"
-        >
-          <SlidersHorizontal className="w-3.5 h-3.5 text-[#172B50]" />
-          <span>View Automation Logs</span>
-        </button>
-      </div>
-
-      {/* ======================================================== */}
-      {/* 5. Lead Status Filter Tabs (8 Segmented Buttons)         */}
+      {/* 3. Lead Status Filter Tabs (8 Segmented Buttons)         */}
       {/* ======================================================== */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
         {[
@@ -2022,6 +1777,336 @@ export default function EnquiryManagement() {
           </div>
         </div>
       </div>
+
+      {/* ======================================================== */}
+      {/* MODAL 0: Lead Funnel & Conversion Analytics Popup       */}
+      {/* ======================================================== */}
+      <Modal
+        isOpen={isLeadFunnelModalOpen}
+        onClose={() => setIsLeadFunnelModalOpen(false)}
+        title="Lead Funnel & Conversion Analytics"
+        subtitle="End-to-end conversion progression, status distribution, and automated follow-up rules"
+        maxWidth="max-w-5xl"
+      >
+        <div className="space-y-4">
+          {/* Top Section: Funnel Card & Status Overview Card Side-by-Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+            {/* Card A: Lead Funnel */}
+            <div className="bg-white rounded-2xl border border-[#172B5015] p-4 sm:p-5 shadow-2xs">
+              <div className="flex items-center justify-between pb-3 border-b border-[#172B500C] mb-4">
+                <h3 className="text-sm font-black text-[#172B50] tracking-tight flex items-center gap-2">
+                  <span>Lead Funnel</span>
+                </h3>
+                <div
+                  className="text-[#172B50]/40 hover:text-[#172B50] cursor-pointer"
+                  title="Visual progression from Initial Enquiry to Enrollment. Click any stage to filter leads."
+                >
+                  <Info className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 items-center">
+                {/* Visual Funnel Stack (Clickable Stages) */}
+                <div className="sm:col-span-7 space-y-2 py-1">
+                  {/* Funnel Stage 1: Enquiries */}
+                  <div
+                    onClick={() => {
+                      setActiveTab('All');
+                      setIsLeadFunnelModalOpen(false);
+                    }}
+                    className="w-full py-2.5 px-3 bg-[#FCD5B5] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-all hover:scale-[1.02] hover:brightness-95 cursor-pointer select-none"
+                    style={{ clipPath: 'polygon(2% 0%, 98% 0%, 95% 100%, 5% 100%)' }}
+                    title="Click to view all enquiries"
+                  >
+                    <span>
+                      <strong className="text-sm font-black mr-2">{funnelData.stages.enquiries}</strong> Enquiries (100%)
+                    </span>
+                  </div>
+
+                  {/* Funnel Stage 2: Demo Requested */}
+                  <div
+                    onClick={() => {
+                      setActiveTab('Demo Requested');
+                      setIsLeadFunnelModalOpen(false);
+                    }}
+                    className="w-[88%] mx-auto py-2.5 px-3 bg-[#DCEEFA] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-all hover:scale-[1.02] hover:brightness-95 cursor-pointer select-none"
+                    style={{ clipPath: 'polygon(3% 0%, 97% 0%, 93% 100%, 7% 100%)' }}
+                    title="Click to filter Demo Requested leads"
+                  >
+                    <span>
+                      <strong className="text-sm font-black mr-2">{funnelData.stages.demoRequested}</strong> Demo Requested ({funnelData.percentages.demoRequested}%)
+                    </span>
+                  </div>
+
+                  {/* Funnel Stage 3: Demo Attended */}
+                  <div
+                    onClick={() => {
+                      setActiveTab('Demo Attended');
+                      setIsLeadFunnelModalOpen(false);
+                    }}
+                    className="w-[76%] mx-auto py-2.5 px-3 bg-[#CCE3F7] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-all hover:scale-[1.02] hover:brightness-95 cursor-pointer select-none"
+                    style={{ clipPath: 'polygon(4% 0%, 96% 0%, 91% 100%, 9% 100%)' }}
+                    title="Click to filter Demo Attended leads"
+                  >
+                    <span>
+                      <strong className="text-sm font-black mr-2">{funnelData.stages.demoAttended}</strong> Demo Attended ({funnelData.percentages.demoAttended}%)
+                    </span>
+                  </div>
+
+                  {/* Funnel Stage 4: Converted */}
+                  <div
+                    onClick={() => {
+                      setActiveTab('Converted');
+                      setIsLeadFunnelModalOpen(false);
+                    }}
+                    className="w-[64%] mx-auto py-2.5 px-3 bg-[#D4F4DD] text-[#172B50] rounded-xl flex items-center justify-center font-extrabold text-xs shadow-2xs transition-all hover:scale-[1.02] hover:brightness-95 cursor-pointer select-none"
+                    style={{ clipPath: 'polygon(5% 0%, 95% 0%, 90% 100%, 10% 100%)' }}
+                    title="Click to filter Converted leads"
+                  >
+                    <span>
+                      <strong className="text-sm font-black mr-2">{funnelData.stages.converted}</strong> Converted ({funnelData.percentages.converted}%)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Funnel Insights */}
+                <div className="sm:col-span-5 space-y-3 pl-0 sm:pl-2 border-t sm:border-t-0 sm:border-l border-[#172B500C] pt-3 sm:pt-0">
+                  <h4 className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/60">
+                    Funnel Insights
+                  </h4>
+
+                  <div className="space-y-3 text-xs">
+                    {/* Metric 1 */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF4E8] flex items-center justify-center text-[#F4510B] shrink-0">
+                        <BarChart2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-black text-[#172B50] text-sm">
+                          {funnelData.insights.enquiryToDemoRate}%
+                        </div>
+                        <div className="text-[11px] text-[#172B50]/70 font-semibold">
+                          Enquiry → Demo Request
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Metric 2 */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] flex items-center justify-center text-[#2563EB] shrink-0">
+                        <PlayCircle className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-black text-[#172B50] text-sm">
+                          {funnelData.insights.demoToAttendedRate}%
+                        </div>
+                        <div className="text-[11px] text-[#172B50]/70 font-semibold">
+                          Demo Request → Attended
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Metric 3 */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-[#ECFDF5] flex items-center justify-center text-[#10B981] shrink-0">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-black text-[#172B50] text-sm">
+                          {funnelData.insights.attendedToConvertedRate}%
+                        </div>
+                        <div className="text-[11px] text-[#172B50]/70 font-semibold">
+                          Attended → Converted
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card B: Lead Status Overview */}
+            <div className="bg-white rounded-2xl border border-[#172B5015] p-4 sm:p-5 shadow-2xs">
+              <div className="flex items-center justify-between pb-3 border-b border-[#172B500C] mb-4">
+                <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                  Lead Status Overview
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                {/* SVG Donut Chart with Center Total */}
+                <div className="sm:col-span-5 flex items-center justify-center relative">
+                  <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 100 100">
+                    {/* Background Ring if total is 0 */}
+                    {donutData.total === 0 ? (
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r={donutData.radius}
+                        fill="transparent"
+                        stroke="#E2E8F0"
+                        strokeWidth="12"
+                      />
+                    ) : (
+                      donutData.slices.map((slice, idx) => (
+                        <circle
+                          key={idx}
+                          cx="50"
+                          cy="50"
+                          r={donutData.radius}
+                          fill="transparent"
+                          stroke={slice.color}
+                          strokeWidth="12"
+                          strokeDasharray={slice.strokeDasharray}
+                          strokeDashoffset={slice.strokeDashoffset}
+                          className="transition-all duration-500"
+                        />
+                      ))
+                    )}
+                  </svg>
+                  {/* Donut Center Text */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                    <span className="text-2xl font-black text-[#172B50] leading-none">
+                      {donutData.total}
+                    </span>
+                    <span className="text-[10px] font-bold text-[#172B50]/60 mt-0.5">
+                      Total Leads
+                    </span>
+                  </div>
+                </div>
+
+                {/* Status Legend Table (Clickable Rows) */}
+                <div className="sm:col-span-7 space-y-2 text-xs">
+                  {donutData.slices.map((slice, idx) => {
+                    const statusTarget =
+                      slice.label.startsWith('Active') ? 'Active' :
+                      slice.label.startsWith('Stale') ? 'Stale' :
+                      slice.label.startsWith('Demo Requested') ? 'Demo Requested' :
+                      slice.label.startsWith('Demo Attended') ? 'Demo Attended' :
+                      slice.label.startsWith('Converted') ? 'Converted' :
+                      slice.label.startsWith('Lost') ? 'Lost' : 'All';
+
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          setActiveTab(statusTarget);
+                          setIsLeadFunnelModalOpen(false);
+                        }}
+                        className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-[#FFF4E8]/60 cursor-pointer transition-colors group"
+                        title={`Click to filter by ${slice.label}`}
+                      >
+                        <div className="flex items-center gap-2 truncate pr-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0 group-hover:scale-125 transition-transform"
+                            style={{ backgroundColor: slice.color }}
+                          />
+                          <span className="text-[#172B50] font-semibold truncate text-[11.5px] group-hover:text-[#F4510B] transition-colors">
+                            {slice.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="font-extrabold text-[#172B50]">{slice.count}</span>
+                          <span className="text-[11px] text-[#172B50]/60 font-semibold w-11 text-right">
+                            {slice.percentage}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section: Automatic Lead Status Rules Horizontal Strip */}
+          <div className="bg-[#FFF9F5] rounded-2xl border border-[#F4510B20] p-3 sm:px-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-5 flex-1">
+              {/* Header Tag */}
+              <div className="flex items-center gap-2 font-black text-[#172B50] shrink-0">
+                <Calendar className="w-4 h-4 text-[#F4510B]" />
+                <span>Lead Status Rule (Auto)</span>
+              </div>
+
+              <div className="hidden lg:block w-px h-6 bg-[#172B5018]" />
+
+              {/* Rule 1: Active 0-5 days */}
+              <div
+                onClick={() => {
+                  setActiveTab('Active');
+                  setIsLeadFunnelModalOpen(false);
+                }}
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                title="Filter Active Leads"
+              >
+                <div className="w-5 h-5 rounded-full bg-[#E8F8F0] flex items-center justify-center text-[#10B981] shrink-0">
+                  <Zap className="w-3 h-3" />
+                </div>
+                <div>
+                  <span className="font-extrabold text-[#172B50]">Active: 0 – 5 days</span>
+                  <span className="text-[11px] text-[#172B50]/60 block sm:inline sm:ml-1.5">
+                    New enquiry, under follow-up
+                  </span>
+                </div>
+              </div>
+
+              <div className="hidden lg:block w-px h-6 bg-[#172B5018]" />
+
+              {/* Rule 2: Stale > 5 days */}
+              <div
+                onClick={() => {
+                  setActiveTab('Stale');
+                  setIsLeadFunnelModalOpen(false);
+                }}
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                title="Filter Stale Leads"
+              >
+                <div className="w-5 h-5 rounded-full bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B] shrink-0">
+                  <Clock className="w-3 h-3" />
+                </div>
+                <div>
+                  <span className="font-extrabold text-[#172B50]">Stale: &gt; 5 days</span>
+                  <span className="text-[11px] text-[#172B50]/60 block sm:inline sm:ml-1.5">
+                    No response after 5 days
+                  </span>
+                </div>
+              </div>
+
+              <div className="hidden lg:block w-px h-6 bg-[#172B5018]" />
+
+              {/* Rule 3: Lost */}
+              <div
+                onClick={() => {
+                  setActiveTab('Lost');
+                  setIsLeadFunnelModalOpen(false);
+                }}
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                title="Filter Lost Leads"
+              >
+                <div className="w-5 h-5 rounded-full bg-[#FEE2E2] flex items-center justify-center text-[#EF4444] shrink-0">
+                  <XCircle className="w-3 h-3" />
+                </div>
+                <div>
+                  <span className="font-extrabold text-[#172B50]">Lost: No response for 5 days</span>
+                  <span className="text-[11px] text-[#172B50]/60 block sm:inline sm:ml-1.5">
+                    Automatically marked as Lost
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* View Automation Logs Button */}
+            <button
+              type="button"
+              onClick={() => setIsAutomationLogsModalOpen(true)}
+              className="px-3.5 py-1.5 bg-white border border-[#172B5018] rounded-xl text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] hover:border-[#F4510B40] transition-colors flex items-center gap-1.5 shrink-0 self-start lg:self-center cursor-pointer shadow-2xs active:scale-95"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#172B50]" />
+              <span>View Automation Logs</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* ======================================================== */}
       {/* MODAL 1: Add / Edit Admission Lead                      */}

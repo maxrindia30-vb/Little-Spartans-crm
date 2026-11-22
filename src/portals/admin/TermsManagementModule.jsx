@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
-export default function TermsManagementModule() {
+export default function TermsManagementModule({ embedded = false }) {
   const {
     termsDocument,
     dosDontsDocument,
@@ -50,8 +50,13 @@ export default function TermsManagementModule() {
   } = useCrm();
 
   // Active Tab: 'terms' | 'dos_donts' | 'acceptances'
-  const currentTab = activeSubTab || 'terms';
+  const [internalTab, setInternalTab] = useState('terms');
+  const currentTab = ['terms', 'dos_donts', 'acceptances'].includes(activeSubTab)
+    ? activeSubTab
+    : internalTab;
+
   const setTab = (tab) => {
+    setInternalTab(tab);
     if (setActiveSubTab) setActiveSubTab(tab);
   };
 

@@ -24,20 +24,14 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import ReportsAnalytics from './ReportsAnalytics';
-import AcademySettings from './AcademySettings';
 
 export default function ReportsSettingsModule() {
   const { data, activeSubTab, setActiveSubTab, setCurrentView, addToast, createBackup, restoreBackup } = useCrm();
 
   // Active sub-tab defaults to 'analytics' if not specified
-  const currentTab = ['analytics', 'export', 'backup', 'settings'].includes(activeSubTab) 
+  const currentTab = ['analytics', 'export', 'backup'].includes(activeSubTab) 
     ? activeSubTab 
     : 'analytics';
-
-  // Dedicated Settings & Configuration Screen
-  if (currentTab === 'settings') {
-    return <AcademySettings />;
-  }
 
   // Export State
   const [exportEntity, setExportEntity] = useState('students');
@@ -258,7 +252,7 @@ export default function ReportsSettingsModule() {
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5" />
-              <span>Analytics</span>
+              <span>Academy Analytics</span>
             </button>
 
             <button
@@ -270,7 +264,7 @@ export default function ReportsSettingsModule() {
               }`}
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Data Export</span>
+              <span>Raw Data Export</span>
             </button>
 
             <button
@@ -283,30 +277,6 @@ export default function ReportsSettingsModule() {
             >
               <Database className="w-3.5 h-3.5" />
               <span>Backup &amp; Recovery</span>
-            </button>
-
-            <button
-              onClick={() => setActiveSubTab('settings')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                currentTab === 'settings'
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'text-[#172B50] hover:bg-white/60'
-              }`}
-            >
-              <Settings className="w-3.5 h-3.5" />
-              <span>Academy Settings</span>
-            </button>
-
-            <button
-              onClick={() => {
-                if (setCurrentView) setCurrentView('terms_policies');
-                if (setActiveSubTab) setActiveSubTab('terms');
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-[#F4510B] hover:bg-[#FFF4E8] border border-[#F4510B20] transition-all cursor-pointer shadow-xs ml-auto"
-              title="Navigate to dedicated Terms & Policies Governance Module"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Terms &amp; Policies Governance</span>
             </button>
           </div>
         </div>
@@ -702,11 +672,6 @@ export default function ReportsSettingsModule() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* SUB-TAB 5: ACADEMY SETTINGS */}
-      {currentTab === 'settings' && (
-        <AcademySettings />
       )}
 
       {/* RESTORE MODAL */}

@@ -25,6 +25,8 @@ import {
   Check,
   MoreVertical,
   Eye,
+  Edit2,
+  Layers,
   ArrowLeftRight,
 } from 'lucide-react';
 import { useCrm } from '../../../context/CrmContext';
@@ -35,129 +37,6 @@ import Modal from '../../../components/common/Modal';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MON_FIRST_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const PROGRAM_CONFIG = {
-  after_school: {
-    id: 'after_school',
-    label: 'After School Program',
-    locations: [
-      {
-        id: 'LOC_MAHALINGAPURAM',
-        name: 'Mahalingapuram',
-        batches: [
-          {
-            id: 'B_MAH_MIXED',
-            name: 'Mixed Age',
-            startTime: '17:00',
-            endTime: '18:00',
-            timingDisplay: '5:00 PM – 6:00 PM',
-            weekdays: MON_FIRST_DAYS,
-            capacity: 20,
-          },
-        ],
-      },
-      {
-        id: 'LOC_ARUMBAKKAM',
-        name: 'Arumbakkam',
-        batches: [
-          {
-            id: 'B_ARUM_MIXED',
-            name: 'Mixed Age Group',
-            startTime: '17:00',
-            endTime: '18:00',
-            timingDisplay: '5:00 PM – 6:00 PM',
-            weekdays: MON_FIRST_DAYS,
-            capacity: 20,
-          },
-          {
-            id: 'B_ARUM_EVENING',
-            name: '5:00 PM – 6:00 PM',
-            startTime: '17:00',
-            endTime: '18:00',
-            timingDisplay: '5:00 PM – 6:00 PM',
-            weekdays: MON_FIRST_DAYS,
-            capacity: 20,
-          },
-        ],
-      },
-      {
-        id: 'LOC_KILPAUK',
-        name: 'Kilpauk',
-        batches: [
-          {
-            id: 'B_KIL_SAT',
-            name: 'Mixed Age Group',
-            startTime: '11:00',
-            endTime: '12:00',
-            timingDisplay: '11:00 AM – 12:00 PM',
-            weekdays: ['Saturday'],
-            capacity: 20,
-          },
-          {
-            id: 'B_KIL_SUN',
-            name: 'Batch',
-            startTime: '11:00',
-            endTime: '12:00',
-            timingDisplay: '11:00 AM – 12:00 PM',
-            weekdays: ['Sunday'],
-            capacity: 20,
-          },
-        ],
-      },
-    ],
-  },
-  school: {
-    id: 'school',
-    label: 'School Program',
-    locations: [
-      {
-        id: 'LOC_INKY_PINKY',
-        name: 'Inky Pinky',
-        batches: [
-          {
-            id: 'B_INKY_MIXED',
-            name: 'Mixed',
-            startTime: '12:45',
-            endTime: '13:30',
-            timingDisplay: '12:45 PM – 1:30 PM',
-            weekdays: MON_FIRST_DAYS,
-            capacity: 25,
-          },
-        ],
-      },
-      {
-        id: 'LOC_SWRL',
-        name: 'Swrl',
-        batches: [
-          {
-            id: 'B_SWRL_DEFAULT',
-            name: 'Swrl Batch',
-            startTime: '16:00',
-            endTime: '17:00',
-            timingDisplay: '4:00 PM – 5:00 PM',
-            weekdays: MON_FIRST_DAYS,
-            capacity: 25,
-          },
-        ],
-      },
-      {
-        id: 'LOC_DARWIN',
-        name: 'Darwin',
-        batches: [
-          {
-            id: 'B_DARWIN_DEFAULT',
-            name: 'Darwin Batch',
-            startTime: '09:30',
-            endTime: '10:30',
-            timingDisplay: '9:30 AM – 10:30 AM',
-            weekdays: MON_FIRST_DAYS,
-            capacity: 25,
-          },
-        ],
-      },
-    ],
-  },
-};
 
 function toYmd(dateObj) {
   const y = dateObj.getFullYear();
@@ -201,8 +80,8 @@ export default function ClassSchedulesPage() {
   const activeLocations = getCommonLocations(data);
   const todayYmd = toYmd(new Date());
 
-  // View Modes: 'daily' | 'weekly' | 'calendar' | 'history'
-  const [viewMode, setViewMode] = useState('weekly');
+  // View Modes: 'all_schedules' | 'daily' | 'weekly' | 'calendar' | 'history'
+  const [viewMode, setViewMode] = useState('all_schedules');
   const [focusDate, setFocusDate] = useState(todayYmd);
 
   // Filters
@@ -253,25 +132,52 @@ export default function ClassSchedulesPage() {
   // File Upload Ref
   const fileInputRef = useRef(null);
 
-  // Create / Edit Modal State
+  // All Locations dynamically from Academy Centers and Locations
+  const allFilterLocations = useMemo(() => {
+    const locSet = new Set();
+    (data.locations || []).forEach((l) => locSet.add(l.name));
+    (data.academy?.centers || []).forEach((c) => locSet.add(c));
+    (data.classSchedules || []).forEach((s) => {
+      if (s.location) locSet.add(s.location);
+    });
+    const arr = Array.from(locSet);
+    return arr.length > 0 ? arr : ['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM', 'ANNA NAGAR', 'KOLATHUR'];
+  }, [data.locations, data.academy, data.classSchedules]);
+
+  // Available Programs
+  const availableProgramsList = useMemo(() => {
+    const progs = (data.programs || []).map((p) => p.name);
+    if (!progs.includes('Spartan Gymnastics & Agility')) progs.unshift('Spartan Gymnastics & Agility');
+    if (!progs.includes('Junior Football Champions')) progs.push('Junior Football Champions');
+    if (!progs.includes('Spartan Athletics & Sprinting')) progs.push('Spartan Athletics & Sprinting');
+    if (!progs.includes('Basketball Rising Stars')) progs.push('Basketball Rising Stars');
+    if (!progs.includes('Spartan Martial Arts & Karate')) progs.push('Spartan Martial Arts & Karate');
+    if (!progs.includes('Little Cubs Multi-Sport')) progs.push('Little Cubs Multi-Sport');
+    if (!progs.includes('After School Program')) progs.push('After School Program');
+    if (!progs.includes('School Program')) progs.push('School Program');
+    return Array.from(new Set(progs));
+  }, [data.programs]);
+
+  // Create / Edit Modal State (same clean pattern as Super Coach portal)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
-    programType: 'after_school', // 'after_school' | 'school'
     className: '',
-    location: 'Mahalingapuram',
-    batch: 'Mixed Age',
-    batchId: 'B_MAH_MIXED',
+    location: 'KK NAGAR',
+    program: 'Spartan Gymnastics & Agility',
+    batch: 'Batch Alpha (Evening)',
+    batchId: '',
     startTime: '17:00',
     endTime: '18:00',
     timingDisplay: '5:00 PM – 6:00 PM',
-    weekdays: ['Monday'],
+    venue: 'Training Court A',
+    weekdays: ['Sunday'],
     date: todayYmd,
-    weekday: WEEKDAYS[new Date(`${todayYmd}T00:00:00`).getDay()],
-    recurringWeeks: '4',
+    weekday: WEEKDAYS[new Date(`${todayYmd}T00:00:00`).getDay()] || 'Sunday',
+    recurringWeeks: '1',
     coachId: '',
     coach2Id: '',
-    capacity: '20',
+    capacity: '15',
     notes: '',
     attachment: null,
   });
@@ -280,77 +186,49 @@ export default function ClassSchedulesPage() {
   const [cancellingSchedule, setCancellingSchedule] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
 
-  // Dependent Locations for the selected Program Type
-  const currentProgramLocations = useMemo(() => {
-    const cfg = PROGRAM_CONFIG[scheduleForm.programType];
-    return cfg?.locations || [];
-  }, [scheduleForm.programType]);
+  // Available Venues for the selected Location
+  const availableVenuesForLocation = useMemo(() => {
+    const locLower = (scheduleForm.location || '').toLowerCase().trim();
+    const locObj = (data.locations || []).find(
+      (l) => (l.name || '').toLowerCase().trim() === locLower
+    );
+    if (locObj?.courts && Array.isArray(locObj.courts) && locObj.courts.length > 0) {
+      return locObj.courts;
+    }
+    return ['Main Turf Ground', 'Training Court A', 'Practice Arena B', 'Warm-up Studio', 'Indoor Gymnasium'];
+  }, [scheduleForm.location, data.locations]);
 
   // Dependent Batches for the selected Location
   const currentBatchesForLocation = useMemo(() => {
-    if (!scheduleForm.location) return [];
-    const locLower = scheduleForm.location.toLowerCase();
+    const locLower = (scheduleForm.location || '').toLowerCase().trim();
+    const fromClasses = (data.classes || [])
+      .filter((c) => (c.center || c.location || '').toLowerCase().trim() === locLower)
+      .map((c) => c.name);
+    const defaults = [
+      'Batch Alpha (Evening)',
+      'Batch Beta (Morning)',
+      'Weekend Morning League',
+      'Mixed Age Group',
+      'Junior Speedsters',
+      'Evening Hoops',
+      'Little Cubs Agility'
+    ];
+    return Array.from(new Set([...fromClasses, ...defaults]));
+  }, [scheduleForm.location, data.classes]);
 
-    // Check if Swrl or Darwin have user-created batches in data.classes
-    if (locLower === 'swrl') {
-      const custom = (data.classes || []).filter(
-        (c) => c.center?.toLowerCase() === 'swrl' && c.status !== 'Inactive'
-      );
-      if (custom.length > 0) {
-        return custom.map((c) => ({
-          id: c.id,
-          name: c.name,
-          startTime: '16:00',
-          endTime: '17:00',
-          timingDisplay: '4:00 PM – 5:00 PM',
-          weekdays: MON_FIRST_DAYS,
-          capacity: c.capacity || 25,
-        }));
-      }
-    }
+  // Available Coaches for the selected Location
+  const availableCoachesForLocation = useMemo(() => {
+    const locLower = (scheduleForm.location || '').toLowerCase().trim();
+    const all = data.coaches || [];
+    const matched = all.filter((c) => (c.center || '').toLowerCase().trim() === locLower);
+    const others = all.filter((c) => (c.center || '').toLowerCase().trim() !== locLower);
+    return [...matched, ...others];
+  }, [scheduleForm.location, data.coaches]);
 
-    if (locLower === 'darwin') {
-      const custom = (data.classes || []).filter(
-        (c) => c.center?.toLowerCase() === 'darwin' && c.status !== 'Inactive'
-      );
-      if (custom.length > 0) {
-        return custom.map((c) => ({
-          id: c.id,
-          name: c.name,
-          startTime: '09:30',
-          endTime: '10:30',
-          timingDisplay: '9:30 AM – 10:30 AM',
-          weekdays: MON_FIRST_DAYS,
-          capacity: c.capacity || 25,
-        }));
-      }
-    }
-
-    const locObj = currentProgramLocations.find((l) => l.name.toLowerCase() === locLower);
-    return locObj?.batches || [];
-  }, [scheduleForm.location, scheduleForm.programType, currentProgramLocations, data.classes]);
-
-  // Available weekdays for the selected location & batch
+  // Available weekdays for the selected location
   const currentAvailableWeekdays = useMemo(() => {
-    if (scheduleForm.location.toLowerCase() === 'kilpauk') {
-      return ['Saturday', 'Sunday'];
-    }
-    const matchedBatch = currentBatchesForLocation.find((b) => b.name === scheduleForm.batch);
-    if (matchedBatch?.weekdays) return matchedBatch.weekdays;
     return MON_FIRST_DAYS;
-  }, [scheduleForm.location, scheduleForm.batch, currentBatchesForLocation]);
-
-  // All Locations for top filter bar
-  const allFilterLocations = useMemo(() => {
-    const locSet = new Set();
-    activeLocations.forEach((l) => locSet.add(l.name));
-    PROGRAM_CONFIG.after_school.locations.forEach((l) => locSet.add(l.name));
-    PROGRAM_CONFIG.school.locations.forEach((l) => locSet.add(l.name));
-    (data.classSchedules || []).forEach((s) => {
-      if (s.location) locSet.add(s.location);
-    });
-    return Array.from(locSet);
-  }, [activeLocations, data.classSchedules]);
+  }, []);
 
   // Eligible Replacement Coaches for the selected session
   const replacementCoachOptions = useMemo(() => {
@@ -509,25 +387,32 @@ export default function ClassSchedulesPage() {
 
   const openCreateModal = (presetDate = focusDate) => {
     const weekday = WEEKDAYS[new Date(`${presetDate}T00:00:00`).getDay()];
-    const defaultBatch = PROGRAM_CONFIG.after_school.locations[0].batches[0];
+    const defaultLoc = allFilterLocations[0] || 'KK NAGAR';
+    const defaultProg = availableProgramsList[0] || 'Spartan Gymnastics & Agility';
+    const defaultBatch = 'Batch Alpha (Evening)';
+    const locCoaches = (data.coaches || []).filter(
+      (c) => (c.center || '').toLowerCase().trim() === defaultLoc.toLowerCase().trim()
+    );
+    const defaultCoach = locCoaches[0]?.id || (data.coaches || [])[0]?.id || '';
 
     setEditingSchedule(null);
     setScheduleForm({
-      programType: 'after_school',
-      className: '',
-      location: 'Mahalingapuram',
-      batch: defaultBatch.name,
-      batchId: defaultBatch.id,
-      startTime: defaultBatch.startTime,
-      endTime: defaultBatch.endTime,
-      timingDisplay: defaultBatch.timingDisplay,
-      weekdays: [weekday || 'Monday'],
+      className: `${defaultProg} (${defaultBatch})`,
+      location: defaultLoc,
+      program: defaultProg,
+      batch: defaultBatch,
+      batchId: '',
+      startTime: '17:00',
+      endTime: '18:00',
+      timingDisplay: '5:00 PM – 6:00 PM',
+      venue: 'Training Court A',
+      weekdays: [weekday || 'Sunday'],
       date: presetDate,
-      weekday,
-      recurringWeeks: '4',
-      coachId: (data.coaches || [])[0]?.id || '',
+      weekday: weekday || 'Sunday',
+      recurringWeeks: '1',
+      coachId: defaultCoach,
       coach2Id: '',
-      capacity: '20',
+      capacity: '15',
       notes: '',
       attachment: null,
     });
@@ -538,147 +423,60 @@ export default function ClassSchedulesPage() {
     const derivedWeekday =
       sch.weekday || (sch.date ? WEEKDAYS[new Date(`${sch.date}T00:00:00`).getDay()] : 'Monday');
 
-    let progType = sch.programType;
-    if (!progType) {
-      const locLower = (sch.location || '').toLowerCase();
-      if (['inky pinky', 'swrl', 'darwin'].includes(locLower)) {
-        progType = 'school';
-      } else {
-        progType = 'after_school';
-      }
-    }
-
     setEditingSchedule(sch);
     setScheduleForm({
-      programType: progType,
       className: sch.className || sch.batch || '',
-      location: sch.location || '',
-      batch: sch.batch || '',
+      location: sch.location || allFilterLocations[0] || 'KK NAGAR',
+      program: sch.program || availableProgramsList[0] || 'Spartan Gymnastics & Agility',
+      batch: sch.batch || 'Batch Alpha (Evening)',
       batchId: sch.batchId || '',
       startTime: sch.startTime || '17:00',
       endTime: sch.endTime || '18:00',
       timingDisplay: sch.timingDisplay || `${sch.startTime} - ${sch.endTime}`,
+      venue: sch.venue || 'Training Court A',
       weekdays: sch.weekdays && sch.weekdays.length > 0 ? sch.weekdays : [derivedWeekday],
       date: sch.date || todayYmd,
       weekday: derivedWeekday,
-      recurringWeeks: '4',
+      recurringWeeks: '1',
       coachId: sch.coachId || '',
       coach2Id: sch.additionalCoaches?.[0]?.coachId || '',
-      capacity: String(sch.capacity || 20),
+      capacity: String(sch.capacity || 15),
       notes: sch.notes || '',
       attachment: sch.attachment || null,
     });
     setIsScheduleModalOpen(true);
   };
 
-  // Program Type Change Handler
-  const handleProgramTypeChange = (nextType) => {
-    if (scheduleForm.programType === nextType) return;
-    const nextCfg = PROGRAM_CONFIG[nextType];
-    const defaultLoc = nextCfg?.locations[0];
-
-    setScheduleForm((prev) => ({
-      ...prev,
-      programType: nextType,
-      location: defaultLoc?.name || '',
-      batch: '',
-      batchId: '',
-      startTime: '',
-      endTime: '',
-      timingDisplay: '',
-      weekdays: [],
-    }));
-  };
-
   // Location Change Handler
   const handleLocationChange = (nextLoc) => {
+    const locLower = (nextLoc || '').toLowerCase().trim();
+    const locCoaches = (data.coaches || []).filter(
+      (c) => (c.center || '').toLowerCase().trim() === locLower
+    );
+    const locObj = (data.locations || []).find(
+      (l) => (l.name || '').toLowerCase().trim() === locLower
+    );
+    const defaultCourt = locObj?.courts?.[0] || 'Training Court A';
+
     setScheduleForm((prev) => ({
       ...prev,
       location: nextLoc,
-      batch: '',
-      batchId: '',
-      startTime: '',
-      endTime: '',
-      timingDisplay: '',
-      weekdays: [],
+      coachId: locCoaches[0]?.id || prev.coachId,
+      venue: defaultCourt,
     }));
   };
 
   // Batch Selection Handler
   const handleBatchChange = (batchName) => {
-    const matched = currentBatchesForLocation.find((b) => b.name === batchName);
-    if (!matched) {
-      setScheduleForm((prev) => ({
-        ...prev,
-        batch: '',
-        batchId: '',
-        startTime: '',
-        endTime: '',
-        timingDisplay: '',
-      }));
-      return;
-    }
-
-    let nextWeekdays = prev.weekdays;
-    if (scheduleForm.location.toLowerCase() === 'kilpauk') {
-      nextWeekdays = matched.weekdays;
-    } else {
-      nextWeekdays = prev.weekdays.filter((d) => matched.weekdays.includes(d));
-      if (nextWeekdays.length === 0) {
-        nextWeekdays = [matched.weekdays[0] || 'Monday'];
-      }
-    }
-
     setScheduleForm((prev) => ({
       ...prev,
-      batch: matched.name,
-      batchId: matched.id || '',
-      className: prev.className || `${matched.name} - ${prev.location}`,
-      startTime: matched.startTime,
-      endTime: matched.endTime,
-      timingDisplay: matched.timingDisplay,
-      capacity: String(matched.capacity || prev.capacity || 20),
-      weekdays: nextWeekdays,
-      weekday: nextWeekdays[0] || prev.weekday,
+      batch: batchName,
+      className: prev.className || `${prev.program} (${batchName})`,
     }));
   };
 
-  // Weekday Click Handler with Kilpauk Automatic Batch Sync
+  // Weekday Click Handler
   const handleWeekdayClick = (dayName) => {
-    if (scheduleForm.location.toLowerCase() === 'kilpauk') {
-      if (dayName === 'Saturday') {
-        const satBatch =
-          currentBatchesForLocation.find((b) => b.name === 'Mixed Age Group') ||
-          currentBatchesForLocation[0];
-        setScheduleForm((prev) => ({
-          ...prev,
-          weekdays: ['Saturday'],
-          weekday: 'Saturday',
-          batch: satBatch?.name || 'Mixed Age Group',
-          batchId: satBatch?.id || 'B_KIL_SAT',
-          startTime: satBatch?.startTime || '11:00',
-          endTime: satBatch?.endTime || '12:00',
-          timingDisplay: satBatch?.timingDisplay || '11:00 AM – 12:00 PM',
-        }));
-      } else if (dayName === 'Sunday') {
-        const sunBatch =
-          currentBatchesForLocation.find((b) => b.name === 'Batch') ||
-          currentBatchesForLocation[1] ||
-          currentBatchesForLocation[0];
-        setScheduleForm((prev) => ({
-          ...prev,
-          weekdays: ['Sunday'],
-          weekday: 'Sunday',
-          batch: sunBatch?.name || 'Batch',
-          batchId: sunBatch?.id || 'B_KIL_SUN',
-          startTime: sunBatch?.startTime || '11:00',
-          endTime: sunBatch?.endTime || '12:00',
-          timingDisplay: sunBatch?.timingDisplay || '11:00 AM – 12:00 PM',
-        }));
-      }
-      return;
-    }
-
     setScheduleForm((prev) => {
       const exists = prev.weekdays.includes(dayName);
       let updated;
@@ -700,44 +498,6 @@ export default function ClassSchedulesPage() {
   const handleDateChange = (nextDate) => {
     if (!nextDate) return;
     const dayOfWeek = WEEKDAYS[new Date(`${nextDate}T00:00:00`).getDay()];
-
-    if (scheduleForm.location.toLowerCase() === 'kilpauk') {
-      if (dayOfWeek === 'Saturday') {
-        const satBatch =
-          currentBatchesForLocation.find((b) => b.name === 'Mixed Age Group') ||
-          currentBatchesForLocation[0];
-        setScheduleForm((prev) => ({
-          ...prev,
-          date: nextDate,
-          weekday: 'Saturday',
-          weekdays: ['Saturday'],
-          batch: satBatch?.name || 'Mixed Age Group',
-          batchId: satBatch?.id || 'B_KIL_SAT',
-          startTime: satBatch?.startTime || '11:00',
-          endTime: satBatch?.endTime || '12:00',
-          timingDisplay: satBatch?.timingDisplay || '11:00 AM – 12:00 PM',
-        }));
-        return;
-      } else if (dayOfWeek === 'Sunday') {
-        const sunBatch =
-          currentBatchesForLocation.find((b) => b.name === 'Batch') ||
-          currentBatchesForLocation[1] ||
-          currentBatchesForLocation[0];
-        setScheduleForm((prev) => ({
-          ...prev,
-          date: nextDate,
-          weekday: 'Sunday',
-          weekdays: ['Sunday'],
-          batch: sunBatch?.name || 'Batch',
-          batchId: sunBatch?.id || 'B_KIL_SUN',
-          startTime: sunBatch?.startTime || '11:00',
-          endTime: sunBatch?.endTime || '12:00',
-          timingDisplay: sunBatch?.timingDisplay || '11:00 AM – 12:00 PM',
-        }));
-        return;
-      }
-    }
-
     setScheduleForm((prev) => ({
       ...prev,
       date: nextDate,
@@ -783,18 +543,6 @@ export default function ClassSchedulesPage() {
       alert('Please select a Batch.');
       return;
     }
-    if (scheduleForm.weekdays.length === 0) {
-      alert('Please select at least one applicable weekday.');
-      return;
-    }
-
-    if (scheduleForm.location.toLowerCase() === 'kilpauk') {
-      const hasInvalid = scheduleForm.weekdays.some((d) => d !== 'Saturday' && d !== 'Sunday');
-      if (hasInvalid) {
-        alert('Kilpauk operates only on Saturday and Sunday.');
-        return;
-      }
-    }
 
     const selectedCoach = (data.coaches || []).find((c) => c.id === scheduleForm.coachId);
     const selectedCoach2 = (data.coaches || []).find((c) => c.id === scheduleForm.coach2Id);
@@ -803,19 +551,17 @@ export default function ClassSchedulesPage() {
       ? [{ coachId: selectedCoach2.id, coachName: selectedCoach2.name }]
       : [];
 
-    const programLabel =
-      scheduleForm.programType === 'school' ? 'School Program' : 'After School Program';
     const classTitle =
-      scheduleForm.className.trim() || `${scheduleForm.batch} (${scheduleForm.location})`;
+      scheduleForm.className.trim() || `${scheduleForm.program} (${scheduleForm.batch})`;
 
     const payload = {
       className: classTitle,
       location: scheduleForm.location,
-      program: programLabel,
-      programType: scheduleForm.programType,
-      batchId: scheduleForm.batchId,
+      program: scheduleForm.program,
+      programType: scheduleForm.program,
+      batchId: scheduleForm.batchId || '',
       batch: scheduleForm.batch,
-      coachId: selectedCoach?.id || '',
+      coachId: selectedCoach?.id || scheduleForm.coachId || '',
       coachName: selectedCoach?.name || 'Unassigned',
       additionalCoaches,
       date: scheduleForm.date,
@@ -823,9 +569,9 @@ export default function ClassSchedulesPage() {
       weekdays: scheduleForm.weekdays,
       startTime: scheduleForm.startTime,
       endTime: scheduleForm.endTime,
-      timingDisplay: scheduleForm.timingDisplay,
-      venue: '',
-      capacity: parseInt(scheduleForm.capacity, 10) || 20,
+      timingDisplay: `${scheduleForm.startTime} - ${scheduleForm.endTime}`,
+      venue: scheduleForm.venue || 'Training Court A',
+      capacity: parseInt(scheduleForm.capacity, 10) || 15,
       notes: scheduleForm.notes,
       attachment: scheduleForm.attachment || null,
     };
@@ -833,7 +579,7 @@ export default function ClassSchedulesPage() {
     if (editingSchedule) {
       const res = updateClassSchedule(editingSchedule.id, payload);
       if (res.success) setIsScheduleModalOpen(false);
-    } else if (scheduleForm.weekdays.length > 1 || parseInt(scheduleForm.recurringWeeks, 10) > 1) {
+    } else if (scheduleForm.weekdays.length > 1 && parseInt(scheduleForm.recurringWeeks, 10) > 1) {
       const res = createRecurringClassSchedules({
         ...payload,
         recurringDays: scheduleForm.weekdays,
@@ -933,8 +679,9 @@ export default function ClassSchedulesPage() {
       <div className="bg-white p-4 rounded-2xl border border-[#172B5012] shadow-card space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* View Mode Pills */}
-          <div className="flex items-center gap-1 bg-[#FFF4E8] p-1 rounded-xl border border-[#172B5014]">
+          <div className="flex items-center gap-1 bg-[#FFF4E8] p-1 rounded-xl border border-[#172B5014] overflow-x-auto">
             {[
+              { id: 'all_schedules', label: 'All Schedules', icon: Layers },
               { id: 'daily', label: 'Daily View', icon: List },
               { id: 'weekly', label: 'Weekly View', icon: Columns },
               { id: 'calendar', label: 'Calendar View', icon: CalendarDays },
@@ -946,7 +693,7 @@ export default function ClassSchedulesPage() {
                   key={mode.id}
                   type="button"
                   onClick={() => setViewMode(mode.id)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                     viewMode === mode.id
                       ? 'bg-[#172B50] text-white shadow-xs'
                       : 'text-[#172B50] opacity-75 hover:opacity-100'
@@ -1047,6 +794,148 @@ export default function ClassSchedulesPage() {
           </select>
         </div>
       </div>
+
+      {/* View 0: ALL SCHEDULES TIMETABLE TABLE (Matching Super Coach Portal Pattern) */}
+      {viewMode === 'all_schedules' && (
+        <div className="bg-white rounded-2xl border border-[#172B5014] shadow-card overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-[#172B5012] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FFF4E8]/50">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-5 rounded-full bg-[#F4510B]" />
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-[#172B50]">
+                  Master Class Timetable across All Centers
+                </h3>
+                <p className="text-[11px] text-[#172B50]/65">
+                  Synchronized across Admin, Super Coach &amp; Coach Portals ({filteredSchedules.length} Sessions)
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => openCreateModal(focusDate)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#F4510B] hover:bg-[#d84306] text-white text-xs font-bold shadow-xs transition-all cursor-pointer self-start sm:self-auto"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Schedule</span>
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-[#172B50]">
+              <thead className="bg-[#FFF4E8] border-b border-[#172B5015] text-[10.5px] font-extrabold uppercase tracking-wider text-[#172B50]">
+                <tr>
+                  <th className="py-3 px-4">Class / Batch</th>
+                  <th className="py-3 px-3">Location</th>
+                  <th className="py-3 px-3">Assigned Coach</th>
+                  <th className="py-3 px-3">Date</th>
+                  <th className="py-3 px-3">Time</th>
+                  <th className="py-3 px-3">Venue</th>
+                  <th className="py-3 px-3 text-center">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#172B5010]">
+                {filteredSchedules.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-xs opacity-60">
+                      No matching class schedules found. Click "Schedule Class Session" to publish a new timetable.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSchedules.map((schedule) => (
+                    <tr key={schedule.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
+                      <td className="py-3.5 px-4 font-bold">
+                        <span className="text-sm font-black text-[#172B50] block">
+                          {schedule.className || schedule.batch}
+                        </span>
+                        <span className="text-[11px] opacity-60">{schedule.program}</span>
+                      </td>
+                      <td className="py-3.5 px-3 font-bold text-[#F4510B]">
+                        {schedule.location}
+                      </td>
+                      <td className="py-3.5 px-3 font-bold">
+                        {schedule.coachName || 'Unassigned'}
+                      </td>
+                      <td className="py-3.5 px-3 text-xs">
+                        {schedule.date}
+                      </td>
+                      <td className="py-3.5 px-3 font-mono font-bold text-xs">
+                        {schedule.startTime} - {schedule.endTime}
+                      </td>
+                      <td className="py-3.5 px-3 text-xs opacity-75">
+                        {schedule.venue || 'Training Court A'}
+                      </td>
+                      <td className="py-3.5 px-3 text-center">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${renderStatusBadge(
+                            schedule.status
+                          )}`}
+                        >
+                          {schedule.status}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setViewingClassSchedule(schedule)}
+                            className="px-2 py-1 rounded-lg text-xs font-bold bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] border border-[#172B5015] hover:border-[#F4510B30] transition-colors cursor-pointer flex items-center gap-1"
+                            title="View Class Details"
+                          >
+                            <Eye className="w-3 h-3 text-[#172B50]" />
+                            <span>View</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(schedule)}
+                            className="px-2 py-1 rounded-lg text-xs font-bold bg-[#172B50] hover:bg-[#F4510B] text-white transition-colors cursor-pointer flex items-center gap-1"
+                            title="Edit Class Schedule"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                            <span>Edit</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplacementDrawerSchedule(schedule);
+                              setReplacementCoachId('');
+                              setReplacementReason('');
+                              setReplacementError('');
+                            }}
+                            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition-colors cursor-pointer flex items-center gap-1"
+                            title="Assign Replacement Coach"
+                          >
+                            <UserCheck className="w-3 h-3" />
+                            <span>Reassign</span>
+                          </button>
+
+                          {schedule.status !== 'Cancelled' && schedule.status !== 'Completed' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCancellingSchedule(schedule);
+                                setCancelReason('');
+                              }}
+                              className="px-2 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer flex items-center gap-1"
+                              title="Cancel Class"
+                            >
+                              <XCircle className="w-3 h-3" />
+                              <span>Cancel</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* View 1: DAILY VIEW */}
       {viewMode === 'daily' && (
@@ -1723,13 +1612,13 @@ export default function ClassSchedulesPage() {
         </div>
       )}
 
-      {/* Schedule Create / Edit Modal */}
+      {/* Schedule Create / Edit Modal (Matching Super Coach Portal Pattern) */}
       <Modal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
-        title={editingSchedule ? `Edit Schedule: ${editingSchedule.id}` : 'Schedule Class Session'}
-        subtitle="Program Type → Location → Batch → Configured Timing → Weekday & Coach"
-        maxWidth="max-w-2xl"
+        title={editingSchedule ? `Edit Class Schedule: ${editingSchedule.id}` : 'Create Class Schedule'}
+        subtitle="Schedule a class session across authorized academy centers"
+        maxWidth="max-w-xl"
       >
         <form onSubmit={handleSaveSchedule} className="space-y-4">
           {formConflict.hasConflict && (
@@ -1739,45 +1628,22 @@ export default function ClassSchedulesPage() {
             </div>
           )}
 
-          {/* 1. Program Type (Replaces One-Time Class vs Weekly Recurring Timetable) */}
-          <div className="p-3.5 rounded-2xl bg-[#FFF4E8]/80 border border-[#F4510B25] space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <span className="text-xs font-black text-[#172B50] block">
-                  Program Type *
-                </span>
-                <span className="text-[10px] text-[#172B50]/65 font-medium">
-                  Select program category to load authorized locations &amp; batches
-                </span>
-              </div>
-              <div className="inline-flex rounded-xl bg-white border border-[#172B501A] p-1 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => handleProgramTypeChange('school')}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    scheduleForm.programType === 'school'
-                      ? 'bg-[#172B50] text-white shadow-xs'
-                      : 'text-[#172B50] hover:bg-[#FFF4E8]'
-                  }`}
-                >
-                  School Program
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleProgramTypeChange('after_school')}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    scheduleForm.programType === 'after_school'
-                      ? 'bg-[#F4510B] text-white shadow-xs'
-                      : 'text-[#172B50] hover:bg-[#FFF4E8]'
-                  }`}
-                >
-                  After School Program
-                </button>
-              </div>
-            </div>
+          {/* 1. Class Title */}
+          <div>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">
+              Class Title *
+            </label>
+            <input
+              type="text"
+              required
+              value={scheduleForm.className}
+              onChange={(e) => setScheduleForm({ ...scheduleForm, className: e.target.value })}
+              placeholder="e.g. Spartan Gymnastics & Agility - Batch Alpha"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
+            />
           </div>
 
-          {/* 2. Dependent Dropdowns: Location and Batches */}
+          {/* 2. Location & Assigned Coach */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#172B50] mb-1">
@@ -1790,9 +1656,9 @@ export default function ClassSchedulesPage() {
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
               >
                 <option value="">Select Location</option>
-                {currentProgramLocations.map((loc) => (
-                  <option key={loc.id || loc.name} value={loc.name}>
-                    {loc.name}
+                {allFilterLocations.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
                   </option>
                 ))}
               </select>
@@ -1800,252 +1666,199 @@ export default function ClassSchedulesPage() {
 
             <div>
               <label className="block text-xs font-bold text-[#172B50] mb-1">
-                Batches *
+                Assigned Coach *
               </label>
               <select
                 required
-                disabled={!scheduleForm.location}
-                value={scheduleForm.batch}
-                onChange={(e) => handleBatchChange(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold disabled:bg-slate-100 disabled:text-slate-400"
+                value={scheduleForm.coachId}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, coachId: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
               >
-                <option value="">
-                  {scheduleForm.location ? 'Select Batch' : 'Select Location First'}
-                </option>
-                {currentBatchesForLocation.map((b) => (
-                  <option key={b.id || b.name} value={b.name}>
-                    {b.name} ({b.timingDisplay})
+                <option value="">Select Coach</option>
+                {availableCoachesForLocation.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.specialization || 'Academy Coach'}) - {c.center || 'All Centers'}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Class Title (Optional custom title) */}
-          <div>
-            <label className="block text-xs font-bold text-[#172B50] mb-1">
-              Class Title / Name
-            </label>
-            <input
-              type="text"
-              value={scheduleForm.className}
-              onChange={(e) => setScheduleForm({ ...scheduleForm, className: e.target.value })}
-              placeholder="e.g. Mixed Age - Mahalingapuram"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white"
-            />
-          </div>
-
-          {/* 3. Date, Auto-Populated Timing & Weekdays (Replaces manual Start/End time) */}
-          <div className="p-3.5 rounded-2xl bg-white border border-[#172B501A] shadow-2xs space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">
-                  Class Date *
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={scheduleForm.date}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#172B50] mb-1">
-                  Configured Batch Timing (Auto-Populated)
-                </label>
-                <div className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-[#172B5022] text-[#172B50] flex items-center justify-between font-bold h-[38px]">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>{scheduleForm.timingDisplay || 'Select Location & Batch'}</span>
-                  </div>
-                  {scheduleForm.timingDisplay && (
-                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                      Auto-Populated
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Applicable Weekdays */}
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
-                <span className="text-xs font-bold text-[#172B50]">
-                  Applicable Weekdays *
-                </span>
-                {scheduleForm.location.toLowerCase() === 'kilpauk' ? (
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                    Kilpauk: Sat (Mixed Age Group) / Sun (Batch)
-                  </span>
-                ) : (
-                  <div className="flex items-center gap-1.5 text-[11px]">
-                    <span className="font-bold text-[#172B50]">Repeat Schedule:</span>
-                    <select
-                      value={scheduleForm.recurringWeeks}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, recurringWeeks: e.target.value })}
-                      className="px-2 py-0.5 rounded-lg bg-white border border-[#172B5020] text-xs font-bold text-[#172B50]"
-                    >
-                      <option value="1">1 Week</option>
-                      <option value="2">2 Weeks</option>
-                      <option value="4">4 Weeks</option>
-                      <option value="8">8 Weeks</option>
-                      <option value="12">12 Weeks</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {MON_FIRST_DAYS.map((dayName) => {
-                  const isAvailable = currentAvailableWeekdays.includes(dayName);
-                  const isSelected = scheduleForm.weekdays.includes(dayName);
-                  return (
-                    <button
-                      key={dayName}
-                      type="button"
-                      disabled={!isAvailable}
-                      onClick={() => handleWeekdayClick(dayName)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        !isAvailable
-                          ? 'opacity-35 bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                          : isSelected
-                          ? 'bg-[#F4510B] text-white border border-[#F4510B] shadow-2xs'
-                          : 'bg-white text-[#172B50] border border-[#172B5020] hover:bg-[#FFF4E8]'
-                      }`}
-                    >
-                      {dayName}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* 4. Coach Assignment */}
+          {/* 3. Program & Batch */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#172B50] mb-1">
-                Coach 1 *
+                Sports Program *
               </label>
               <select
-                value={scheduleForm.coachId}
+                required
+                value={scheduleForm.program}
                 onChange={(e) => {
-                  const nextCoach1 = e.target.value;
-                  setScheduleForm((prev) => ({
-                    ...prev,
-                    coachId: nextCoach1,
-                    coach2Id: prev.coach2Id === nextCoach1 ? '' : prev.coach2Id,
-                  }));
+                  const p = e.target.value;
+                  setScheduleForm({
+                    ...scheduleForm,
+                    program: p,
+                    className: scheduleForm.className ? scheduleForm.className : `${p} (${scheduleForm.batch || 'Batch Alpha'})`
+                  });
                 }}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
               >
-                <option value="">Select Coach 1</option>
-                {(data.coaches || []).map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
+                {availableProgramsList.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
                   </option>
                 ))}
               </select>
             </div>
+
             <div>
               <label className="block text-xs font-bold text-[#172B50] mb-1">
-                Coach 2 (Optional)
+                Batch / Cohort *
               </label>
               <select
-                value={scheduleForm.coach2Id}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, coach2Id: e.target.value })}
+                value={scheduleForm.batch}
+                onChange={(e) => handleBatchChange(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
               >
-                <option value="">Select Coach 2 (Optional)</option>
-                {(data.coaches || [])
-                  .filter((c) => c.id !== scheduleForm.coachId)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                {currentBatchesForLocation.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          {/* 5. Session Notes & Drill Upload (Replaces text-only input) */}
-          <div className="space-y-2 p-3.5 rounded-2xl bg-white border border-[#172B501A] shadow-2xs">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-black text-[#172B50]">
-                Session Notes &amp; Drill Attachments
-              </label>
-              <span className="text-[10px] text-[#172B50]/60 font-medium">
-                PDF, DOC, DOCX, Images (Max 15MB)
-              </span>
-            </div>
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,image/*"
-              className="hidden"
-            />
-
-            {scheduleForm.attachment ? (
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FFF5ED] border border-[#F4510B30]">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-white text-[#F4510B] flex items-center justify-center shrink-0 border border-[#F4510B20] shadow-2xs">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#172B50] truncate">{scheduleForm.attachment.name}</p>
-                    <p className="text-[10px] text-[#172B50]/65 font-medium">
-                      {scheduleForm.attachment.size ? `${(scheduleForm.attachment.size / 1024).toFixed(1)} KB` : 'Attached File'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-2.5 py-1 text-[11px] font-bold text-[#F4510B] bg-white border border-[#F4510B30] hover:bg-[#F4510B] hover:text-white rounded-lg transition-colors cursor-pointer"
-                  >
-                    Replace
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setScheduleForm((prev) => ({ ...prev, attachment: null }))}
-                    className="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Remove Attachment"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-[#172B5020] hover:border-[#F4510B] rounded-xl p-3 text-center cursor-pointer bg-[#F8FAFC] hover:bg-[#FFF5ED]/40 transition-all flex flex-col items-center justify-center gap-1.5 group"
-              >
-                <div className="w-8 h-8 rounded-full bg-white shadow-2xs flex items-center justify-center text-[#172B50] group-hover:text-[#F4510B] group-hover:scale-110 transition-all">
-                  <Upload className="w-4 h-4" />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-[#F4510B] group-hover:underline">Upload File</span>
-                  <span className="text-xs text-[#172B50]/60">or drag and drop drills</span>
-                </div>
-                <span className="text-[10px] text-[#172B50]/50 font-medium">
-                  Support for PDF, DOC, DOCX and image files
-                </span>
-              </div>
-            )}
-
+          {/* 4. Date, Start Time & End Time */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                Class Date *
+              </label>
               <input
-                type="text"
-                value={scheduleForm.notes}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
-                placeholder="Optional short description or drill instruction..."
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white"
+                type="date"
+                required
+                value={scheduleForm.date}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                Start Time *
+              </label>
+              <input
+                type="time"
+                required
+                value={scheduleForm.startTime}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, startTime: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                End Time *
+              </label>
+              <input
+                type="time"
+                required
+                value={scheduleForm.endTime}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, endTime: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
+              />
+            </div>
+          </div>
+
+          {/* 5. Court / Venue & Capacity */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                Court / Arena Venue
+              </label>
+              <select
+                value={scheduleForm.venue}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, venue: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
+              >
+                {availableVenuesForLocation.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">
+                Athlete Capacity
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={scheduleForm.capacity}
+                onChange={(e) => setScheduleForm({ ...scheduleForm, capacity: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-semibold"
+              />
+            </div>
+          </div>
+
+          {/* 6. Weekdays repeat (Optional) */}
+          <div className="p-3 rounded-xl bg-[#FFF4E8]/60 border border-[#F4510B20] space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-1">
+              <span className="text-xs font-bold text-[#172B50]">
+                Recurring Days (Optional)
+              </span>
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <span className="font-bold text-[#172B50]">Repeat:</span>
+                <select
+                  value={scheduleForm.recurringWeeks}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, recurringWeeks: e.target.value })}
+                  className="px-2 py-0.5 rounded-lg bg-white border border-[#172B5020] text-xs font-bold text-[#172B50]"
+                >
+                  <option value="1">1 Week (Single Session)</option>
+                  <option value="2">2 Weeks</option>
+                  <option value="4">4 Weeks</option>
+                  <option value="8">8 Weeks</option>
+                  <option value="12">12 Weeks</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {MON_FIRST_DAYS.map((dayName) => {
+                const isSelected = scheduleForm.weekdays.includes(dayName);
+                return (
+                  <button
+                    key={dayName}
+                    type="button"
+                    onClick={() => handleWeekdayClick(dayName)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#F4510B] text-white border border-[#F4510B] shadow-2xs'
+                        : 'bg-white text-[#172B50] border border-[#172B5020] hover:bg-[#FFF4E8]'
+                    }`}
+                  >
+                    {dayName}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 7. Special Notes */}
+          <div>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">
+              Session Notes &amp; Guidelines
+            </label>
+            <input
+              type="text"
+              value={scheduleForm.notes}
+              onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
+              placeholder="e.g. Focus on warm-up drills, agility cones..."
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white font-medium"
+            />
           </div>
 
           {/* Submit Actions */}
@@ -2062,7 +1875,7 @@ export default function ClassSchedulesPage() {
               disabled={formConflict.hasConflict || !scheduleForm.location || !scheduleForm.batch}
               className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:bg-[#d84306] disabled:opacity-50 cursor-pointer shadow-xs active:scale-95 transition-all"
             >
-              {editingSchedule ? 'Update Schedule' : 'Publish Schedule'}
+              {editingSchedule ? 'Save Changes' : 'Publish Schedule'}
             </button>
           </div>
         </form>

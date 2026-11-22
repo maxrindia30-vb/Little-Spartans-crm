@@ -195,17 +195,19 @@ export default function Sidebar() {
         { id: 'analytics', label: 'Academy Analytics', view: 'reports_settings', subTab: 'analytics' },
         { id: 'export', label: 'Raw Data Export', view: 'reports_settings', subTab: 'export' },
         { id: 'backup', label: 'Backup & Recovery', view: 'reports_settings', subTab: 'backup' },
-        { id: 'settings', label: 'Academy Settings', view: 'reports_settings', subTab: 'settings' },
       ],
     },
     {
-      id: 'terms_policies',
-      label: 'Terms & Policies',
-      icon: FileText,
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
       children: [
-        { id: 'terms', label: 'Terms & Conditions', view: 'terms_policies', subTab: 'terms' },
-        { id: 'dos_donts', label: 'Parent Do’s & Don’ts', view: 'terms_policies', subTab: 'dos_donts' },
-        { id: 'acceptances', label: 'Parent Acceptances', view: 'terms_policies', subTab: 'acceptances' },
+        { id: 'academy_settings', label: 'Academy Settings', view: 'settings', subTab: 'academy' },
+        { id: 'brand_identity', label: 'Brand & Identity', view: 'settings', subTab: 'brand' },
+        { id: 'center_management', label: 'Center Management', view: 'settings', subTab: 'centers' },
+        { id: 'academic_calendar', label: 'Academic Calendar', view: 'settings', subTab: 'calendar' },
+        { id: 'terms_conditions', label: 'Terms & Conditions', view: 'settings', subTab: 'terms' },
+        { id: 'settings_audit', label: 'Settings Audit Log', view: 'settings', subTab: 'audit' },
       ],
     },
   ];
@@ -220,6 +222,18 @@ export default function Sidebar() {
     if (child.view === 'attendance_compensation' && ['student_attendance', 'coach_attendance', 'coach_leaves', 'student_compensation'].includes(currentView)) {
       return (child.subTab || child.id) === currentView;
     }
+    if (child.view === 'settings' || child.view === 'terms_policies') {
+      if (['settings', 'academy_settings', 'terms_policies', 'terms', 'policies'].includes(currentView)) {
+        if (child.subTab === 'terms' && ['terms', 'dos_donts', 'acceptances'].includes(activeSubTab)) {
+          return true;
+        }
+        if (child.subTab === 'academy' && (!activeSubTab || activeSubTab === 'academy' || activeSubTab === 'settings')) {
+          return true;
+        }
+        return activeSubTab === child.subTab;
+      }
+      return false;
+    }
     if (child.view !== currentView) return false;
     if (child.subTab) {
       if (child.view === 'people' && !activeSubTab) return child.subTab === 'students';
@@ -230,7 +244,6 @@ export default function Sidebar() {
       if (child.view === 'access_management' && !activeSubTab) return child.subTab === 'overview';
       if (child.view === 'communication' && !activeSubTab) return child.subTab === 'inbox';
       if (child.view === 'reports_settings' && !activeSubTab) return child.subTab === 'analytics';
-      if (child.view === 'terms_policies' && !activeSubTab) return child.subTab === 'terms';
       return activeSubTab === child.subTab;
     }
     return true;
@@ -317,6 +330,7 @@ export default function Sidebar() {
     { id: 'communication', label: 'Communication', icon: MessageSquare },
     { id: 'access_management', label: 'Access Management', icon: ShieldCheck },
     { id: 'reports_settings', label: 'Reports & Settings', icon: BarChart2 },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   // =========================================================================
@@ -431,9 +445,14 @@ export default function Sidebar() {
         setActiveSubTab('overview');
       }
     } else if (itemId === 'reports_settings' && setActiveSubTab) {
-      const validReportTabs = ['analytics', 'export', 'backup', 'permissions', 'settings'];
+      const validReportTabs = ['analytics', 'export', 'backup'];
       if (!validReportTabs.includes(activeSubTab)) {
         setActiveSubTab('analytics');
+      }
+    } else if (itemId === 'settings' && setActiveSubTab) {
+      const validSettingsTabs = ['academy', 'brand', 'centers', 'calendar', 'terms', 'audit'];
+      if (!validSettingsTabs.includes(activeSubTab)) {
+        setActiveSubTab('academy');
       }
     } else if (itemId === 'communication' && setActiveSubTab) {
       const validCommTabs = ['inbox', 'announcements', 'broadcasts', 'templates', 'sent', 'scheduled', 'reports', 'feedback', 'support_requests'];

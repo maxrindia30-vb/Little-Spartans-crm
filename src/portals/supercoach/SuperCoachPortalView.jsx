@@ -21,6 +21,8 @@ import {
   Search,
   Download,
   Eye,
+  Edit2,
+  XCircle,
   FileText,
   AlertCircle,
   ChevronRight,
@@ -58,6 +60,8 @@ export default function SuperCoachPortalView() {
     reassignScheduleCoach,
     reportCoachIssue,
     createClassSchedule,
+    updateClassSchedule,
+    cancelClassSchedule,
     addToast
   } = useCrm();
 
@@ -65,6 +69,19 @@ export default function SuperCoachPortalView() {
   const assignedLocations = useMemo(() => {
     return currentUser?.assignedLocations || ['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM'];
   }, [currentUser]);
+
+  // Normalized location matcher for case-insensitive cross-portal sync
+  const assignedLocationsNormalized = useMemo(() => {
+    return assignedLocations.map((l) => (l || '').toLowerCase().trim());
+  }, [assignedLocations]);
+
+  const isLocationAuthorized = React.useCallback((locName) => {
+    if (!locName) return false;
+    const norm = String(locName).toLowerCase().trim();
+    return assignedLocationsNormalized.some(
+      (al) => al === norm || norm.includes(al) || al.includes(norm)
+    );
+  }, [assignedLocationsNormalized]);
 
   // Active location switcher for Super Coach dashboard
   const [selectedLocation, setSelectedLocation] = useState('All');
@@ -96,7 +113,15 @@ export default function SuperCoachPortalView() {
   const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isCreateScheduleModalOpen, setIsCreateScheduleModalOpen] = useState(false);
+  const [isViewScheduleModalOpen, setIsViewScheduleModalOpen] = useState(false);
+  const [isEditScheduleModalOpen, setIsEditScheduleModalOpen] = useState(false);
+  const [isCancelScheduleModalOpen, setIsCancelScheduleModalOpen] = useState(false);
+
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [viewingSchedule, setViewingSchedule] = useState(null);
+  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [cancellingSchedule, setCancellingSchedule] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
   const [selectedCoachForIssue, setSelectedCoachForIssue] = useState(null);
 
   // Reassign coach form
@@ -125,63 +150,80 @@ export default function SuperCoachPortalView() {
     venue: 'Training Court A'
   });
 
-  // Scoped Locations Objects
+  // Edit schedule form
+  const [editScheduleForm, setEditScheduleForm] = useState({
+    className: '',
+    program: '',
+    batch: '',
+    location: '',
+    coachId: '',
+    coachName: '',
+    date: '',
+    startTime: '17:00',
+    endTime: '18:00',
+    venue: 'Training Court A',
+    capacity: 15,
+    status: 'Scheduled',
+    notes: ''
+  });
+
+  // Scoped Locations Objects (case-insensitive authorized match)
   const scopedLocations = useMemo(() => {
-    return (data.locations || []).filter((loc) => assignedLocations.includes(loc.name));
-  }, [data.locations, assignedLocations]);
+    return (data.locations || []).filter((loc) => isLocationAuthorized(loc.name));
+  }, [data.locations, isLocationAuthorized]);
 
   // Scoped Coaches (operating in assigned locations)
   const scopedCoaches = useMemo(() => {
     return (data.coaches || []).filter((coach) => {
       if (!coach.center) return true;
-      return assignedLocations.includes(coach.center);
+      return isLocationAuthorized(coach.center);
     });
-  }, [data.coaches, assignedLocations]);
+  }, [data.coaches, isLocationAuthorized]);
 
   // Filtered coaches by selectedLocation
   const locationFilteredCoaches = useMemo(() => {
     return scopedCoaches.filter((coach) => {
-      const matchLoc = selectedLocation === 'All' || coach.center === selectedLocation;
+      const matchLoc = selectedLocation === 'All' || isLocationAuthorized(coach.center);
       const matchSearch =
         !coachSearch ||
         coach.name?.toLowerCase().includes(coachSearch.toLowerCase()) ||
         coach.specialization?.toLowerCase().includes(coachSearch.toLowerCase());
       return matchLoc && matchSearch;
     });
-  }, [scopedCoaches, selectedLocation, coachSearch]);
+  }, [scopedCoaches, selectedLocation, coachSearch, isLocationAuthorized]);
 
   // Scoped Students
   const scopedStudents = useMemo(() => {
     return (data.students || []).filter((student) => {
       if (!student.center) return true;
-      return assignedLocations.includes(student.center);
+      return isLocationAuthorized(student.center);
     });
-  }, [data.students, assignedLocations]);
+  }, [data.students, isLocationAuthorized]);
 
-  // Scoped Schedules
+  // Scoped Schedules (case-insensitive location match across Admin & Super Coach)
   const scopedSchedules = useMemo(() => {
-    return (data.classSchedules || []).filter((s) => assignedLocations.includes(s.location));
-  }, [data.classSchedules, assignedLocations]);
+    return (data.classSchedules || []).filter((s) => isLocationAuthorized(s.location));
+  }, [data.classSchedules, isLocationAuthorized]);
 
   // Today's classes
   const todayYmd = new Date().toISOString().split('T')[0];
   const todayClasses = useMemo(() => {
     return scopedSchedules.filter((s) => {
       const matchDate = s.date === todayYmd;
-      const matchLoc = selectedLocation === 'All' || s.location === selectedLocation;
+      const matchLoc = selectedLocation === 'All' || (s.location || '').toLowerCase() === selectedLocation.toLowerCase();
       return matchDate && matchLoc;
     });
   }, [scopedSchedules, todayYmd, selectedLocation]);
 
   // Scoped Equipment
   const scopedEquipment = useMemo(() => {
-    return (data.equipment || []).filter((i) => assignedLocations.includes(i.location));
-  }, [data.equipment, assignedLocations]);
+    return (data.equipment || []).filter((i) => isLocationAuthorized(i.location));
+  }, [data.equipment, isLocationAuthorized]);
 
   // Scoped Reports
   const scopedReports = useMemo(() => {
-    return (data.equipmentReports || []).filter((r) => assignedLocations.includes(r.location));
-  }, [data.equipmentReports, assignedLocations]);
+    return (data.equipmentReports || []).filter((r) => isLocationAuthorized(r.location));
+  }, [data.equipmentReports, isLocationAuthorized]);
 
   // Overall KPIs
   const kpis = useMemo(() => {
@@ -318,6 +360,79 @@ export default function SuperCoachPortalView() {
     const res = createClassSchedule(candidate);
     if (res.success) {
       setIsCreateScheduleModalOpen(false);
+    }
+  };
+
+  const handleOpenViewSchedule = (schedule) => {
+    setViewingSchedule(schedule);
+    setIsViewScheduleModalOpen(true);
+  };
+
+  const handleOpenEditSchedule = (schedule) => {
+    setEditingSchedule(schedule);
+    setEditScheduleForm({
+      className: schedule.className || schedule.batch || '',
+      program: schedule.program || 'Spartan Gymnastics & Agility',
+      batch: schedule.batch || 'Batch Alpha',
+      location: schedule.location || assignedLocations[0],
+      coachId: schedule.coachId || '',
+      coachName: schedule.coachName || 'Unassigned',
+      date: schedule.date || todayYmd,
+      startTime: schedule.startTime || '17:00',
+      endTime: schedule.endTime || '18:00',
+      venue: schedule.venue || 'Training Court A',
+      capacity: schedule.capacity || 15,
+      status: schedule.status || 'Scheduled',
+      notes: schedule.notes || ''
+    });
+    setIsEditScheduleModalOpen(true);
+  };
+
+  const handleEditScheduleSubmit = (e) => {
+    e.preventDefault();
+    if (!editingSchedule) return;
+
+    const coach = scopedCoaches.find((c) => c.id === editScheduleForm.coachId);
+
+    const payload = {
+      className: editScheduleForm.className.trim() || `${editScheduleForm.program} (${editScheduleForm.batch})`,
+      program: editScheduleForm.program,
+      batch: editScheduleForm.batch,
+      location: editScheduleForm.location,
+      coachId: coach?.id || editScheduleForm.coachId || '',
+      coachName: coach?.name || editScheduleForm.coachName || 'Unassigned',
+      date: editScheduleForm.date,
+      startTime: editScheduleForm.startTime,
+      endTime: editScheduleForm.endTime,
+      timingDisplay: `${editScheduleForm.startTime} - ${editScheduleForm.endTime}`,
+      venue: editScheduleForm.venue,
+      capacity: parseInt(editScheduleForm.capacity, 10) || 15,
+      status: editScheduleForm.status,
+      notes: editScheduleForm.notes
+    };
+
+    const res = updateClassSchedule(editingSchedule.id, payload);
+    if (res.success) {
+      setIsEditScheduleModalOpen(false);
+      setEditingSchedule(null);
+    }
+  };
+
+  const handleOpenCancelSchedule = (schedule) => {
+    setCancellingSchedule(schedule);
+    setCancelReason('');
+    setIsCancelScheduleModalOpen(true);
+  };
+
+  const handleCancelScheduleSubmit = (e) => {
+    e.preventDefault();
+    if (!cancellingSchedule) return;
+
+    const res = cancelClassSchedule(cancellingSchedule.id, cancelReason);
+    if (res.success) {
+      setIsCancelScheduleModalOpen(false);
+      setCancellingSchedule(null);
+      setCancelReason('');
     }
   };
 
@@ -1629,13 +1744,49 @@ export default function SuperCoachPortalView() {
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenReassign(schedule)}
-                            className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#172B50] hover:bg-[#F4510B] text-white transition-colors cursor-pointer"
-                          >
-                            Reassign
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenViewSchedule(schedule)}
+                              className="px-2 py-1 rounded-lg text-xs font-bold bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] border border-[#172B5015] hover:border-[#F4510B30] transition-colors cursor-pointer flex items-center gap-1"
+                              title="View Class Details"
+                            >
+                              <Eye className="w-3 h-3 text-[#172B50]" />
+                              <span>View</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditSchedule(schedule)}
+                              className="px-2 py-1 rounded-lg text-xs font-bold bg-[#172B50] hover:bg-[#F4510B] text-white transition-colors cursor-pointer flex items-center gap-1"
+                              title="Edit Class Schedule"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                              <span>Edit</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReassign(schedule)}
+                              className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition-colors cursor-pointer flex items-center gap-1"
+                              title="Reassign Coach"
+                            >
+                              <UserCheck className="w-3 h-3" />
+                              <span>Reassign</span>
+                            </button>
+
+                            {schedule.status !== 'Cancelled' && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenCancelSchedule(schedule)}
+                                className="px-2 py-1 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer flex items-center gap-1"
+                                title="Cancel Class Session"
+                              >
+                                <XCircle className="w-3 h-3" />
+                                <span>Cancel</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -2191,6 +2342,375 @@ export default function SuperCoachPortalView() {
               className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm cursor-pointer"
             >
               Publish Schedule
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ============================================================ */}
+      {/* MODAL: VIEW CLASS SCHEDULE DETAILS (Super Coach)              */}
+      {/* ============================================================ */}
+      <Modal
+        isOpen={isViewScheduleModalOpen && Boolean(viewingSchedule)}
+        onClose={() => {
+          setIsViewScheduleModalOpen(false);
+          setViewingSchedule(null);
+        }}
+        title="Class Session Details"
+        subtitle={viewingSchedule?.id ? `Schedule ID: ${viewingSchedule.id}` : 'Class Overview'}
+        maxWidth="max-w-lg"
+      >
+        {viewingSchedule && (
+          <div className="space-y-4 text-xs text-[#172B50]">
+            <div className="p-4 rounded-2xl bg-[#FFF4E8] border border-[#F4510B25] space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B] block">
+                    {viewingSchedule.program || 'Sports Program'}
+                  </span>
+                  <h3 className="text-base font-black text-[#172B50]">
+                    {viewingSchedule.className || viewingSchedule.batch}
+                  </h3>
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
+                    viewingSchedule.status === 'Completed'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : viewingSchedule.status === 'Cancelled'
+                      ? 'bg-rose-100 text-rose-800'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  {viewingSchedule.status || 'Scheduled'}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-white border border-[#172B5015] shadow-2xs">
+                <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Academy Location</span>
+                <span className="text-sm font-black text-[#F4510B] mt-0.5 block">{viewingSchedule.location}</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white border border-[#172B5015] shadow-2xs">
+                <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Court / Arena</span>
+                <span className="text-sm font-bold text-[#172B50] mt-0.5 block">{viewingSchedule.venue || 'Training Court A'}</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white border border-[#172B5015] shadow-2xs">
+                <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Assigned Head Coach</span>
+                <span className="text-sm font-black text-[#172B50] mt-0.5 block">{viewingSchedule.coachName || 'Unassigned'}</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white border border-[#172B5015] shadow-2xs">
+                <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Session Date & Time</span>
+                <span className="text-xs font-bold text-[#172B50] mt-0.5 block">
+                  {viewingSchedule.date} ({viewingSchedule.startTime} - {viewingSchedule.endTime})
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white border border-[#172B5015] shadow-2xs">
+                <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Athlete Capacity</span>
+                <span className="text-xs font-bold text-[#172B50] mt-0.5 block">
+                  {viewingSchedule.enrolledCount || 12} Enrolled / {viewingSchedule.capacity || 15} Max
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white border border-[#172B5015] shadow-2xs">
+                <span className="text-[10px] font-bold text-[#172B50]/60 block uppercase">Batch Name</span>
+                <span className="text-xs font-bold text-[#172B50] mt-0.5 block">{viewingSchedule.batch || 'Batch Alpha'}</span>
+              </div>
+            </div>
+
+            {viewingSchedule.notes && (
+              <div className="p-3 rounded-xl bg-[#FFF4E8]/60 border border-[#172B5015]">
+                <span className="text-[10px] font-bold text-[#172B50]/70 block uppercase mb-1">Session Instructions</span>
+                <p className="text-xs text-[#172B50] leading-relaxed">{viewingSchedule.notes}</p>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-[#172B5015] flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const s = viewingSchedule;
+                  setIsViewScheduleModalOpen(false);
+                  setViewingSchedule(null);
+                  handleOpenReassign(s);
+                }}
+                className="px-3.5 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-2xs transition-all cursor-pointer"
+              >
+                Reassign Coach
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const s = viewingSchedule;
+                    setIsViewScheduleModalOpen(false);
+                    setViewingSchedule(null);
+                    handleOpenEditSchedule(s);
+                  }}
+                  className="px-4 py-2 text-xs font-bold bg-[#172B50] hover:bg-[#F4510B] text-white rounded-xl shadow-2xs transition-all cursor-pointer"
+                >
+                  Edit Schedule
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsViewScheduleModalOpen(false);
+                    setViewingSchedule(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl border border-[#172B5020]"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ============================================================ */}
+      {/* MODAL: EDIT CLASS SCHEDULE (Super Coach)                     */}
+      {/* ============================================================ */}
+      <Modal
+        isOpen={isEditScheduleModalOpen && Boolean(editingSchedule)}
+        onClose={() => {
+          setIsEditScheduleModalOpen(false);
+          setEditingSchedule(null);
+        }}
+        title={`Edit Schedule: ${editingSchedule?.id || ''}`}
+        subtitle="Update class timetable, court venue, or instructor assignment"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleEditScheduleSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Class Title *</label>
+            <input
+              type="text"
+              required
+              value={editScheduleForm.className}
+              onChange={(e) => setEditScheduleForm({ ...editScheduleForm, className: e.target.value })}
+              className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Location *</label>
+              <select
+                value={editScheduleForm.location}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, location: e.target.value })}
+                className="w-full px-3 py-2 text-xs font-bold bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              >
+                {assignedLocations.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Assigned Coach *</label>
+              <select
+                value={editScheduleForm.coachId}
+                onChange={(e) => {
+                  const c = scopedCoaches.find(co => co.id === e.target.value);
+                  setEditScheduleForm({
+                    ...editScheduleForm,
+                    coachId: e.target.value,
+                    coachName: c?.name || 'Unassigned'
+                  });
+                }}
+                className="w-full px-3 py-2 text-xs font-bold bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              >
+                <option value="">Select Coach</option>
+                {scopedCoaches
+                  .filter((c) => !editScheduleForm.location || isLocationAuthorized(c.center))
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.specialization})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Program</label>
+              <select
+                value={editScheduleForm.program}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, program: e.target.value })}
+                className="w-full px-3 py-2 text-xs font-bold bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              >
+                {(data.programs || []).map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+                <option value="After School Program">After School Program</option>
+                <option value="School Program">School Program</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Batch / Cohort</label>
+              <input
+                type="text"
+                value={editScheduleForm.batch}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, batch: e.target.value })}
+                className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Date</label>
+              <input
+                type="date"
+                required
+                value={editScheduleForm.date}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, date: e.target.value })}
+                className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Start Time</label>
+              <input
+                type="time"
+                required
+                value={editScheduleForm.startTime}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, startTime: e.target.value })}
+                className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">End Time</label>
+              <input
+                type="time"
+                required
+                value={editScheduleForm.endTime}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, endTime: e.target.value })}
+                className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Court / Venue</label>
+              <input
+                type="text"
+                value={editScheduleForm.venue}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, venue: e.target.value })}
+                placeholder="e.g. Training Court A"
+                className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">Status</label>
+              <select
+                value={editScheduleForm.status}
+                onChange={(e) => setEditScheduleForm({ ...editScheduleForm, status: e.target.value })}
+                className="w-full px-3 py-2 text-xs font-bold bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+              >
+                <option value="Scheduled">Scheduled</option>
+                <option value="Updated">Updated</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Special Notes</label>
+            <textarea
+              rows={2}
+              value={editScheduleForm.notes}
+              onChange={(e) => setEditScheduleForm({ ...editScheduleForm, notes: e.target.value })}
+              placeholder="e.g. Bring agility cones, warm-up drills..."
+              className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+            />
+          </div>
+
+          <div className="pt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditScheduleModalOpen(false);
+                setEditingSchedule(null);
+              }}
+              className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm cursor-pointer hover:bg-[#d84306]"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ============================================================ */}
+      {/* MODAL: CANCEL CLASS SCHEDULE (Super Coach)                   */}
+      {/* ============================================================ */}
+      <Modal
+        isOpen={isCancelScheduleModalOpen && Boolean(cancellingSchedule)}
+        onClose={() => {
+          setIsCancelScheduleModalOpen(false);
+          setCancellingSchedule(null);
+        }}
+        title="Cancel Class Session"
+        subtitle={cancellingSchedule ? `${cancellingSchedule.className || cancellingSchedule.batch} (${cancellingSchedule.date})` : ''}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleCancelScheduleSubmit} className="space-y-4">
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+            <p className="font-bold">Are you sure you want to cancel this scheduled class?</p>
+            <p className="text-[11px] mt-1 opacity-80">
+              Assigned coaches and registered parents will be notified immediately of this cancellation.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Cancellation Reason *</label>
+            <textarea
+              required
+              rows={2}
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g. Unforeseen weather conditions, court maintenance..."
+              className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+            />
+          </div>
+
+          <div className="pt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsCancelScheduleModalOpen(false);
+                setCancellingSchedule(null);
+              }}
+              className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-sm cursor-pointer"
+            >
+              Confirm Cancellation
             </button>
           </div>
         </form>
