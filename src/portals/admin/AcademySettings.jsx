@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   Shield,
@@ -1246,7 +1246,7 @@ export default function AcademySettings() {
                   <label className="block font-bold text-[#172B50] mb-1">Contact Person</label>
                   <input
                     type="text"
-                    placeholder="e.g. Coach Vikram Singh"
+                    placeholder="e.g. Center Coordinator"
                     value={centerForm.contactPerson}
                     onChange={(e) => setCenterForm({ ...centerForm, contactPerson: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-[#172B5025] outline-none focus:ring-2 focus:ring-[#F4510B]"

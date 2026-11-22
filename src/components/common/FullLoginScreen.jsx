@@ -30,7 +30,7 @@ export default function FullLoginScreen() {
     admin: {
       id: 'admin',
       roleLabel: 'Admin Portal',
-      userTitle: 'Commander Vikramaditya',
+      userTitle: (data.userAccounts && data.userAccounts[0]?.name) || 'Academy Administrator',
       roleSubtitle: 'Academy Director & Super Admin',
       defaultEmail: 'director@littlespartans.co.in',
       badge: 'Super Admin Access',
@@ -63,7 +63,7 @@ export default function FullLoginScreen() {
     support: {
       id: 'support',
       roleLabel: 'Customer Support Portal',
-      userTitle: 'Priya Menon',
+      userTitle: 'Customer Support Lead',
       roleSubtitle: 'Lead Relations Officer',
       defaultEmail: 'support@littlespartans.co.in',
       badge: 'Support Desk Lead',

@@ -18,12 +18,18 @@ export default function PeopleManagementModule() {
   } = useCrm();
 
   // Active tab: 'students' | 'parents' | 'coaches'
-  const currentTab = currentView === 'students' 
+  const currentTab = currentView === 'coaches' 
+    ? 'coaches'
+    : currentView === 'parents'
+    ? 'parents'
+    : currentView === 'students' 
     ? 'students' 
     : (['students', 'parents', 'coaches'].includes(activeSubTab) ? activeSubTab : 'students');
 
   useEffect(() => {
-    if (!activeSubTab || currentView === 'students' || !['students', 'parents', 'coaches'].includes(activeSubTab)) {
+    if (['students', 'parents', 'coaches'].includes(currentView)) {
+      setActiveSubTab(currentView);
+    } else if (!activeSubTab || !['students', 'parents', 'coaches'].includes(activeSubTab)) {
       setActiveSubTab('students');
     }
   }, [currentView, activeSubTab, setActiveSubTab]);

@@ -90,7 +90,7 @@ export default function SupportPortalView() {
                 Customer Support & Admissions Desk
               </h1>
               <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Priya Menon (Lead Relations Officer) • Managing Inquiries, Grievances & Parent Concierge
+                Support Desk • Managing Inquiries, Grievances & Parent Concierge
               </p>
             </div>
 

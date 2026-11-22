@@ -318,7 +318,7 @@ export default function EquipmentManagementModule({
     if (!selectedReport) return;
 
     verifyEquipmentReport(selectedReport.id, {
-      reviewer: currentUser?.name || 'Senior Coach Kabir Rao',
+      reviewer: currentUser?.name || 'Super Coach',
       notes: verifyForm.notes,
       action: verifyForm.action,
       updateInventory: verifyForm.updateInventory,
@@ -342,7 +342,7 @@ export default function EquipmentManagementModule({
     if (!selectedReport) return;
 
     adminApproveEquipmentReport(selectedReport.id, {
-      reviewer: currentUser?.name || 'Commander Vikramaditya',
+      reviewer: currentUser?.name || 'Administrator',
       notes: adminApproveForm.notes,
       action: adminApproveForm.action,
       status: REPORT_STATUSES.APPROVED_BY_ADMIN

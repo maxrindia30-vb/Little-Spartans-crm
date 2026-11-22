@@ -45,7 +45,13 @@ import {
   MapPin,
   Activity,
   Sparkles,
-  LifeBuoy
+  LifeBuoy,
+  ClipboardCheck,
+  RotateCcw,
+  CalendarPlus,
+  Megaphone,
+  Layers,
+  Rocket
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
@@ -338,6 +344,7 @@ export default function Sidebar() {
   // =========================================================================
   const superCoachNavItems = [
     { id: 'dashboard', label: 'Operations Dashboard', icon: Activity },
+    { id: 'evaluations', label: 'Evaluation Review', icon: ShieldCheck },
     { id: 'locations', label: 'Multi-Location Hub', icon: MapPin },
     { id: 'coaches', label: 'Coach Management', icon: UserCheck },
     { id: 'equipment', label: 'Equipment Management', icon: Package },
@@ -350,25 +357,29 @@ export default function Sidebar() {
   // 3. COACH NAVIGATION: LOCATION INSPECTION & CLASSES
   // =========================================================================
   const coachNavItems = [
-    { id: 'classes', label: 'My Classes', icon: Calendar },
-    { id: 'students', label: 'My Students', icon: GraduationCap },
+    { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'batches', label: 'My Batches', icon: Layers },
+    { id: 'classes', label: 'My Schedule', icon: Calendar },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'equipment', label: 'Equipment Inspection', icon: Package },
-    { id: 'evaluations', label: 'Student Performance', icon: Award },
-    { id: 'compensation', label: 'Compensation Classes', icon: RefreshCw },
-    { id: 'competitions', label: 'Sports & Events', icon: Trophy },
-    { id: 'workspace', label: 'My Workspace', icon: UserCheck },
+    { id: 'child_evaluations', label: 'Child Evaluations', icon: ClipboardCheck },
+    { id: 'evaluation_history', label: 'Evaluation History', icon: History },
+    { id: 'returned_evaluations', label: 'Returned Evaluations', icon: RotateCcw },
+    { id: 'performance', label: 'My Performance', icon: Trophy },
+    { id: 'leave_requests', label: 'Leave Requests', icon: CalendarPlus },
+    { id: 'announcements', label: 'Announcements', icon: Megaphone },
+    { id: 'profile', label: 'My Profile', icon: User },
   ];
 
   // =========================================================================
   // 4. PARENT NAVIGATION
   // =========================================================================
   const parentNavItems = [
-    { id: 'children', label: 'My Children', icon: GraduationCap },
+    { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'children', label: 'My Child', icon: GraduationCap },
+    { id: 'programs_achievements', label: 'Programs & Achievements', icon: Rocket },
     { id: 'classes', label: 'Classes & Schedule', icon: Calendar },
     { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: CalendarCheck },
     { id: 'fees_payments', label: 'Fees & Payments', icon: CreditCard },
-    { id: 'progress', label: 'Progress & Achievements', icon: Award },
     { id: 'competitions', label: 'Sports & Events', icon: Trophy },
     { id: 'communication', label: 'Communication', icon: MessageSquare },
   ];
@@ -376,32 +387,32 @@ export default function Sidebar() {
   // Section title & items depending on active portal
   let sectionTitle = 'ACADEMY MANAGEMENT';
   let navItems = adminNavItems;
-  let profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80";
-  let profileInitials = 'BS';
-  let profileName = currentUser?.name || 'Balavivek S';
+  let profilePhoto = currentUser?.avatar || null;
+  let profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'AD';
+  let profileName = currentUser?.name || 'Administrator';
   let profileRole = currentUser?.badge || 'Super Admin';
 
   if (currentPortal === 'super_coach') {
     sectionTitle = 'SUPER COACH PORTAL';
     navItems = superCoachNavItems;
-    profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80";
-    profileInitials = 'KR';
-    profileName = currentUser?.name || 'Senior Coach Kabir Rao';
-    profileRole = currentUser?.role || 'Super Coach · Area Lead';
+    profilePhoto = currentUser?.avatar || null;
+    profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'SC';
+    profileName = currentUser?.name || 'Super Coach';
+    profileRole = currentUser?.role || 'Area Coaching Lead';
   } else if (currentPortal === 'parent') {
     sectionTitle = 'PARENT PORTAL';
     navItems = parentNavItems;
-    profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80";
-    profileInitials = 'RS';
-    profileName = currentUser?.name || 'Dr. Rohan Sharma';
-    profileRole = currentUser?.role || 'Parent Account';
+    profilePhoto = currentUser?.avatar || null;
+    profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'PA';
+    profileName = currentUser?.name || 'Parent User';
+    profileRole = currentUser?.role || 'Parent / Guardian';
   } else if (currentPortal === 'coach') {
     sectionTitle = 'COACH PORTAL';
     navItems = coachNavItems;
-    profilePhoto = currentUser?.avatar || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80";
-    profileInitials = 'VS';
-    profileName = currentUser?.name || 'Coach Vikram Singh';
-    profileRole = currentUser?.role || 'Head Coach - Athletics';
+    profilePhoto = currentUser?.avatar || null;
+    profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'CO';
+    profileName = currentUser?.name || 'Coach User';
+    profileRole = currentUser?.role || 'Certified Coach';
   }
 
   // Navbar mouse enter: opens full view
@@ -759,7 +770,12 @@ export default function Sidebar() {
           ) : (
             navItems.map(item => {
               const Icon = item.icon;
-              const isActive = currentView === item.id;
+              const isActive =
+                currentView === item.id ||
+                (item.id === 'child_evaluations' && currentView === 'evaluations') ||
+                (item.id === 'programs_achievements' && (currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs')) ||
+                (item.id === 'classes' && currentView === 'schedule') ||
+                (item.id === 'leave_requests' && (currentView === 'leaves' || currentView === 'workspace'));
 
               return (
                 <button

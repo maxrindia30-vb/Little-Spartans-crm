@@ -1,20 +1,65 @@
 import React, { useState } from 'react';
 import { useCrm } from '../../context/CrmContext';
 
-// Monthly Revenue & Enrollments Area/Bar Chart
+// Monthly Revenue & Enrollments Area/Bar Chart (Dynamically computed from actual CRM payments and admissions)
 export function RevenueTrendChart() {
-  const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
-  const revenueData = [180, 220, 290, 340, 410, 485]; // in thousands ₹
-  const enrollmentData = [35, 42, 58, 70, 85, 96];
+  const { data } = useCrm();
+  const payments = data.payments || [];
+  const students = data.students || [];
 
-  const maxRev = 550;
+  const totalPayments = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const hasData = payments.length > 0 || students.length > 0;
+
+  // Last 6 months labels
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleDateString('en-GB', { month: 'short' }),
+      year: d.getFullYear(),
+      month: d.getMonth(),
+    });
+  }
+
+  // Aggregate actual payments and admissions per month
+  const monthlyStats = months.map(m => {
+    const rev = payments
+      .filter(p => {
+        if (!p.date) return false;
+        const d = new Date(p.date);
+        return d.getFullYear() === m.year && d.getMonth() === m.month && p.status !== 'Failed';
+      })
+      .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+
+    const enr = students.filter(s => {
+      const dt = s.admissionDate || s.createdAt || s.enrollmentDate;
+      if (!dt) return false;
+      const d = new Date(dt);
+      return d.getFullYear() === m.year && d.getMonth() === m.month;
+    }).length;
+
+    return {
+      label: m.label,
+      revenueK: Math.round(rev / 1000),
+      rawRevenue: rev,
+      enrollments: enr,
+    };
+  });
+
+  const maxRevK = Math.max(...monthlyStats.map(s => s.revenueK), 10);
+  const maxEnr = Math.max(...monthlyStats.map(s => s.enrollments), 5);
+  const currentMonthGross = monthlyStats[monthlyStats.length - 1]?.rawRevenue || 0;
 
   return (
     <div className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#172B5012] gap-2">
         <div>
           <h4 className="text-sm font-extrabold text-[#172B50]">Academy Revenue & Growth Velocity</h4>
-          <p className="text-xs text-[#172B50] opacity-70">Monthly tuition collections & new admissions (H2 2026)</p>
+          <p className="text-xs text-[#172B50] opacity-70">
+            {hasData ? 'Monthly tuition collections & new admissions' : 'Tuition collections & new admission trends'}
+          </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-bold">
           <div className="flex items-center gap-1.5">
@@ -28,44 +73,59 @@ export function RevenueTrendChart() {
         </div>
       </div>
 
-      <div className="mt-6 h-56 flex items-end justify-between gap-3 pt-6 px-2">
-        {months.map((m, idx) => {
-          const revHeight = (revenueData[idx] / maxRev) * 100;
-          const enrHeight = (enrollmentData[idx] / 120) * 100;
+      {!hasData ? (
+        <div className="mt-6 h-56 flex flex-col items-center justify-center p-6 text-center rounded-xl bg-[#FFF4E8]/40 border border-dashed border-[#172B50]/15">
+          <div className="w-12 h-12 rounded-full bg-[#172B50]/10 flex items-center justify-center text-[#172B50] mb-2 font-black text-lg">
+            ₹
+          </div>
+          <p className="text-sm font-bold text-[#172B50]">No Revenue or Enrollment Records Found</p>
+          <p className="text-xs text-[#172B50]/70 max-w-sm mt-1">
+            Collections and admissions recorded via Payments and B2C Enquiries will automatically render dynamic growth velocity curves.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6 h-56 flex items-end justify-between gap-3 pt-6 px-2">
+          {monthlyStats.map((item) => {
+            const revHeight = maxRevK > 0 ? (item.revenueK / maxRevK) * 100 : 0;
+            const enrHeight = maxEnr > 0 ? (item.enrollments / maxEnr) * 100 : 0;
 
-          return (
-            <div key={m} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-              <div className="w-full flex items-end justify-center gap-1.5 h-full relative">
-                
-                {/* Tooltip */}
-                <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-[#172B50] text-white text-[10px] py-1 px-2 rounded font-bold shadow-dropdown pointer-events-none whitespace-nowrap z-20">
-                  ₹{revenueData[idx]}k • {enrollmentData[idx]} kids
+            return (
+              <div key={item.label} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
+                <div className="w-full flex items-end justify-center gap-1.5 h-full relative">
+                  {/* Tooltip */}
+                  <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-[#172B50] text-white text-[10px] py-1 px-2 rounded font-bold shadow-dropdown pointer-events-none whitespace-nowrap z-20">
+                    ₹{item.revenueK}k • {item.enrollments} kids
+                  </div>
+
+                  {/* Revenue Bar: Spartan Orange */}
+                  <div
+                    style={{ height: `${Math.max(revHeight, 4)}%` }}
+                    className="w-1/2 max-w-[28px] bg-[#F4510B] rounded-t-lg transition-all group-hover:brightness-110 shadow-sm"
+                  />
+
+                  {/* Enrollment Bar: Navy Blue */}
+                  <div
+                    style={{ height: `${Math.max(enrHeight, 4)}%` }}
+                    className="w-1/2 max-w-[28px] bg-[#172B50] rounded-t-lg transition-all group-hover:brightness-125 shadow-sm"
+                  />
                 </div>
 
-                {/* Revenue Bar: Spartan Orange */}
-                <div 
-                  style={{ height: `${revHeight}%` }}
-                  className="w-1/2 max-w-[28px] bg-[#F4510B] rounded-t-lg transition-all group-hover:brightness-110 shadow-sm"
-                />
-
-                {/* Enrollment Bar: Navy Blue */}
-                <div 
-                  style={{ height: `${enrHeight}%` }}
-                  className="w-1/2 max-w-[28px] bg-[#172B50] rounded-t-lg transition-all group-hover:brightness-125 shadow-sm"
-                />
+                <span className="text-[11px] font-bold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                  {item.label}
+                </span>
               </div>
-
-              <span className="text-[11px] font-bold text-[#172B50] group-hover:text-[#F4510B] transition-colors">
-                {m}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="mt-4 pt-3 border-t border-[#172B5012] flex items-center justify-between text-xs">
-        <span className="font-semibold text-[#172B50]">November Gross Run-rate: ₹4,85,000</span>
-        <span className="font-bold text-[#F4510B]">+18.2% MoM</span>
+        <span className="font-semibold text-[#172B50]">
+          Total Realized Revenue: ₹{totalPayments.toLocaleString('en-IN')}
+        </span>
+        <span className="font-bold text-[#F4510B]">
+          {hasData ? `${students.length} Total Athletes` : '0 Recorded Records'}
+        </span>
       </div>
     </div>
   );

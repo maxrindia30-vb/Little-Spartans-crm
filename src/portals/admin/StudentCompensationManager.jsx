@@ -282,7 +282,7 @@ export default function StudentCompensationManager() {
         replacementCoach: coachObj?.name || 'Assigned Coach',
         replacementSlot: slotLabel,
         approvalNotes: allotNotes || `Allotted on ${allotDate} at ${slotLabel}`,
-        reviewedBy: 'Admin Vikramaditya'
+        reviewedBy: 'Administrator'
       });
     } else {
       // Create a manual approved/scheduled request directly
@@ -331,7 +331,7 @@ export default function StudentCompensationManager() {
     updateCompensationRequest(rejectingRequestId, {
       status: 'Rejected',
       approvalNotes: rejectionReason,
-      reviewedBy: 'Admin Vikramaditya'
+      reviewedBy: 'Administrator'
     });
     setRejectModalOpen(false);
     setRejectingRequestId('');

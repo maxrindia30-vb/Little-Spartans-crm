@@ -59,6 +59,7 @@ import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import SportsEventsModule from '../admin/SportsEventsModule';
 import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
+import ChildEvaluationModule from './ChildEvaluationModule';
 
 export default function CoachPortalView() {
   const { 
@@ -70,6 +71,7 @@ export default function CoachPortalView() {
     updateCompensationRequest,
     updateCoachCompensation,
     completeClassSchedule,
+    submitEvaluation,
     addToast 
   } = useCrm();
 
@@ -274,7 +276,31 @@ export default function CoachPortalView() {
   };
 
   const handleSaveEvaluation = () => {
-    addToast('Athlete performance assessment saved and synced to parent report card!');
+    const targetStudent = myStudents.find(s => s.id === evalStudent) || myStudents[0];
+    if (targetStudent && submitEvaluation) {
+      submitEvaluation({
+        studentId: targetStudent.id,
+        studentName: targetStudent.name,
+        studentAvatar: targetStudent.avatar || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80',
+        age: targetStudent.age || 5,
+        location: coachProfile.center || 'KK NAGAR',
+        program: targetStudent.program || 'Foundational Movement',
+        batch: targetStudent.batch || 'LE - B1',
+        category: 'Balance & Coordination',
+        coachName: coachProfile.name || 'Coach Sam',
+        coachAvatar: coachProfile.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+        status: 'Pending',
+        skills: {
+          balance: { name: 'Balance', description: 'Body control & stability', coachRating: Math.round((evalScores.balance || 8) / 2), superCoachRating: Math.round((evalScores.balance || 8) / 2), previousRating: 3, progress: '+20%' },
+          jumping: { name: 'Jumping & Landing', description: 'Power & safe landing', coachRating: Math.round((evalScores.agility || 8) / 2), superCoachRating: Math.round((evalScores.agility || 8) / 2), previousRating: 3, progress: '+20%' },
+          throwing: { name: 'Throwing & Catching', description: 'Focus, timing & hand-eye', coachRating: Math.round((evalScores.speed || 8) / 2), superCoachRating: Math.round((evalScores.speed || 8) / 2), previousRating: 4, progress: '+20%' },
+          running: { name: 'Running', description: 'Speed, agility & movement', coachRating: Math.round((evalScores.discipline || 8) / 2), superCoachRating: Math.round((evalScores.discipline || 8) / 2), previousRating: 3, progress: '+20%' },
+        },
+        coachObservation: `${targetStudent.name} demonstrated notable focus and agility during this session rubric assessment.`,
+        superCoachNotes: ''
+      });
+    }
+    addToast('Athlete performance assessment submitted for Super Coach verification!');
   };
 
   // Filter coach absence coverage + assigned student compensation replacement classes
@@ -1203,7 +1229,7 @@ export default function CoachPortalView() {
       )}
 
       {/* 2. MY CLASSES: AUTOMATICALLY SYNCHRONIZED FROM ADMIN PORTAL */}
-      {currentView === 'classes' && (
+      {(currentView === 'classes' || currentView === 'batches' || currentView === 'schedule') && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#172B5015]">
             <div>
@@ -1838,134 +1864,19 @@ export default function CoachPortalView() {
         </div>
       )}
 
-      {/* 5. STUDENT PERFORMANCE (EVALUATIONS) */}
-      {currentView === 'evaluations' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Spartan Athlete Skill Assessments &amp; Evaluations
-              </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Admin-standard technical rubric scoring, belt progressions, and term milestone tracking
-              </p>
-            </div>
-          </div>
+      {/* 5. CHILD EVALUATIONS & PERFORMANCE (MATCHES ATTACHED SCREENSHOT) */}
+      {(currentView === 'child_evaluations' || currentView === 'evaluations') && (
+        <ChildEvaluationModule initialTab="evaluating" />
+      )}
 
-          {/* Top 4 KPI Cards matching Admin Certificates / Evaluations */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
-                <Users className="w-4 h-4 text-[#F4510B]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Total Athletes</div>
-                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  {myStudents.length}
-                </div>
-              </div>
-            </div>
+      {/* 6. EVALUATION HISTORY */}
+      {currentView === 'evaluation_history' && (
+        <ChildEvaluationModule initialTab="history" />
+      )}
 
-            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
-                <Award className="w-4 h-4 text-[#16A34A]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Evaluation Rubrics</div>
-                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  5 Disciplines
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
-                <Star className="w-4 h-4 text-[#0284C7]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Average Score</div>
-                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  8.8 / 10
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
-                <Calendar className="w-4 h-4 text-[#F4510B]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Current Term</div>
-                <div className="text-base sm:text-lg font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  Q4 2026
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-[#172B5015]">
-              <div>
-                <label className="text-xs font-bold text-[#172B50] block mb-1">Select Athlete to Evaluate</label>
-                <select
-                  value={evalStudent}
-                  onChange={(e) => setEvalStudent(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] rounded-xl outline-none"
-                >
-                  {myStudents.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.age} yrs - {s.rank})</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-bold text-[#172B50] block mb-1">Assessment Term</label>
-                <input
-                  type="text"
-                  disabled
-                  value="Q4 2026 Term Final Evaluation"
-                  className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] rounded-xl outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Rubrics */}
-            <div className="space-y-3">
-              {[
-                { key: 'agility', label: 'Motor Agility & Obstacle Navigation' },
-                { key: 'speed', label: 'Reaction Time & Sprint Velocity' },
-                { key: 'balance', label: 'Core Strength & Balance Beam Stance' },
-                { key: 'discipline', label: 'Coach Punctuality & Listening Discipline' },
-                { key: 'spirit', label: 'Spartan Spirit & Team Encouragement' },
-              ].map(rubric => (
-                <div key={rubric.key} className="p-3 bg-[#FFF4E8] rounded-xl flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#172B50]">{rubric.label}</span>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="10"
-                      value={evalScores[rubric.key]}
-                      onChange={(e) => setEvalScores(prev => ({ ...prev, [rubric.key]: parseInt(e.target.value) }))}
-                      className="accent-[#F4510B]"
-                    />
-                    <span className="text-xs font-black text-[#F4510B] w-6 text-right">
-                      {evalScores[rubric.key]}/10
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-3 border-t border-[#172B5015] flex justify-end">
-              <button
-                onClick={handleSaveEvaluation}
-                className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl hover:brightness-110 shadow-sm"
-              >
-                Save Evaluation Report
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* 7. RETURNED EVALUATIONS */}
+      {currentView === 'returned_evaluations' && (
+        <ChildEvaluationModule initialTab="returned" />
       )}
 
       {/* 6. COMPENSATION CLASSES (Student Replacements + Coach Coverage) */}
@@ -2178,8 +2089,8 @@ export default function CoachPortalView() {
         />
       )}
 
-      {/* 9. MY WORKSPACE (Module 7.8: Leave, Announcements, Profile) */}
-      {(currentView === 'workspace' || currentView === 'leaves' || currentView === 'profile') && (
+      {/* 9. MY WORKSPACE (Module 7.8: Leave, Announcements, Profile, Performance) */}
+      {(currentView === 'workspace' || currentView === 'leaves' || currentView === 'leave_requests' || currentView === 'profile' || currentView === 'announcements' || currentView === 'performance') && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>

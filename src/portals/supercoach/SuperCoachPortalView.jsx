@@ -50,6 +50,7 @@ import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
 import AttendanceManagement from '../admin/AttendanceManagement';
 import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
+import EvaluationReviewModule from './EvaluationReviewModule';
 
 export default function SuperCoachPortalView() {
   const {
@@ -88,7 +89,7 @@ export default function SuperCoachPortalView() {
 
   // Internal active tab if navigated within Super Coach Portal
   const [activeTab, setActiveTab] = useState(() => {
-    if (['dashboard', 'locations', 'coaches', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
+    if (['dashboard', 'evaluations', 'locations', 'coaches', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
       return currentView;
     }
     return 'dashboard';
@@ -99,7 +100,7 @@ export default function SuperCoachPortalView() {
 
   // Keep activeTab synced with currentView when sidebar triggers navigation
   React.useEffect(() => {
-    if (['dashboard', 'locations', 'coaches', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
+    if (['dashboard', 'evaluations', 'locations', 'coaches', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
       setActiveTab(currentView);
     }
   }, [currentView]);
@@ -442,73 +443,75 @@ export default function SuperCoachPortalView() {
       {/* ============================================================ */}
       {/* 1. TOP HEADER: Good Morning, Super Coach! & Action Icons     */}
       {/* ============================================================ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-        {/* Left: Heading & Subtitle */}
-        <div className="text-left space-y-1">
-          <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
-            <span>Good Morning, Super Coach!</span>
-            <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
-          </h1>
-          <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
-            Dashboard
-          </p>
-        </div>
-
-        {/* Right: Quick Action Round Buttons */}
-        <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-center shrink-0">
-          {/* 1. Search */}
-          <button
-            type="button"
-            onClick={() => addToast('Search active roster and coaches')}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
-            title="Search"
-          >
-            <Search className="w-4 h-4 text-[#172B50]" />
-          </button>
-
-          {/* 2. Notification */}
-          <button
-            type="button"
-            onClick={() => addToast('Faculty and equipment alerts')}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4 text-[#172B50]" />
-            {kpis.pendingEquipmentReports > 0 && (
-              <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
-            )}
-          </button>
-
-          {/* 3. Profile */}
-          <div 
-            onClick={() => setActiveTab('coaches')}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
-            title="Super Coach Profile"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-              alt="Super Coach"
-              className="w-full h-full object-cover"
-            />
+      {activeTab !== 'evaluations' && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+          {/* Left: Heading & Subtitle */}
+          <div className="text-left space-y-1">
+            <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
+              <span>Good Morning, Super Coach!</span>
+              <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
+            </h1>
+            <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
+              Dashboard
+            </p>
           </div>
 
-          {/* 4. Action */}
-          <button
-            type="button"
-            onClick={() => setIsCreateScheduleModalOpen(true)}
-            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
-            title="Create Class"
-          >
-            <Plus className="w-4 h-4 text-[#172B50]" />
-          </button>
+          {/* Right: Quick Action Round Buttons */}
+          <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-center shrink-0">
+            {/* 1. Search */}
+            <button
+              type="button"
+              onClick={() => addToast('Search active roster and coaches')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+              title="Search"
+            >
+              <Search className="w-4 h-4 text-[#172B50]" />
+            </button>
 
-          {/* 5. Live Calendar */}
-          <LiveCalendarButton 
-            classes={scopedSchedules} 
-            onViewSchedule={() => setActiveTab('schedules')} 
-          />
+            {/* 2. Notification */}
+            <button
+              type="button"
+              onClick={() => addToast('Faculty and equipment alerts')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4 text-[#172B50]" />
+              {kpis.pendingEquipmentReports > 0 && (
+                <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
+              )}
+            </button>
+
+            {/* 3. Profile */}
+            <div 
+              onClick={() => setActiveTab('coaches')}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
+              title="Super Coach Profile"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+                alt="Super Coach"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* 4. Action */}
+            <button
+              type="button"
+              onClick={() => setIsCreateScheduleModalOpen(true)}
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+              title="Create Class"
+            >
+              <Plus className="w-4 h-4 text-[#172B50]" />
+            </button>
+
+            {/* 5. Live Calendar */}
+            <LiveCalendarButton 
+              classes={scopedSchedules} 
+              onViewSchedule={() => setActiveTab('schedules')} 
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 2. TAB 1: OPERATIONS DASHBOARD */}
       {/* ============================================================ */}
@@ -2093,6 +2096,13 @@ export default function SuperCoachPortalView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* 8. TAB: EVALUATION REVIEW (MATCHES REFERENCE SCREENSHOT)     */}
+      {/* ============================================================ */}
+      {activeTab === 'evaluations' && (
+        <EvaluationReviewModule />
       )}
 
       {/* ============================================================ */}

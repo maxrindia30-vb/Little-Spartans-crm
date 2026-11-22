@@ -75,82 +75,100 @@ export default function CompetitionsModule() {
       </div>
 
       {/* Tournaments Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {data.competitions.map(comp => (
-          <div key={comp.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
-            <div>
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
-                    {comp.sport}
-                  </span>
-                  <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{comp.title}</h3>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-[#FFF4E8] flex items-center justify-center shrink-0 border border-[#172B5015]">
-                  <Trophy className="w-4 h-4 text-[#F4510B]" />
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="mt-3.5 space-y-1.5 text-xs text-[#172B50]">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
-                  <span className="font-semibold">{comp.date}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                  <span className="opacity-80 truncate">{comp.venue}</span>
-                </div>
-              </div>
-
-              {/* Age Categories */}
-              <div className="mt-3 p-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
-                <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block mb-1">
-                  Eligible Age Divisions
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {comp.ageCategories.map((c, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#172B50] border border-[#172B5015]">
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Prizes */}
-              <div className="mt-2.5 text-[11px] text-[#172B50] opacity-80 flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                <span>{comp.prizes}</span>
-              </div>
-            </div>
-
-            {/* Registration Progress */}
-            <div className="mt-4 pt-3 border-t border-[#172B5015]">
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="text-[#172B50]">Spots Filled</span>
-                <span className="text-[#F4510B]">{comp.registeredCount}/{comp.maxParticipants}</span>
-              </div>
-              <div className="w-full h-2 bg-[#FFF4E8] rounded-full overflow-hidden border border-[#172B5015]">
-                <div
-                  style={{ width: `${(comp.registeredCount / comp.maxParticipants) * 100}%` }}
-                  className="h-full bg-[#172B50] rounded-full"
-                />
-              </div>
-
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs font-black text-[#172B50]">{comp.entryFee}</span>
-                <button
-                  onClick={() => setRegisterModalComp(comp)}
-                  className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg shadow-sm hover:brightness-110 transition-all"
-                >
-                  Register Athlete
-                </button>
-              </div>
-            </div>
-
+      {(!data.competitions || data.competitions.length === 0) ? (
+        <div className="bg-white rounded-2xl p-12 text-center border border-[#172B501A] shadow-card">
+          <div className="w-16 h-16 rounded-2xl bg-[#FFF4E8] flex items-center justify-center mx-auto mb-3 border border-[#172B5015]">
+            <Trophy className="w-8 h-8 text-[#F4510B]" />
           </div>
-        ))}
-      </div>
+          <h3 className="text-base font-extrabold text-[#172B50]">No Tournaments or Fixtures Scheduled</h3>
+          <p className="text-xs text-[#172B50] opacity-70 mt-1 max-w-md mx-auto">
+            Host upcoming inter-center derbies, championships, or friendly fixtures for Little Spartans athletes.
+          </p>
+          <button
+            onClick={() => setIsAddOpen(true)}
+            className="mt-4 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
+          >
+            Host First Tournament
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {data.competitions.map(comp => (
+            <div key={comp.id} className="bg-white rounded-2xl p-5 border border-[#172B501A] shadow-card flex flex-col justify-between hover:shadow-dropdown transition-shadow">
+              <div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F4510B]">
+                      {comp.sport}
+                    </span>
+                    <h3 className="text-base font-extrabold text-[#172B50] mt-0.5">{comp.title}</h3>
+                  </div>
+                  <div className="w-9 h-9 rounded-xl bg-[#FFF4E8] flex items-center justify-center shrink-0 border border-[#172B5015]">
+                    <Trophy className="w-4 h-4 text-[#F4510B]" />
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="mt-3.5 space-y-1.5 text-xs text-[#172B50]">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span className="font-semibold">{comp.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span className="opacity-80 truncate">{comp.venue}</span>
+                  </div>
+                </div>
+
+                {/* Age Categories */}
+                <div className="mt-3 p-2.5 rounded-xl bg-[#FFF4E8] border border-[#172B5015]">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50] opacity-60 block mb-1">
+                    Eligible Age Divisions
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {(comp.ageCategories || []).map((c, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#172B50] border border-[#172B5015]">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Prizes */}
+                <div className="mt-2.5 text-[11px] text-[#172B50] opacity-80 flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                  <span>{comp.prizes}</span>
+                </div>
+              </div>
+
+              {/* Registration Progress */}
+              <div className="mt-4 pt-3 border-t border-[#172B5015]">
+                <div className="flex justify-between text-xs font-bold mb-1">
+                  <span className="text-[#172B50]">Spots Filled</span>
+                  <span className="text-[#F4510B]">{comp.registeredCount}/{comp.maxParticipants}</span>
+                </div>
+                <div className="w-full h-2 bg-[#FFF4E8] rounded-full overflow-hidden border border-[#172B5015]">
+                  <div
+                    style={{ width: `${(comp.registeredCount / comp.maxParticipants) * 100}%` }}
+                    className="h-full bg-[#172B50] rounded-full"
+                  />
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-xs font-black text-[#172B50]">{comp.entryFee}</span>
+                  <button
+                    onClick={() => setRegisterModalComp(comp)}
+                    className="px-3 py-1.5 text-xs font-bold bg-[#F4510B] text-white rounded-lg shadow-sm hover:brightness-110 transition-all"
+                  >
+                    Register Athlete
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Host Competition Modal */}
       <Modal

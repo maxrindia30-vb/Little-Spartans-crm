@@ -13,6 +13,9 @@ import { useCrm } from '../../context/CrmContext';
 export default function Navbar() {
   const { 
     currentPortal,
+    setCurrentPortal,
+    currentView,
+    setCurrentView,
     currentUser, 
     globalSearch, 
     setGlobalSearch, 
@@ -25,6 +28,7 @@ export default function Navbar() {
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [portalMenuOpen, setPortalMenuOpen] = useState(false);
 
   const portalNotifications = (data.notifications || []).filter(
     n => n.targetRole === 'all' || n.targetRole === currentPortal
@@ -84,6 +88,50 @@ export default function Navbar() {
 
         {/* Right Action Icons: Notifications, User Profile Menu */}
         <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* Quick Portal Switcher */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setPortalMenuOpen(!portalMenuOpen);
+                setNotificationsOpen(false);
+                setProfileOpen(false);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF4E8] border border-[#F4510B]/30 hover:border-[#F4510B] text-xs font-bold text-[#172B50] transition-all cursor-pointer shadow-2xs"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#F4510B]" />
+              <span className="capitalize">{currentPortal.replace('_', ' ')}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#172B50]/60" />
+            </button>
+
+            {portalMenuOpen && (
+              <div className="absolute right-0 mt-1.5 w-44 bg-white border border-[#172B50]/15 rounded-xl shadow-xl py-1 z-50">
+                {[
+                  { id: 'admin', label: 'Admin Portal', defaultView: 'dashboard' },
+                  { id: 'super_coach', label: 'Super Coach', defaultView: 'evaluations' },
+                  { id: 'coach', label: 'Coach Portal', defaultView: 'child_evaluations' },
+                  { id: 'parent', label: 'Parent Portal', defaultView: 'dashboard' },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPortal(p.id);
+                      if (setCurrentView) setCurrentView(p.defaultView);
+                      setPortalMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between cursor-pointer ${
+                      currentPortal === p.id ? 'bg-[#FFF4E8] text-[#F4510B]' : 'text-[#172B50] hover:bg-[#FFF4E8]/50'
+                    }`}
+                  >
+                    <span>{p.label}</span>
+                    {currentPortal === p.id && <span className="w-1.5 h-1.5 rounded-full bg-[#F4510B]" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Notifications Dropdown */}
           <div className="relative">

@@ -153,56 +153,66 @@ export default function PaymentsBilling() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#172B5010]">
-              {filteredPayments.map(pay => (
-                <tr key={pay.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
-                  <td className="py-3 px-4">
-                    <span className="font-extrabold text-[#172B50] block">{pay.invoiceNumber}</span>
-                    <span className="text-[10px] text-[#172B50] opacity-60">{pay.billingMonth}</span>
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <span className="font-extrabold text-[#172B50] block">{pay.studentName}</span>
-                    <span className="text-[10px] text-[#F4510B] font-semibold">{pay.program}</span>
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <span className="font-bold text-[#172B50]">{pay.parentName}</span>
-                  </td>
-
-                  <td className="py-3 px-4 font-black text-sm text-[#172B50]">
-                    ₹{pay.amount.toLocaleString()}
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <span className="font-semibold text-[#172B50] block">{pay.paymentMethod}</span>
-                    <span className="text-[10px] text-[#172B50] opacity-60">{pay.transactionId}</span>
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      pay.status === 'Paid'
-                        ? 'bg-[#172B50] text-white'
-                        : 'bg-[#F4510B] text-white'
-                    }`}>
-                      {pay.status}
-                    </span>
-                  </td>
-
-                  <td className="py-3 px-4 text-right">
-                    {pay.status === 'Paid' ? (
-                      <button
-                        onClick={() => setReceiptInvoice(pay)}
-                        className="px-2.5 py-1 text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] hover:bg-[#F4510B] hover:text-white rounded-lg transition-colors inline-flex items-center gap-1"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                        <span>Receipt</span>
-                      </button>
-                    ) : (
-                      <span className="text-[10px] font-bold text-[#F4510B]">Unpaid</span>
-                    )}
+              {filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-xs text-[#172B50] opacity-70">
+                    <CreditCard className="w-8 h-8 text-[#172B50]/30 mx-auto mb-2" />
+                    <p className="font-bold text-sm text-[#172B50]">No Payment Records Found</p>
+                    <p className="mt-1 text-xs">Fee receipts and transaction logs will be listed here as payments are recorded.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredPayments.map(pay => (
+                  <tr key={pay.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
+                    <td className="py-3 px-4">
+                      <span className="font-extrabold text-[#172B50] block">{pay.invoiceNumber}</span>
+                      <span className="text-[10px] text-[#172B50] opacity-60">{pay.billingMonth}</span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="font-extrabold text-[#172B50] block">{pay.studentName}</span>
+                      <span className="text-[10px] text-[#F4510B] font-semibold">{pay.program}</span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="font-bold text-[#172B50]">{pay.parentName}</span>
+                    </td>
+
+                    <td className="py-3 px-4 font-black text-sm text-[#172B50]">
+                      ₹{pay.amount.toLocaleString()}
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="font-semibold text-[#172B50] block">{pay.paymentMethod}</span>
+                      <span className="text-[10px] text-[#172B50] opacity-60">{pay.transactionId}</span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        pay.status === 'Paid'
+                          ? 'bg-[#172B50] text-white'
+                          : 'bg-[#F4510B] text-white'
+                      }`}>
+                        {pay.status}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4 text-right">
+                      {pay.status === 'Paid' ? (
+                        <button
+                          onClick={() => setReceiptInvoice(pay)}
+                          className="px-2.5 py-1 text-xs font-bold bg-[#FFF4E8] text-[#172B50] border border-[#172B5020] hover:bg-[#F4510B] hover:text-white rounded-lg transition-colors inline-flex items-center gap-1"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Receipt</span>
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-bold text-[#F4510B]">Unpaid</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

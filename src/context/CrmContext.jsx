@@ -47,7 +47,7 @@ import {
 
 const CrmContext = createContext();
 
-const LOCAL_STORAGE_KEY = 'little_spartans_crm_v5_clean';
+const LOCAL_STORAGE_KEY = 'little_spartans_crm_v6_clean';
 const CURRENT_ROLE_KEY = 'little_spartans_current_portal';
 
 const LEGACY_STORAGE_KEYS = [
@@ -57,7 +57,9 @@ const LEGACY_STORAGE_KEYS = [
   'little_spartans_crm_v3',
   'little_spartans_crm_v4',
   'little_spartans_crm_v4_clean',
-  'little_spartans_crm_backup'
+  'little_spartans_crm_v5_clean',
+  'little_spartans_crm_backup',
+  'little_spartans_lead_automation_logs'
 ];
 
 // Clean out legacy test/dummy data keys on startup
@@ -76,11 +78,16 @@ export function CrmProvider({ children }) {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Purge dummy/legacy coach records so fresh academy accounts start at 0
-        const legacyCoachNames = new Set([
-          'coach vikram singh', 
-          'sensei rajesh kumar', 
-          'coach priya nair', 
+        
+        // Define known seed dummy IDs and names to purge project-wide
+        const DUMMY_COACH_NAMES = new Set([
+          'coach kabir rao',
+          'coach vikram singh',
+          'coach arumugam k',
+          'coach rajesh kumar',
+          'coach dinesh v',
+          'sensei rajesh kumar',
+          'coach priya nair',
           'coach david miller',
           'kapil',
           'coach kapil',
@@ -91,23 +98,117 @@ export function CrmProvider({ children }) {
           'teja',
           'coach teja'
         ]);
-        const storedCoaches = (Array.isArray(parsed.coaches) ? parsed.coaches : [])
-          .filter((c) => !legacyCoachNames.has((c.name || '').toLowerCase().trim()));
 
-        const mergedCoaches = [
-          ...initialAcademyData.coaches,
-          ...storedCoaches.filter((c) => !new Set(initialAcademyData.coaches.map(ic => ic.name.toLowerCase().trim())).has((c.name || '').toLowerCase().trim())),
-        ];
-        const storedLocations =
-          Array.isArray(parsed.locations) && parsed.locations.length > 0
-            ? parsed.locations
-            : initialAcademyData.locations;
+        const DUMMY_CHILD_NAMES = new Set([
+          'rohan rao', 'ananya sharma', 'pranav kumar', 'aarav mehta',
+          'diya nair', 'kavya reddy', 'siddharth verma', 'tanvi sundaram',
+          'aditya balaji', 'ishaan iyer', 'meera krishnan', 'varun narayanan',
+          'samaira patel', 'vihaan gupta', 'anika chawla', 'aryan pillai',
+          'aarav patel', 'aarav sharma', 'priya sundaram', 'rohan chandran',
+          'krrish iyer', 'diya patel', 'ananya verma'
+        ]);
+
+        const DUMMY_PARENT_NAMES = new Set([
+          'suresh mehta', 'manoj nair', 'venkatesh reddy', 'deepak rao',
+          'kavita sharma', 'rajesh kumar', 'pooja verma', 'sundaram r',
+          'balaji v', 'subramanian iyer', 'krishnan s', 'narayanan t',
+          'nitin patel', 'amit gupta', 'gaurav chawla', 'gopinath pillai',
+          'rajesh patel', 'priya patel', 'amit sharma', 'neha verma',
+          'karthik iyer', 'karthik sundaram', 'lakshmi chandran'
+        ]);
+
+        const isDummyEnquiry = (e) => {
+          if (!e) return true;
+          if (e.id && /^ENQ-0(0[1-9]|1[0-9]|20)$/.test(e.id)) return true;
+          const child = (e.childName || '').toLowerCase().trim();
+          const parent = (e.parentName || '').toLowerCase().trim();
+          if (DUMMY_CHILD_NAMES.has(child) || DUMMY_PARENT_NAMES.has(parent)) return true;
+          return false;
+        };
+
+        const isDummyDemo = (d) => {
+          if (!d) return true;
+          if (d.id && /^DEMO-0(0[1-9]|1[0-9]|20)$/.test(d.id)) return true;
+          const child = (d.childName || '').toLowerCase().trim();
+          const parent = (d.parentName || '').toLowerCase().trim();
+          if (DUMMY_CHILD_NAMES.has(child) || DUMMY_PARENT_NAMES.has(parent)) return true;
+          return false;
+        };
+
+        const isDummyStudent = (s) => {
+          if (!s) return true;
+          if (s.id && /^LS-(KKN|KPK|MHP|AN|KOL)-2026-00[1-5]$/.test(s.id)) return true;
+          const name = (s.name || '').toLowerCase().trim();
+          const parent = (s.parentName || '').toLowerCase().trim();
+          if (DUMMY_CHILD_NAMES.has(name) || DUMMY_PARENT_NAMES.has(parent)) return true;
+          return false;
+        };
+
+        const isDummyParent = (p) => {
+          if (!p) return true;
+          const name = (p.name || '').toLowerCase().trim();
+          if (DUMMY_PARENT_NAMES.has(name)) return true;
+          return false;
+        };
+
+        const isDummyCoach = (c) => {
+          if (!c) return true;
+          if (c.id && /^COACH-0(0[1-9]|1[0-9])$/.test(c.id)) return true;
+          const name = (c.name || '').toLowerCase().trim();
+          if (DUMMY_COACH_NAMES.has(name)) return true;
+          return false;
+        };
+
+        const isDummyClass = (cl) => {
+          if (!cl) return true;
+          if (cl.id && /^CLS-0(0[1-9]|1[0-9])$/.test(cl.id)) return true;
+          return false;
+        };
+
+        const isDummySchedule = (s) => {
+          if (!s) return true;
+          if (s.id && /^SCH-0(0[1-9]|1[0-9])$/.test(s.id)) return true;
+          return false;
+        };
+
+        const isDummyAttendance = (a) => {
+          if (!a) return true;
+          if (a.id && /^ATT-0(0[1-9]|1[0-9])$/.test(a.id)) return true;
+          const stName = (a.studentName || '').toLowerCase().trim();
+          if (DUMMY_CHILD_NAMES.has(stName)) return true;
+          return false;
+        };
+
+        const isDummyPayment = (p) => {
+          if (!p) return true;
+          if (p.id && /^PAY-0(0[1-9]|1[0-9])$/.test(p.id)) return true;
+          const stName = (p.studentName || '').toLowerCase().trim();
+          const prName = (p.parentName || '').toLowerCase().trim();
+          if (DUMMY_CHILD_NAMES.has(stName) || DUMMY_PARENT_NAMES.has(prName)) return true;
+          return false;
+        };
+
+        // Purge dummy/legacy records from stored data
+        const storedCoaches = (Array.isArray(parsed.coaches) ? parsed.coaches : [])
+          .filter((c) => !isDummyCoach(c));
+
+        const storedLocations = (Array.isArray(parsed.locations) && parsed.locations.length > 0
+          ? parsed.locations
+          : initialAcademyData.locations).map(loc => ({
+            ...loc,
+            contactPerson: (loc.contactPerson && !DUMMY_COACH_NAMES.has(loc.contactPerson.toLowerCase().trim())) ? loc.contactPerson : 'Branch Coordinator',
+            contactPhone: loc.contactPhone || '+91 98765 43210'
+          }));
+
         const activeCenters = storedLocations
           .filter((l) => l.status !== 'Inactive')
           .map((l) => l.name);
 
-        const rawStudents = Array.isArray(parsed.students) ? parsed.students : (initialAcademyData.students || []);
-        const rawParents = Array.isArray(parsed.parents) ? parsed.parents : (initialAcademyData.parents || []);
+        const rawStudents = (Array.isArray(parsed.students) ? parsed.students : [])
+          .filter(s => !isDummyStudent(s));
+
+        const rawParents = (Array.isArray(parsed.parents) ? parsed.parents : [])
+          .filter(p => !isDummyParent(p));
 
         // Migrate & harmonize One Common ID for Kid & Parent, Auto-generate passwords
         const migratedStudents = rawStudents.map((student) => ({
@@ -176,9 +277,9 @@ export function CrmProvider({ children }) {
           ? parsed.userAccounts
           : initialAcademyData.userAccounts || [];
 
-        // Retain super_admin, admin, coach, and valid parent accounts
+        // Retain super_admin, admin, coach, and valid parent accounts (filter dummy parents)
         const retainedAccounts = existingAccounts.filter(
-          (a) => a.role === 'admin' || a.role === 'super_admin' || a.id === 'ACC-001' || a.role === 'coach'
+          (a) => (a.role === 'admin' || a.role === 'super_admin' || a.id === 'ACC-001') && !DUMMY_PARENT_NAMES.has((a.name || '').toLowerCase().trim())
         );
 
         // Auto-sync parent accounts for all enrolled parents matching locations
@@ -216,59 +317,46 @@ export function CrmProvider({ children }) {
         return {
           ...initialAcademyData,
           ...parsed,
-          students: migratedStudents.length > 0 ? migratedStudents : (initialAcademyData.students || []),
-          parents: migratedParents.length > 0 ? migratedParents : (initialAcademyData.parents || []),
-          classes: Array.isArray(parsed.classes) && parsed.classes.length > 0 ? parsed.classes : (initialAcademyData.classes || []),
+          students: migratedStudents.filter(s => !isDummyStudent(s)),
+          parents: migratedParents.filter(p => !isDummyParent(p)),
+          classes: (Array.isArray(parsed.classes) ? parsed.classes : []).filter(cl => !isDummyClass(cl)),
           academy: {
             ...initialAcademyData.academy,
             ...(parsed.academy || {}),
             centers: activeCenters.length > 0 ? activeCenters : initialAcademyData.academy.centers,
           },
           locations: storedLocations,
-          coaches: mergedCoaches,
-          enquiries: Array.isArray(parsed.enquiries) && parsed.enquiries.length > 0
-            ? parsed.enquiries.map(enq => ({
-                ...enq,
-                source: enq.source || ENQUIRY_SOURCES.MANUAL,
-              }))
-            : (initialAcademyData.enquiries || []),
-          demos: Array.isArray(parsed.demos) && parsed.demos.length > 0 ? parsed.demos : (initialAcademyData.demos || []),
-          payments: Array.isArray(parsed.payments) && parsed.payments.length > 0 ? parsed.payments : (initialAcademyData.payments || []),
-          classSchedules: Array.isArray(parsed.classSchedules) && parsed.classSchedules.length > 0 ? parsed.classSchedules : initialAcademyData.classSchedules,
-          attendanceRecords: Array.isArray(parsed.attendanceRecords) && parsed.attendanceRecords.length > 0 ? parsed.attendanceRecords : initialAcademyData.attendanceRecords,
-          compensationRequests: Array.isArray(parsed.compensationRequests) && parsed.compensationRequests.length > 0 ? parsed.compensationRequests : (initialAcademyData.compensationRequests || []),
-          compensationHistory: Array.isArray(parsed.compensationHistory) && parsed.compensationHistory.length > 0 ? parsed.compensationHistory : (initialAcademyData.compensationHistory || []),
-          notifications: Array.isArray(parsed.notifications) && parsed.notifications.length > 0 ? parsed.notifications : (initialAcademyData.notifications || []),
-          superCoaches: Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : initialAcademyData.superCoaches,
-          equipment: Array.isArray(parsed.equipment) && parsed.equipment.length > 0 ? parsed.equipment : initialEquipmentInventory,
-          equipmentReports: Array.isArray(parsed.equipmentReports) && parsed.equipmentReports.length > 0 ? parsed.equipmentReports : initialEquipmentReports,
+          coaches: storedCoaches,
+          enquiries: (Array.isArray(parsed.enquiries) ? parsed.enquiries : [])
+            .filter(e => !isDummyEnquiry(e))
+            .map(enq => ({
+              ...enq,
+              source: enq.source || ENQUIRY_SOURCES.MANUAL,
+            })),
+          demos: (Array.isArray(parsed.demos) ? parsed.demos : []).filter(d => !isDummyDemo(d)),
+          payments: (Array.isArray(parsed.payments) ? parsed.payments : []).filter(p => !isDummyPayment(p)),
+          classSchedules: (Array.isArray(parsed.classSchedules) ? parsed.classSchedules : []).filter(s => !isDummySchedule(s)),
+          attendanceRecords: (Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : []).filter(a => !isDummyAttendance(a)),
+          compensationRequests: (Array.isArray(parsed.compensationRequests) ? parsed.compensationRequests : []).filter(r => !r.id?.startsWith('CR-')),
+          compensationHistory: (Array.isArray(parsed.compensationHistory) ? parsed.compensationHistory : []).filter(h => !h.id?.startsWith('CH-')),
+          notifications: (Array.isArray(parsed.notifications) ? parsed.notifications : []).filter(n => !n.id?.startsWith('NOTIF-')),
+          superCoaches: (Array.isArray(parsed.superCoaches) ? parsed.superCoaches : []).filter(sc => sc.id !== 'SCOACH-1' && !sc.name?.includes('Kabir')),
+          equipment: Array.isArray(parsed.equipment) ? parsed.equipment : [],
+          equipmentReports: Array.isArray(parsed.equipmentReports) ? parsed.equipmentReports : [],
+          evaluations: Array.isArray(parsed.evaluations) ? parsed.evaluations : [],
           userAccounts: mergedAccounts,
-          coachLeaveRequests: Array.isArray(parsed.coachLeaveRequests) && parsed.coachLeaveRequests.length > 0
-            ? parsed.coachLeaveRequests
-            : (initialAcademyData.coachLeaveRequests || []),
-          leaveRequests: Array.isArray(parsed.coachLeaveRequests) && parsed.coachLeaveRequests.length > 0
-            ? parsed.coachLeaveRequests
-            : (initialAcademyData.coachLeaveRequests || []),
-          coachReplacements: Array.isArray(parsed.coachReplacements)
-            ? parsed.coachReplacements
-            : (initialAcademyData.coachReplacements || []),
-          conversations: Array.isArray(parsed.conversations) && parsed.conversations.length > 0
-            ? parsed.conversations
-            : (initialAcademyData.conversations || []),
-          broadcasts: Array.isArray(parsed.broadcasts)
-            ? parsed.broadcasts
-            : (initialAcademyData.broadcasts || []),
-          messageTemplates: Array.isArray(parsed.messageTemplates)
+          coachLeaveRequests: (Array.isArray(parsed.coachLeaveRequests) ? parsed.coachLeaveRequests : []).filter(r => !DUMMY_CLR_IDS.has(r.id)),
+          leaveRequests: (Array.isArray(parsed.leaveRequests) ? parsed.leaveRequests : []).filter(r => !DUMMY_CLR_IDS.has(r.id)),
+          coachReplacements: Array.isArray(parsed.coachReplacements) ? parsed.coachReplacements : [],
+          conversations: (Array.isArray(parsed.conversations) ? parsed.conversations : []).filter(c => !DUMMY_CONV_IDS.has(c.id)),
+          broadcasts: (Array.isArray(parsed.broadcasts) ? parsed.broadcasts : []).filter(b => !DUMMY_BCAST_IDS.has(b.id)),
+          messageTemplates: Array.isArray(parsed.messageTemplates) && parsed.messageTemplates.length > 0
             ? parsed.messageTemplates
-            : (initialAcademyData.messageTemplates || []),
-          scheduledMessages: Array.isArray(parsed.scheduledMessages)
-            ? parsed.scheduledMessages
-            : (initialAcademyData.scheduledMessages || []),
+            : initialAcademyData.messageTemplates,
+          scheduledMessages: (Array.isArray(parsed.scheduledMessages) ? parsed.scheduledMessages : []),
           termsDocument: parsed.termsDocument || initialAcademyData.termsDocument,
           dosDontsDocument: parsed.dosDontsDocument || initialAcademyData.dosDontsDocument,
-          termsAcceptances: Array.isArray(parsed.termsAcceptances) && parsed.termsAcceptances.length > 0
-            ? parsed.termsAcceptances
-            : (initialAcademyData.termsAcceptances || []),
+          termsAcceptances: (Array.isArray(parsed.termsAcceptances) ? parsed.termsAcceptances : []).filter(a => !a.id?.startsWith('ACC-')),
           academicCalendar: parsed.academicCalendar || initialAcademyData.academicCalendar,
           settingsAuditLogs: Array.isArray(parsed.settingsAuditLogs) && parsed.settingsAuditLogs.length > 0
             ? parsed.settingsAuditLogs
@@ -392,6 +480,7 @@ export function CrmProvider({ children }) {
       notifications: [],
       equipment: [],
       equipmentReports: [],
+      evaluations: [],
       coachReplacements: [],
       conversations: initialAcademyData.conversations || [],
       broadcasts: initialAcademyData.broadcasts || [],
@@ -413,11 +502,11 @@ export function CrmProvider({ children }) {
   // Current logged in user credentials per portal
   const currentUserProfiles = {
     admin: {
-      name: "Commander Vikramaditya",
+      name: (data.userAccounts && data.userAccounts[0]?.name) || "Administrator",
       role: "Academy Director",
       portalTitle: "Admin Portal",
-      email: "director@littlespartans.co.in",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
+      email: (data.userAccounts && data.userAccounts[0]?.email) || "director@littlespartans.co.in",
+      avatar: null,
       badge: "Super Admin"
     },
     parent: {
@@ -425,7 +514,7 @@ export function CrmProvider({ children }) {
       role: data.parents[0]?.center ? `Parent (${data.parents[0].center})` : "Parent Portal",
       portalTitle: "Parent Portal",
       email: data.parents[0]?.email || "parent@littlespartans.co.in",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      avatar: null,
       badge: "Verified Parent"
     },
     coach: {
@@ -433,24 +522,24 @@ export function CrmProvider({ children }) {
       role: data.coaches[0]?.specialization || "Sports Coach",
       portalTitle: "Coach Portal",
       email: data.coaches[0]?.email || "coach@littlespartans.co.in",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+      avatar: null,
       badge: "Academy Coach"
     },
     super_coach: {
-      name: (data.superCoaches && data.superCoaches[0]?.name) || "Senior Coach Kabir Rao",
-      role: (data.superCoaches && data.superCoaches[0]?.title) || "Senior Super Coach & Operations Lead",
+      name: (data.superCoaches && data.superCoaches[0]?.name) || "Super Coach",
+      role: (data.superCoaches && data.superCoaches[0]?.title) || "Super Coach & Operations Lead",
       portalTitle: "Super Coach Portal",
       email: (data.superCoaches && data.superCoaches[0]?.email) || "supercoach@littlespartans.co.in",
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80",
+      avatar: null,
       badge: "Super Coach",
-      assignedLocations: (data.superCoaches && data.superCoaches[0]?.assignedLocations) || ["KK NAGAR", "KILPAUK", "MAHALINGAPURAM"]
+      assignedLocations: (data.superCoaches && data.superCoaches[0]?.assignedLocations) || []
     },
     support: {
-      name: "Priya Menon",
+      name: "Customer Support Lead",
       role: "Lead Relations Officer",
       portalTitle: "Customer Support Portal",
       email: "support@littlespartans.co.in",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      avatar: null,
       badge: "Support Lead"
     }
   };
@@ -1010,7 +1099,7 @@ export function CrmProvider({ children }) {
     const coachProfile = currentPortal === 'coach' ? data.coaches[0] : null;
     const markedBy = currentPortal === 'coach'
       ? (coachProfile?.name || 'Coach')
-      : 'Commander Vikramaditya (Admin)';
+      : ((data.userAccounts && data.userAccounts[0]?.name ? `${data.userAccounts[0].name} (Admin)` : 'Administrator (Admin)'));
 
     // Map existing records to detect edits
     const prevMap = new Map();
@@ -1588,6 +1677,74 @@ export function CrmProvider({ children }) {
     return { success: true };
   };
 
+  const addCoach = (coachPayload) => {
+    const nextSeq = (data.coaches || []).reduce((max, c) => {
+      const match = (c.id || '').match(/COACH-(\d+)/i);
+      const num = match ? parseInt(match[1], 10) : 0;
+      return num > max ? num : max;
+    }, (data.coaches || []).length);
+    const coachId = coachPayload.id || `COACH-${String(nextSeq + 1).padStart(3, '0')}`;
+
+    const newCoach = {
+      ...coachPayload,
+      id: coachId,
+      status: coachPayload.status || 'Active',
+      rating: coachPayload.rating || '5.0',
+      activeBatches: coachPayload.activeBatches || 0,
+      studentsCount: coachPayload.studentsCount || 0,
+      auditLog: coachPayload.auditLog || [
+        {
+          action: 'Coach Registered',
+          performedBy: 'Admin (Super Admin)',
+          timestamp: new Date().toISOString(),
+          details: 'Initial onboarding registration completed via Admin Portal'
+        }
+      ]
+    };
+
+    setData((prev) => ({
+      ...prev,
+      coaches: [...(prev.coaches || []), newCoach]
+    }));
+
+    return newCoach;
+  };
+
+  const updateCoach = (coachId, updates) => {
+    setData((prev) => ({
+      ...prev,
+      coaches: (prev.coaches || []).map((c) => {
+        if (c.id === coachId) {
+          const auditHistory = c.auditLog || [];
+          const newAuditEntry = {
+            action: updates.auditAction || 'Profile Updated',
+            performedBy: 'Admin (Super Admin)',
+            timestamp: new Date().toISOString(),
+            details: updates.auditNote || 'Coach profile details updated by administrator'
+          };
+          const cleanUpdates = { ...updates };
+          delete cleanUpdates.auditAction;
+          delete cleanUpdates.auditNote;
+          return {
+            ...c,
+            ...cleanUpdates,
+            auditLog: [newAuditEntry, ...auditHistory]
+          };
+        }
+        return c;
+      })
+    }));
+    return { success: true };
+  };
+
+  const deleteCoach = (coachId) => {
+    setData((prev) => ({
+      ...prev,
+      coaches: (prev.coaches || []).filter((c) => c.id !== coachId)
+    }));
+    return { success: true };
+  };
+
   // Module 5: Account Management (Admin Creates Parent & Coach Accounts)
   const createAccount = (accountData) => {
     // Check email uniqueness
@@ -1847,7 +2004,7 @@ export function CrmProvider({ children }) {
       status: initialStatus,
       adminNotes: reqData.adminNotes || '',
       approvalNotes: reqData.adminNotes || (requestSource === 'Admin' ? 'Created manually by Admin' : 'Awaiting Admin review'),
-      reviewedBy: requestSource === 'Admin' ? 'Admin Vikramaditya' : 'Pending Admin Approval',
+      reviewedBy: requestSource === 'Admin' ? 'Administrator' : 'Pending Admin Approval',
       replacementDate: '',
       replacementStartTime: '',
       replacementEndTime: '',
@@ -2016,7 +2173,7 @@ export function CrmProvider({ children }) {
           notes: updates.approvalNotes || updates.adminNotes || `Replacement class for missed session on ${existing.missedDate}`,
           status: 'Scheduled',
           createdAt: new Date().toISOString(),
-          publishedBy: 'Admin Vikramaditya',
+          publishedBy: 'Administrator',
         };
         nextSchedules = [replacementSchedule, ...nextSchedules];
       }
@@ -2041,7 +2198,7 @@ export function CrmProvider({ children }) {
       replacementCoach,
       replacementCoachId,
       linkedScheduleId,
-      reviewedBy: updates.reviewedBy || (currentPortal === 'coach' ? existing.reviewedBy : 'Admin Vikramaditya'),
+      reviewedBy: updates.reviewedBy || (currentPortal === 'coach' ? existing.reviewedBy : 'Administrator'),
       updatedAt: new Date().toISOString(),
     };
 
@@ -2087,7 +2244,7 @@ export function CrmProvider({ children }) {
       details: isScheduling
         ? `Allotted replacement session on ${updatedReq.replacementDate} (${updatedReq.replacementSlot}) with ${updatedReq.replacementCoach}`
         : `Request status updated to ${updatedReq.status}. Notes: ${updatedReq.approvalNotes || ''}`,
-      actor: 'Admin Vikramaditya',
+      actor: 'Administrator',
       role: 'Admin',
       status: updatedReq.status,
     };
@@ -2119,7 +2276,7 @@ export function CrmProvider({ children }) {
       id: `CCOMP-0${(data.coachCompensationClasses || []).length + 1}`,
       ...compData,
       status: 'Scheduled',
-      assignedBy: 'Admin Vikramaditya'
+      assignedBy: 'Administrator'
     };
     setData(prev => ({
       ...prev,
@@ -2238,7 +2395,7 @@ export function CrmProvider({ children }) {
       attachment: candidate.attachment || null,
       status: 'Scheduled',
       createdAt: new Date().toISOString(),
-      publishedBy: 'Admin Vikramaditya',
+      publishedBy: 'Administrator',
     };
   };
 
@@ -2640,7 +2797,7 @@ export function CrmProvider({ children }) {
     const newLog = {
       id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString(),
-      user: currentUser?.name || 'Commander Vikramaditya',
+      user: currentUser?.name || 'Administrator',
       role: currentUser?.badge || currentUser?.role || 'Super Admin',
       category: category || 'Settings & Configuration',
       action: action || 'Update',
@@ -2712,7 +2869,7 @@ export function CrmProvider({ children }) {
     const newAudit = {
       id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString(),
-      user: currentUser?.name || 'Commander Vikramaditya',
+      user: currentUser?.name || 'Administrator',
       role: currentUser?.badge || currentUser?.role || 'Super Admin',
       category: 'Center Management',
       action: 'Add Center',
@@ -2774,7 +2931,7 @@ export function CrmProvider({ children }) {
     const newAudit = {
       id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString(),
-      user: currentUser?.name || 'Commander Vikramaditya',
+      user: currentUser?.name || 'Administrator',
       role: currentUser?.badge || currentUser?.role || 'Super Admin',
       category: 'Center Management',
       action: 'Update Center',
@@ -2836,7 +2993,7 @@ export function CrmProvider({ children }) {
     const newAudit = {
       id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString(),
-      user: currentUser?.name || 'Commander Vikramaditya',
+      user: currentUser?.name || 'Administrator',
       role: currentUser?.badge || currentUser?.role || 'Super Admin',
       category: 'Center Management',
       action: nextStatus === 'Active' ? 'Activate Center' : 'Deactivate Center',
@@ -2874,7 +3031,7 @@ export function CrmProvider({ children }) {
     const newAudit = {
       id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString(),
-      user: currentUser?.name || 'Commander Vikramaditya',
+      user: currentUser?.name || 'Administrator',
       role: currentUser?.badge || currentUser?.role || 'Super Admin',
       category: 'General Information',
       action: 'Update Academy Profile',
@@ -2903,7 +3060,7 @@ export function CrmProvider({ children }) {
     const newAudit = {
       id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString(),
-      user: currentUser?.name || 'Commander Vikramaditya',
+      user: currentUser?.name || 'Administrator',
       role: currentUser?.badge || currentUser?.role || 'Super Admin',
       category: 'Academic Calendar',
       action: 'Year Updated',
@@ -3477,7 +3634,7 @@ export function CrmProvider({ children }) {
     const report = (data.equipmentReports || []).find(r => r.id === reportId);
     if (!report) return { success: false, message: 'Report not found' };
 
-    const reviewerName = verificationData.reviewer || currentUserProfiles.super_coach?.name || 'Senior Coach Kabir Rao';
+    const reviewerName = verificationData.reviewer || currentUserProfiles.super_coach?.name || 'Super Coach';
     const notes = verificationData.notes || 'Verified on site by Super Coach';
     const status = verificationData.status || REPORT_STATUSES.VERIFIED_BY_SUPER_COACH;
 
@@ -3543,7 +3700,7 @@ export function CrmProvider({ children }) {
     const report = (data.equipmentReports || []).find(r => r.id === reportId);
     if (!report) return { success: false, message: 'Report not found' };
 
-    const reviewerName = approvalData.reviewer || currentUserProfiles.admin?.name || 'Commander Vikramaditya';
+    const reviewerName = approvalData.reviewer || currentUserProfiles.admin?.name || 'Administrator';
     const notes = approvalData.notes || 'Admin approved maintenance/replacement.';
     const status = approvalData.status || REPORT_STATUSES.APPROVED_BY_ADMIN;
 
@@ -4209,6 +4366,169 @@ export function CrmProvider({ children }) {
     addToast('Terms & Conditions acceptance reset for testing.', 'info');
   };
 
+  // =========================================================================
+  // EVALUATION REVIEW & QUALITY ASSURANCE ACTIONS
+  // =========================================================================
+  const saveDraftEvaluation = (evalData) => {
+    const id = evalData.id || `EV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const draftEval = {
+      ...evalData,
+      id,
+      status: 'Draft',
+      updatedAt: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
+      publishedToParent: false,
+    };
+    setData((prev) => {
+      const existingIdx = (prev.evaluations || []).findIndex(
+        (e) => e.id === id || (e.studentId === evalData.studentId && e.cycle === evalData.cycle)
+      );
+      let updatedList;
+      if (existingIdx >= 0) {
+        updatedList = [...prev.evaluations];
+        updatedList[existingIdx] = { ...updatedList[existingIdx], ...draftEval };
+      } else {
+        updatedList = [draftEval, ...(prev.evaluations || [])];
+      }
+      return {
+        ...prev,
+        evaluations: updatedList,
+      };
+    });
+    addToast(`Evaluation for ${evalData.studentName || 'child'} saved as Draft.`, 'info');
+    return draftEval;
+  };
+
+  const submitEvaluation = (evalData) => {
+    const id = evalData.id || `EV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newEval = {
+      ...evalData,
+      id,
+      status: 'Pending',
+      submittedAt: evalData.submittedAt || new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
+      publishedToParent: false,
+    };
+    setData((prev) => {
+      const existingIdx = (prev.evaluations || []).findIndex(
+        (e) => e.id === id || (e.studentId === evalData.studentId && e.cycle === evalData.cycle)
+      );
+      let updatedList;
+      if (existingIdx >= 0) {
+        updatedList = [...prev.evaluations];
+        updatedList[existingIdx] = { ...updatedList[existingIdx], ...newEval, status: 'Pending' };
+      } else {
+        updatedList = [newEval, ...(prev.evaluations || [])];
+      }
+      return {
+        ...prev,
+        evaluations: updatedList,
+      };
+    });
+    addToast(`Evaluation ${id} submitted to Super Coach for review!`, 'success');
+    return newEval;
+  };
+
+  const updateEvaluation = (id, updates) => {
+    setData((prev) => ({
+      ...prev,
+      evaluations: (prev.evaluations || []).map((ev) => (ev.id === id ? { ...ev, ...updates } : ev)),
+    }));
+    addToast('Evaluation changes saved successfully!', 'success');
+  };
+
+  const approveEvaluation = (id, reviewNotes) => {
+    let approvedStudentId = null;
+    let approvedSkills = null;
+    let approvedObservation = null;
+
+    setData((prev) => {
+      const updatedEvals = (prev.evaluations || []).map((ev) => {
+        if (ev.id === id) {
+          approvedStudentId = ev.studentId;
+          approvedSkills = ev.skills;
+          approvedObservation = reviewNotes !== undefined ? reviewNotes : (ev.superCoachNotes || ev.coachObservation);
+          return {
+            ...ev,
+            status: 'Approved',
+            superCoachNotes: reviewNotes !== undefined ? reviewNotes : ev.superCoachNotes,
+            approvedAt: new Date().toISOString(),
+            publishedToParent: true,
+          };
+        }
+        return ev;
+      });
+
+      // Synchronize evaluation progression to student record for Parent Portal
+      const updatedStudents = (prev.students || []).map((st) => {
+        if (st.id === approvedStudentId && approvedSkills) {
+          const bal = (approvedSkills.balance?.superCoachRating || approvedSkills.balance?.coachRating || 4) * 20;
+          const jump = (approvedSkills.jumping?.superCoachRating || approvedSkills.jumping?.coachRating || 4) * 20;
+          const thr = (approvedSkills.throwing?.superCoachRating || approvedSkills.throwing?.coachRating || 5) * 20;
+          const run = (approvedSkills.running?.superCoachRating || approvedSkills.running?.coachRating || 4) * 20;
+          const overall = Math.round((bal + jump + thr + run) / 4);
+          return {
+            ...st,
+            evaluations: {
+              balance: bal,
+              jumping: jump,
+              throwing: thr,
+              running: run,
+              overall,
+              remark: approvedObservation || 'Consistent focus and athletic growth.',
+              lastEvaluated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            }
+          };
+        }
+        return st;
+      });
+
+      return {
+        ...prev,
+        evaluations: updatedEvals,
+        students: updatedStudents,
+      };
+    });
+    addToast(`Evaluation ${id} approved and published to Parent Portal!`, 'success');
+  };
+
+  const returnEvaluation = (id, returnReason, superCoachNotes) => {
+    setData((prev) => ({
+      ...prev,
+      evaluations: (prev.evaluations || []).map((ev) => {
+        if (ev.id === id) {
+          return {
+            ...ev,
+            status: 'Returned',
+            returnReason,
+            superCoachNotes: superCoachNotes !== undefined ? superCoachNotes : ev.superCoachNotes,
+            returnedAt: new Date().toISOString(),
+            publishedToParent: false,
+          };
+        }
+        return ev;
+      }),
+    }));
+    addToast(`Evaluation ${id} returned to coach for revision.`, 'info');
+  };
+
+  const bulkApproveEvaluations = (ids) => {
+    const idSet = new Set(ids);
+    setData((prev) => ({
+      ...prev,
+      evaluations: (prev.evaluations || []).map((ev) => {
+        if (idSet.has(ev.id)) {
+          return {
+            ...ev,
+            status: 'Approved',
+            approvedAt: new Date().toISOString(),
+            publishedToParent: true,
+          };
+        }
+        return ev;
+      }),
+    }));
+    addToast(`${ids.length} evaluation(s) approved and published to Parent Portal!`, 'success');
+  };
+
   return (
     <CrmContext.Provider
       value={{
@@ -4251,6 +4571,9 @@ export function CrmProvider({ children }) {
         updateParent,
         updateStudent,
         deleteStudent,
+        addCoach,
+        updateCoach,
+        deleteCoach,
         addEnquiry,
         updateEnquiry,
         updateEnquiryStage,
@@ -4323,6 +4646,13 @@ export function CrmProvider({ children }) {
         updateSuperCoachLocations,
         reassignScheduleCoach,
         reportCoachIssue,
+        // Evaluation Review Actions
+        saveDraftEvaluation,
+        submitEvaluation,
+        updateEvaluation,
+        approveEvaluation,
+        returnEvaluation,
+        bulkApproveEvaluations,
         // Emergency Coach Replacement Actions
         assignEmergencyCoachReplacement,
         revokeEmergencyCoachReplacement,

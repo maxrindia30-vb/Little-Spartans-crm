@@ -112,55 +112,65 @@ export default function ProgramsClasses() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#172B5010]">
-              {data.classes.map(cls => {
-                const fillPct = Math.round((cls.enrolled / cls.capacity) * 100);
-                return (
-                  <tr key={cls.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-extrabold text-[#172B50] text-sm block">{cls.name}</span>
-                      <span className="text-[10px] text-[#F4510B] font-bold">{cls.program} • {cls.level}</span>
-                    </td>
+              {(!data.classes || data.classes.length === 0) ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-xs text-[#172B50] opacity-70">
+                    <Calendar className="w-8 h-8 text-[#172B50]/30 mx-auto mb-2" />
+                    <p className="font-bold text-sm text-[#172B50]">No Training Batches Scheduled</p>
+                    <p className="mt-1 text-xs">Create class batches and allocate coaches to begin taking enrollments.</p>
+                  </td>
+                </tr>
+              ) : (
+                data.classes.map(cls => {
+                  const fillPct = cls.capacity > 0 ? Math.round((cls.enrolled / cls.capacity) * 100) : 0;
+                  return (
+                    <tr key={cls.id} className="hover:bg-[#FFF4E8]/40 transition-colors">
+                      <td className="py-3 px-4">
+                        <span className="font-extrabold text-[#172B50] text-sm block">{cls.name}</span>
+                        <span className="text-[10px] text-[#F4510B] font-bold">{cls.program} • {cls.level}</span>
+                      </td>
 
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-[#172B50] flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                        <span>{cls.center}</span>
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <span className="font-extrabold text-[#172B50]">{cls.coach}</span>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-[#172B50] flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-[#172B50] opacity-60" />
-                        <span>{cls.schedule}</span>
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-2 bg-[#FFF4E8] rounded-full overflow-hidden border border-[#172B5015]">
-                          <div 
-                            style={{ width: `${fillPct}%` }}
-                            className={`h-full rounded-full ${fillPct >= 90 ? 'bg-[#F4510B]' : 'bg-[#172B50]'}`}
-                          />
-                        </div>
-                        <span className="font-extrabold text-[#172B50] text-[11px]">
-                          {cls.enrolled}/{cls.capacity} ({fillPct}%)
+                      <td className="py-3 px-4">
+                        <span className="font-bold text-[#172B50] flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                          <span>{cls.center}</span>
                         </span>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="py-3 px-4 text-right">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#172B50] text-white">
-                        {cls.status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
+                      <td className="py-3 px-4">
+                        <span className="font-extrabold text-[#172B50]">{cls.coach}</span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="font-semibold text-[#172B50] flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-[#172B50] opacity-60" />
+                          <span>{cls.schedule}</span>
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 h-2 bg-[#FFF4E8] rounded-full overflow-hidden border border-[#172B5015]">
+                            <div 
+                              style={{ width: `${fillPct}%` }}
+                              className={`h-full rounded-full ${fillPct >= 90 ? 'bg-[#F4510B]' : 'bg-[#172B50]'}`}
+                            />
+                          </div>
+                          <span className="font-extrabold text-[#172B50] text-[11px]">
+                            {cls.enrolled}/{cls.capacity} ({fillPct}%)
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#172B50] text-white">
+                          {cls.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
