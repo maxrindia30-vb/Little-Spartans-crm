@@ -28,6 +28,7 @@ import {
   Edit2,
   Layers,
   ArrowLeftRight,
+  RotateCw,
 } from 'lucide-react';
 import { useCrm } from '../../../context/CrmContext';
 import { getCommonLocations } from '../../../services/locationService';
@@ -75,6 +76,7 @@ export default function ClassSchedulesPage() {
     checkScheduleConflictLive,
     assignEmergencyCoachReplacement,
     revokeEmergencyCoachReplacement,
+    addToast,
   } = useCrm();
 
   const activeLocations = getCommonLocations(data);
@@ -83,6 +85,9 @@ export default function ClassSchedulesPage() {
   // View Modes: 'all_schedules' | 'daily' | 'weekly' | 'calendar' | 'history'
   const [viewMode, setViewMode] = useState('all_schedules');
   const [focusDate, setFocusDate] = useState(todayYmd);
+
+  // Reschedule Mode state for unified reschedule flow
+  const [isRescheduleMode, setIsRescheduleMode] = useState(false);
 
   // Filters
   const [locationFilter, setLocationFilter] = useState('All');
@@ -386,6 +391,7 @@ export default function ClassSchedulesPage() {
   }, [isScheduleModalOpen, scheduleForm, data.coaches, checkScheduleConflictLive, editingSchedule]);
 
   const openCreateModal = (presetDate = focusDate) => {
+    setIsRescheduleMode(false);
     const weekday = WEEKDAYS[new Date(`${presetDate}T00:00:00`).getDay()];
     const defaultLoc = allFilterLocations[0] || 'KK NAGAR';
     const defaultProg = availableProgramsList[0] || 'Spartan Gymnastics & Agility';
@@ -420,6 +426,36 @@ export default function ClassSchedulesPage() {
   };
 
   const openEditModal = (sch) => {
+    setIsRescheduleMode(false);
+    const derivedWeekday =
+      sch.weekday || (sch.date ? WEEKDAYS[new Date(`${sch.date}T00:00:00`).getDay()] : 'Monday');
+
+    setEditingSchedule(sch);
+    setScheduleForm({
+      className: sch.className || sch.batch || '',
+      location: sch.location || allFilterLocations[0] || 'KK NAGAR',
+      program: sch.program || availableProgramsList[0] || 'Spartan Gymnastics & Agility',
+      batch: sch.batch || 'Batch Alpha (Evening)',
+      batchId: sch.batchId || '',
+      startTime: sch.startTime || '17:00',
+      endTime: sch.endTime || '18:00',
+      timingDisplay: sch.timingDisplay || `${sch.startTime} - ${sch.endTime}`,
+      venue: sch.venue || 'Training Court A',
+      weekdays: sch.weekdays && sch.weekdays.length > 0 ? sch.weekdays : [derivedWeekday],
+      date: sch.date || todayYmd,
+      weekday: derivedWeekday,
+      recurringWeeks: '1',
+      coachId: sch.coachId || '',
+      coach2Id: sch.additionalCoaches?.[0]?.coachId || '',
+      capacity: String(sch.capacity || 15),
+      notes: sch.notes || '',
+      attachment: sch.attachment || null,
+    });
+    setIsScheduleModalOpen(true);
+  };
+
+  const openRescheduleModal = (sch) => {
+    setIsRescheduleMode(true);
     const derivedWeekday =
       sch.weekday || (sch.date ? WEEKDAYS[new Date(`${sch.date}T00:00:00`).getDay()] : 'Monday');
 
@@ -574,11 +610,17 @@ export default function ClassSchedulesPage() {
       capacity: parseInt(scheduleForm.capacity, 10) || 15,
       notes: scheduleForm.notes,
       attachment: scheduleForm.attachment || null,
+      status: isRescheduleMode ? 'Rescheduled' : editingSchedule?.status || 'Scheduled',
     };
 
     if (editingSchedule) {
       const res = updateClassSchedule(editingSchedule.id, payload);
-      if (res.success) setIsScheduleModalOpen(false);
+      if (res.success) {
+        setIsScheduleModalOpen(false);
+        if (isRescheduleMode && addToast) {
+          addToast(`Session rescheduled to ${scheduleForm.date} (${payload.timingDisplay}) successfully!`, 'success');
+        }
+      }
     } else if (scheduleForm.weekdays.length > 1 && parseInt(scheduleForm.recurringWeeks, 10) > 1) {
       const res = createRecurringClassSchedules({
         ...payload,
@@ -897,6 +939,18 @@ export default function ClassSchedulesPage() {
                             <span>Edit</span>
                           </button>
 
+                          {schedule.status !== 'Cancelled' && (
+                            <button
+                              type="button"
+                              onClick={() => openRescheduleModal(schedule)}
+                              className="px-2 py-1 rounded-lg text-xs font-bold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white border border-[#F4510B30] transition-colors cursor-pointer flex items-center gap-1"
+                              title="Reschedule Class Session"
+                            >
+                              <RotateCw className="w-3 h-3" />
+                              <span>Reschedule</span>
+                            </button>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => {
@@ -1062,6 +1116,21 @@ export default function ClassSchedulesPage() {
                                 <span>Edit Schedule</span>
                               </button>
 
+                              {sch.status !== 'Cancelled' && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDropdownScheduleId(null);
+                                    openRescheduleModal(sch);
+                                  }}
+                                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors text-left cursor-pointer"
+                                >
+                                  <RotateCw className="w-3.5 h-3.5 shrink-0 text-[#F4510B]" />
+                                  <span>Reschedule Session</span>
+                                </button>
+                              )}
+
                               {sch.status !== 'Cancelled' && sch.status !== 'Completed' && (
                                 <button
                                   type="button"
@@ -1187,226 +1256,289 @@ export default function ClassSchedulesPage() {
 
       {/* View 2: WEEKLY TIMETABLE VIEW */}
       {viewMode === 'weekly' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-3">
-          {weekDates.map((col) => {
-            const colItems = filteredSchedules.filter((s) => s.date === col.ymd);
-            const isToday = col.ymd === todayYmd;
-            const isColActive = col.ymd === focusDate || (isToday && focusDate === todayYmd);
+        <div className="overflow-x-auto pb-4 no-scrollbar">
+          <div className="grid grid-cols-7 gap-3 min-w-[1180px]">
+            {weekDates.map((col) => {
+              const colItems = filteredSchedules.filter((s) => s.date === col.ymd);
+              const isToday = col.ymd === todayYmd;
+              const isColActive = col.ymd === focusDate || (isToday && focusDate === todayYmd);
 
-            return (
-              <div
-                key={col.ymd}
-                className={`bg-white rounded-2xl border p-3 shadow-card flex flex-col min-h-[260px] transition-all ${
-                  isColActive ? 'border-[#F4510B] ring-1 ring-[#F4510B]/20' : 'border-[#172B5014]'
-                }`}
-              >
-                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#172B5010]">
-                  <div>
-                    <p className={`text-xs font-extrabold ${isColActive ? 'text-[#F4510B]' : 'text-[#172B50]'}`}>
-                      {col.dayName}
-                    </p>
-                    <p className="text-[10px] font-semibold text-[#172B50] opacity-60">{col.label}</p>
+              return (
+                <div
+                  key={col.ymd}
+                  className={`bg-white rounded-2xl border p-3 shadow-card flex flex-col min-h-[520px] max-h-[760px] transition-all ${
+                    isColActive
+                      ? 'border-2 border-[#F4510B] ring-2 ring-[#F4510B]/15'
+                      : 'border-[#172B5014] hover:border-[#172B5025]'
+                  }`}
+                >
+                  {/* Sticky Column Header */}
+                  <div className="sticky top-0 bg-white z-10 flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#172B5010]">
+                    <div>
+                      <p className={`text-xs font-black tracking-tight ${isColActive ? 'text-[#F4510B]' : 'text-[#172B50]'}`}>
+                        {col.dayName}
+                      </p>
+                      <p className="text-[10.5px] font-semibold text-[#172B50]/60 mt-0.5">{col.label}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openCreateModal(col.ymd)}
+                      title={`Add class session on ${col.ymd}`}
+                      className="p-1.5 rounded-xl bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openCreateModal(col.ymd)}
-                    title={`Add class on ${col.ymd}`}
-                    className="p-1 rounded-lg bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
 
-                {colItems.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center text-[11px] text-[#172B50] opacity-40 text-center px-2">
-                    No sessions
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {colItems.map((sch) => {
-                      const isReplacementActive = sch.replacement && sch.replacement.status === 'Active';
-                      const isMenuOpen = activeDropdownScheduleId === sch.id;
+                  {/* Sessions or Empty State */}
+                  {colItems.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center text-xs font-medium text-[#172B50]/40 text-center px-2 py-12 select-none">
+                      No sessions
+                    </div>
+                  ) : (
+                    <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 no-scrollbar">
+                      {colItems.map((sch) => {
+                        const isReplacementActive = sch.replacement && sch.replacement.status === 'Active';
+                        const isMenuOpen = activeDropdownScheduleId === sch.id;
 
-                      return (
-                        <div
-                          key={sch.id}
-                          className={`relative p-2.5 rounded-xl border text-[11px] transition-all ${
-                            isReplacementActive
-                              ? 'bg-[#FFF7ED] border-[#F97316]/50 shadow-2xs'
-                              : 'bg-[#FFF4E8]/75 border-[#172B5012] hover:border-[#F4510B35]'
-                          } space-y-1`}
-                        >
-                          {/* Top Row: Time Badge on Left, Three-Dot Menu on Right */}
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="font-extrabold text-[#F4510B] text-[10.5px]">
-                              {sch.timingDisplay || `${sch.startTime} - ${sch.endTime}`}
-                            </span>
+                        return (
+                          <div
+                            key={sch.id}
+                            className={`relative p-3 rounded-xl border text-[11px] transition-all ${
+                              isReplacementActive
+                                ? 'bg-[#FFF7ED] border-[#F97316]/50 shadow-2xs'
+                                : 'bg-[#FFF9F5] border-[#F4510B22] hover:border-[#F4510B45] shadow-2xs'
+                            } space-y-2`}
+                          >
+                            {/* Row 1: Time, Status Badge & Actions Dropdown Menu */}
+                            <div className="flex items-center justify-between gap-1">
+                              <div className="flex items-center gap-1.5 text-xs font-black text-[#F4510B] tracking-tight whitespace-nowrap">
+                                <Clock className="w-3.5 h-3.5 shrink-0 text-[#F4510B]" />
+                                <span>{sch.timingDisplay || `${sch.startTime} – ${sch.endTime}`}</span>
+                              </div>
 
-                            <div className="flex items-center gap-1">
-                              <span
-                                className={`px-1.5 py-0.2 rounded-md text-[9px] font-bold border ${renderStatusBadge(
-                                  sch.status
-                                )}`}
-                              >
-                                {sch.status}
-                              </span>
-
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveDropdownScheduleId(isMenuOpen ? null : sch.id);
-                                  }}
-                                  title="Class actions"
-                                  className={`p-1 rounded-lg border transition-colors cursor-pointer ${
-                                    isMenuOpen
-                                      ? 'bg-[#172B50] text-white border-[#172B50]'
-                                      : 'bg-white text-[#172B50] border-[#172B5015] hover:border-[#F4510B]'
-                                  }`}
+                              <div className="flex items-center gap-1 shrink-0">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded-full text-[9px] font-black border ${renderStatusBadge(
+                                    sch.status
+                                  )}`}
                                 >
-                                  <MoreVertical className="w-3 h-3" />
-                                </button>
+                                  {sch.status}
+                                </span>
 
-                                {/* Dropdown Menu Popover */}
-                                {isMenuOpen && (
-                                  <div
-                                    ref={dropdownRef}
-                                    className="absolute right-0 top-7 z-50 w-52 bg-white rounded-2xl shadow-xl border border-[#172B501A] py-1.5 animate-in fade-in zoom-in-95 duration-150"
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveDropdownScheduleId(isMenuOpen ? null : sch.id);
+                                    }}
+                                    title="Session actions"
+                                    className={`p-1 rounded-lg border transition-all cursor-pointer ${
+                                      isMenuOpen
+                                        ? 'bg-[#172B50] text-white border-[#172B50]'
+                                        : 'bg-white text-[#172B50] border-[#172B5018] hover:border-[#F4510B] hover:text-[#F4510B]'
+                                    }`}
                                   >
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setActiveDropdownScheduleId(null);
-                                        setViewingClassSchedule(sch);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors text-left cursor-pointer"
-                                    >
-                                      <Eye className="w-3.5 h-3.5 shrink-0 text-[#172B50]/70" />
-                                      <span>View Class</span>
-                                    </button>
+                                    <MoreVertical className="w-3 h-3" />
+                                  </button>
 
-                                    {sch.status !== 'Cancelled' && (
+                                  {/* Dropdown Menu Popover */}
+                                  {isMenuOpen && (
+                                    <div
+                                      ref={dropdownRef}
+                                      className="absolute right-0 top-7 z-50 w-52 bg-white rounded-2xl shadow-xl border border-[#172B501A] py-1.5 animate-in fade-in zoom-in-95 duration-150"
+                                    >
                                       <button
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setActiveDropdownScheduleId(null);
-                                          setReplacementDrawerSchedule(sch);
-                                          setReplacementCoachId('');
-                                          setReplacementReason('');
-                                          setReplacementError('');
+                                          setViewingClassSchedule(sch);
                                         }}
                                         className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors text-left cursor-pointer"
                                       >
-                                        <ArrowLeftRight className="w-3.5 h-3.5 shrink-0 text-[#F4510B]" />
-                                        <span>Assign Replacement Coach</span>
+                                        <Eye className="w-3.5 h-3.5 shrink-0 text-[#172B50]/70" />
+                                        <span>View Session Details</span>
                                       </button>
-                                    )}
 
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setActiveDropdownScheduleId(null);
-                                        openEditModal(sch);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors text-left cursor-pointer"
-                                    >
-                                      <Edit3 className="w-3.5 h-3.5 shrink-0 text-[#172B50]/70" />
-                                      <span>Edit Schedule</span>
-                                    </button>
-
-                                    {sch.status !== 'Cancelled' && sch.status !== 'Completed' && (
                                       <button
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setActiveDropdownScheduleId(null);
-                                          setCancellingSchedule(sch);
-                                          setCancelReason('');
+                                          openEditModal(sch);
                                         }}
-                                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors text-left cursor-pointer border-t border-[#172B500C] mt-1 pt-2"
+                                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors text-left cursor-pointer"
                                       >
-                                        <XCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
-                                        <span>Cancel Class</span>
+                                        <Edit3 className="w-3.5 h-3.5 shrink-0 text-[#172B50]/70" />
+                                        <span>Edit Session</span>
                                       </button>
-                                    )}
-                                  </div>
-                                )}
+
+                                      {sch.status !== 'Cancelled' && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveDropdownScheduleId(null);
+                                            openRescheduleModal(sch);
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors text-left cursor-pointer"
+                                        >
+                                          <RotateCw className="w-3.5 h-3.5 shrink-0 text-[#F4510B]" />
+                                          <span>Reschedule Session</span>
+                                        </button>
+                                      )}
+
+                                      {sch.status !== 'Cancelled' && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveDropdownScheduleId(null);
+                                            setReplacementDrawerSchedule(sch);
+                                            setReplacementCoachId('');
+                                            setReplacementReason('');
+                                            setReplacementError('');
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] transition-colors text-left cursor-pointer"
+                                        >
+                                          <UserCheck className="w-3.5 h-3.5 shrink-0 text-[#2563EB]" />
+                                          <span>Assign Replacement Coach</span>
+                                        </button>
+                                      )}
+
+                                      {sch.status !== 'Cancelled' && sch.status !== 'Completed' && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveDropdownScheduleId(null);
+                                            setCancellingSchedule(sch);
+                                            setCancelReason('');
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors text-left cursor-pointer border-t border-[#172B500C] mt-1 pt-2"
+                                        >
+                                          <XCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                                          <span>Cancel Session</span>
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {/* Location & Batch */}
-                          <div>
-                            <p className="font-extrabold text-[#172B50] leading-snug">{sch.location}</p>
-                            <p className="text-[10px] text-[#172B50]/75 font-semibold">{sch.batch}</p>
-                          </div>
-
-                          {/* Replacement Badge */}
-                          {isReplacementActive && (
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]/60 shadow-2xs">
-                              <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
-                              <span>Replacement Assigned</span>
+                            {/* Row 2: Location & Session Type Badge */}
+                            <div>
+                              <div className="flex items-center justify-between gap-1">
+                                <div className="flex items-center gap-1 text-xs font-black text-[#172B50] uppercase tracking-wide truncate">
+                                  <MapPin className="w-3 h-3 text-[#F4510B] shrink-0" />
+                                  <span className="truncate">{sch.location}</span>
+                                </div>
+                                <span className="px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-[#172B500A] text-[#172B50]/75 border border-[#172B5012] uppercase tracking-wider shrink-0">
+                                  {sch.sessionType || (sch.isCompensationReplacement ? 'Compensation' : 'Regular')}
+                                </span>
+                              </div>
+                              <div className="text-[11px] font-bold text-[#F4510B] truncate mt-0.5">
+                                {sch.program}
+                              </div>
+                              <div className="text-[10.5px] font-semibold text-[#172B50]/80 truncate">
+                                {sch.batch || sch.className}
+                              </div>
                             </div>
-                          )}
 
-                          {/* Coach Lines */}
-                          <div className="space-y-0.5 pt-0.5">
-                            {isReplacementActive ? (
-                              <>
-                                <div className="flex items-center gap-1 text-[10px] text-slate-500 font-semibold line-through">
-                                  <User className="w-2.5 h-2.5 shrink-0 text-slate-400" />
-                                  <span>{sch.coachName} (Original)</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-[10.5px] text-emerald-700 font-extrabold">
-                                  <UserCheck className="w-2.5 h-2.5 shrink-0 text-emerald-600" />
-                                  <span>{sch.replacement.replacementCoachName} (Cover)</span>
-                                </div>
-                                {sch.additionalCoaches?.length > 0 && (
-                                  <div className="text-[9.5px] text-[#172B50]/70 font-medium">
-                                    Coach 2: {sch.additionalCoaches.map((c) => c.coachName).join(', ')}
+                            {/* Replacement Active Alert Badge */}
+                            {isReplacementActive && (
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]/60 shadow-2xs">
+                                <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+                                <span>Replacement Assigned</span>
+                              </div>
+                            )}
+
+                            {/* Coaches: Coach 1 & Coach 2 */}
+                            <div className="space-y-0.5 pt-1 border-t border-[#172B500C] text-[10.5px]">
+                              {isReplacementActive ? (
+                                <>
+                                  <div className="flex items-center gap-1 text-slate-500 font-semibold line-through text-[10px]">
+                                    <User className="w-2.5 h-2.5 shrink-0 text-slate-400" />
+                                    <span className="truncate">Coach 1: {sch.coachName} (Original)</span>
                                   </div>
-                                )}
-                              </>
-                            ) : (
-                              <div className="flex items-center gap-1 text-[10px] font-semibold text-[#172B50]">
-                                <User className="w-2.5 h-2.5 shrink-0 text-[#172B50]/60" />
-                                <span>Coach 1: {sch.coachName}</span>
-                                {sch.additionalCoaches?.length > 0 && (
-                                  <span className="opacity-75">
-                                    • {sch.additionalCoaches.map((c) => c.coachName).join(', ')}
+                                  <div className="flex items-center gap-1 text-emerald-800 font-extrabold text-[10px]">
+                                    <UserCheck className="w-2.5 h-2.5 shrink-0 text-emerald-600" />
+                                    <span className="truncate">Cover: {sch.replacement.replacementCoachName}</span>
+                                  </div>
+                                  {sch.additionalCoaches?.length > 0 && (
+                                    <div className="flex items-center gap-1 text-[#172B50]/75 font-semibold text-[10px]">
+                                      <User className="w-2.5 h-2.5 shrink-0 text-[#172B50]/50" />
+                                      <span className="truncate">
+                                        Coach 2: {sch.additionalCoaches.map((c) => c.coachName).join(', ')}
+                                      </span>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-1 text-[#172B50] font-bold text-[10.5px]">
+                                    <User className="w-2.5 h-2.5 shrink-0 text-[#172B50]/70" />
+                                    <span className="truncate">Coach 1: {sch.coachName || 'Unassigned'}</span>
+                                  </div>
+                                  {sch.additionalCoaches?.length > 0 && (
+                                    <div className="flex items-center gap-1 text-[#172B50]/80 font-semibold text-[10px]">
+                                      <User className="w-2.5 h-2.5 shrink-0 text-[#172B50]/50" />
+                                      <span className="truncate">
+                                        Coach 2: {sch.additionalCoaches.map((c) => c.coachName).join(', ')}
+                                      </span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+
+                            {/* Venue & Capacity */}
+                            {(sch.venue || sch.capacity) && (
+                              <div className="flex items-center justify-between text-[9.5px] text-[#172B50]/70 font-semibold pt-1 border-t border-[#172B5008]">
+                                <span className="truncate max-w-[65%]">{sch.venue || 'Training Court A'}</span>
+                                {sch.capacity && (
+                                  <span className="shrink-0 bg-white px-1.5 py-0.5 rounded border border-[#172B5010]">
+                                    {sch.enrolledCount !== undefined ? `${sch.enrolledCount}/${sch.capacity}` : `Cap: ${sch.capacity}`}
                                   </span>
                                 )}
                               </div>
                             )}
-                          </div>
 
-                          {sch.attachment && (
-                            <div className="pt-0.5">
-                              <a
-                                href={sch.attachment.dataUrl}
-                                download={sch.attachment.name}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[9.5px] font-bold text-[#F4510B] hover:underline"
-                                title={`Download ${sch.attachment.name}`}
-                              >
-                                <Paperclip className="w-2.5 h-2.5 shrink-0" />
-                                <span className="truncate max-w-[100px]">{sch.attachment.name}</span>
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                            {/* Notes */}
+                            {sch.notes && (
+                              <div className="text-[9.5px] text-[#172B50]/70 italic bg-white/70 p-1.5 rounded-lg border border-[#172B500C] line-clamp-2">
+                                "{sch.notes}"
+                              </div>
+                            )}
+
+                            {/* Attachment Link */}
+                            {sch.attachment && (
+                              <div className="pt-0.5">
+                                <a
+                                  href={sch.attachment.dataUrl}
+                                  download={sch.attachment.name}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[9.5px] font-bold text-[#F4510B] hover:underline"
+                                  title={`Download ${sch.attachment.name}`}
+                                >
+                                  <Paperclip className="w-2.5 h-2.5 shrink-0" />
+                                  <span className="truncate max-w-[120px]">{sch.attachment.name}</span>
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -1612,12 +1744,22 @@ export default function ClassSchedulesPage() {
         </div>
       )}
 
-      {/* Schedule Create / Edit Modal (Matching Super Coach Portal Pattern) */}
+      {/* Schedule Create / Edit / Reschedule Modal */}
       <Modal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
-        title={editingSchedule ? `Edit Class Schedule: ${editingSchedule.id}` : 'Create Class Schedule'}
-        subtitle="Schedule a class session across authorized academy centers"
+        title={
+          isRescheduleMode
+            ? `Reschedule Session: ${editingSchedule?.id || ''}`
+            : editingSchedule
+            ? `Edit Class Schedule: ${editingSchedule.id}`
+            : 'Create Class Schedule'
+        }
+        subtitle={
+          isRescheduleMode
+            ? `Update session date, timing, or venue for ${editingSchedule?.className || editingSchedule?.batch || ''}`
+            : 'Schedule a class session across authorized academy centers'
+        }
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleSaveSchedule} className="space-y-4">
@@ -1875,7 +2017,7 @@ export default function ClassSchedulesPage() {
               disabled={formConflict.hasConflict || !scheduleForm.location || !scheduleForm.batch}
               className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:bg-[#d84306] disabled:opacity-50 cursor-pointer shadow-xs active:scale-95 transition-all"
             >
-              {editingSchedule ? 'Save Changes' : 'Publish Schedule'}
+              {isRescheduleMode ? 'Confirm Reschedule' : editingSchedule ? 'Save Changes' : 'Publish Schedule'}
             </button>
           </div>
         </form>
