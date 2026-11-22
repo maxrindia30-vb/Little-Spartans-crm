@@ -382,62 +382,179 @@ export const initialAcademyData = {
     {
       id: "LOC-1",
       name: "KK NAGAR",
+      code: "LS-KKN",
       city: "Chennai",
-      address: "KK Nagar, Chennai",
+      state: "Tamil Nadu",
+      pinCode: "600078",
+      address: "15, Munusamy Salai, KK Nagar, Chennai",
+      contactPerson: "Coach Kabir Rao",
+      contactPhone: "+91 98840 55441",
+      operatingDays: "Mon - Sat",
+      operatingHours: "06:00 AM - 08:30 PM",
+      capacity: 150,
+      status: "Active",
+      facilities: ["Main Turf Ground", "Training Court A", "Practice Arena B", "Warm-up Studio"],
       courts: [
         "Main Turf Ground",
         "Training Court A",
         "Practice Arena B",
         "Warm-up Studio"
-      ]
+      ],
+      programs: ["Spartan Gymnastics & Agility", "Junior Football Champions", "Spartan Athletics & Sprinting", "Basketball Rising Stars", "Little Cubs Multi-Sport"]
     },
     {
       id: "LOC-2",
       name: "KILPAUK",
+      code: "LS-KPK",
       city: "Chennai",
-      address: "Kilpauk, Chennai",
+      state: "Tamil Nadu",
+      pinCode: "600010",
+      address: "82, Poonamallee High Rd, Kilpauk, Chennai",
+      contactPerson: "Coach Vikram Singh",
+      contactPhone: "+91 98840 55442",
+      operatingDays: "Mon - Sat",
+      operatingHours: "06:00 AM - 08:30 PM",
+      capacity: 140,
+      status: "Active",
+      facilities: ["Main Turf Ground", "Training Court A", "Practice Arena B", "Warm-up Studio"],
       courts: [
         "Main Turf Ground",
         "Training Court A",
         "Practice Arena B",
         "Warm-up Studio"
-      ]
+      ],
+      programs: ["Spartan Gymnastics & Agility", "Junior Football Champions", "Spartan Athletics & Sprinting", "Basketball Rising Stars"]
     },
     {
       id: "LOC-3",
       name: "MAHALINGAPURAM",
+      code: "LS-MHP",
       city: "Chennai",
-      address: "Mahalingapuram, Chennai",
+      state: "Tamil Nadu",
+      pinCode: "600034",
+      address: "45, Josier St, Mahalingapuram, Chennai",
+      contactPerson: "Coach Ramesh K",
+      contactPhone: "+91 98840 55443",
+      operatingDays: "Mon - Sat",
+      operatingHours: "06:00 AM - 08:30 PM",
+      capacity: 130,
+      status: "Active",
+      facilities: ["Main Turf Ground", "Training Court A", "Practice Arena B", "Warm-up Studio"],
       courts: [
         "Main Turf Ground",
         "Training Court A",
         "Practice Arena B",
         "Warm-up Studio"
-      ]
+      ],
+      programs: ["Spartan Gymnastics & Agility", "Junior Football Champions", "Spartan Martial Arts & Karate"]
     },
     {
       id: "LOC-4",
       name: "ANNA NAGAR",
+      code: "LS-ANR",
       city: "Chennai",
-      address: "Anna Nagar, Chennai",
+      state: "Tamil Nadu",
+      pinCode: "600040",
+      address: "12, 2nd Avenue, Anna Nagar, Chennai",
+      contactPerson: "Coach Preethi S",
+      contactPhone: "+91 98840 55444",
+      operatingDays: "Mon - Sat",
+      operatingHours: "06:00 AM - 08:30 PM",
+      capacity: 160,
+      status: "Active",
+      facilities: ["Main Turf Ground", "Training Court A", "Practice Arena B", "Warm-up Studio"],
       courts: [
         "Main Turf Ground",
         "Training Court A",
         "Practice Arena B",
         "Warm-up Studio"
-      ]
+      ],
+      programs: ["Spartan Gymnastics & Agility", "Junior Football Champions", "Spartan Athletics & Sprinting", "Little Cubs Multi-Sport"]
     },
     {
       id: "LOC-5",
       name: "KOLATHUR",
+      code: "LS-KTR",
       city: "Chennai",
-      address: "Kolathur, Chennai",
+      state: "Tamil Nadu",
+      pinCode: "600099",
+      address: "28, Redhills Main Rd, Kolathur, Chennai",
+      contactPerson: "Coach Dinesh V",
+      contactPhone: "+91 98840 55445",
+      operatingDays: "Mon - Sat",
+      operatingHours: "06:00 AM - 08:30 PM",
+      capacity: 120,
+      status: "Active",
+      facilities: ["Main Turf Ground", "Training Court A", "Practice Arena B", "Warm-up Studio"],
       courts: [
         "Main Turf Ground",
         "Training Court A",
         "Practice Arena B",
         "Warm-up Studio"
-      ]
+      ],
+      programs: ["Junior Football Champions", "Basketball Rising Stars", "Spartan Martial Arts & Karate"]
+    }
+  ],
+
+  // Academic Calendar & Terms Governance
+  academicCalendar: {
+    academicYear: "2026-2027",
+    terms: [
+      { id: "TERM-1", name: "Term 1 (Monsoon)", startDate: "2026-06-01", endDate: "2026-08-31", status: "Completed" },
+      { id: "TERM-2", name: "Term 2 (Autumn & Winter)", startDate: "2026-09-01", endDate: "2026-11-30", status: "Active" },
+      { id: "TERM-3", name: "Term 3 (Spring Championship)", startDate: "2026-12-01", endDate: "2027-02-28", status: "Upcoming" },
+      { id: "CAMP-1", name: "Summer Spartan Intensive Camp", startDate: "2027-04-01", endDate: "2027-05-15", status: "Scheduled" }
+    ],
+    holidays: [
+      { id: "HOL-1", name: "Independence Day", date: "2026-08-15", type: "National Holiday" },
+      { id: "HOL-2", name: "Gandhi Jayanti", date: "2026-10-02", type: "National Holiday" },
+      { id: "HOL-3", name: "Diwali Festival Break", date: "2026-11-01", type: "Festival Holiday" },
+      { id: "HOL-4", name: "Christmas Day", date: "2026-12-25", type: "Academy Holiday" },
+      { id: "HOL-5", name: "Pongal & Makar Sankranti", date: "2027-01-14", type: "Festival Holiday" },
+      { id: "HOL-6", name: "Republic Day", date: "2027-01-26", type: "National Holiday" }
+    ]
+  },
+
+  // Settings & Configuration Audit Trail
+  settingsAuditLogs: [
+    {
+      id: "SET-LOG-101",
+      timestamp: "2026-11-20T10:15:00Z",
+      user: "Commander Vikramaditya",
+      role: "Super Admin",
+      category: "Brand & Identity",
+      action: "Verification",
+      field: "Brand Palette Tokens",
+      oldValue: "Standard Theme",
+      newValue: "Warm Cream, Spartan Orange, Navy Blue, Pure White",
+      status: "Verified",
+      ipAddress: "127.0.0.1"
+    },
+    {
+      id: "SET-LOG-102",
+      timestamp: "2026-11-18T14:30:00Z",
+      user: "Commander Vikramaditya",
+      role: "Super Admin",
+      category: "Center Management",
+      action: "Facility Verification",
+      field: "Kolathur Courts",
+      oldValue: "3 Courts",
+      newValue: "Main Turf Ground, Training Court A, Practice Arena B, Warm-up Studio",
+      status: "Verified",
+      ipAddress: "127.0.0.1"
+    },
+    {
+      id: "SET-LOG-103",
+      timestamp: "2026-11-15T09:00:00Z",
+      user: "Commander Vikramaditya",
+      role: "Super Admin",
+      category: "Academic Calendar",
+      action: "Session Initialized",
+      field: "Academic Year",
+      oldValue: "2025-2026",
+      newValue: "2026-2027",
+      status: "Verified",
+      ipAddress: "127.0.0.1"
     }
   ],
 

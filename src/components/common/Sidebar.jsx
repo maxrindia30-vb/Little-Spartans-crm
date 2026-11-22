@@ -195,7 +195,6 @@ export default function Sidebar() {
         { id: 'analytics', label: 'Academy Analytics', view: 'reports_settings', subTab: 'analytics' },
         { id: 'export', label: 'Raw Data Export', view: 'reports_settings', subTab: 'export' },
         { id: 'backup', label: 'Backup & Recovery', view: 'reports_settings', subTab: 'backup' },
-        { id: 'permissions', label: 'Permissions Audit', view: 'reports_settings', subTab: 'permissions' },
         { id: 'settings', label: 'Academy Settings', view: 'reports_settings', subTab: 'settings' },
       ],
     },

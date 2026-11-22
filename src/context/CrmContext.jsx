@@ -271,6 +271,10 @@ export function CrmProvider({ children }) {
           termsAcceptances: Array.isArray(parsed.termsAcceptances)
             ? parsed.termsAcceptances
             : (initialAcademyData.termsAcceptances || []),
+          academicCalendar: parsed.academicCalendar || initialAcademyData.academicCalendar,
+          settingsAuditLogs: Array.isArray(parsed.settingsAuditLogs) && parsed.settingsAuditLogs.length > 0
+            ? parsed.settingsAuditLogs
+            : (initialAcademyData.settingsAuditLogs || []),
         };
       }
     } catch (e) {
@@ -398,6 +402,8 @@ export function CrmProvider({ children }) {
       termsDocument: initialAcademyData.termsDocument,
       dosDontsDocument: initialAcademyData.dosDontsDocument,
       termsAcceptances: [],
+      academicCalendar: initialAcademyData.academicCalendar,
+      settingsAuditLogs: initialAcademyData.settingsAuditLogs || [],
       userAccounts: [initialAcademyData.userAccounts[0]],
       locations: initialAcademyData.locations,
       programs: initialAcademyData.programs,
@@ -2632,34 +2638,91 @@ export function CrmProvider({ children }) {
   };
 
   // --- Module 1: Academy Locations & Sports Programs Management ---
+  const logSettingsAudit = ({ category, action, field, oldValue, newValue }) => {
+    const newLog = {
+      id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      user: currentUser?.name || 'Commander Vikramaditya',
+      role: currentUser?.badge || currentUser?.role || 'Super Admin',
+      category: category || 'Settings & Configuration',
+      action: action || 'Update',
+      field: field || 'Configuration',
+      oldValue: String(oldValue ?? '—'),
+      newValue: String(newValue ?? '—'),
+      status: 'Verified',
+      ipAddress: '127.0.0.1 (Authorized Admin Session)'
+    };
+    setData((prev) => ({
+      ...prev,
+      settingsAuditLogs: [newLog, ...(prev.settingsAuditLogs || [])]
+    }));
+    return newLog;
+  };
+
   const addLocation = (locPayload) => {
     const normalizedName = (locPayload.name || '').trim().toUpperCase();
     if (!normalizedName) {
-      addToast('Location name is required.', 'error');
+      addToast('Center / Location name is required.', 'error');
       return { success: false };
     }
     const duplicate = (data.locations || []).some(
       (loc) => loc.name.trim().toUpperCase() === normalizedName
     );
     if (duplicate) {
-      addToast(`Location "${normalizedName}" already exists.`, 'error');
+      addToast(`Center "${normalizedName}" already exists.`, 'error');
       return { success: false };
     }
 
-    const courtsList = Array.isArray(locPayload.courts)
-      ? locPayload.courts.map((c) => c.trim()).filter(Boolean)
-      : String(locPayload.courts || '')
+    const courtsList = Array.isArray(locPayload.facilities || locPayload.courts)
+      ? (locPayload.facilities || locPayload.courts).map((c) => c.trim()).filter(Boolean)
+      : String(locPayload.facilities || locPayload.courts || '')
           .split(',')
           .map((c) => c.trim())
           .filter(Boolean);
 
+    const programsList = Array.isArray(locPayload.programs)
+      ? locPayload.programs
+      : String(locPayload.programs || '')
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean);
+
+    const generatedCode = locPayload.code 
+      ? locPayload.code.trim().toUpperCase() 
+      : `LS-${normalizedName.substring(0, 3).replace(/\s+/g, '')}`;
+
     const newLocation = {
       id: `LOC-${Math.floor(100 + Math.random() * 900)}`,
       name: normalizedName,
+      code: generatedCode,
       city: (locPayload.city || 'Chennai').trim(),
+      state: (locPayload.state || 'Tamil Nadu').trim(),
+      pinCode: (locPayload.pinCode || '600001').trim(),
       address: (locPayload.address || `${normalizedName}, Chennai`).trim(),
-      courts: courtsList.length > 0 ? courtsList : ['Main Training Arena'],
+      contactPerson: (locPayload.contactPerson || 'Academy Operations Lead').trim(),
+      contactPhone: (locPayload.contactPhone || '+91 98765 43210').trim(),
+      operatingDays: (locPayload.operatingDays || 'Mon - Sat').trim(),
+      operatingHours: (locPayload.operatingHours || '06:00 AM - 08:30 PM').trim(),
+      capacity: parseInt(locPayload.capacity) || 150,
+      facilities: courtsList.length > 0 ? courtsList : ['Main Turf Ground', 'Training Court A'],
+      courts: courtsList.length > 0 ? courtsList : ['Main Turf Ground', 'Training Court A'],
+      programs: programsList.length > 0 ? programsList : ['Spartan Gymnastics & Agility', 'Junior Football Champions'],
       status: locPayload.status || 'Active',
+      createdAt: new Date().toISOString()
+    };
+
+    const newAudit = {
+      id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      user: currentUser?.name || 'Commander Vikramaditya',
+      role: currentUser?.badge || currentUser?.role || 'Super Admin',
+      category: 'Center Management',
+      action: 'Add Center',
+      field: 'New Center Created',
+      oldValue: 'None',
+      newValue: `${normalizedName} (${generatedCode})`,
+      status: 'Verified',
+      ipAddress: '127.0.0.1'
     };
 
     setData((prev) => {
@@ -2671,17 +2734,18 @@ export function CrmProvider({ children }) {
         ...prev,
         locations: updatedLocations,
         academy: { ...prev.academy, centers: activeCenters },
+        settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])]
       };
     });
 
-    addToast(`Academy location "${normalizedName}" added.`, 'success');
+    addToast(`Academy center "${normalizedName}" added successfully.`, 'success');
     return { success: true, location: newLocation };
   };
 
   const updateLocation = (id, updates) => {
     const existing = (data.locations || []).find((l) => l.id === id);
     if (!existing) {
-      addToast('Location not found.', 'error');
+      addToast('Center location not found.', 'error');
       return { success: false };
     }
     const nextName = (updates.name || existing.name).trim().toUpperCase();
@@ -2689,20 +2753,40 @@ export function CrmProvider({ children }) {
       (loc) => loc.id !== id && loc.name.trim().toUpperCase() === nextName
     );
     if (duplicate) {
-      addToast(`Location "${nextName}" already exists.`, 'error');
+      addToast(`Center "${nextName}" already exists.`, 'error');
       return { success: false };
     }
 
-    const courtsList = Array.isArray(updates.courts)
-      ? updates.courts.map((c) => c.trim()).filter(Boolean)
-      : updates.courts !== undefined
-      ? String(updates.courts)
+    const courtsList = Array.isArray(updates.facilities || updates.courts)
+      ? (updates.facilities || updates.courts).map((c) => c.trim()).filter(Boolean)
+      : (updates.facilities || updates.courts) !== undefined
+      ? String(updates.facilities || updates.courts)
           .split(',')
           .map((c) => c.trim())
           .filter(Boolean)
-      : existing.courts;
+      : existing.courts || existing.facilities || [];
+
+    const programsList = Array.isArray(updates.programs)
+      ? updates.programs
+      : updates.programs !== undefined
+      ? String(updates.programs).split(',').map((p) => p.trim()).filter(Boolean)
+      : existing.programs || [];
 
     const oldName = existing.name;
+    const newAudit = {
+      id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      user: currentUser?.name || 'Commander Vikramaditya',
+      role: currentUser?.badge || currentUser?.role || 'Super Admin',
+      category: 'Center Management',
+      action: 'Update Center',
+      field: `${nextName} Details`,
+      oldValue: `${oldName} (${existing.code || 'Code'})`,
+      newValue: `${nextName} (${updates.code || existing.code})`,
+      status: 'Verified',
+      ipAddress: '127.0.0.1'
+    };
+
     setData((prev) => {
       const updatedLocations = (prev.locations || []).map((loc) =>
         loc.id === id
@@ -2710,7 +2794,10 @@ export function CrmProvider({ children }) {
               ...loc,
               ...updates,
               name: nextName,
+              code: updates.code ? updates.code.trim().toUpperCase() : loc.code,
+              facilities: courtsList.length > 0 ? courtsList : loc.facilities,
               courts: courtsList.length > 0 ? courtsList : loc.courts,
+              programs: programsList.length > 0 ? programsList : loc.programs,
             }
           : loc
       );
@@ -2724,6 +2811,7 @@ export function CrmProvider({ children }) {
         ...prev,
         locations: updatedLocations,
         academy: { ...prev.academy, centers: activeCenters },
+        settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])],
         programs: (prev.programs || []).map((p) => ({
           ...p,
           locations: Array.isArray(p.locations) ? p.locations.map(renameMap) : p.locations,
@@ -2738,7 +2826,7 @@ export function CrmProvider({ children }) {
       };
     });
 
-    addToast(`Location "${nextName}" updated.`, 'info');
+    addToast(`Center "${nextName}" updated successfully.`, 'info');
     return { success: true };
   };
 
@@ -2746,6 +2834,21 @@ export function CrmProvider({ children }) {
     const existing = (data.locations || []).find((l) => l.id === id);
     if (!existing) return { success: false };
     const nextStatus = existing.status === 'Inactive' ? 'Active' : 'Inactive';
+    
+    const newAudit = {
+      id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      user: currentUser?.name || 'Commander Vikramaditya',
+      role: currentUser?.badge || currentUser?.role || 'Super Admin',
+      category: 'Center Management',
+      action: nextStatus === 'Active' ? 'Activate Center' : 'Deactivate Center',
+      field: `${existing.name} Status`,
+      oldValue: existing.status,
+      newValue: nextStatus,
+      status: 'Verified',
+      ipAddress: '127.0.0.1'
+    };
+
     setData((prev) => {
       const updatedLocations = (prev.locations || []).map((loc) =>
         loc.id === id ? { ...loc, status: nextStatus } : loc
@@ -2757,10 +2860,132 @@ export function CrmProvider({ children }) {
         ...prev,
         locations: updatedLocations,
         academy: { ...prev.academy, centers: activeCenters },
+        settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])]
       };
     });
-    addToast(`Location "${existing.name}" marked as ${nextStatus}.`, nextStatus === 'Active' ? 'success' : 'warning');
+    addToast(
+      `Center "${existing.name}" is now ${nextStatus}. Historical records preserved.`,
+      nextStatus === 'Active' ? 'success' : 'warning'
+    );
     return { success: true, status: nextStatus };
+  };
+
+  // Update Academy General Information (Name, Tagline, Phone, Email, Website)
+  const updateAcademyGeneralInfo = (infoPayload) => {
+    const oldAcademy = data.academy || {};
+    const newAudit = {
+      id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      user: currentUser?.name || 'Commander Vikramaditya',
+      role: currentUser?.badge || currentUser?.role || 'Super Admin',
+      category: 'General Information',
+      action: 'Update Academy Profile',
+      field: 'Academy Details',
+      oldValue: `${oldAcademy.name || ''} | ${oldAcademy.email || ''}`,
+      newValue: `${infoPayload.name || oldAcademy.name} | ${infoPayload.email || oldAcademy.email}`,
+      status: 'Verified',
+      ipAddress: '127.0.0.1'
+    };
+
+    setData((prev) => ({
+      ...prev,
+      academy: {
+        ...prev.academy,
+        ...infoPayload
+      },
+      settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])]
+    }));
+    addToast('Academy General Information updated successfully.', 'success');
+  };
+
+  // Update Academic Year
+  const updateAcademicYear = (newYear) => {
+    if (!newYear || !newYear.trim()) return;
+    const oldYear = data.academy?.academicYear || '2026-2027';
+    const newAudit = {
+      id: `SET-LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      user: currentUser?.name || 'Commander Vikramaditya',
+      role: currentUser?.badge || currentUser?.role || 'Super Admin',
+      category: 'Academic Calendar',
+      action: 'Year Updated',
+      field: 'Academic Year',
+      oldValue: oldYear,
+      newValue: newYear.trim(),
+      status: 'Verified',
+      ipAddress: '127.0.0.1'
+    };
+
+    setData((prev) => ({
+      ...prev,
+      academy: {
+        ...prev.academy,
+        academicYear: newYear.trim()
+      },
+      academicCalendar: {
+        ...(prev.academicCalendar || {}),
+        academicYear: newYear.trim()
+      },
+      settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])]
+    }));
+    addToast(`Academic Year set to ${newYear.trim()}.`, 'success');
+  };
+
+  // Academic Terms
+  const addAcademicTerm = (termPayload) => {
+    const newTerm = {
+      id: `TERM-${Date.now()}`,
+      name: termPayload.name || 'New Term',
+      startDate: termPayload.startDate || '2026-06-01',
+      endDate: termPayload.endDate || '2026-08-31',
+      status: termPayload.status || 'Upcoming'
+    };
+    setData((prev) => {
+      const currentCal = prev.academicCalendar || initialAcademyData.academicCalendar;
+      return {
+        ...prev,
+        academicCalendar: {
+          ...currentCal,
+          terms: [...(currentCal.terms || []), newTerm]
+        }
+      };
+    });
+    addToast(`Term "${newTerm.name}" added to Academic Calendar.`, 'success');
+  };
+
+  // Academic Holidays
+  const addAcademicHoliday = (holidayPayload) => {
+    const newHoliday = {
+      id: `HOL-${Date.now()}`,
+      name: holidayPayload.name || 'Academy Holiday',
+      date: holidayPayload.date || new Date().toISOString().split('T')[0],
+      type: holidayPayload.type || 'Academy Holiday'
+    };
+    setData((prev) => {
+      const currentCal = prev.academicCalendar || initialAcademyData.academicCalendar;
+      return {
+        ...prev,
+        academicCalendar: {
+          ...currentCal,
+          holidays: [...(currentCal.holidays || []), newHoliday]
+        }
+      };
+    });
+    addToast(`Holiday "${newHoliday.name}" added to calendar.`, 'success');
+  };
+
+  const deleteAcademicHoliday = (holidayId) => {
+    setData((prev) => {
+      const currentCal = prev.academicCalendar || initialAcademyData.academicCalendar;
+      return {
+        ...prev,
+        academicCalendar: {
+          ...currentCal,
+          holidays: (currentCal.holidays || []).filter(h => h.id !== holidayId)
+        }
+      };
+    });
+    addToast('Holiday removed from calendar.', 'info');
   };
 
   const addProgram = (programPayload) => {
@@ -4112,6 +4337,15 @@ export function CrmProvider({ children }) {
         scheduleNewMessage,
         publishAnnouncementRecord,
         resetToCleanSlate,
+        // Settings & Configuration Governance
+        settingsAuditLogs: data.settingsAuditLogs || initialAcademyData.settingsAuditLogs || [],
+        academicCalendar: data.academicCalendar || initialAcademyData.academicCalendar,
+        updateAcademyGeneralInfo,
+        updateAcademicYear,
+        addAcademicTerm,
+        addAcademicHoliday,
+        deleteAcademicHoliday,
+        logSettingsAudit,
         // First-Time Login Terms & Conditions & Admin Governance
         termsDocument: data.termsDocument || initialAcademyData.termsDocument,
         dosDontsDocument: data.dosDontsDocument || initialAcademyData.dosDontsDocument,

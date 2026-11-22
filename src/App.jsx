@@ -23,6 +23,7 @@ import CommunicationModule from './portals/admin/CommunicationModule';
 import ReportsSettingsModule from './portals/admin/ReportsSettingsModule';
 import AccessManagementModule from './portals/admin/AccessManagementModule';
 import TermsManagementModule from './portals/admin/TermsManagementModule';
+import AcademySettings from './portals/admin/AcademySettings';
 
 // Other Portals
 import ParentPortalView from './portals/parent/ParentPortalView';
@@ -131,14 +132,18 @@ export default function App() {
       case 'users':
         return <AccessManagementModule />;
 
-      // 10. Reports & Settings (Analytics, Data Export, Backup & Recovery, User Permissions, Settings)
+      // 10. Reports & Settings (Analytics, Data Export, Backup & Recovery)
       case 'reports_settings':
       case 'reports':
-      case 'settings':
       case 'export':
       case 'backup':
-      case 'permissions':
+      case 'analytics':
         return <ReportsSettingsModule />;
+
+      // Settings & Configuration (Academy Settings, Brand & Identity, Center Management, Academic Calendar, Audit Log)
+      case 'settings':
+      case 'academy_settings':
+        return <AcademySettings />;
 
       // 11. Sports Equipment Management (Academy-Wide Inventory & Sanctions)
       case 'equipment':

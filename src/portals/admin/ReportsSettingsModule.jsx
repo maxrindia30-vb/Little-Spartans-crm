@@ -30,9 +30,14 @@ export default function ReportsSettingsModule() {
   const { data, activeSubTab, setActiveSubTab, setCurrentView, addToast, createBackup, restoreBackup } = useCrm();
 
   // Active sub-tab defaults to 'analytics' if not specified
-  const currentTab = ['analytics', 'export', 'backup', 'permissions', 'settings'].includes(activeSubTab) 
+  const currentTab = ['analytics', 'export', 'backup', 'settings'].includes(activeSubTab) 
     ? activeSubTab 
     : 'analytics';
+
+  // Dedicated Settings & Configuration Screen
+  if (currentTab === 'settings') {
+    return <AcademySettings />;
+  }
 
   // Export State
   const [exportEntity, setExportEntity] = useState('students');
@@ -277,19 +282,7 @@ export default function ReportsSettingsModule() {
               }`}
             >
               <Database className="w-3.5 h-3.5" />
-              <span>Backup & Recovery</span>
-            </button>
-
-            <button
-              onClick={() => setActiveSubTab('permissions')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                currentTab === 'permissions'
-                  ? 'bg-[#172B50] text-white shadow-sm'
-                  : 'text-[#172B50] hover:bg-white/60'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Permissions (RBAC)</span>
+              <span>Backup &amp; Recovery</span>
             </button>
 
             <button
