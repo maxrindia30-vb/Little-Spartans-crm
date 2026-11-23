@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import EnquiryLiveCalendarFilter, { getDateFilterBounds } from '../../components/common/EnquiryLiveCalendarFilter';
 import { getCommonLocations, filterEnquiries } from '../../services/locationService';
 import {
   calculateAgeFromDob,
@@ -96,7 +97,9 @@ export default function EnquiryManagement() {
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedProgram, setSelectedProgram] = useState('All');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('All');
-  const [selectedDateRange, setSelectedDateRange] = useState('all'); // all, today, 7days, 30days
+  const [dateFilterMode, setDateFilterMode] = useState('all'); // all, today, yesterday, this_week, last_7_days, this_month, single_date, custom_range
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(''); // YYYY-MM-DD
+  const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
   const [activeTab, setActiveTab] = useState('All');
   const [sortField, setSortField] = useState('enquiryDate');
   const [sortAsc, setSortAsc] = useState(false);
@@ -271,6 +274,29 @@ export default function EnquiryManagement() {
     return getDonutChartData(kpis);
   }, [kpis]);
 
+  // Live date filter bounds
+  const dateBounds = useMemo(() => getDateFilterBounds(), []);
+
+  // Compute number of enquiries on each calendar date
+  const enquiriesCountByDate = useMemo(() => {
+    const counts = {};
+    enrichedEnquiries.forEach((enq) => {
+      // Respect location filter in calendar badges if a specific location is selected
+      if (selectedLocation !== 'All') {
+        const locVal = selectedLocation.trim().toLowerCase();
+        const enqCenter = (enq.center || '').trim().toLowerCase();
+        const enqLoc = (enq.location || '').trim().toLowerCase();
+        if (enqCenter !== locVal && enqLoc !== locVal) return;
+      }
+      const rawDate = enq.enquiryDate || enq.createdAt || '';
+      const ymd = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate.slice(0, 10);
+      if (ymd) {
+        counts[ymd] = (counts[ymd] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [enrichedEnquiries, selectedLocation]);
+
   // ==========================================
   // Filtering & Sorting
   // ==========================================
@@ -285,8 +311,13 @@ export default function EnquiryManagement() {
       }
 
       // 2. Location Filter
-      if (selectedLocation !== 'All' && enq.center !== selectedLocation) {
-        return false;
+      if (selectedLocation !== 'All') {
+        const locVal = selectedLocation.trim().toLowerCase();
+        const enqCenter = (enq.center || '').trim().toLowerCase();
+        const enqLoc = (enq.location || '').trim().toLowerCase();
+        if (enqCenter !== locVal && enqLoc !== locVal) {
+          return false;
+        }
       }
 
       // 3. Program Filter
@@ -304,16 +335,25 @@ export default function EnquiryManagement() {
         return false;
       }
 
-      // 6. Date Range Filter
-      if (selectedDateRange !== 'all') {
-        const enqDate = enq.enquiryDate || enq.createdAt;
-        if (selectedDateRange === 'today' && enqDate !== todayYmd) {
-          return false;
-        } else if (selectedDateRange === '7days') {
-          if (calculateDaysSince(enqDate) > 7) return false;
-        } else if (selectedDateRange === '30days') {
-          if (calculateDaysSince(enqDate) > 30) return false;
-        }
+      // 6. Live Calendar & Date Range Filter
+      const enqDateRaw = enq.enquiryDate || enq.createdAt || '';
+      const enqYmd = enqDateRaw.includes('T') ? enqDateRaw.split('T')[0] : enqDateRaw.slice(0, 10);
+
+      if (dateFilterMode === 'today') {
+        if (enqYmd !== dateBounds.todayYmd) return false;
+      } else if (dateFilterMode === 'yesterday') {
+        if (enqYmd !== dateBounds.yesterdayYmd) return false;
+      } else if (dateFilterMode === 'this_week') {
+        if (enqYmd < dateBounds.startOfWeekYmd || enqYmd > dateBounds.endOfWeekYmd) return false;
+      } else if (dateFilterMode === 'last_7_days') {
+        if (enqYmd < dateBounds.sevenDaysAgoYmd || enqYmd > dateBounds.todayYmd) return false;
+      } else if (dateFilterMode === 'this_month') {
+        if (enqYmd < dateBounds.startOfMonthYmd || enqYmd > dateBounds.endOfMonthYmd) return false;
+      } else if (dateFilterMode === 'single_date' && selectedCalendarDate) {
+        if (enqYmd !== selectedCalendarDate) return false;
+      } else if (dateFilterMode === 'custom_range') {
+        if (customDateRange?.start && enqYmd < customDateRange.start) return false;
+        if (customDateRange?.end && enqYmd > customDateRange.end) return false;
       }
 
       // 7. Search Input Filter
@@ -338,20 +378,41 @@ export default function EnquiryManagement() {
     selectedProgram,
     selectedStatusFilter,
     selectedSource,
-    selectedDateRange,
+    dateFilterMode,
+    selectedCalendarDate,
+    customDateRange,
+    dateBounds,
     searchTerm,
-    todayYmd,
   ]);
 
   // Sort
   const sortedEnquiries = useMemo(() => {
     return [...filteredEnquiries].sort((a, b) => {
-      let valA = a[sortField] || '';
-      let valB = b[sortField] || '';
+      let valA = '';
+      let valB = '';
       if (sortField === 'enquiryDate') {
         valA = a.enquiryDate || a.createdAt || '';
         valB = b.enquiryDate || b.createdAt || '';
+      } else if (sortField === 'childName') {
+        valA = a.childName || '';
+        valB = b.childName || '';
+      } else if (sortField === 'parentName') {
+        valA = a.parentName || '';
+        valB = b.parentName || '';
+      } else if (sortField === 'resolvedStatus') {
+        valA = a.resolvedStatus || '';
+        valB = b.resolvedStatus || '';
+      } else if (sortField === 'id') {
+        valA = a.id || '';
+        valB = b.id || '';
+      } else {
+        valA = a[sortField] || '';
+        valB = b[sortField] || '';
       }
+
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
       if (valA < valB) return sortAsc ? -1 : 1;
       if (valA > valB) return sortAsc ? 1 : -1;
       return 0;
@@ -501,6 +562,7 @@ export default function EnquiryManagement() {
       email: formState.email.trim(),
       interestedProgram: formState.interestedProgram,
       center: formState.center,
+      location: formState.center,
       preferredBatchId: pickedBatch?.id || '',
       preferredBatchName: pickedBatch?.name || '',
       source: formState.source || ENQUIRY_SOURCES.MANUAL,
@@ -1184,25 +1246,21 @@ export default function EnquiryManagement() {
             <ChevronDown className="w-3 h-3 text-[#172B50]/50 absolute right-2.5 pointer-events-none" />
           </div>
 
-          {/* Enquiry Date Range Selector */}
-          <div className="relative inline-flex items-center">
-            <Calendar className="w-3.5 h-3.5 text-[#F4510B] absolute left-3 pointer-events-none z-10" />
-            <select
-              aria-label="Filter enquiries by date range"
-              value={selectedDateRange}
-              onChange={(e) => {
-                setSelectedDateRange(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-8 pr-7 py-2 text-xs font-bold bg-[#F8FAFC] text-[#172B50] border border-[#172B5018] rounded-xl hover:border-[#F4510B50] focus:outline-none focus:ring-2 focus:ring-[#F4510B20] focus:border-[#F4510B] cursor-pointer appearance-none"
-            >
-              <option value="all">Enquiry Date: All Time</option>
-              <option value="today">Today</option>
-              <option value="7days">Last 7 Days</option>
-              <option value="30days">Last 30 Days</option>
-            </select>
-            <ChevronDown className="w-3 h-3 text-[#172B50]/50 absolute right-2.5 pointer-events-none" />
-          </div>
+          {/* Live Calendar Date Filter */}
+          <EnquiryLiveCalendarFilter
+            dateFilterMode={dateFilterMode}
+            selectedDate={selectedCalendarDate}
+            customDateRange={customDateRange}
+            onDateFilterChange={({ mode, selectedDate, customRange }) => {
+              setDateFilterMode(mode);
+              setSelectedCalendarDate(selectedDate || '');
+              setCustomDateRange(customRange || { start: '', end: '' });
+              setCurrentPage(1);
+            }}
+            enquiriesCountByDate={enquiriesCountByDate}
+            selectedLocation={selectedLocation}
+            totalFilteredCount={filteredEnquiries.length}
+          />
 
           {/* Search Box */}
           <div className="relative flex-1 min-w-[220px]">
@@ -1363,9 +1421,16 @@ export default function EnquiryManagement() {
                   Age
                 </th>
 
-                {/* 6. Parent Name */}
+                {/* 6. Parent Name (Sortable) */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  Parent Name
+                  <button
+                    type="button"
+                    onClick={() => handleSort('parentName')}
+                    className="inline-flex items-center gap-1 hover:text-[#F4510B] cursor-pointer"
+                  >
+                    <span>Parent Name</span>
+                    <ArrowUpDown className="w-3 h-3 text-[#172B50]/50" />
+                  </button>
                 </th>
 
                 {/* 7. Phone */}
@@ -1378,27 +1443,39 @@ export default function EnquiryManagement() {
                   Email ID
                 </th>
 
-                {/* 9. Program */}
+                {/* 9. Location */}
+                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
+                  Location
+                </th>
+
+                {/* 10. Program */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   Program
                 </th>
 
-                {/* 10. Status */}
+                {/* 11. Status (Sortable) */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  Status
+                  <button
+                    type="button"
+                    onClick={() => handleSort('resolvedStatus')}
+                    className="inline-flex items-center gap-1 hover:text-[#F4510B] cursor-pointer"
+                  >
+                    <span>Status</span>
+                    <ArrowUpDown className="w-3 h-3 text-[#172B50]/50" />
+                  </button>
                 </th>
 
-                {/* 11. Last Parent Response */}
+                {/* 12. Last Parent Response */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   Last Parent Response
                 </th>
 
-                {/* 12. Days */}
+                {/* 13. Days */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   Days
                 </th>
 
-                {/* 13. Actions */}
+                {/* 14. Actions */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] text-right whitespace-nowrap">
                   Actions
                 </th>
@@ -1408,7 +1485,7 @@ export default function EnquiryManagement() {
             <tbody className="divide-y divide-[#172B500C]">
               {paginatedEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="py-16 px-4 text-center">
+                  <td colSpan={14} className="py-16 px-4 text-center">
                     <div className="max-w-md mx-auto flex flex-col items-center">
                       <div className="w-16 h-16 rounded-2xl bg-[#FFF5ED] flex items-center justify-center text-[#F4510B] mb-3 shadow-2xs">
                         <Inbox className="w-8 h-8" />
@@ -1532,9 +1609,17 @@ export default function EnquiryManagement() {
                         )}
                       </td>
 
-                      {/* 9. Program */}
+                      {/* 9. Location */}
+                      <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50] font-semibold">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFC] border border-[#172B5012] text-xs">
+                          <MapPin className="w-3 h-3 text-[#F4510B]" />
+                          <span>{enq.center || enq.location || 'KK NAGAR'}</span>
+                        </span>
+                      </td>
+
+                      {/* 10. Program */}
                       <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50] font-medium">
-                        {enq.interestedProgram || 'Football'}
+                        {enq.interestedProgram || enq.program || 'Junior Football Champions'}
                       </td>
 
                       {/* 10. Status Badge */}

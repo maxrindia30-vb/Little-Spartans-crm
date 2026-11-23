@@ -327,13 +327,17 @@ export function CrmProvider({ children }) {
           },
           locations: storedLocations,
           coaches: storedCoaches,
-          enquiries: (Array.isArray(parsed.enquiries) ? parsed.enquiries : [])
+          enquiries: (Array.isArray(parsed.enquiries) && parsed.enquiries.length > 0
+            ? parsed.enquiries
+            : (initialAcademyData.enquiries || []))
             .filter(e => !isDummyEnquiry(e))
             .map(enq => ({
               ...enq,
               source: enq.source || ENQUIRY_SOURCES.MANUAL,
             })),
-          demos: (Array.isArray(parsed.demos) ? parsed.demos : []).filter(d => !isDummyDemo(d)),
+          demos: (Array.isArray(parsed.demos) && parsed.demos.length > 0
+            ? parsed.demos
+            : (initialAcademyData.demos || [])).filter(d => !isDummyDemo(d)),
           payments: (Array.isArray(parsed.payments) ? parsed.payments : []).filter(p => !isDummyPayment(p)),
           classSchedules: (Array.isArray(parsed.classSchedules) ? parsed.classSchedules : []).filter(s => !isDummySchedule(s)),
           attendanceRecords: (Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : []).filter(a => !isDummyAttendance(a)),
