@@ -50,6 +50,7 @@ export default function AcademySettings() {
     activeSubTab,
     setActiveSubTab,
     setCurrentPortal,
+    currentView,
     setCurrentView,
     addLocation,
     updateLocation,
@@ -69,6 +70,7 @@ export default function AcademySettings() {
       if (['terms', 'dos_donts', 'acceptances'].includes(activeSubTab)) return 'terms';
       if (['academy', 'brand', 'centers', 'calendar', 'audit'].includes(activeSubTab)) return activeSubTab;
     }
+    if (currentView === 'centers' || currentView === 'locations') return 'centers';
     return 'academy';
   });
 
@@ -79,8 +81,10 @@ export default function AcademySettings() {
       } else if (['academy', 'brand', 'centers', 'calendar', 'audit'].includes(activeSubTab)) {
         setActiveTab(activeSubTab);
       }
+    } else if (currentView === 'centers' || currentView === 'locations') {
+      setActiveTab('centers');
     }
-  }, [activeSubTab]);
+  }, [activeSubTab, currentView]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);

@@ -143,6 +143,8 @@ export default function App() {
       // 11. Settings & Configuration (Academy Settings, Brand & Identity, Center Management, Academic Calendar, Terms & Conditions, Audit Log)
       case 'settings':
       case 'academy_settings':
+      case 'centers':
+      case 'locations':
       case 'terms_policies':
       case 'terms':
       case 'policies':

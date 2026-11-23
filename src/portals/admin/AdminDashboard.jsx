@@ -144,6 +144,15 @@ export default function AdminDashboard() {
     cls.date === todayYmd || cls.weekday === todayWeekday || cls.dayOfWeek === todayWeekday
   );
 
+  // Row 2 Academy Operations (Centers & Equipment)
+  const activeLocationsCount = (Array.isArray(data.locations) && data.locations.length > 0)
+    ? data.locations.filter(loc => loc.status !== 'Inactive').length
+    : (commonLocations?.length || (data.academy?.centers || []).length);
+
+  const activeEquipmentCount = Array.isArray(data.equipment)
+    ? data.equipment.filter(item => item.status !== 'Inactive' && item.status !== 'Retired').length
+    : 0;
+
   // ============================================================
   // LIVE CALENDAR POPOVER STATE & HELPERS
   // ============================================================
@@ -874,22 +883,25 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Two tiles: Competitions & Equipment & Kits */}
+            {/* Two tiles: Locations & Equipment & Kits */}
             <div className="grid grid-cols-2 gap-2 mt-2">
-              {/* Tile 1: Competitions */}
+              {/* Tile 1: Locations */}
               <button
                 type="button"
-                onClick={() => setCurrentView('sports_events')}
+                onClick={() => {
+                  if (setActiveSubTab) setActiveSubTab('centers');
+                  setCurrentView('settings');
+                }}
                 className="bg-white rounded-xl p-2 border border-[#16A34A15] shadow-2xs hover:border-[#F4510B35] hover:shadow-xs active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center text-center group h-[96px] sm:h-[100px]"
               >
                 <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                  <Trophy className="w-3.5 h-3.5 text-[#F4510B]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
                 </div>
                 <span className="text-[11px] font-black text-[#172B50] leading-tight">
-                  Competitions
+                  Locations
                 </span>
                 <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5 leading-tight">
-                  {data.competitions?.length || 0} Upcoming Events
+                  {activeLocationsCount} Active Centers
                 </span>
               </button>
 
@@ -906,7 +918,7 @@ export default function AdminDashboard() {
                   Equipment &amp; Kits
                 </span>
                 <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5 leading-tight">
-                  {data.equipment?.length || 0} Active Items
+                  {activeEquipmentCount} Active Items
                 </span>
               </button>
             </div>
@@ -920,12 +932,12 @@ export default function AdminDashboard() {
             <button
               type="button"
               onClick={() => {
-                setCurrentView('people');
-                if (setActiveSubTab) setActiveSubTab('coaches');
+                if (setActiveSubTab) setActiveSubTab('centers');
+                setCurrentView('settings');
               }}
               className="text-[11px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
             >
-              <span>View All ({(data.coaches?.length || 0) + (commonLocations?.length || 0)})</span>
+              <span>View All ({activeLocationsCount + activeEquipmentCount})</span>
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
