@@ -200,6 +200,17 @@ export function CrmProvider({ children }) {
           }
         });
 
+        const loadedEnquiries = (Array.isArray(parsed.enquiries) && parsed.enquiries.length > 0
+          ? parsed.enquiries
+          : initialAcademyData.enquiries || [])
+          .filter((e) => !isDummyEnquiry(e));
+        const storedEnquiries = [...loadedEnquiries];
+        (initialAcademyData.enquiries || []).forEach((ie) => {
+          if (!storedEnquiries.some((e) => e.id === ie.id)) {
+            storedEnquiries.push(ie);
+          }
+        });
+
         const storedLocations = (Array.isArray(parsed.locations) && parsed.locations.length > 0
           ? parsed.locations
           : initialAcademyData.locations).map(loc => ({
@@ -337,9 +348,7 @@ export function CrmProvider({ children }) {
           },
           locations: storedLocations,
           coaches: storedCoaches,
-          enquiries: (Array.isArray(parsed.enquiries) && parsed.enquiries.length > 0
-            ? parsed.enquiries
-            : (initialAcademyData.enquiries || []))
+          enquiries: storedEnquiries
             .filter(e => !isDummyEnquiry(e))
             .map(enq => ({
               ...enq,
@@ -846,18 +855,27 @@ export function CrmProvider({ children }) {
   };
 
   const addEnquiry = (enquiryData) => {
+    const centerName = enquiryData.center || enquiryData.location || 'KK NAGAR';
+    const nowIso = new Date().toISOString();
+    const todayYmd = nowIso.split('T')[0];
+    const enqDate = enquiryData.enquiryDate || todayYmd;
+    const createdAt = enquiryData.createdAt || (enquiryData.enquiryDate ? `${enquiryData.enquiryDate}T10:00:00.000Z` : nowIso);
+
     const newEnq = {
       ...enquiryData,
       id: generateUniquePrefixedId(data.enquiries || [], 'ENQ'),
+      center: centerName,
+      location: centerName,
       source: enquiryData.source || ENQUIRY_SOURCES.MANUAL,
-      enquiryDate: enquiryData.enquiryDate || new Date().toISOString().split('T')[0],
-      createdAt: enquiryData.enquiryDate || new Date().toISOString().split('T')[0],
+      enquiryDate: enqDate,
+      createdAt: createdAt,
+      lastParentResponse: enquiryData.lastParentResponse || enqDate,
       stage: enquiryData.stage || 'New',
       demoId: enquiryData.demoId || null,
     };
     setData(prev => ({
       ...prev,
-      enquiries: [newEnq, ...prev.enquiries]
+      enquiries: [newEnq, ...(prev.enquiries || [])]
     }));
     addToast(`New enquiry for "${newEnq.childName}" registered (${newEnq.source}).`);
     return newEnq;

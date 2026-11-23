@@ -1192,11 +1192,17 @@ export default function EnquiryManagement() {
               className="pl-8 pr-7 py-2 text-xs font-bold bg-[#F8FAFC] text-[#172B50] border border-[#172B5018] rounded-xl hover:border-[#F4510B50] focus:outline-none focus:ring-2 focus:ring-[#F4510B20] focus:border-[#F4510B] cursor-pointer appearance-none"
             >
               <option value="All">All Locations</option>
-              {commonLocations.map((loc) => (
-                <option key={loc.id} value={loc.name}>
-                  {loc.name}
-                </option>
-              ))}
+              {commonLocations.map((loc) => {
+                const displayName = loc.name
+                  .split(' ')
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                  .join(' ');
+                return (
+                  <option key={loc.id} value={loc.name}>
+                    {displayName}
+                  </option>
+                );
+              })}
             </select>
             <ChevronDown className="w-3 h-3 text-[#172B50]/50 absolute right-2.5 pointer-events-none" />
           </div>
@@ -1613,7 +1619,12 @@ export default function EnquiryManagement() {
                       <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50] font-semibold">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFC] border border-[#172B5012] text-xs">
                           <MapPin className="w-3 h-3 text-[#F4510B]" />
-                          <span>{enq.center || enq.location || 'KK NAGAR'}</span>
+                          <span>
+                            {(enq.center || enq.location || 'KK NAGAR')
+                              .split(' ')
+                              .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                              .join(' ')}
+                          </span>
                         </span>
                       </td>
 
@@ -1704,7 +1715,7 @@ export default function EnquiryManagement() {
                               className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
                             >
                               <Eye className="w-3.5 h-3.5 text-[#172B50]/70" />
-                              <span>View Details</span>
+                              <span>View Enquiry</span>
                             </button>
 
                             {/* Edit Enquiry */}

@@ -86,10 +86,15 @@ export default function EnquiryLiveCalendarFilter({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
-  // Initial calendar view defaulted to current month or selected date month
+  // Initial calendar view defaulted to current month, selected date, or latest enquiry month
   const [viewYear, setViewYear] = useState(() => {
     if (selectedDate && /^\d{4}-\d{2}-\d{2}/.test(selectedDate)) {
       return parseInt(selectedDate.slice(0, 4), 10);
+    }
+    const dates = Object.keys(enquiriesCountByDate).filter(d => enquiriesCountByDate[d] > 0).sort();
+    if (dates.length > 0) {
+      const latest = dates[dates.length - 1];
+      return parseInt(latest.slice(0, 4), 10);
     }
     return new Date().getFullYear();
   });
@@ -98,8 +103,30 @@ export default function EnquiryLiveCalendarFilter({
     if (selectedDate && /^\d{4}-\d{2}-\d{2}/.test(selectedDate)) {
       return parseInt(selectedDate.slice(5, 7), 10) - 1;
     }
+    const dates = Object.keys(enquiriesCountByDate).filter(d => enquiriesCountByDate[d] > 0).sort();
+    if (dates.length > 0) {
+      const latest = dates[dates.length - 1];
+      return parseInt(latest.slice(5, 7), 10) - 1;
+    }
     return new Date().getMonth();
   });
+
+  // Whenever popover opens, sync calendar view to selected date or latest enquiry month
+  useEffect(() => {
+    if (isOpen) {
+      if (selectedDate && /^\d{4}-\d{2}-\d{2}/.test(selectedDate)) {
+        setViewYear(parseInt(selectedDate.slice(0, 4), 10));
+        setViewMonth(parseInt(selectedDate.slice(5, 7), 10) - 1);
+      } else {
+        const dates = Object.keys(enquiriesCountByDate).filter(d => enquiriesCountByDate[d] > 0).sort();
+        if (dates.length > 0) {
+          const latest = dates[dates.length - 1];
+          setViewYear(parseInt(latest.slice(0, 4), 10));
+          setViewMonth(parseInt(latest.slice(5, 7), 10) - 1);
+        }
+      }
+    }
+  }, [isOpen, selectedDate, enquiriesCountByDate]);
 
   // Local state for custom range inputs
   const [rangeStart, setRangeStart] = useState(customDateRange?.start || '');
