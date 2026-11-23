@@ -51,8 +51,10 @@ export const ENQUIRY_SOURCE_CONFIG = {
 };
 
 export const DEMO_STATUSES = {
+  PENDING_SCHEDULING: 'Pending Scheduling',
   SCHEDULED: 'Scheduled',
   CONFIRMED: 'Confirmed',
+  ATTENDED: 'Attended',
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
   NO_SHOW: 'No Show',
@@ -60,6 +62,11 @@ export const DEMO_STATUSES = {
 };
 
 export const DEMO_STATUS_CONFIG = {
+  [DEMO_STATUSES.PENDING_SCHEDULING]: {
+    label: 'Pending Scheduling',
+    badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+    dotClass: 'bg-amber-500',
+  },
   [DEMO_STATUSES.SCHEDULED]: {
     label: 'Scheduled',
     badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -69,6 +76,11 @@ export const DEMO_STATUS_CONFIG = {
     label: 'Confirmed',
     badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     dotClass: 'bg-indigo-500',
+  },
+  [DEMO_STATUSES.ATTENDED]: {
+    label: 'Attended',
+    badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    dotClass: 'bg-emerald-500',
   },
   [DEMO_STATUSES.COMPLETED]: {
     label: 'Completed',
@@ -223,11 +235,13 @@ export function validateDemoPayload(payload, activeLocations = []) {
   if (!payload.program || !payload.program.trim()) {
     errors.push("Sports program is required.");
   }
-  if (!payload.demoDate || !payload.demoDate.trim()) {
-    errors.push("Demo date is required.");
-  }
-  if (!payload.demoTime || !payload.demoTime.trim()) {
-    errors.push("Demo time is required.");
+  if (payload.status !== DEMO_STATUSES.PENDING_SCHEDULING && payload.status !== 'Pending Scheduling') {
+    if (!payload.demoDate || !payload.demoDate.trim()) {
+      errors.push("Demo date is required.");
+    }
+    if (!payload.demoTime || !payload.demoTime.trim()) {
+      errors.push("Demo time is required.");
+    }
   }
 
   return {
@@ -374,10 +388,10 @@ export function calculateDemoMetrics(enquiries = [], demos = [], students = []) 
   const totalDemos = demos.length;
   const todayStr = new Date().toISOString().slice(0, 10);
   const upcomingDemos = demos.filter(d => 
-    (d.status === DEMO_STATUSES.SCHEDULED || d.status === DEMO_STATUSES.CONFIRMED || d.status === DEMO_STATUSES.RESCHEDULED) &&
-    d.demoDate >= todayStr
+    (d.status === DEMO_STATUSES.SCHEDULED || d.status === DEMO_STATUSES.CONFIRMED || d.status === DEMO_STATUSES.RESCHEDULED || d.status === DEMO_STATUSES.PENDING_SCHEDULING) &&
+    (!d.demoDate || d.demoDate >= todayStr)
   ).length;
-  const completedDemos = demos.filter(d => d.status === DEMO_STATUSES.COMPLETED).length;
+  const completedDemos = demos.filter(d => d.status === DEMO_STATUSES.COMPLETED || d.status === DEMO_STATUSES.ATTENDED || d.status === 'Attended').length;
 
   const studentConversions = demos.filter(d => d.convertedToStudent === true).length +
     enquiries.filter(e => e.stage === 'Enrolled').length;

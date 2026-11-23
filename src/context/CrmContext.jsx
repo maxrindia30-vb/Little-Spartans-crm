@@ -24,6 +24,7 @@ import {
   updateDemoStatusRecord,
   DEMO_STATUSES,
   ENQUIRY_SOURCES,
+  calculateAgeFromDob,
 } from '../services/demoService';
 import {
   initialEquipmentInventory,
@@ -1141,14 +1142,30 @@ export function CrmProvider({ children }) {
       let updatedEnquiries = prev.enquiries || [];
       if (target.enquiryId) {
         let enquiryStage = null;
-        if (newStatus === DEMO_STATUSES.COMPLETED) enquiryStage = 'Demo Completed';
-        else if (newStatus === DEMO_STATUSES.CANCELLED) enquiryStage = 'Demo Cancelled';
-        else if (newStatus === DEMO_STATUSES.NO_SHOW) enquiryStage = 'Demo No Show';
-        else if (newStatus === DEMO_STATUSES.CONFIRMED) enquiryStage = 'Demo Scheduled';
-        else if (newStatus === DEMO_STATUSES.RESCHEDULED) enquiryStage = 'Demo Scheduled';
+        let enquiryStatus = null;
+        if (newStatus === DEMO_STATUSES.COMPLETED || newStatus === 'Attended' || newStatus === DEMO_STATUSES.ATTENDED) {
+          enquiryStage = 'Trial Completed';
+          enquiryStatus = 'Demo Attended';
+        } else if (newStatus === DEMO_STATUSES.CANCELLED) {
+          enquiryStage = 'Demo Cancelled';
+        } else if (newStatus === DEMO_STATUSES.NO_SHOW) {
+          enquiryStage = 'Demo No Show';
+        } else if (newStatus === DEMO_STATUSES.CONFIRMED || newStatus === DEMO_STATUSES.SCHEDULED) {
+          enquiryStage = 'Trial Scheduled';
+          enquiryStatus = 'Demo Requested';
+        } else if (newStatus === DEMO_STATUSES.PENDING_SCHEDULING || newStatus === 'Pending Scheduling') {
+          enquiryStage = 'Trial Scheduled';
+          enquiryStatus = 'Demo Requested';
+        } else if (newStatus === DEMO_STATUSES.RESCHEDULED) {
+          enquiryStage = 'Trial Scheduled';
+        }
 
-        if (enquiryStage) {
-          updatedEnquiries = updatedEnquiries.map(e => e.id === target.enquiryId ? { ...e, stage: enquiryStage } : e);
+        if (enquiryStage || enquiryStatus) {
+          updatedEnquiries = updatedEnquiries.map(e => e.id === target.enquiryId ? {
+            ...e,
+            ...(enquiryStage ? { stage: enquiryStage } : {}),
+            ...(enquiryStatus ? { status: enquiryStatus } : {}),
+          } : e);
         }
       }
 
@@ -1161,6 +1178,307 @@ export function CrmProvider({ children }) {
 
     addToast(`Demo ${id} status updated to ${newStatus}.`, 'info');
     return { success: true, demo: updated };
+  };
+
+  const syncEnquiryLeadStatus = (enquiryId, newStatusChoice, reason = '') => {
+    const targetEnquiry = (data.enquiries || []).find((e) => e.id === enquiryId);
+    if (!targetEnquiry) return { success: false, error: 'Enquiry not found' };
+
+    const now = new Date().toISOString();
+    const todayStr = now.slice(0, 10);
+
+    // Look for existing linked demo
+    let existingDemo = (data.demos || []).find(
+      (d) =>
+        d.enquiryId === enquiryId ||
+        d.id === targetEnquiry.demoId ||
+        (d.childName &&
+          targetEnquiry.childName &&
+          d.childName.toLowerCase().trim() === targetEnquiry.childName.toLowerCase().trim() &&
+          d.phone === targetEnquiry.phone)
+    );
+
+    let linkedDemoId = existingDemo?.id || null;
+    let isNewDemo = false;
+
+    const isDemoReq =
+      newStatusChoice === 'Demo Requested' ||
+      newStatusChoice.toLowerCase().includes('demo requested');
+    const isDemoAtt =
+      newStatusChoice === 'Demo Attended' ||
+      newStatusChoice.toLowerCase().includes('demo attended');
+    const isConverted =
+      newStatusChoice === 'Converted (Enrolled)' ||
+      newStatusChoice.toLowerCase().includes('converted');
+
+    if (isDemoReq) {
+      if (existingDemo) {
+        linkedDemoId = existingDemo.id;
+        const historyEntry = {
+          id: `HIST-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          timestamp: now,
+          action: 'Lead Status Changed to Demo Requested',
+          fromStatus: existingDemo.status,
+          toStatus:
+            existingDemo.status === 'Scheduled' || existingDemo.status === 'Confirmed'
+              ? existingDemo.status
+              : 'Pending Scheduling',
+          note: reason || 'Updated automatically from Enquiry List status change to Demo Requested.',
+          updatedBy: 'Admin Desk',
+        };
+
+        setData((prev) => ({
+          ...prev,
+          enquiries: (prev.enquiries || []).map((e) =>
+            e.id === enquiryId
+              ? {
+                  ...e,
+                  status: 'Demo Requested',
+                  stage: 'Trial Scheduled',
+                  demoId: linkedDemoId,
+                  updatedAt: now,
+                }
+              : e
+          ),
+          demos: (prev.demos || []).map((d) =>
+            d.id === existingDemo.id
+              ? {
+                  ...d,
+                  childName: targetEnquiry.childName,
+                  dob: targetEnquiry.dob || d.dob || '',
+                  childAge: targetEnquiry.childAge || d.childAge || '',
+                  gender: targetEnquiry.gender || d.gender || 'Male',
+                  parentName: targetEnquiry.parentName,
+                  phone: targetEnquiry.phone,
+                  email: targetEnquiry.email || d.email || '',
+                  location: targetEnquiry.center || targetEnquiry.location || d.location,
+                  program: targetEnquiry.interestedProgram || d.program,
+                  status:
+                    d.status === 'Scheduled' || d.status === 'Confirmed'
+                      ? d.status
+                      : 'Pending Scheduling',
+                  conversionStatus: d.conversionStatus || 'Pending Demo',
+                  updatedAt: now,
+                  history: [historyEntry, ...(d.history || [])],
+                }
+              : d
+          ),
+        }));
+      } else {
+        const count = (data.demos || []).length + 1;
+        linkedDemoId = `DEMO-${String(count).padStart(3, '0')}`;
+        isNewDemo = true;
+
+        const newDemo = {
+          id: linkedDemoId,
+          enquiryId: targetEnquiry.id,
+          childName: targetEnquiry.childName.trim(),
+          dob: targetEnquiry.dob || '',
+          childAge: targetEnquiry.childAge
+            ? String(targetEnquiry.childAge)
+            : (targetEnquiry.dob ? String(calculateAgeFromDob(targetEnquiry.dob) || '') : ''),
+          gender: targetEnquiry.gender || 'Male',
+          parentName: targetEnquiry.parentName.trim(),
+          phone: targetEnquiry.phone.trim(),
+          email: targetEnquiry.email ? targetEnquiry.email.trim() : '',
+          location: targetEnquiry.center || targetEnquiry.location || 'KK NAGAR',
+          program: targetEnquiry.interestedProgram || 'Foundational Movement',
+          demoDate: targetEnquiry.trialDate && targetEnquiry.trialDate !== '-' ? targetEnquiry.trialDate : '',
+          demoTime: targetEnquiry.trialTime || '17:00',
+          coachId: '',
+          coachName: '',
+          status: 'Pending Scheduling',
+          conversionStatus: 'Pending Demo',
+          convertedToStudent: false,
+          studentId: null,
+          createdAt: now,
+          updatedAt: now,
+          notes: reason ? `Lead status changed to Demo Requested: ${reason}` : (targetEnquiry.notes || 'Demo requested via Enquiry List.'),
+          history: [
+            {
+              id: `HIST-${Date.now()}-01`,
+              timestamp: now,
+              action: 'Demo Created via Lead Status',
+              fromStatus: null,
+              toStatus: 'Pending Scheduling',
+              note: reason || 'Created automatically upon lead status update to Demo Requested.',
+              updatedBy: 'Admin Desk',
+            },
+          ],
+        };
+
+        setData((prev) => ({
+          ...prev,
+          enquiries: (prev.enquiries || []).map((e) =>
+            e.id === enquiryId
+              ? {
+                  ...e,
+                  status: 'Demo Requested',
+                  stage: 'Trial Scheduled',
+                  demoId: linkedDemoId,
+                  updatedAt: now,
+                }
+              : e
+          ),
+          demos: [newDemo, ...(prev.demos || [])],
+        }));
+      }
+
+      addToast(`Lead ${enquiryId} status set to Demo Requested. Linked demo ${linkedDemoId} ${isNewDemo ? 'created' : 'updated'}.`, 'success');
+      return { success: true, demoId: linkedDemoId, isNewDemo, status: 'Demo Requested' };
+    }
+
+    if (isDemoAtt) {
+      if (existingDemo) {
+        linkedDemoId = existingDemo.id;
+        const historyEntry = {
+          id: `HIST-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          timestamp: now,
+          action: 'Attendance marked: Attended',
+          fromStatus: existingDemo.status,
+          toStatus: 'Attended',
+          note: reason || 'Updated automatically from Enquiry List status change to Demo Attended.',
+          updatedBy: 'Admin Desk',
+        };
+
+        setData((prev) => ({
+          ...prev,
+          enquiries: (prev.enquiries || []).map((e) =>
+            e.id === enquiryId
+              ? {
+                  ...e,
+                  status: 'Demo Attended',
+                  stage: 'Trial Completed',
+                  demoId: linkedDemoId,
+                  updatedAt: now,
+                }
+              : e
+          ),
+          demos: (prev.demos || []).map((d) =>
+            d.id === existingDemo.id
+              ? {
+                  ...d,
+                  status: 'Attended',
+                  conversionStatus: d.conversionStatus || 'Pending Demo',
+                  updatedAt: now,
+                  history: [historyEntry, ...(d.history || [])],
+                }
+              : d
+          ),
+        }));
+      } else {
+        const count = (data.demos || []).length + 1;
+        linkedDemoId = `DEMO-${String(count).padStart(3, '0')}`;
+        isNewDemo = true;
+
+        const newDemo = {
+          id: linkedDemoId,
+          enquiryId: targetEnquiry.id,
+          childName: targetEnquiry.childName.trim(),
+          dob: targetEnquiry.dob || '',
+          childAge: targetEnquiry.childAge
+            ? String(targetEnquiry.childAge)
+            : (targetEnquiry.dob ? String(calculateAgeFromDob(targetEnquiry.dob) || '') : ''),
+          gender: targetEnquiry.gender || 'Male',
+          parentName: targetEnquiry.parentName.trim(),
+          phone: targetEnquiry.phone.trim(),
+          email: targetEnquiry.email ? targetEnquiry.email.trim() : '',
+          location: targetEnquiry.center || targetEnquiry.location || 'KK NAGAR',
+          program: targetEnquiry.interestedProgram || 'Foundational Movement',
+          demoDate: targetEnquiry.trialDate && targetEnquiry.trialDate !== '-' ? targetEnquiry.trialDate : todayStr,
+          demoTime: targetEnquiry.trialTime || '17:00',
+          coachId: '',
+          coachName: '',
+          status: 'Attended',
+          conversionStatus: 'Pending Demo',
+          convertedToStudent: false,
+          studentId: null,
+          createdAt: now,
+          updatedAt: now,
+          notes: reason ? `Lead status changed to Demo Attended: ${reason}` : (targetEnquiry.notes || 'Demo attended via Enquiry List.'),
+          history: [
+            {
+              id: `HIST-${Date.now()}-01`,
+              timestamp: now,
+              action: 'Demo Attended via Lead Status',
+              fromStatus: null,
+              toStatus: 'Attended',
+              note: reason || 'Created automatically upon lead status update to Demo Attended.',
+              updatedBy: 'Admin Desk',
+            },
+          ],
+        };
+
+        setData((prev) => ({
+          ...prev,
+          enquiries: (prev.enquiries || []).map((e) =>
+            e.id === enquiryId
+              ? {
+                  ...e,
+                  status: 'Demo Attended',
+                  stage: 'Trial Completed',
+                  demoId: linkedDemoId,
+                  updatedAt: now,
+                }
+              : e
+          ),
+          demos: [newDemo, ...(prev.demos || [])],
+        }));
+      }
+
+      addToast(`Lead ${enquiryId} status set to Demo Attended. Linked demo ${linkedDemoId} updated.`, 'success');
+      return { success: true, demoId: linkedDemoId, isNewDemo, status: 'Demo Attended' };
+    }
+
+    if (isConverted) {
+      setData((prev) => ({
+        ...prev,
+        enquiries: (prev.enquiries || []).map((e) =>
+          e.id === enquiryId
+            ? {
+                ...e,
+                status: 'Converted (Enrolled)',
+                stage: 'Enrolled',
+                updatedAt: now,
+              }
+            : e
+        ),
+        demos: (prev.demos || []).map((d) =>
+          existingDemo && d.id === existingDemo.id
+            ? {
+                ...d,
+                conversionStatus: 'Converted to Student',
+                convertedToStudent: true,
+                updatedAt: now,
+              }
+            : d
+        ),
+      }));
+      addToast(`Lead ${enquiryId} status updated to Converted.`, 'success');
+      return { success: true, demoId: existingDemo?.id || null, status: 'Converted (Enrolled)' };
+    }
+
+    // Default: Active, Stale, Lost
+    setData((prev) => ({
+      ...prev,
+      enquiries: (prev.enquiries || []).map((e) =>
+        e.id === enquiryId
+          ? {
+              ...e,
+              status: newStatusChoice,
+              lastParentResponse:
+                newStatusChoice.includes('Active')
+                  ? todayStr
+                  : e.lastParentResponse,
+              stage: newStatusChoice.includes('Lost') ? 'Closed / Lost' : e.stage,
+              updatedAt: now,
+            }
+          : e
+      ),
+    }));
+
+    addToast(`Lead ${enquiryId} status updated to ${newStatusChoice}.`, 'success');
+    return { success: true, status: newStatusChoice };
   };
 
   const rescheduleDemo = (id, updates) => {
@@ -4803,6 +5121,7 @@ export function CrmProvider({ children }) {
         addEnquiry,
         updateEnquiry,
         updateEnquiryStage,
+        syncEnquiryLeadStatus,
         enrollFromEnquiry,
         // Demo Management
         addDemo,

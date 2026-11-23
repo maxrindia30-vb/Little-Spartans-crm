@@ -65,6 +65,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     rescheduleDemo,
     convertDemoToStudent,
     navigateToPersonRecord,
+    focusedRecord,
+    setFocusedRecord,
   } = useCrm();
 
   const commonLocations = getCommonLocations(data);
@@ -97,6 +99,19 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       updateDemoConversionStatus(demoId, stage);
     }
   };
+
+  // Focus navigation from other modules (e.g. Enquiry List -> View in Demo Management)
+  useEffect(() => {
+    if (focusedRecord && (focusedRecord.type === 'demo' || !focusedRecord.type) && focusedRecord.id) {
+      const target = (data.demos || []).find(
+        (d) => d.id === focusedRecord.id || d.enquiryId === focusedRecord.id
+      );
+      if (target) {
+        setDetailDemo(target);
+        if (setFocusedRecord) setFocusedRecord(null);
+      }
+    }
+  }, [focusedRecord, data.demos, setFocusedRecord]);
 
   // Add Demo Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -716,9 +731,13 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                         </button>
                         <div className="flex items-center gap-1.5 text-[11px] text-[#172B50] opacity-70 mt-0.5">
                           <CalendarDays className="w-3 h-3 text-[#F4510B]" />
-                          <span>{demo.demoDate}</span>
-                          <span>•</span>
-                          <span>{demo.demoTime}</span>
+                          <span>{demo.demoDate || 'Date TBD'}</span>
+                          {demo.demoTime && (
+                            <>
+                              <span>•</span>
+                              <span>{demo.demoTime}</span>
+                            </>
+                          )}
                         </div>
                         {demo.enquiryId && (
                           <span className="text-[10px] font-mono text-[#172B50] opacity-50 block mt-0.5">

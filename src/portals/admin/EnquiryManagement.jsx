@@ -81,9 +81,12 @@ export default function EnquiryManagement() {
     data,
     addEnquiry,
     updateEnquiry,
+    syncEnquiryLeadStatus,
     enrollFromEnquiry,
     addDemo,
     navigateToPersonRecord,
+    setCurrentView,
+    setFocusedRecord,
     addToast,
   } = useCrm();
 
@@ -105,9 +108,6 @@ export default function EnquiryManagement() {
   const [sortAsc, setSortAsc] = useState(false);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [selectedSource, setSelectedSource] = useState('All');
-
-  // Multi-select Checkboxes
-  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -195,6 +195,16 @@ export default function EnquiryManagement() {
   const [statusUpdateEnquiry, setStatusUpdateEnquiry] = useState(null);
   const [newStatusChoice, setNewStatusChoice] = useState('');
   const [statusReason, setStatusReason] = useState('');
+  const [statusSavedSuccess, setStatusSavedSuccess] = useState(null);
+
+  const handleNavigateToDemo = (demoId) => {
+    if (setFocusedRecord) {
+      setFocusedRecord({ type: 'demo', id: demoId });
+    }
+    if (setCurrentView) {
+      setCurrentView('demos');
+    }
+  };
 
   // 7. Activity History Modal
   const [activityHistoryEnquiry, setActivityHistoryEnquiry] = useState(null);
@@ -456,27 +466,6 @@ export default function EnquiryManagement() {
       program: demoModalEnquiry.interestedProgram,
     });
   }, [data.coaches, demoModalEnquiry]);
-
-  // ==========================================
-  // Checkbox Handlers
-  // ==========================================
-  const isAllSelected = paginatedEnquiries.length > 0 && paginatedEnquiries.every((e) => selectedLeadIds.includes(e.id));
-
-  const handleToggleSelectAll = () => {
-    if (isAllSelected) {
-      const pageIds = new Set(paginatedEnquiries.map((e) => e.id));
-      setSelectedLeadIds((prev) => prev.filter((id) => !pageIds.has(id)));
-    } else {
-      const newIds = new Set([...selectedLeadIds, ...paginatedEnquiries.map((e) => e.id)]);
-      setSelectedLeadIds(Array.from(newIds));
-    }
-  };
-
-  const handleToggleSelectLead = (id) => {
-    setSelectedLeadIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
 
   // Sort handler
   const handleSort = (field) => {
@@ -742,8 +731,9 @@ export default function EnquiryManagement() {
   // Quick Status Update
   const handleOpenStatusUpdate = (enq) => {
     setStatusUpdateEnquiry(enq);
-    setNewStatusChoice(enq.resolvedStatus);
+    setNewStatusChoice(enq.resolvedStatus || enq.status || LEAD_STATUS.ACTIVE);
     setStatusReason('');
+    setStatusSavedSuccess(null);
     setActiveMenuId(null);
   };
 
@@ -751,15 +741,21 @@ export default function EnquiryManagement() {
     e.preventDefault();
     if (!statusUpdateEnquiry || !newStatusChoice) return;
 
-    updateEnquiry(statusUpdateEnquiry.id, {
-      status: newStatusChoice,
-      lastParentResponse: newStatusChoice === LEAD_STATUS.ACTIVE ? todayYmd : statusUpdateEnquiry.lastParentResponse,
-    });
+    let res = null;
+    if (syncEnquiryLeadStatus) {
+      res = syncEnquiryLeadStatus(statusUpdateEnquiry.id, newStatusChoice, statusReason);
+    } else {
+      updateEnquiry(statusUpdateEnquiry.id, {
+        status: newStatusChoice,
+        lastParentResponse: newStatusChoice === LEAD_STATUS.ACTIVE ? todayYmd : statusUpdateEnquiry.lastParentResponse,
+      });
+      res = { success: true, status: newStatusChoice };
+    }
 
     saveAutomationLog({
       enquiryId: statusUpdateEnquiry.id,
       childName: statusUpdateEnquiry.childName,
-      fromStatus: statusUpdateEnquiry.resolvedStatus,
+      fromStatus: statusUpdateEnquiry.resolvedStatus || statusUpdateEnquiry.status,
       toStatus: newStatusChoice,
       rule: 'Manual Status Update',
       reason: statusReason || 'Status changed by Admin.',
@@ -767,12 +763,27 @@ export default function EnquiryManagement() {
 
     addEnquiryActivity(statusUpdateEnquiry.id, {
       type: 'Status Changed',
-      description: `Status updated from "${statusUpdateEnquiry.resolvedStatus}" to "${newStatusChoice}". Reason: ${statusReason || 'Manual update'}`,
+      description: `Status updated from "${statusUpdateEnquiry.resolvedStatus || statusUpdateEnquiry.status}" to "${newStatusChoice}". Reason: ${statusReason || 'Manual update'}${res?.demoId ? ` | Linked Demo: ${res.demoId}` : ''}`,
       author: 'Admin Desk',
     });
 
-    addToast(`Lead ${statusUpdateEnquiry.id} status updated to ${newStatusChoice}.`, 'success');
-    setStatusUpdateEnquiry(null);
+    // Check if Demo Requested or Demo Attended
+    const isDemoStatus =
+      newStatusChoice === LEAD_STATUS.DEMO_REQUESTED ||
+      newStatusChoice === LEAD_STATUS.DEMO_ATTENDED ||
+      newStatusChoice.includes('Demo Requested') ||
+      newStatusChoice.includes('Demo Attended');
+
+    if (isDemoStatus && res?.demoId) {
+      setStatusSavedSuccess({
+        newStatus: newStatusChoice,
+        demoId: res.demoId,
+        enquiryId: statusUpdateEnquiry.id,
+      });
+    } else {
+      setStatusUpdateEnquiry(null);
+      setStatusSavedSuccess(null);
+    }
   };
 
   // Open Activity History
@@ -1375,30 +1386,19 @@ export default function EnquiryManagement() {
       )}
 
       {/* ======================================================== */}
-      {/* 7. Enquiry Table (13 Exact Columns)                     */}
+      {/* 7. Enquiry Table (7 Core Columns, Compact & Responsive)  */}
       {/* ======================================================== */}
       <div className="bg-white rounded-2xl border border-[#172B5015] shadow-xs overflow-hidden relative">
         <div className="overflow-x-auto min-h-[350px]">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-[#FFF9F5] text-[#172B50] border-b border-[#172B5010]">
-                {/* 1. Checkbox */}
-                <th className="py-3.5 px-3 w-10 text-center">
-                  <input
-                    type="checkbox"
-                    aria-label="Select all enquiries on this page"
-                    checked={isAllSelected}
-                    onChange={handleToggleSelectAll}
-                    className="w-4 h-4 rounded border-[#172B5030] text-[#F4510B] focus:ring-[#F4510B] cursor-pointer"
-                  />
-                </th>
-
-                {/* 2. Enquiry ID */}
+                {/* 1. Enquiry ID */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   Enquiry ID
                 </th>
 
-                {/* 3. Enquiry Date (Sortable) */}
+                {/* 2. Enquiry Date (Sortable) */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   <button
                     type="button"
@@ -1410,56 +1410,29 @@ export default function EnquiryManagement() {
                   </button>
                 </th>
 
-                {/* 4. Child Name (Sortable) */}
+                {/* 3. Child Name & Age (Sortable) */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   <button
                     type="button"
                     onClick={() => handleSort('childName')}
                     className="inline-flex items-center gap-1 hover:text-[#F4510B] cursor-pointer"
                   >
-                    <span>Child Name</span>
+                    <span>Child Name &amp; Age</span>
                     <ArrowUpDown className="w-3 h-3 text-[#172B50]/50" />
                   </button>
                 </th>
 
-                {/* 5. Age */}
-                <th className="py-3.5 px-3 font-extrabold text-[#172B50] text-center whitespace-nowrap">
-                  Age
-                </th>
-
-                {/* 6. Parent Name (Sortable) */}
-                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('parentName')}
-                    className="inline-flex items-center gap-1 hover:text-[#F4510B] cursor-pointer"
-                  >
-                    <span>Parent Name</span>
-                    <ArrowUpDown className="w-3 h-3 text-[#172B50]/50" />
-                  </button>
-                </th>
-
-                {/* 7. Phone */}
-                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  Phone
-                </th>
-
-                {/* 8. Email ID */}
-                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  Email ID
-                </th>
-
-                {/* 9. Location */}
-                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  Location
-                </th>
-
-                {/* 10. Program */}
+                {/* 4. Program */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   Program
                 </th>
 
-                {/* 11. Status (Sortable) */}
+                {/* 5. Location */}
+                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
+                  Location
+                </th>
+
+                {/* 6. Status (Sortable) */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
                   <button
                     type="button"
@@ -1471,17 +1444,7 @@ export default function EnquiryManagement() {
                   </button>
                 </th>
 
-                {/* 12. Last Parent Response */}
-                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  Last Parent Response
-                </th>
-
-                {/* 13. Days */}
-                <th className="py-3.5 px-3 font-extrabold text-[#172B50] whitespace-nowrap">
-                  Days
-                </th>
-
-                {/* 14. Actions */}
+                {/* 7. Actions */}
                 <th className="py-3.5 px-3 font-extrabold text-[#172B50] text-right whitespace-nowrap">
                   Actions
                 </th>
@@ -1491,7 +1454,7 @@ export default function EnquiryManagement() {
             <tbody className="divide-y divide-[#172B500C]">
               {paginatedEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="py-16 px-4 text-center">
+                  <td colSpan={7} className="py-16 px-4 text-center">
                     <div className="max-w-md mx-auto flex flex-col items-center">
                       <div className="w-16 h-16 rounded-2xl bg-[#FFF5ED] flex items-center justify-center text-[#F4510B] mb-3 shadow-2xs">
                         <Inbox className="w-8 h-8" />
@@ -1513,7 +1476,6 @@ export default function EnquiryManagement() {
                 </tr>
               ) : (
                 paginatedEnquiries.map((enq) => {
-                  const isChecked = selectedLeadIds.includes(enq.id);
                   const isMenuOpen = activeMenuId === enq.id;
                   const status = enq.resolvedStatus;
                   const ageDisplay = `${enq.childAge || 6} Y`;
@@ -1521,101 +1483,52 @@ export default function EnquiryManagement() {
                   return (
                     <tr
                       key={enq.id}
-                      className={`hover:bg-[#FFF9F5]/70 transition-colors ${
-                        isChecked ? 'bg-[#FFF5ED]/50' : ''
-                      }`}
+                      className="hover:bg-[#FFF9F5]/70 transition-colors"
                     >
-                      {/* 1. Checkbox */}
-                      <td className="py-3.5 px-3 text-center">
-                        <input
-                          type="checkbox"
-                          aria-label={`Select lead ${enq.id}`}
-                          checked={isChecked}
-                          onChange={() => handleToggleSelectLead(enq.id)}
-                          className="w-4 h-4 rounded border-[#172B5030] text-[#F4510B] focus:ring-[#F4510B] cursor-pointer"
-                        />
-                      </td>
-
-                      {/* 2. Enquiry ID */}
-                      <td className="py-3.5 px-3">
+                      {/* 1. Enquiry ID */}
+                      <td className="py-3.5 px-3 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setDetailEnquiryId(enq.id)}
-                          className="font-black text-[#172B50] hover:text-[#F4510B] cursor-pointer text-left"
+                          className="font-black text-[#172B50] hover:text-[#F4510B] cursor-pointer text-left font-mono text-xs"
+                          title="Click to view full enquiry details"
                         >
                           {enq.id}
                         </button>
                       </td>
 
-                      {/* 3. Enquiry Date */}
+                      {/* 2. Enquiry Date */}
                       <td className="py-3.5 px-3 text-[#172B50]/80 whitespace-nowrap font-medium">
                         {formatDisplayDate(enq.enquiryDate || enq.createdAt)}
                       </td>
 
-                      {/* 4. Child Name */}
-                      <td className="py-3.5 px-3 whitespace-nowrap font-black text-[#172B50]">
-                        {enq.childName}
-                      </td>
-
-                      {/* 5. Age */}
-                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-extrabold ${getAgeBadgeStyle(
-                            enq.childAge
-                          )}`}
-                        >
-                          {ageDisplay}
-                        </span>
-                      </td>
-
-                      {/* 6. Parent Name */}
-                      <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50] font-semibold">
-                        {enq.parentName}
-                      </td>
-
-                      {/* 7. Phone */}
+                      {/* 3. Child Name & Age */}
                       <td className="py-3.5 px-3 whitespace-nowrap">
-                        <a
-                          href={`tel:${enq.phone}`}
-                          onClick={() => {
-                            addEnquiryActivity(enq.id, {
-                              type: 'Phone Call Initiated',
-                              description: `Clicked to dial ${enq.phone}`,
-                              author: 'Admin Desk',
-                            });
-                          }}
-                          className="inline-flex items-center gap-1.5 text-[#172B50] hover:text-[#F4510B] font-medium"
-                          title="Click to dial parent"
-                        >
-                          <Phone className="w-3.5 h-3.5 text-[#F4510B]" />
-                          <span>{enq.phone}</span>
-                        </a>
-                      </td>
-
-                      {/* 8. Email ID */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        {enq.email ? (
-                          <a
-                            href={`mailto:${enq.email}`}
-                            onClick={() => {
-                              addEnquiryActivity(enq.id, {
-                                type: 'Email Initiated',
-                                description: `Clicked to email ${enq.email}`,
-                                author: 'Admin Desk',
-                              });
-                            }}
-                            className="inline-flex items-center gap-1.5 text-[#172B50]/80 hover:text-[#F4510B] font-medium"
-                            title="Click to email parent"
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setDetailEnquiryId(enq.id)}
+                            className="font-black text-[#172B50] hover:text-[#F4510B] cursor-pointer text-left"
+                            title="Click to view full enquiry details"
                           >
-                            <Mail className="w-3.5 h-3.5 text-[#172B50]/60" />
-                            <span className="truncate max-w-[150px]">{enq.email}</span>
-                          </a>
-                        ) : (
-                          <span className="text-[#172B50]/40">—</span>
-                        )}
+                            {enq.childName}
+                          </button>
+                          <span
+                            className={`inline-block px-1.5 py-0.5 rounded text-[10.5px] font-extrabold ${getAgeBadgeStyle(
+                              enq.childAge
+                            )}`}
+                          >
+                            {ageDisplay}
+                          </span>
+                        </div>
                       </td>
 
-                      {/* 9. Location */}
+                      {/* 4. Program */}
+                      <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50] font-medium">
+                        {enq.interestedProgram || enq.program || 'Junior Football Champions'}
+                      </td>
+
+                      {/* 5. Location */}
                       <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50] font-semibold">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFC] border border-[#172B5012] text-xs">
                           <MapPin className="w-3 h-3 text-[#F4510B]" />
@@ -1628,12 +1541,7 @@ export default function EnquiryManagement() {
                         </span>
                       </td>
 
-                      {/* 10. Program */}
-                      <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50] font-medium">
-                        {enq.interestedProgram || enq.program || 'Junior Football Champions'}
-                      </td>
-
-                      {/* 10. Status Badge */}
+                      {/* 6. Status Badge */}
                       <td className="py-3.5 px-3 whitespace-nowrap">
                         {status === LEAD_STATUS.DEMO_ATTENDED && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#D4F4DD] text-[#059669] border border-[#A7F3D0]">
@@ -1673,19 +1581,7 @@ export default function EnquiryManagement() {
                         )}
                       </td>
 
-                      {/* 11. Last Parent Response */}
-                      <td className="py-3.5 px-3 whitespace-nowrap text-[#172B50]/80 font-medium">
-                        {formatDisplayDate(enq.lastParentResponse || enq.enquiryDate || enq.createdAt)}
-                      </td>
-
-                      {/* 12. Days */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <span className={getDaysBadgeStyle(enq.daysSinceResponse, status)}>
-                          {enq.daysSinceResponse} {enq.daysSinceResponse === 1 ? 'day' : 'days'}
-                        </span>
-                      </td>
-
-                      {/* 13. Actions (Three-Dot Menu) */}
+                      {/* 7. Actions (Three-Dot Menu) */}
                       <td className="py-3.5 px-3 text-right whitespace-nowrap relative">
                         <button
                           type="button"
@@ -1703,49 +1599,35 @@ export default function EnquiryManagement() {
                         {isMenuOpen && (
                           <div
                             ref={menuRef}
-                            className="absolute right-3 top-10 w-52 bg-white rounded-2xl shadow-[0_10px_35px_rgba(23,43,80,0.15)] border border-[#172B5015] py-1.5 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100"
+                            className="absolute right-3 top-10 w-48 bg-white rounded-2xl shadow-[0_10px_35px_rgba(23,43,80,0.15)] border border-[#172B5015] py-1.5 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100"
                           >
-                            {/* View Details */}
+                            {/* 1. View Enquiry */}
                             <button
                               type="button"
                               onClick={() => {
                                 setDetailEnquiryId(enq.id);
                                 setActiveMenuId(null);
                               }}
-                              className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
+                              className="w-full px-3 py-1.5 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                             >
                               <Eye className="w-3.5 h-3.5 text-[#172B50]/70" />
                               <span>View Enquiry</span>
                             </button>
 
-                            {/* Edit Enquiry */}
+                            {/* 2. Edit Enquiry */}
                             <button
                               type="button"
-                              onClick={() => handleOpenEditModal(enq)}
-                              className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
+                              onClick={() => {
+                                handleOpenEditModal(enq);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                             >
                               <Edit3 className="w-3.5 h-3.5 text-[#172B50]/70" />
                               <span>Edit Enquiry</span>
                             </button>
 
-                            {/* Call Parent */}
-                            <a
-                              href={`tel:${enq.phone}`}
-                              onClick={() => {
-                                addEnquiryActivity(enq.id, {
-                                  type: 'Phone Call Initiated',
-                                  description: `Direct dial to ${enq.phone}`,
-                                  author: 'Admin Desk',
-                                });
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
-                            >
-                              <Phone className="w-3.5 h-3.5 text-[#F4510B]" />
-                              <span>Call Parent</span>
-                            </a>
-
-                            {/* WhatsApp */}
+                            {/* 3. WhatsApp */}
                             <a
                               href={`https://wa.me/${(enq.phone || '').replace(/[^0-9]/g, '')}`}
                               target="_blank"
@@ -1758,75 +1640,108 @@ export default function EnquiryManagement() {
                                 });
                                 setActiveMenuId(null);
                               }}
-                              className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
+                              className="w-full px-3 py-1.5 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                             >
                               <MessageSquare className="w-3.5 h-3.5 text-[#10B981]" />
                               <span>WhatsApp</span>
                             </a>
 
-                            {/* Schedule Demo */}
+                            {/* 4. Schedule Demo */}
                             {status !== LEAD_STATUS.CONVERTED && (
                               <button
                                 type="button"
-                                onClick={() => handleOpenConvertDemo(enq)}
-                                className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
+                                onClick={() => {
+                                  handleOpenConvertDemo(enq);
+                                  setActiveMenuId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                               >
                                 <Calendar className="w-3.5 h-3.5 text-[#3B82F6]" />
                                 <span>Schedule Demo</span>
                               </button>
                             )}
 
-                            {/* Add Follow-up */}
+                            {/* 5. Add Follow-up */}
                             <button
                               type="button"
-                              onClick={() => handleOpenFollowUp(enq)}
-                              className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
+                              onClick={() => {
+                                handleOpenFollowUp(enq);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                             >
                               <Clock className="w-3.5 h-3.5 text-[#F59E0B]" />
                               <span>Add Follow-up</span>
                             </button>
 
-                            {/* Update Status */}
+                            {/* 6. Update Status */}
                             <button
                               type="button"
-                              onClick={() => handleOpenStatusUpdate(enq)}
-                              className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer"
+                              onClick={() => {
+                                handleOpenStatusUpdate(enq);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                             >
                               <RotateCw className="w-3.5 h-3.5 text-[#6366F1]" />
                               <span>Update Status</span>
                             </button>
 
-                            {/* Mark as Lost (Red button) */}
-                            {status !== LEAD_STATUS.LOST && status !== LEAD_STATUS.CONVERTED && (
+                            {/* 7. View in Demo Management (if linked) */}
+                            {(enq.demoId || (data.demos || []).some((d) => d.enquiryId === enq.id)) && (
                               <button
                                 type="button"
-                                onClick={() => handleMarkAsLost(enq)}
-                                className="w-full px-3.5 py-2 text-[#EF4444] hover:bg-rose-50 flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
+                                onClick={() => {
+                                  const matched = (data.demos || []).find(
+                                    (d) => d.id === enq.demoId || d.enquiryId === enq.id
+                                  );
+                                  handleNavigateToDemo(matched ? matched.id : (enq.demoId || enq.id));
+                                  setActiveMenuId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-[#F4510B] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
+                              >
+                                <ArrowRight className="w-3.5 h-3.5 text-[#F4510B]" />
+                                <span>View in Demo</span>
+                              </button>
+                            )}
+
+                            {/* 8. Mark as Lost / Reopen Lead */}
+                            {status !== LEAD_STATUS.LOST && status !== LEAD_STATUS.CONVERTED ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleMarkAsLost(enq);
+                                  setActiveMenuId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-[#EF4444] hover:bg-rose-50 flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                               >
                                 <XCircle className="w-3.5 h-3.5 text-[#EF4444]" />
                                 <span>Mark as Lost</span>
                               </button>
-                            )}
-
-                            {/* Reopen Lead (Green button) */}
-                            {status === LEAD_STATUS.LOST && (
+                            ) : status === LEAD_STATUS.LOST ? (
                               <button
                                 type="button"
-                                onClick={() => handleReopenLead(enq)}
-                                className="w-full px-3.5 py-2 text-[#10B981] hover:bg-emerald-50 flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
+                                onClick={() => {
+                                  handleReopenLead(enq);
+                                  setActiveMenuId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-[#10B981] hover:bg-emerald-50 flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
                               >
                                 <RefreshCw className="w-3.5 h-3.5 text-[#10B981]" />
                                 <span>Reopen Lead</span>
                               </button>
-                            )}
+                            ) : null}
 
-                            {/* View Activity History */}
+                            {/* 8. View Activity History */}
                             <button
                               type="button"
-                              onClick={() => handleOpenActivityHistory(enq)}
-                              className="w-full px-3.5 py-2 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold border-t border-[#172B5010] mt-1 cursor-pointer"
+                              onClick={() => {
+                                handleOpenActivityHistory(enq);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 text-[#172B50] hover:bg-[#FFF5ED] flex items-center gap-2.5 font-bold border-t border-[#172B5010] mt-0.5 cursor-pointer transition-colors"
                             >
-                              <Clock className="w-3.5 h-3.5 text-[#172B50]/60" />
+                              <History className="w-3.5 h-3.5 text-[#172B50]/60" />
                               <span>View Activity History</span>
                             </button>
                           </div>
@@ -1849,7 +1764,6 @@ export default function EnquiryManagement() {
             <span>
               Showing Page {safePage} of {totalPages} • {filteredEnquiries.length} enquiry record
               {filteredEnquiries.length === 1 ? '' : 's'}
-              {selectedLeadIds.length > 0 && ` (${selectedLeadIds.length} selected)`}
             </span>
           </div>
 
@@ -2723,55 +2637,109 @@ export default function EnquiryManagement() {
       {/* ======================================================== */}
       <Modal
         isOpen={Boolean(statusUpdateEnquiry)}
-        onClose={() => setStatusUpdateEnquiry(null)}
-        title="Update Lead Status"
+        onClose={() => {
+          setStatusUpdateEnquiry(null);
+          setStatusSavedSuccess(null);
+        }}
+        title={statusSavedSuccess ? "Status Updated Successfully" : "Update Lead Status"}
         subtitle={statusUpdateEnquiry ? `Changing status for ${statusUpdateEnquiry.childName} (${statusUpdateEnquiry.id})` : ''}
       >
         {statusUpdateEnquiry && (
-          <form onSubmit={handleSaveStatusUpdate} className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">New Status</label>
-              <select
-                value={newStatusChoice}
-                onChange={(e) => setNewStatusChoice(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5025] text-[#172B50]"
-              >
-                <option value={LEAD_STATUS.ACTIVE}>Active Lead (0-5 days)</option>
-                <option value={LEAD_STATUS.STALE}>Stale Lead (&gt; 5 days)</option>
-                <option value={LEAD_STATUS.DEMO_REQUESTED}>Demo Requested</option>
-                <option value={LEAD_STATUS.DEMO_ATTENDED}>Demo Attended</option>
-                <option value={LEAD_STATUS.CONVERTED}>Converted (Enrolled)</option>
-                <option value={LEAD_STATUS.LOST}>Lost Lead</option>
-              </select>
-            </div>
+          statusSavedSuccess ? (
+            <div className="py-2 space-y-4">
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-[#172B50]">
+                    Status Updated to {statusSavedSuccess.newStatus}
+                  </h4>
+                  <p className="text-xs text-[#172B50] opacity-80 mt-1 leading-relaxed">
+                    Lead <strong>{statusUpdateEnquiry.childName} ({statusUpdateEnquiry.id})</strong> has been successfully updated.
+                    {statusSavedSuccess.demoId && (
+                      <span className="block mt-1 font-bold text-emerald-800">
+                        Linked Demo Record: {statusSavedSuccess.demoId} in Demo Management.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
 
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">Reason for Status Change</label>
-              <textarea
-                rows={2}
-                value={statusReason}
-                onChange={(e) => setStatusReason(e.target.value)}
-                placeholder="Parent confirmed relocation, scheduling conflict, etc."
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5025] text-[#172B50]"
-              />
+              <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusUpdateEnquiry(null);
+                    setStatusSavedSuccess(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                >
+                  Stay on Enquiry List
+                </button>
+                {statusSavedSuccess.demoId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const dId = statusSavedSuccess.demoId;
+                      setStatusUpdateEnquiry(null);
+                      setStatusSavedSuccess(null);
+                      handleNavigateToDemo(dId);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-extrabold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 cursor-pointer"
+                  >
+                    <span>View in Demo Management</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
+          ) : (
+            <form onSubmit={handleSaveStatusUpdate} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">New Status</label>
+                <select
+                  value={newStatusChoice}
+                  onChange={(e) => setNewStatusChoice(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5025] text-[#172B50]"
+                >
+                  <option value={LEAD_STATUS.ACTIVE}>Active Lead (0-5 days)</option>
+                  <option value={LEAD_STATUS.STALE}>Stale Lead (&gt; 5 days)</option>
+                  <option value={LEAD_STATUS.DEMO_REQUESTED}>Demo Requested</option>
+                  <option value={LEAD_STATUS.DEMO_ATTENDED}>Demo Attended</option>
+                  <option value={LEAD_STATUS.CONVERTED}>Converted (Enrolled)</option>
+                  <option value={LEAD_STATUS.LOST}>Lost Lead</option>
+                </select>
+              </div>
 
-            <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setStatusUpdateEnquiry(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2 text-xs font-bold bg-[#172B50] text-white rounded-xl shadow-sm hover:bg-[#F4510B] cursor-pointer"
-              >
-                Update Status
-              </button>
-            </div>
-          </form>
+              <div>
+                <label className="text-xs font-bold text-[#172B50] block mb-1">Reason for Status Change</label>
+                <textarea
+                  rows={2}
+                  value={statusReason}
+                  onChange={(e) => setStatusReason(e.target.value)}
+                  placeholder="Parent confirmed relocation, scheduling conflict, etc."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5025] text-[#172B50]"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-[#172B5015] flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setStatusUpdateEnquiry(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 text-xs font-bold bg-[#172B50] text-white rounded-xl shadow-sm hover:bg-[#F4510B] cursor-pointer"
+                >
+                  Update Status
+                </button>
+              </div>
+            </form>
+          )
         )}
       </Modal>
 
@@ -2942,113 +2910,264 @@ export default function EnquiryManagement() {
         }
         maxWidth="max-w-2xl"
       >
-        {detailEnquiry && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-[#FFF9F5] border border-[#F4510B20]">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#172B50]">Source:</span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-white border border-[#172B5020] text-[#172B50]">
-                  {detailEnquiry.source || 'Manual Desk'}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="font-bold text-[#172B50]">Current Status:</span>
-                <span className="px-2.5 py-0.5 rounded-md font-extrabold bg-[#172B50] text-white text-[11px]">
-                  {detailEnquiry.resolvedStatus}
-                </span>
-              </div>
-            </div>
+        {detailEnquiry && (() => {
+          const activities = getEnquiryActivities(detailEnquiry.id);
+          const daysText = `${detailEnquiry.daysSinceResponse ?? 0} ${detailEnquiry.daysSinceResponse === 1 ? 'day' : 'days'}`;
+          const lastResponseText = formatDisplayDate(detailEnquiry.lastParentResponse || detailEnquiry.enquiryDate || detailEnquiry.createdAt);
+          const enquiryDateText = formatDisplayDate(detailEnquiry.enquiryDate || detailEnquiry.createdAt);
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-4 rounded-2xl border border-[#172B5015]">
-              <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Child Information</span>
-                <p className="text-sm font-black text-[#172B50] mt-0.5">{detailEnquiry.childName}</p>
-                <p className="text-xs text-[#172B50]/80">
-                  Age: {detailEnquiry.childAge} yrs • Gender: {detailEnquiry.gender || 'Not specified'}
-                </p>
-                {detailEnquiry.dob && <p className="text-xs text-[#172B50]/70">DOB: {detailEnquiry.dob}</p>}
-              </div>
+          return (
+            <div className="space-y-4 text-xs">
+              {/* 1. Header Banner: ID, Enquiry Date, Status & Source */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 p-3.5 rounded-2xl bg-[#FFF9F5] border border-[#F4510B20]">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Enquiry ID</span>
+                    <span className="font-mono font-black text-sm text-[#172B50]">{detailEnquiry.id}</span>
+                  </div>
+                  <div className="h-6 w-px bg-[#172B5015]" />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Enquiry Date</span>
+                    <span className="font-bold text-[#172B50]">{enquiryDateText}</span>
+                  </div>
+                  <div className="h-6 w-px bg-[#172B5015]" />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Source</span>
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-white border border-[#172B5020] text-[#172B50]">
+                      {detailEnquiry.source || 'Manual Desk'}
+                    </span>
+                  </div>
+                </div>
 
-              <div>
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Parent / Contact</span>
-                <p className="text-sm font-black text-[#172B50] mt-0.5">{detailEnquiry.parentName}</p>
-                <p className="text-xs text-[#172B50]/80">Phone: {detailEnquiry.phone}</p>
-                <p className="text-xs text-[#172B50]/80">Email: {detailEnquiry.email || '—'}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 rounded-xl border border-[#172B5015] bg-[#F8FAFC]">
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Academy Location</span>
-                <span className="font-black text-[#F4510B]">{detailEnquiry.center}</span>
-              </div>
-              <div className="p-3 rounded-xl border border-[#172B5015] bg-[#F8FAFC]">
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Sports Program</span>
-                <span className="font-bold text-[#172B50]">{detailEnquiry.interestedProgram}</span>
-              </div>
-              <div className="p-3 rounded-xl border border-[#172B5015] bg-[#F8FAFC]">
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Preferred Batch</span>
-                <span className="font-bold text-[#172B50] block">
-                  {detailEnquiry.preferredBatchName || 'Open Batch'}
-                </span>
-              </div>
-            </div>
-
-            {detailEnquiry.notes && (
-              <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#172B5015] text-xs">
-                <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block mb-0.5">Notes:</span>
-                <p className="text-[#172B50]/85 whitespace-pre-wrap">{detailEnquiry.notes}</p>
-              </div>
-            )}
-
-            <div className="pt-3 border-t border-[#172B5015] flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleOpenEditModal(detailEnquiry);
-                    setDetailEnquiryId(null);
-                  }}
-                  className="px-3 py-1.5 rounded-xl border border-[#172B5020] text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] cursor-pointer"
-                >
-                  Edit Enquiry
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleOpenActivityHistory(detailEnquiry);
-                    setDetailEnquiryId(null);
-                  }}
-                  className="px-3 py-1.5 rounded-xl border border-[#172B5020] text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] cursor-pointer"
-                >
-                  Activity History
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50]/60">Status:</span>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black bg-[#172B50] text-white">
+                    {detailEnquiry.resolvedStatus}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {detailEnquiry.resolvedStatus !== LEAD_STATUS.CONVERTED && (
+              {/* 2. Grid: Child Information & Parent / Contact Information */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Child Information */}
+                <div className="bg-white p-3.5 rounded-2xl border border-[#172B5015] space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[#F4510B] font-bold text-[11px] uppercase tracking-wider">
+                    <User className="w-3.5 h-3.5" />
+                    <span>Child Information</span>
+                  </div>
+                  <p className="text-sm font-black text-[#172B50]">{detailEnquiry.childName}</p>
+                  <div className="space-y-0.5 text-[#172B50]/80">
+                    <p><strong className="text-[#172B50]">Age:</strong> {detailEnquiry.childAge || 6} Years</p>
+                    <p><strong className="text-[#172B50]">Gender:</strong> {detailEnquiry.gender || 'Not specified'}</p>
+                    {detailEnquiry.dob && <p><strong className="text-[#172B50]">DOB:</strong> {detailEnquiry.dob}</p>}
+                  </div>
+                </div>
+
+                {/* Parent / Contact Information */}
+                <div className="bg-white p-3.5 rounded-2xl border border-[#172B5015] space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[#F4510B] font-bold text-[11px] uppercase tracking-wider">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Parent / Contact</span>
+                  </div>
+                  <p className="text-sm font-black text-[#172B50]">{detailEnquiry.parentName}</p>
+                  <div className="space-y-1 text-[#172B50]/80">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3 h-3 text-[#F4510B]" />
+                      <span className="font-semibold">{detailEnquiry.phone}</span>
+                      <a
+                        href={`https://wa.me/${(detailEnquiry.phone || '').replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#10B981]/10 text-[#059669] hover:bg-[#10B981]/20 font-bold text-[10px]"
+                        title="Open WhatsApp chat"
+                      >
+                        <MessageSquare className="w-2.5 h-2.5" />
+                        <span>Chat</span>
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3 h-3 text-[#172B50]/60" />
+                      <span className="truncate">{detailEnquiry.email || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Program, Location & Response Metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="p-3 rounded-xl border border-[#172B5015] bg-[#F8FAFC]">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Selected Program</span>
+                  <span className="font-bold text-[#172B50] block mt-0.5">
+                    {detailEnquiry.interestedProgram || detailEnquiry.program || 'Junior Football Champions'}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl border border-[#172B5015] bg-[#F8FAFC]">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Location</span>
+                  <span className="font-black text-[#F4510B] block mt-0.5">
+                    {(detailEnquiry.center || detailEnquiry.location || 'KK NAGAR')
+                      .split(' ')
+                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                      .join(' ')}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl border border-[#172B5015] bg-[#F8FAFC]">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Last Parent Response</span>
+                  <span className="font-bold text-[#172B50] block mt-0.5">{lastResponseText}</span>
+                </div>
+                <div className="p-3 rounded-xl border border-[#172B5015] bg-[#F8FAFC]">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Days Since Enquiry</span>
+                  <span className={`inline-block mt-0.5 ${getDaysBadgeStyle(detailEnquiry.daysSinceResponse, detailEnquiry.resolvedStatus)}`}>
+                    {daysText}
+                  </span>
+                </div>
+              </div>
+
+              {/* 4. Follow-up History and Notes */}
+              <div className="bg-white p-3.5 rounded-2xl border border-[#172B5015] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[#172B50] font-black text-xs">
+                    <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span>Follow-up History &amp; Notes</span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
-                      openEnrollConfirmation(detailEnquiry);
+                      handleOpenFollowUp(detailEnquiry);
                       setDetailEnquiryId(null);
                     }}
-                    className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[#F4510B] text-white hover:brightness-110 cursor-pointer shadow-2xs"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B30] text-[11px] font-bold hover:bg-[#F4510B] hover:text-white cursor-pointer transition-colors"
                   >
-                    Enroll Student
+                    <Plus className="w-3 h-3" />
+                    <span>Add Follow-up</span>
                   </button>
+                </div>
+
+                {/* Notes Block */}
+                {detailEnquiry.notes ? (
+                  <div className="p-2.5 bg-[#FFF9F5] rounded-xl border border-[#F4510B20] text-xs">
+                    <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block mb-0.5">Enquiry Notes:</span>
+                    <p className="text-[#172B50]/85 whitespace-pre-wrap leading-relaxed">{detailEnquiry.notes}</p>
+                  </div>
+                ) : (
+                  <div className="p-2 bg-[#F8FAFC] rounded-xl border border-[#172B5010] text-[#172B50]/60 text-[11px] italic">
+                    No general intake notes recorded.
+                  </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setDetailEnquiryId(null)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#172B50] text-white hover:bg-slate-800 cursor-pointer"
-                >
-                  Close
-                </button>
+
+                {/* Follow-up / Activity Timeline Items */}
+                <div className="space-y-2 pt-1">
+                  <span className="text-[10px] font-bold uppercase text-[#172B50]/60 block">Recent Activity Log:</span>
+                  {activities && activities.length > 0 ? (
+                    <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
+                      {activities.slice(0, 4).map((act) => (
+                        <div key={act.id} className="p-2 rounded-xl bg-[#F8FAFC] border border-[#172B5010] flex items-start justify-between gap-2">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-[#172B50] text-[11px]">{act.type}</span>
+                              <span className="text-[10px] text-[#172B50]/50">• {act.author || 'Admin'}</span>
+                            </div>
+                            <p className="text-[#172B50]/75 text-[11px] leading-snug">{act.description}</p>
+                          </div>
+                          <span className="text-[10px] text-[#172B50]/50 whitespace-nowrap shrink-0">
+                            {formatDisplayDate(act.timestamp)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-[#172B50]/60 italic">No previous follow-up interactions logged yet.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* 5. Footer Actions */}
+              <div className="pt-3 border-t border-[#172B5015] flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href={`https://wa.me/${(detailEnquiry.phone || '').replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      addEnquiryActivity(detailEnquiry.id, {
+                        type: 'WhatsApp Initiated',
+                        description: `Direct WhatsApp message to ${detailEnquiry.phone}`,
+                        author: 'Admin Desk',
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#10B981]/30 bg-[#10B981]/10 text-[#059669] hover:bg-[#10B981]/20 font-bold text-xs cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleOpenEditModal(detailEnquiry);
+                      setDetailEnquiryId(null);
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-[#172B5020] text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] cursor-pointer"
+                  >
+                    Edit Enquiry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleOpenActivityHistory(detailEnquiry);
+                      setDetailEnquiryId(null);
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-[#172B5020] text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] cursor-pointer"
+                  >
+                    Activity History
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const detailLinkedDemo = (data.demos || []).find(
+                      (d) => d.id === detailEnquiry.demoId || d.enquiryId === detailEnquiry.id
+                    );
+                    if (detailLinkedDemo) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const dId = detailLinkedDemo.id;
+                            setDetailEnquiryId(null);
+                            handleNavigateToDemo(dId);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#F4510B35] bg-[#FFF4E8] text-[#F4510B] hover:bg-[#FFE8D5] text-xs font-extrabold cursor-pointer shadow-2xs"
+                        >
+                          <span>View in Demo ({detailLinkedDemo.id})</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+                  {detailEnquiry.resolvedStatus !== LEAD_STATUS.CONVERTED && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openEnrollConfirmation(detailEnquiry);
+                        setDetailEnquiryId(null);
+                      }}
+                      className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[#F4510B] text-white hover:brightness-110 cursor-pointer shadow-2xs"
+                    >
+                      Enroll Student
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setDetailEnquiryId(null)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#172B50] text-white hover:bg-slate-800 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
 
       {/* ======================================================== */}
