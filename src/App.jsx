@@ -85,9 +85,10 @@ export default function App() {
       case 'demos':
         return <DemoManagementModule />;
 
-      // 3. People Management (Students, Parents, Coaches)
+      // 3. People Management (Kids / Students, Parents, Coaches)
       case 'people':
       case 'students':
+      case 'kids':
       case 'parents':
       case 'coaches':
         return <PeopleManagementModule />;

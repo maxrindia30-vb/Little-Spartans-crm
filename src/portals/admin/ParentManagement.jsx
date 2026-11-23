@@ -155,9 +155,9 @@ export default function ParentManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#172B50] tracking-tight">
             Parent Directory &amp; Billing
-          </h1>
+          </h2>
           <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
             Add parents by academy location, link their children &amp; issue Parent Portal access
           </p>
@@ -166,7 +166,7 @@ export default function ParentManagement() {
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 text-white" />
           <span>Add Parent</span>

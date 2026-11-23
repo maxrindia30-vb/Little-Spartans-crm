@@ -76,7 +76,23 @@ export default function Sidebar() {
 
   // Mouse hover state: when mouse enters navbar, opens full view; when mouse leaves, closes!
   const [isHovered, setIsHovered] = useState(false);
-  const [isPinned, setIsPinned] = useState(false);
+  const [isPinned, setIsPinned] = useState(() => {
+    try {
+      const saved = localStorage.getItem('little_spartans_sidebar_pinned');
+      if (saved !== null) return saved === 'true';
+    } catch (e) {}
+    return true;
+  });
+
+  const togglePin = () => {
+    setIsPinned(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('little_spartans_sidebar_pinned', String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
 
   // Is full view currently visible? (on hover, or if user pins it, or on mobile)
   const isFullView = isHovered || isPinned;
@@ -219,8 +235,23 @@ export default function Sidebar() {
   ];
 
   const isChildActive = (child) => {
-    if (child.view === 'people' && ['students', 'parents', 'coaches'].includes(currentView)) {
-      return (child.subTab || child.id) === currentView;
+    // People Management: Kids (students), Parents, Coaches
+    if (child.view === 'people' || ['students', 'parents', 'coaches', 'kids'].includes(child.id)) {
+      if (['people', 'students', 'parents', 'coaches', 'kids'].includes(currentView)) {
+        if (child.id === 'students' || child.subTab === 'students') {
+          return (
+            currentView === 'students' ||
+            currentView === 'kids' ||
+            (currentView === 'people' && (!activeSubTab || activeSubTab === 'students'))
+          );
+        }
+        if (child.id === 'parents' || child.subTab === 'parents') {
+          return currentView === 'parents' || (currentView === 'people' && activeSubTab === 'parents');
+        }
+        if (child.id === 'coaches' || child.subTab === 'coaches') {
+          return currentView === 'coaches' || (currentView === 'people' && activeSubTab === 'coaches');
+        }
+      }
     }
     if (child.view === 'programs' && ['batches', 'schedules'].includes(currentView)) {
       return (child.subTab || child.id) === currentView;
@@ -256,12 +287,18 @@ export default function Sidebar() {
   };
 
   const isParentActive = (parent) => {
+    if (parent.id === 'people' && ['people', 'students', 'parents', 'coaches', 'kids'].includes(currentView)) {
+      return true;
+    }
     return parent.children.some(child => isChildActive(child));
   };
 
   // Accordion state: only one parent submenu open at a time
   const [expandedMenu, setExpandedMenu] = useState(() => {
     if (!isAdminPortal || currentView === 'dashboard') return null;
+    if (['people', 'students', 'parents', 'coaches', 'kids'].includes(currentView)) {
+      return 'people';
+    }
     const activeParent = adminNavStructure.find(p => isParentActive(p));
     return activeParent ? activeParent.id : null;
   });
@@ -273,9 +310,13 @@ export default function Sidebar() {
     if (lastNavKeyRef.current !== navKey) {
       lastNavKeyRef.current = navKey;
       if (isAdminPortal && currentView !== 'dashboard') {
-        const activeParent = adminNavStructure.find(p => isParentActive(p));
-        if (activeParent) {
-          setExpandedMenu(activeParent.id);
+        if (['people', 'students', 'parents', 'coaches', 'kids'].includes(currentView)) {
+          setExpandedMenu('people');
+        } else {
+          const activeParent = adminNavStructure.find(p => isParentActive(p));
+          if (activeParent) {
+            setExpandedMenu(activeParent.id);
+          }
         }
       }
     }
@@ -296,7 +337,7 @@ export default function Sidebar() {
       if (firstChild.subTab && setActiveSubTab) {
         setActiveSubTab(firstChild.subTab);
       }
-      setCurrentView(firstChild.view);
+      setCurrentView(firstChild.view, firstChild.subTab);
     } else {
       setCurrentView(parent.id);
     }
@@ -319,7 +360,7 @@ export default function Sidebar() {
     if (child.subTab && setActiveSubTab) {
       setActiveSubTab(child.subTab);
     }
-    setCurrentView(child.view);
+    setCurrentView(child.view, child.subTab);
     setSidebarOpen(false);
   };
 
@@ -435,6 +476,9 @@ export default function Sidebar() {
   const handleNavItemClick = (itemId) => {
     if (itemId === 'people' && setActiveSubTab) {
       setActiveSubTab('students');
+      setCurrentView('people', 'students');
+      setSidebarOpen(false);
+      return;
     } else if (itemId === 'programs' && setActiveSubTab) {
       const validProgramTabs = ['batches', 'schedules', 'coach_assignments'];
       if (!validProgramTabs.includes(activeSubTab)) {
@@ -564,7 +608,7 @@ export default function Sidebar() {
                 {/* Pin toggle to lock full view permanently if desired */}
                 <button
                   type="button"
-                  onClick={() => setIsPinned(!isPinned)}
+                  onClick={togglePin}
                   className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                     isPinned ? 'text-[#F4510B] bg-white/10' : 'text-white/60 hover:text-white hover:bg-white/10'
                   }`}

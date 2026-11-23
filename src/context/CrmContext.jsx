@@ -400,6 +400,15 @@ export function CrmProvider({ children }) {
 
   // Current active portal: 'admin' | 'parent' | 'coach' | 'super_coach' | 'support'
   const [currentPortal, setCurrentPortal] = useState(() => {
+    if (typeof window !== 'undefined' && window.location) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const p = params.get('portal');
+        if (p && ['admin', 'parent', 'coach', 'super_coach', 'support'].includes(p)) {
+          return p;
+        }
+      } catch (e) {}
+    }
     try {
       const savedPortal = localStorage.getItem(CURRENT_ROLE_KEY);
       if (savedPortal && ['admin', 'parent', 'coach', 'super_coach', 'support'].includes(savedPortal)) {
@@ -410,13 +419,93 @@ export function CrmProvider({ children }) {
   });
 
   // Active module view within portal
-  const [currentView, setCurrentViewRaw] = useState('dashboard');
-  const [activeSubTab, setActiveSubTab] = useState('students');
+  const [currentView, setCurrentViewRaw] = useState(() => {
+    if (typeof window !== 'undefined' && window.location) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const v = params.get('view');
+        if (v) return v;
+      } catch (e) {}
+    }
+    try {
+      const saved = localStorage.getItem('little_spartans_current_view');
+      if (saved) return saved;
+    } catch (e) {}
+    return 'dashboard';
+  });
 
-  const setCurrentView = (view) => {
+  const [activeSubTab, setActiveSubTabRaw] = useState(() => {
+    if (typeof window !== 'undefined' && window.location) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const s = params.get('subTab') || params.get('subtab') || params.get('tab');
+        if (s) return s;
+        const v = params.get('view');
+        if (v === 'kids' || v === 'students') return 'students';
+        if (v === 'parents') return 'parents';
+        if (v === 'coaches') return 'coaches';
+      } catch (e) {}
+    }
+    try {
+      const saved = localStorage.getItem('little_spartans_active_subtab');
+      if (saved) return saved;
+    } catch (e) {}
+    return 'students';
+  });
+
+  const setCurrentView = (view, subTab = '') => {
     setCurrentViewRaw(view);
-    if (view === 'people' || view === 'students') {
-      setActiveSubTab('students');
+    let resolvedSubTab = subTab;
+    if (!resolvedSubTab) {
+      if (view === 'students' || view === 'kids') {
+        resolvedSubTab = 'students';
+      } else if (view === 'parents') {
+        resolvedSubTab = 'parents';
+      } else if (view === 'coaches') {
+        resolvedSubTab = 'coaches';
+      } else if (view === 'people') {
+        resolvedSubTab = ['students', 'parents', 'coaches'].includes(activeSubTab) ? activeSubTab : 'students';
+      }
+    }
+
+    if (resolvedSubTab) {
+      setActiveSubTabRaw(resolvedSubTab);
+    }
+
+    try {
+      localStorage.setItem('little_spartans_current_view', view);
+      if (resolvedSubTab) {
+        localStorage.setItem('little_spartans_active_subtab', resolvedSubTab);
+      }
+    } catch (e) {}
+
+    if (typeof window !== 'undefined' && window.history) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('view', view);
+        if (resolvedSubTab && (view === 'people' || view === 'students' || view === 'parents' || view === 'coaches' || view === 'kids')) {
+          url.searchParams.set('subTab', resolvedSubTab);
+        } else if (resolvedSubTab) {
+          url.searchParams.set('subTab', resolvedSubTab);
+        } else {
+          url.searchParams.delete('subTab');
+        }
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
+    }
+  };
+
+  const setActiveSubTab = (subTab) => {
+    setActiveSubTabRaw(subTab);
+    try {
+      localStorage.setItem('little_spartans_active_subtab', subTab);
+    } catch (e) {}
+    if (typeof window !== 'undefined' && window.history) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('subTab', subTab);
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
     }
   };
   
@@ -430,8 +519,14 @@ export function CrmProvider({ children }) {
   const [focusedRecord, setFocusedRecord] = useState(null);
   const enrollingIdsRef = useRef(new Set());
 
-  // Authentication state (default false to present the Little Spartans ZenConnect login portal immediately)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Authentication state (supports session persistence on refresh)
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try {
+      const savedAuth = localStorage.getItem('little_spartans_is_logged_in');
+      if (savedAuth !== null) return savedAuth === 'true';
+    } catch (e) {}
+    return false;
+  });
   const [showMotivationalModal, setShowMotivationalModal] = useState(false);
 
   // Active Toast notification
@@ -447,11 +542,16 @@ export function CrmProvider({ children }) {
   }, [data]);
 
   // Save current portal
+  const isPortalInitialMount = useRef(true);
   useEffect(() => {
     try {
       localStorage.setItem(CURRENT_ROLE_KEY, currentPortal);
     } catch (e) {}
-    // Reset view to dashboard when changing portal
+    if (isPortalInitialMount.current) {
+      isPortalInitialMount.current = false;
+      return;
+    }
+    // Reset view to dashboard only when user explicitly switches portals
     setCurrentView('dashboard');
     setSidebarOpen(false);
   }, [currentPortal]);
@@ -4080,18 +4180,19 @@ export function CrmProvider({ children }) {
   };
 
   const navigateTo = (view, subTab = '') => {
-    setCurrentView(view);
+    setCurrentView(view, subTab);
     if (subTab) {
       setActiveSubTab(subTab);
-    } else if (view === 'people' || view === 'students') {
+    } else if (view === 'people' || view === 'students' || view === 'kids') {
       setActiveSubTab('students');
     }
     setSidebarOpen(false);
   };
 
   const navigateToPersonRecord = (type, id) => {
-    setCurrentView('people');
-    setActiveSubTab(type === 'parent' ? 'parents' : 'students');
+    const targetSubTab = type === 'parent' ? 'parents' : 'students';
+    setCurrentView('people', targetSubTab);
+    setActiveSubTab(targetSubTab);
     setFocusedRecord({ type, id });
     setSidebarOpen(false);
   };
@@ -4589,10 +4690,16 @@ export function CrmProvider({ children }) {
         login: (portalRole) => {
           if (portalRole) setCurrentPortal(portalRole);
           setIsLoggedIn(true);
+          try {
+            localStorage.setItem('little_spartans_is_logged_in', 'true');
+          } catch (e) {}
           setShowMotivationalModal(true);
         },
         logout: () => {
           setIsLoggedIn(false);
+          try {
+            localStorage.setItem('little_spartans_is_logged_in', 'false');
+          } catch (e) {}
           setShowMotivationalModal(false);
         },
         showMotivationalModal,
