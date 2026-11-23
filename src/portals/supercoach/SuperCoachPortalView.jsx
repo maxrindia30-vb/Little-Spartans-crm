@@ -51,6 +51,7 @@ import AttendanceManagement from '../admin/AttendanceManagement';
 import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
 import EvaluationReviewModule from './EvaluationReviewModule';
+import CoachManagementModule from './CoachManagementModule';
 
 export default function SuperCoachPortalView() {
   const {
@@ -68,7 +69,10 @@ export default function SuperCoachPortalView() {
 
   // Super Coach assigned locations (Admin-granted access)
   const assignedLocations = useMemo(() => {
-    return currentUser?.assignedLocations || ['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM'];
+    if (Array.isArray(currentUser?.assignedLocations) && currentUser.assignedLocations.length > 0) {
+      return currentUser.assignedLocations;
+    }
+    return ['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM', 'ANNA NAGAR'];
   }, [currentUser]);
 
   // Normalized location matcher for case-insensitive cross-portal sync
@@ -77,7 +81,8 @@ export default function SuperCoachPortalView() {
   }, [assignedLocations]);
 
   const isLocationAuthorized = React.useCallback((locName) => {
-    if (!locName) return false;
+    if (!locName) return true;
+    if (!assignedLocationsNormalized || assignedLocationsNormalized.length === 0) return true;
     const norm = String(locName).toLowerCase().trim();
     return assignedLocationsNormalized.some(
       (al) => al === norm || norm.includes(al) || al.includes(norm)
@@ -1427,167 +1432,7 @@ export default function SuperCoachPortalView() {
       {/* 4. TAB 3: COACH MANAGEMENT                                    */}
       {/* ============================================================ */}
       {activeTab === 'coaches' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight">
-                Coaching Faculty &amp; Supervision
-              </h1>
-              <p className="text-xs sm:text-sm text-[#172B50] opacity-75 mt-0.5">
-                Faculty qualifications, session allocations, student ratios, and supervisory performance oversight
-              </p>
-            </div>
-          </div>
-
-          {/* Top 4 KPI Cards matching Admin CoachManagement */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-            <div className="bg-[#FFF4E8] border border-[#F4510B25] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#F4510B18] text-[#F4510B] flex items-center justify-center shrink-0">
-                <UserCheck className="w-4 h-4 text-[#F4510B]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Faculty Members</div>
-                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  {scopedCoaches.length}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#F0FDF4] border border-[#16A34A20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#16A34A18] text-[#16A34A] flex items-center justify-center shrink-0">
-                <Award className="w-4 h-4 text-[#16A34A]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Certified Specialists</div>
-                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  {scopedCoaches.filter(c => c.certification).length}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#F0F7FF] border border-[#0284C720] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#0284C718] text-[#0284C7] flex items-center justify-center shrink-0">
-                <Layers className="w-4 h-4 text-[#0284C7]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Active Batches</div>
-                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  {scopedSchedules.length}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#FFF9F5] border border-[#F4510B20] rounded-2xl px-3.5 sm:px-4 py-2.5 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-[#F4510B15] text-[#F4510B] flex items-center justify-center shrink-0">
-                <Star className="w-4 h-4 text-[#F4510B]" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-[#172B50]/70 whitespace-nowrap">Faculty Rating</div>
-                <div className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight mt-0.5">
-                  4.9 ★
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-5 border border-[#172B5014] shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-5 rounded-full bg-[#F4510B]" />
-              <h3 className="text-base font-black text-[#172B50]">
-                Coaching Faculty across Assigned Locations
-              </h3>
-            </div>
-
-            <div className="relative min-w-[260px]">
-              <Search className="w-4 h-4 text-[#172B50] opacity-50 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={coachSearch}
-                onChange={(e) => setCoachSearch(e.target.value)}
-                placeholder="Search coach by name or specialization..."
-                className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020] focus:outline-none focus:ring-2 focus:ring-[#F4510B]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {locationFilteredCoaches.map((coach) => {
-              const coachSchedules = scopedSchedules.filter((s) => s.coachId === coach.id);
-              const coachStudents = scopedStudents.filter((st) => st.coachName === coach.name);
-
-              return (
-                <div
-                  key={coach.id}
-                  className="bg-white rounded-3xl p-5 border border-[#172B5014] shadow-card flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-[#172B50] text-white flex items-center justify-center font-black text-base shrink-0 shadow-sm">
-                          {coach.name.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <h4 className="text-base font-black text-[#172B50]">{coach.name}</h4>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#F4510B] text-white inline-block mt-0.5">
-                            {coach.center}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {coach.rating} ★
-                      </span>
-                    </div>
-
-                    <div className="mt-4 space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="opacity-70">Discipline:</span>
-                        <strong className="text-[#172B50]">{coach.specialization}</strong>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="opacity-70">Credentials:</span>
-                        <strong className="text-[#172B50]">{coach.certification || 'Certified Coach'}</strong>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="opacity-70">Experience:</span>
-                        <strong className="text-[#172B50]">{coach.experience || '4+ Yrs'}</strong>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="opacity-70">Active Batches:</span>
-                        <strong className="text-[#172B50]">{coachSchedules.length} Sessions</strong>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="opacity-70">Assigned Athletes:</span>
-                        <strong className="text-[#172B50]">{coachStudents.length} Students</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-[#172B5010] flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenIssueModal(coach)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      <span>Report Issue</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedLocation(coach.center);
-                        setActiveTab('schedules');
-                      }}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#172B50] hover:bg-[#F4510B] text-white transition-colors cursor-pointer"
-                    >
-                      View Timetable
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <CoachManagementModule onNavigateToEvaluations={() => setActiveTab('evaluations')} />
       )}
 
       {/* ============================================================ */}

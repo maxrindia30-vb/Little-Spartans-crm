@@ -189,8 +189,16 @@ export function CrmProvider({ children }) {
         };
 
         // Purge dummy/legacy records from stored data
-        const storedCoaches = (Array.isArray(parsed.coaches) ? parsed.coaches : [])
+        const loadedCoaches = (Array.isArray(parsed.coaches) && parsed.coaches.length > 0
+          ? parsed.coaches
+          : initialAcademyData.coaches || [])
           .filter((c) => !isDummyCoach(c));
+        const storedCoaches = [...loadedCoaches];
+        (initialAcademyData.coaches || []).forEach((ic) => {
+          if (!storedCoaches.some((c) => c.id === ic.id || (c.name && ic.name && c.name.toLowerCase() === ic.name.toLowerCase()))) {
+            storedCoaches.push(ic);
+          }
+        });
 
         const storedLocations = (Array.isArray(parsed.locations) && parsed.locations.length > 0
           ? parsed.locations
@@ -319,7 +327,9 @@ export function CrmProvider({ children }) {
           ...parsed,
           students: migratedStudents.filter(s => !isDummyStudent(s)),
           parents: migratedParents.filter(p => !isDummyParent(p)),
-          classes: (Array.isArray(parsed.classes) ? parsed.classes : []).filter(cl => !isDummyClass(cl)),
+          classes: (Array.isArray(parsed.classes) && parsed.classes.length > 0
+            ? parsed.classes
+            : (initialAcademyData.classes || [])).filter(cl => !isDummyClass(cl)),
           academy: {
             ...initialAcademyData.academy,
             ...(parsed.academy || {}),
@@ -344,10 +354,12 @@ export function CrmProvider({ children }) {
           compensationRequests: (Array.isArray(parsed.compensationRequests) ? parsed.compensationRequests : []).filter(r => !r.id?.startsWith('CR-')),
           compensationHistory: (Array.isArray(parsed.compensationHistory) ? parsed.compensationHistory : []).filter(h => !h.id?.startsWith('CH-')),
           notifications: (Array.isArray(parsed.notifications) ? parsed.notifications : []).filter(n => !n.id?.startsWith('NOTIF-')),
-          superCoaches: (Array.isArray(parsed.superCoaches) ? parsed.superCoaches : []).filter(sc => sc.id !== 'SCOACH-1' && !sc.name?.includes('Kabir')),
+          superCoaches: (Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : (initialAcademyData.superCoaches || [])).filter(sc => sc.id !== 'SCOACH-1' && !sc.name?.includes('Kabir')),
           equipment: Array.isArray(parsed.equipment) ? parsed.equipment : [],
           equipmentReports: Array.isArray(parsed.equipmentReports) ? parsed.equipmentReports : [],
-          evaluations: Array.isArray(parsed.evaluations) ? parsed.evaluations : [],
+          evaluations: (Array.isArray(parsed.evaluations) && parsed.evaluations.length > 0
+            ? parsed.evaluations
+            : (initialAcademyData.evaluations || [])),
           userAccounts: mergedAccounts,
           coachLeaveRequests: (Array.isArray(parsed.coachLeaveRequests) ? parsed.coachLeaveRequests : []).filter(r => !DUMMY_CLR_IDS.has(r.id)),
           leaveRequests: (Array.isArray(parsed.leaveRequests) ? parsed.leaveRequests : []).filter(r => !DUMMY_CLR_IDS.has(r.id)),
@@ -530,13 +542,15 @@ export function CrmProvider({ children }) {
       badge: "Academy Coach"
     },
     super_coach: {
-      name: (data.superCoaches && data.superCoaches[0]?.name) || "Super Coach",
-      role: (data.superCoaches && data.superCoaches[0]?.title) || "Super Coach & Operations Lead",
+      name: (data.superCoaches && data.superCoaches[0]?.name) || "Anita R.",
+      role: (data.superCoaches && data.superCoaches[0]?.title) || "Super Coach",
       portalTitle: "Super Coach Portal",
-      email: (data.superCoaches && data.superCoaches[0]?.email) || "supercoach@littlespartans.co.in",
-      avatar: null,
+      email: (data.superCoaches && data.superCoaches[0]?.email) || "anita.r@littlespartans.co.in",
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
       badge: "Super Coach",
-      assignedLocations: (data.superCoaches && data.superCoaches[0]?.assignedLocations) || []
+      assignedLocations: (data.superCoaches && data.superCoaches[0]?.assignedLocations && data.superCoaches[0].assignedLocations.length > 0)
+        ? data.superCoaches[0].assignedLocations
+        : ["KK NAGAR", "ANNA NAGAR", "KILPAUK", "MAHALINGAPURAM"]
     },
     support: {
       name: "Customer Support Lead",

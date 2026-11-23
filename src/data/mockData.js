@@ -94,32 +94,309 @@ export const initialAcademyData = {
   // Operational Data: All start clean with ZERO dummy records
   classes: [
     {
-      id: "BATCH-LE-B1",
-      name: "LE - B1",
-      program: "Foundational Movement",
-      center: "KK NAGAR",
-      coachId: "COACH-SAM",
-      coach: "Coach Sam",
-      coachName: "Coach Sam",
-      schedule: "Mon, Wed, Fri 4:00 PM - 5:00 PM",
-      capacity: 15,
-      enrolledCount: 5,
-      status: "Active"
+        "id": "BATCH-LE-B1",
+        "name": "LE - B1",
+        "program": "Foundational Movement",
+        "center": "KK NAGAR",
+        "coachId": "COACH-ARUN",
+        "coach": "Arun Prakash",
+        "coachName": "Arun Prakash",
+        "coach2Id": "COACH-SAM",
+        "coach2Name": "Coach Sam",
+        "schedule": "Mon, Wed, Fri 4:00 PM - 5:00 PM",
+        "capacity": 15,
+        "enrolledCount": 5,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-LE-B2",
+        "name": "LE - B2",
+        "program": "Spartan Athletics & Sprinting",
+        "center": "KK NAGAR",
+        "coachId": "COACH-ARUN",
+        "coach": "Arun Prakash",
+        "coachName": "Arun Prakash",
+        "schedule": "Tue, Thu, Sat 4:30 PM - 5:30 PM",
+        "capacity": 15,
+        "enrolledCount": 6,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-FB-KKN1",
+        "name": "FB - KKN1",
+        "program": "Junior Football Champions",
+        "center": "KK NAGAR",
+        "coachId": "COACH-SAM",
+        "coach": "Coach Sam",
+        "coachName": "Coach Sam",
+        "schedule": "Sat, Sun 7:00 AM - 8:30 AM",
+        "capacity": 18,
+        "enrolledCount": 10,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-GYM-KKN1",
+        "name": "GYM - KKN1",
+        "program": "Spartan Gymnastics & Agility",
+        "center": "KK NAGAR",
+        "coachId": "COACH-ARUN",
+        "coach": "Arun Prakash",
+        "coachName": "Arun Prakash",
+        "schedule": "Mon, Wed 5:30 PM - 6:30 PM",
+        "capacity": 12,
+        "enrolledCount": 8,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-FB-B1",
+        "name": "FB - B1",
+        "program": "Junior Football Champions",
+        "center": "ANNA NAGAR",
+        "coachId": "COACH-DIVYA",
+        "coach": "Divya R",
+        "coachName": "Divya R",
+        "schedule": "Tue, Thu, Sat 5:00 PM - 6:00 PM",
+        "capacity": 16,
+        "enrolledCount": 12,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-ATH-AN1",
+        "name": "ATH - AN1",
+        "program": "Spartan Athletics & Sprinting",
+        "center": "ANNA NAGAR",
+        "coachId": "COACH-DIVYA",
+        "coach": "Divya R",
+        "coachName": "Divya R",
+        "schedule": "Mon, Wed, Fri 6:00 PM - 7:00 PM",
+        "capacity": 15,
+        "enrolledCount": 9,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-MCS-AN1",
+        "name": "MCS - AN1",
+        "program": "Little Cubs Multi-Sport",
+        "center": "ANNA NAGAR",
+        "coachId": "COACH-DIVYA",
+        "coach": "Divya R",
+        "coachName": "Divya R",
+        "schedule": "Sat, Sun 8:30 AM - 9:30 AM",
+        "capacity": 14,
+        "enrolledCount": 11,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-BB-B1",
+        "name": "BB - B1",
+        "program": "Basketball Rising Stars",
+        "center": "KILPAUK",
+        "coachId": "COACH-VIGNESH",
+        "coach": "Vignesh K",
+        "coachName": "Vignesh K",
+        "schedule": "Mon, Wed, Fri 5:00 PM - 6:00 PM",
+        "capacity": 15,
+        "enrolledCount": 12,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-MV-B1",
+        "name": "MV - B1",
+        "program": "Foundational Movement",
+        "center": "KILPAUK",
+        "coachId": "COACH-VIGNESH",
+        "coach": "Vignesh K",
+        "coachName": "Vignesh K",
+        "schedule": "Tue, Thu, Sat 4:00 PM - 5:00 PM",
+        "capacity": 15,
+        "enrolledCount": 8,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-FM-B1",
+        "name": "FM - B1",
+        "program": "Foundational Movement",
+        "center": "MAHALINGAPURAM",
+        "coachId": "COACH-KEERTHANA",
+        "coach": "Keerthana S",
+        "coachName": "Keerthana S",
+        "schedule": "Mon, Wed, Fri 4:00 PM - 5:00 PM",
+        "capacity": 15,
+        "enrolledCount": 7,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-GYM-MHP1",
+        "name": "GYM - MHP1",
+        "program": "Spartan Gymnastics & Agility",
+        "center": "MAHALINGAPURAM",
+        "coachId": "COACH-KEERTHANA",
+        "coach": "Keerthana S",
+        "coachName": "Keerthana S",
+        "schedule": "Tue, Thu 5:00 PM - 6:00 PM",
+        "capacity": 12,
+        "enrolledCount": 6,
+        "status": "Active"
+    },
+    {
+        "id": "BATCH-FB-MHP1",
+        "name": "FB - MHP1",
+        "program": "Junior Football Champions",
+        "center": "MAHALINGAPURAM",
+        "coachId": "COACH-KEERTHANA",
+        "coach": "Keerthana S",
+        "coachName": "Keerthana S",
+        "schedule": "Sat, Sun 7:30 AM - 9:00 AM",
+        "capacity": 16,
+        "enrolledCount": 10,
+        "status": "Active"
     }
-  ],
+],
   coaches: [
     {
-      id: "COACH-SAM",
-      name: "Coach Sam",
-      phone: "+91 98765 43210",
-      email: "coach.sam@littlespartans.co.in",
-      center: "KK NAGAR",
-      assignedLocations: ["KK NAGAR", "KILPAUK"],
-      specialization: "Foundational Movement",
-      rating: 4.9,
-      status: "Active"
+        "id": "COACH-ARUN",
+        "name": "Arun Prakash",
+        "role": "Senior Coach",
+        "specialization": "Movement & Athletics",
+        "phone": "+91 98401 11223",
+        "email": "arun.prakash@littlespartans.co.in",
+        "center": "KK NAGAR",
+        "assignedLocations": [
+            "KK NAGAR",
+            "KILPAUK"
+        ],
+        "programs": [
+            "Foundational Movement",
+            "Spartan Athletics & Sprinting"
+        ],
+        "assignedBatches": [
+            "LE - B1",
+            "LE - B2"
+        ],
+        "sessions": 24,
+        "attendance": 96,
+        "rating": 4.9,
+        "status": "Active",
+        "evaluationStatus": "Up to Date",
+        "pendingEvaluationsCount": 0,
+        "certification": "NIS Certified Athletics Specialist, Level 2",
+        "experience": "6+ Yrs",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+        "id": "COACH-DIVYA",
+        "name": "Divya R",
+        "role": "Coach",
+        "specialization": "Football",
+        "phone": "+91 98402 22334",
+        "email": "divya.r@littlespartans.co.in",
+        "center": "ANNA NAGAR",
+        "assignedLocations": [
+            "ANNA NAGAR"
+        ],
+        "programs": [
+            "Junior Football Champions"
+        ],
+        "assignedBatches": [
+            "FB - B1"
+        ],
+        "sessions": 18,
+        "attendance": 94,
+        "rating": 4.8,
+        "status": "Active",
+        "evaluationStatus": "Pending (2)",
+        "pendingEvaluationsCount": 2,
+        "certification": "AIFF 'C' License Certified",
+        "experience": "4+ Yrs",
+        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+        "id": "COACH-VIGNESH",
+        "name": "Vignesh K",
+        "role": "Coach",
+        "specialization": "Basketball",
+        "phone": "+91 98403 33445",
+        "email": "vignesh.k@littlespartans.co.in",
+        "center": "KILPAUK",
+        "assignedLocations": [
+            "KILPAUK"
+        ],
+        "programs": [
+            "Basketball Rising Stars",
+            "Foundational Movement"
+        ],
+        "assignedBatches": [
+            "BB - B1",
+            "MV - B1"
+        ],
+        "sessions": 20,
+        "attendance": 92,
+        "rating": 4.7,
+        "status": "Active",
+        "evaluationStatus": "Up to Date",
+        "pendingEvaluationsCount": 0,
+        "certification": "BFI Level 1 Certified Basketball Coach",
+        "experience": "5+ Yrs",
+        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+        "id": "COACH-KEERTHANA",
+        "name": "Keerthana S",
+        "role": "Coach",
+        "specialization": "Foundational Movement",
+        "phone": "+91 98404 44556",
+        "email": "keerthana.s@littlespartans.co.in",
+        "center": "MAHALINGAPURAM",
+        "assignedLocations": [
+            "MAHALINGAPURAM"
+        ],
+        "programs": [
+            "Foundational Movement"
+        ],
+        "assignedBatches": [
+            "FM - B1"
+        ],
+        "sessions": 22,
+        "attendance": 95,
+        "rating": 4.9,
+        "status": "Active",
+        "evaluationStatus": "Review Due",
+        "pendingEvaluationsCount": 1,
+        "certification": "Child Physical Literacy Specialist",
+        "experience": "3+ Yrs",
+        "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+        "id": "COACH-SAM",
+        "name": "Coach Sam",
+        "role": "Lead Coach",
+        "specialization": "Foundational Movement",
+        "phone": "+91 98765 43210",
+        "email": "coach.sam@littlespartans.co.in",
+        "center": "KK NAGAR",
+        "assignedLocations": [
+            "KK NAGAR",
+            "KILPAUK"
+        ],
+        "programs": [
+            "Foundational Movement",
+            "Junior Football Champions"
+        ],
+        "assignedBatches": [
+            "LE - B1",
+            "FB - KKN1"
+        ],
+        "sessions": 24,
+        "attendance": 97,
+        "rating": 4.9,
+        "status": "Active",
+        "evaluationStatus": "Up to Date",
+        "pendingEvaluationsCount": 0,
+        "certification": "Youth Athletic Development Certified",
+        "experience": "5+ Yrs",
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
     }
-  ],
+],
   students: [
     {
       id: "STU-LS-001",
@@ -138,6 +415,519 @@ export const initialAcademyData = {
       parentName: "Senthil S",
       parentPhone: "+91 98765 00001",
       parentEmail: "parent.priya@littlespartans.co.in"
+    },
+    {
+            "id": "COACH-KARTHIK-N",
+            "name": "Karthik Narayanan",
+            "role": "Senior Coach",
+            "specialization": "Football",
+            "phone": "+91 98405 55667",
+            "email": "karthik.n@littlespartans.co.in",
+            "center": "ANNA NAGAR",
+            "assignedLocations": [
+                    "ANNA NAGAR"
+            ],
+            "programs": [
+                    "Junior Football Champions"
+            ],
+            "assignedBatches": [
+                    "FB - B1"
+            ],
+            "sessions": 18,
+            "attendance": 95,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "AFC 'B' Diploma",
+            "experience": "7+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-MEENAKSHI-S",
+            "name": "Meenakshi Sundaram",
+            "role": "Coach",
+            "specialization": "Gymnastics & Agility",
+            "phone": "+91 98406 66778",
+            "email": "meenakshi.s@littlespartans.co.in",
+            "center": "KK NAGAR",
+            "assignedLocations": [
+                    "KK NAGAR"
+            ],
+            "programs": [
+                    "Spartan Gymnastics & Agility"
+            ],
+            "assignedBatches": [
+                    "LE - B1"
+            ],
+            "sessions": 20,
+            "attendance": 96,
+            "rating": 4.8,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "National Gymnastics Coach",
+            "experience": "4+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-DEEPA-R",
+            "name": "Deepa Ramesh",
+            "role": "Coach",
+            "specialization": "Foundational Movement",
+            "phone": "+91 98407 77889",
+            "email": "deepa.r@littlespartans.co.in",
+            "center": "MAHALINGAPURAM",
+            "assignedLocations": [
+                    "MAHALINGAPURAM"
+            ],
+            "programs": [
+                    "Foundational Movement"
+            ],
+            "assignedBatches": [
+                    "FM - B1"
+            ],
+            "sessions": 22,
+            "attendance": 94,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Child Movement Specialist",
+            "experience": "5+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-ARVIND-S",
+            "name": "Arvind Swamy",
+            "role": "Coach",
+            "specialization": "Basketball",
+            "phone": "+91 98408 88990",
+            "email": "arvind.s@littlespartans.co.in",
+            "center": "KILPAUK",
+            "assignedLocations": [
+                    "KILPAUK"
+            ],
+            "programs": [
+                    "Basketball Rising Stars"
+            ],
+            "assignedBatches": [
+                    "BB - B1"
+            ],
+            "sessions": 19,
+            "attendance": 93,
+            "rating": 4.8,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "State Basketball Coach",
+            "experience": "4+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-HARISH-K",
+            "name": "Harish Kumar",
+            "role": "Coach",
+            "specialization": "Athletics & Sprinting",
+            "phone": "+91 98409 99001",
+            "email": "harish.k@littlespartans.co.in",
+            "center": "KK NAGAR",
+            "assignedLocations": [
+                    "KK NAGAR"
+            ],
+            "programs": [
+                    "Spartan Athletics & Sprinting"
+            ],
+            "assignedBatches": [
+                    "ATH - KKN1"
+            ],
+            "sessions": 21,
+            "attendance": 97,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Track & Field Coach",
+            "experience": "5+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-POOJA-S",
+            "name": "Pooja Sundar",
+            "role": "Coach",
+            "specialization": "Foundational Movement",
+            "phone": "+91 98410 11223",
+            "email": "pooja.s@littlespartans.co.in",
+            "center": "ANNA NAGAR",
+            "assignedLocations": [
+                    "ANNA NAGAR"
+            ],
+            "programs": [
+                    "Foundational Movement"
+            ],
+            "assignedBatches": [
+                    "FB - B1"
+            ],
+            "sessions": 18,
+            "attendance": 95,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Movement Educator",
+            "experience": "3+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-ASHWIN-B",
+            "name": "Ashwin Balaji",
+            "role": "Coach",
+            "specialization": "Football",
+            "phone": "+91 98411 22334",
+            "email": "ashwin.b@littlespartans.co.in",
+            "center": "KILPAUK",
+            "assignedLocations": [
+                    "KILPAUK"
+            ],
+            "programs": [
+                    "Junior Football Champions"
+            ],
+            "assignedBatches": [
+                    "MV - B1"
+            ],
+            "sessions": 20,
+            "attendance": 94,
+            "rating": 4.8,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Grassroots Football Leader",
+            "experience": "4+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-SNEHA-I",
+            "name": "Sneha Iyer",
+            "role": "Coach",
+            "specialization": "Gymnastics & Agility",
+            "phone": "+91 98412 33445",
+            "email": "sneha.i@littlespartans.co.in",
+            "center": "MAHALINGAPURAM",
+            "assignedLocations": [
+                    "MAHALINGAPURAM"
+            ],
+            "programs": [
+                    "Spartan Gymnastics & Agility"
+            ],
+            "assignedBatches": [
+                    "GYM - MHP1"
+            ],
+            "sessions": 22,
+            "attendance": 96,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Agility Specialist",
+            "experience": "4+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-VARUN-P",
+            "name": "Varun Prasad",
+            "role": "Coach",
+            "specialization": "Athletics & Sprinting",
+            "phone": "+91 98413 44556",
+            "email": "varun.p@littlespartans.co.in",
+            "center": "KK NAGAR",
+            "assignedLocations": [
+                    "KK NAGAR"
+            ],
+            "programs": [
+                    "Spartan Athletics & Sprinting"
+            ],
+            "assignedBatches": [
+                    "ATH - KKN1"
+            ],
+            "sessions": 20,
+            "attendance": 95,
+            "rating": 4.8,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Athletics Coach",
+            "experience": "3+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-ROHIT-V",
+            "name": "Rohit Verma",
+            "role": "Coach",
+            "specialization": "Basketball",
+            "phone": "+91 98414 55667",
+            "email": "rohit.v@littlespartans.co.in",
+            "center": "ANNA NAGAR",
+            "assignedLocations": [
+                    "ANNA NAGAR"
+            ],
+            "programs": [
+                    "Basketball Rising Stars"
+            ],
+            "assignedBatches": [
+                    "BB - AN1"
+            ],
+            "sessions": 18,
+            "attendance": 96,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Youth Basketball Specialist",
+            "experience": "5+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-PRIYA-V",
+            "name": "Priya Venkataraman",
+            "role": "Coach",
+            "specialization": "Foundational Movement",
+            "phone": "+91 98415 66778",
+            "email": "priya.v@littlespartans.co.in",
+            "center": "KILPAUK",
+            "assignedLocations": [
+                    "KILPAUK"
+            ],
+            "programs": [
+                    "Foundational Movement"
+            ],
+            "assignedBatches": [
+                    "MV - B1"
+            ],
+            "sessions": 21,
+            "attendance": 95,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Early Childhood Physical Educator",
+            "experience": "4+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-NAVEEN-R",
+            "name": "Naveen Raj",
+            "role": "Coach",
+            "specialization": "Gymnastics & Agility",
+            "phone": "+91 98416 77889",
+            "email": "naveen.r@littlespartans.co.in",
+            "center": "MAHALINGAPURAM",
+            "assignedLocations": [
+                    "MAHALINGAPURAM"
+            ],
+            "programs": [
+                    "Spartan Gymnastics & Agility"
+            ],
+            "assignedBatches": [
+                    "GYM - MHP1"
+            ],
+            "sessions": 20,
+            "attendance": 94,
+            "rating": 4.8,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Acrobatics & Agility Coach",
+            "experience": "3+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-ANANYA-K",
+            "name": "Ananya Krishnan",
+            "role": "Coach",
+            "specialization": "Football",
+            "phone": "+91 98417 88990",
+            "email": "ananya.k@littlespartans.co.in",
+            "center": "KK NAGAR",
+            "assignedLocations": [
+                    "KK NAGAR"
+            ],
+            "programs": [
+                    "Junior Football Champions"
+            ],
+            "assignedBatches": [
+                    "FB - KKN1"
+            ],
+            "sessions": 22,
+            "attendance": 96,
+            "rating": 4.9,
+            "status": "Active",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Youth Football Coach",
+            "experience": "4+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-SPEC-VIKRAM",
+            "name": "Dr. Vikram Sen",
+            "role": "Visiting Specialist",
+            "specialization": "Sports Physiotherapy",
+            "phone": "+91 98418 99001",
+            "email": "dr.vikram@littlespartans.co.in",
+            "center": "KK NAGAR",
+            "assignedLocations": [
+                    "KK NAGAR"
+            ],
+            "programs": [
+                    "Foundational Movement"
+            ],
+            "assignedBatches": [
+                    "LE - B1"
+            ],
+            "sessions": 8,
+            "attendance": 98,
+            "rating": 5,
+            "status": "On Leave",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Certified Sports Physiotherapist & Specialist",
+            "experience": "10+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-SPEC-SHALINI",
+            "name": "Shalini Menon",
+            "role": "Visiting Specialist",
+            "specialization": "Child Biomechanics",
+            "phone": "+91 98419 11223",
+            "email": "shalini.m@littlespartans.co.in",
+            "center": "ANNA NAGAR",
+            "assignedLocations": [
+                    "ANNA NAGAR"
+            ],
+            "programs": [
+                    "Foundational Movement"
+            ],
+            "assignedBatches": [
+                    "FB - B1"
+            ],
+            "sessions": 6,
+            "attendance": 97,
+            "rating": 4.9,
+            "status": "On Leave",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Certified Child Biomechanics Specialist",
+            "experience": "8+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-SPEC-RAJESH",
+            "name": "Rajesh Kannan",
+            "role": "Visiting Specialist",
+            "specialization": "Strength & Conditioning",
+            "phone": "+91 98420 22334",
+            "email": "rajesh.k@littlespartans.co.in",
+            "center": "KILPAUK",
+            "assignedLocations": [
+                    "KILPAUK"
+            ],
+            "programs": [
+                    "Basketball Rising Stars"
+            ],
+            "assignedBatches": [
+                    "BB - B1"
+            ],
+            "sessions": 10,
+            "attendance": 96,
+            "rating": 4.9,
+            "status": "Inactive",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Certified Strength & Conditioning Specialist",
+            "experience": "9+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-SPEC-GOWTHAM",
+            "name": "Gowtham Mani",
+            "role": "Visiting Specialist",
+            "specialization": "Speed & Agility",
+            "phone": "+91 98421 33445",
+            "email": "gowtham.m@littlespartans.co.in",
+            "center": "MAHALINGAPURAM",
+            "assignedLocations": [
+                    "MAHALINGAPURAM"
+            ],
+            "programs": [
+                    "Spartan Gymnastics & Agility"
+            ],
+            "assignedBatches": [
+                    "FM - B1"
+            ],
+            "sessions": 8,
+            "attendance": 95,
+            "rating": 4.8,
+            "status": "Inactive",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Certified Speed & Agility Specialist",
+            "experience": "7+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-SPEC-BHAVANI",
+            "name": "Bhavani Shankar",
+            "role": "Visiting Specialist",
+            "specialization": "Gymnastics Technical",
+            "phone": "+91 98422 44556",
+            "email": "bhavani.s@littlespartans.co.in",
+            "center": "KK NAGAR",
+            "assignedLocations": [
+                    "KK NAGAR"
+            ],
+            "programs": [
+                    "Spartan Gymnastics & Agility"
+            ],
+            "assignedBatches": [
+                    "LE - B1"
+            ],
+            "sessions": 8,
+            "attendance": 97,
+            "rating": 4.9,
+            "status": "On Leave",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Certified Gymnastics Technical Specialist",
+            "experience": "8+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+            "id": "COACH-SPEC-MANOJ",
+            "name": "Manoj Prabhakar",
+            "role": "Visiting Specialist",
+            "specialization": "Athletic Assessment",
+            "phone": "+91 98423 55667",
+            "email": "manoj.p@littlespartans.co.in",
+            "center": "ANNA NAGAR",
+            "assignedLocations": [
+                    "ANNA NAGAR"
+            ],
+            "programs": [
+                    "Junior Football Champions"
+            ],
+            "assignedBatches": [
+                    "FB - B1"
+            ],
+            "sessions": 6,
+            "attendance": 96,
+            "rating": 4.9,
+            "status": "Inactive",
+            "evaluationStatus": "Up to Date",
+            "pendingEvaluationsCount": 0,
+            "certification": "Certified Athletic Performance Specialist",
+            "experience": "11+ Yrs",
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
     },
     {
       id: "STU-LS-002",
@@ -446,7 +1236,17 @@ export const initialAcademyData = {
   classSchedules: [],
   attendanceRecords: [],
   notifications: [],
-  superCoaches: [],
+  superCoaches: [
+    {
+      id: "SC-001",
+      name: "Anita R.",
+      title: "Super Coach",
+      email: "anita.r@littlespartans.co.in",
+      phone: "+91 98401 22345",
+      assignedLocations: ["KK NAGAR", "ANNA NAGAR", "KILPAUK", "MAHALINGAPURAM"],
+      role: "super_coach"
+    }
+  ],
   equipment: [],
   equipmentReports: [],
 
