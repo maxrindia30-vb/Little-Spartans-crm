@@ -25,6 +25,7 @@ import {
   Sparkles,
   Download,
   AlertTriangle,
+  AlertCircle,
   ArrowRight,
   Check,
   Building2,
@@ -105,6 +106,8 @@ export default function AcademySettings() {
   // Center Modal States (Add & Edit)
   const [isCenterModalOpen, setIsCenterModalOpen] = useState(false);
   const [editingCenter, setEditingCenter] = useState(null); // null = Add, object = Edit
+  const [centerFormErrors, setCenterFormErrors] = useState({});
+  const [isSavingCenter, setIsSavingCenter] = useState(false);
   const [centerForm, setCenterForm] = useState({
     name: '',
     code: '',
@@ -112,12 +115,12 @@ export default function AcademySettings() {
     city: 'Chennai',
     state: 'Tamil Nadu',
     pinCode: '600001',
-    contactPerson: '',
-    contactPhone: '',
+    contactPerson: 'Operations Lead',
+    contactPhone: '+91 98765 43210',
     operatingDays: 'Mon - Sat',
     operatingHours: '06:00 AM - 08:30 PM',
     capacity: 150,
-    facilities: 'Main Turf Ground, Training Court A, Warm-up Studio',
+    facilities: 'Main Turf Ground, Training Court A, Practice Arena B, Warm-up Studio',
     programs: ['Spartan Gymnastics & Agility', 'Junior Football Champions', 'Spartan Athletics & Sprinting'],
     status: 'Active'
   });
@@ -172,9 +175,10 @@ export default function AcademySettings() {
   // Open Add Center modal
   const handleOpenAddCenter = () => {
     setEditingCenter(null);
+    setCenterFormErrors({});
     setCenterForm({
       name: '',
-      code: `LS-C${(centersList.length + 1)}`,
+      code: '',
       address: '',
       city: 'Chennai',
       state: 'Tamil Nadu',
@@ -194,14 +198,15 @@ export default function AcademySettings() {
   // Open Edit Center modal
   const handleOpenEditCenter = (center) => {
     setEditingCenter(center);
+    setCenterFormErrors({});
     setCenterForm({
       name: center.name || '',
-      code: center.code || `LS-${center.name?.substring(0, 3)}`,
+      code: center.code || `LS-${(center.name || '').substring(0, 3).toUpperCase()}`,
       address: center.address || '',
       city: center.city || 'Chennai',
       state: center.state || 'Tamil Nadu',
       pinCode: center.pinCode || '600001',
-      contactPerson: center.contactPerson || 'Center Operations Manager',
+      contactPerson: center.contactPerson || 'Operations Lead',
       contactPhone: center.contactPhone || '+91 98765 43210',
       operatingDays: center.operatingDays || 'Mon - Sat',
       operatingHours: center.operatingHours || '06:00 AM - 08:30 PM',
@@ -217,24 +222,108 @@ export default function AcademySettings() {
 
   // Save Center handler
   const handleSaveCenter = (e) => {
-    e.preventDefault();
-    if (!centerForm.name.trim()) {
-      addToast('Please enter a valid center name.', 'error');
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    if (isSavingCenter) return;
+
+    const errors = {};
+    const trimmedName = (centerForm.name || '').trim();
+    const trimmedCode = (centerForm.code || '').trim().toUpperCase();
+    const trimmedAddress = (centerForm.address || '').trim();
+
+    // 1. Validate Center Name
+    if (!trimmedName) {
+      errors.name = 'Center Name is required.';
+    } else {
+      const duplicateName = centersList.some(
+        (c) => c.name && c.name.trim().toUpperCase() === trimmedName.toUpperCase() && (!editingCenter || c.id !== editingCenter.id)
+      );
+      if (duplicateName) {
+        errors.name = `Center "${trimmedName}" already exists. Please choose a unique name.`;
+      }
+    }
+
+    // 2. Validate Center Code
+    if (!trimmedCode) {
+      errors.code = 'Center Code is required.';
+    } else {
+      const duplicateCode = centersList.some(
+        (c) => c.code && c.code.trim().toUpperCase() === trimmedCode && (!editingCenter || c.id !== editingCenter.id)
+      );
+      if (duplicateCode) {
+        errors.code = `Center Code "${trimmedCode}" is already in use. Please enter a unique code.`;
+      }
+    }
+
+    // 3. Validate Full Street Address
+    if (!trimmedAddress) {
+      errors.address = 'Full Street Address is required.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setCenterFormErrors(errors);
+      addToast('Please fill in all mandatory fields marked with *.', 'error');
       return;
     }
 
-    const payload = {
-      ...centerForm,
-      facilities: centerForm.facilities.split(',').map(f => f.trim()).filter(Boolean),
-      courts: centerForm.facilities.split(',').map(f => f.trim()).filter(Boolean),
-    };
+    setCenterFormErrors({});
+    setIsSavingCenter(true);
 
-    if (editingCenter) {
-      updateLocation(editingCenter.id, payload);
-    } else {
-      addLocation(payload);
+    try {
+      const facilitiesList = Array.isArray(centerForm.facilities)
+        ? centerForm.facilities
+        : typeof centerForm.facilities === 'string'
+        ? centerForm.facilities.split(',').map((f) => f.trim()).filter(Boolean)
+        : [];
+
+      const payload = {
+        ...centerForm,
+        name: trimmedName,
+        code: trimmedCode,
+        address: trimmedAddress,
+        city: (centerForm.city || 'Chennai').trim(),
+        state: (centerForm.state || 'Tamil Nadu').trim(),
+        pinCode: (centerForm.pinCode || '600001').trim(),
+        contactPerson: (centerForm.contactPerson || 'Operations Lead').trim(),
+        contactPhone: (centerForm.contactPhone || '+91 98765 43210').trim(),
+        operatingDays: (centerForm.operatingDays || 'Mon - Sat').trim(),
+        operatingHours: (centerForm.operatingHours || '06:00 AM - 08:30 PM').trim(),
+        capacity: parseInt(centerForm.capacity, 10) || 150,
+        facilities: facilitiesList.length > 0 ? facilitiesList : ['Main Turf Ground', 'Training Court A'],
+        courts: facilitiesList.length > 0 ? facilitiesList : ['Main Turf Ground', 'Training Court A'],
+        status: centerForm.status === 'Inactive' ? 'Inactive' : 'Active'
+      };
+
+      let result;
+      if (editingCenter) {
+        result = updateLocation(editingCenter.id, payload);
+      } else {
+        result = addLocation(payload);
+      }
+
+      if (result && result.success === false) {
+        if (result.error) {
+          addToast(result.error, 'error');
+          if (result.error.toLowerCase().includes('code')) {
+            setCenterFormErrors((prev) => ({ ...prev, code: result.error }));
+          } else if (result.error.toLowerCase().includes('name') || result.error.toLowerCase().includes('center')) {
+            setCenterFormErrors((prev) => ({ ...prev, name: result.error }));
+          }
+        }
+        setIsSavingCenter(false);
+        return; // DO NOT CLOSE MODAL IF CREATION FAILS
+      }
+
+      // Close modal on successful creation
+      setIsCenterModalOpen(false);
+      setEditingCenter(null);
+    } catch (err) {
+      console.error('Error saving academy center:', err);
+      addToast('An error occurred while saving the center. Please try again.', 'error');
+    } finally {
+      setIsSavingCenter(false);
     }
-    setIsCenterModalOpen(false);
   };
 
   // Save General Info with confirmation
@@ -859,6 +948,55 @@ export default function AcademySettings() {
               </button>
             </div>
 
+            {/* Center Summary KPIs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-[#FFF9F5] border border-[#F4510B18] rounded-2xl p-3.5 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-[#172B50]/60">Total Centers</p>
+                  <p className="text-xl font-black text-[#172B50] mt-0.5">{centersList.length}</p>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center border border-[#F4510B20]">
+                  <Building2 className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-[#F0FDF4] border border-[#16A34A18] rounded-2xl p-3.5 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-[#172B50]/60">Active Centers</p>
+                  <p className="text-xl font-black text-emerald-600 mt-0.5">
+                    {centersList.filter((c) => c.status !== 'Inactive').length}
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-[#F8FAFC] border border-[#172B5014] rounded-2xl p-3.5 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-[#172B50]/60">Inactive Centers</p>
+                  <p className="text-xl font-black text-gray-600 mt-0.5">
+                    {centersList.filter((c) => c.status === 'Inactive').length}
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center border border-gray-200">
+                  <Clock className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-[#F0F7FF] border border-[#0284C718] rounded-2xl p-3.5 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-[#172B50]/60">Total Capacity</p>
+                  <p className="text-xl font-black text-[#0284C7] mt-0.5">
+                    {centersList.reduce((acc, c) => acc + (parseInt(c.capacity, 10) || 0), 0)}
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#0284C7] flex items-center justify-center border border-[#0284C720]">
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
             {/* Centers Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
@@ -1177,29 +1315,57 @@ export default function AcademySettings() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveCenter} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSaveCenter} noValidate className="space-y-3.5 text-xs">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
                   <label className="block font-bold text-[#172B50] mb-1">Center Name *</label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Adyar Center"
+                    placeholder="e.g. Arumbakkam"
                     value={centerForm.name}
-                    onChange={(e) => setCenterForm({ ...centerForm, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-[#172B5025] font-bold outline-none focus:ring-2 focus:ring-[#F4510B]"
+                    onChange={(e) => {
+                      setCenterForm({ ...centerForm, name: e.target.value });
+                      if (centerFormErrors.name) {
+                        setCenterFormErrors((prev) => ({ ...prev, name: null }));
+                      }
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl border font-bold outline-none transition-all focus:ring-2 ${
+                      centerFormErrors.name
+                        ? 'border-rose-500 bg-rose-50/20 focus:ring-rose-500'
+                        : 'border-[#172B5025] focus:ring-[#F4510B]'
+                    }`}
                   />
+                  {centerFormErrors.name && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1 flex items-center gap-1 animate-in fade-in">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{centerFormErrors.name}</span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block font-bold text-[#172B50] mb-1">Center Code *</label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. LS-ADY"
+                    placeholder="e.g. LS-ARM"
                     value={centerForm.code}
-                    onChange={(e) => setCenterForm({ ...centerForm, code: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-[#172B5025] font-mono font-bold uppercase outline-none focus:ring-2 focus:ring-[#F4510B]"
+                    onChange={(e) => {
+                      setCenterForm({ ...centerForm, code: e.target.value.toUpperCase() });
+                      if (centerFormErrors.code) {
+                        setCenterFormErrors((prev) => ({ ...prev, code: null }));
+                      }
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl border font-mono font-bold uppercase outline-none transition-all focus:ring-2 ${
+                      centerFormErrors.code
+                        ? 'border-rose-500 bg-rose-50/20 focus:ring-rose-500'
+                        : 'border-[#172B5025] focus:ring-[#F4510B]'
+                    }`}
                   />
+                  {centerFormErrors.code && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1 flex items-center gap-1 animate-in fade-in">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{centerFormErrors.code}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1207,12 +1373,26 @@ export default function AcademySettings() {
                 <label className="block font-bold text-[#172B50] mb-1">Full Street Address *</label>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. 24 Gandhi Road, Adyar"
+                  placeholder="e.g. 12 Poonamallee High Rd, Arumbakkam"
                   value={centerForm.address}
-                  onChange={(e) => setCenterForm({ ...centerForm, address: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-[#172B5025] outline-none focus:ring-2 focus:ring-[#F4510B]"
+                  onChange={(e) => {
+                    setCenterForm({ ...centerForm, address: e.target.value });
+                    if (centerFormErrors.address) {
+                      setCenterFormErrors((prev) => ({ ...prev, address: null }));
+                    }
+                  }}
+                  className={`w-full px-3 py-2 rounded-xl border outline-none transition-all focus:ring-2 ${
+                    centerFormErrors.address
+                      ? 'border-rose-500 bg-rose-50/20 focus:ring-rose-500'
+                      : 'border-[#172B5025] focus:ring-[#F4510B]'
+                  }`}
                 />
+                {centerFormErrors.address && (
+                  <p className="text-[11px] font-bold text-rose-500 mt-1 flex items-center gap-1 animate-in fade-in">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{centerFormErrors.address}</span>
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -1250,7 +1430,7 @@ export default function AcademySettings() {
                   <label className="block font-bold text-[#172B50] mb-1">Contact Person</label>
                   <input
                     type="text"
-                    placeholder="e.g. Center Coordinator"
+                    placeholder="e.g. Operations Lead"
                     value={centerForm.contactPerson}
                     onChange={(e) => setCenterForm({ ...centerForm, contactPerson: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-[#172B5025] outline-none focus:ring-2 focus:ring-[#F4510B]"
@@ -1260,7 +1440,7 @@ export default function AcademySettings() {
                   <label className="block font-bold text-[#172B50] mb-1">Contact Phone</label>
                   <input
                     type="text"
-                    placeholder="e.g. +91 98840 55441"
+                    placeholder="e.g. +91 98765 43210"
                     value={centerForm.contactPhone}
                     onChange={(e) => setCenterForm({ ...centerForm, contactPhone: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-[#172B5025] outline-none focus:ring-2 focus:ring-[#F4510B]"
@@ -1304,7 +1484,7 @@ export default function AcademySettings() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Main Turf Ground, Training Court A, Practice Arena B"
+                  placeholder="Main Turf Ground, Training Court A, Practice Arena B, Warm-up Studio"
                   value={centerForm.facilities}
                   onChange={(e) => setCenterForm({ ...centerForm, facilities: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl border border-[#172B5025] outline-none focus:ring-2 focus:ring-[#F4510B]"
@@ -1339,16 +1519,26 @@ export default function AcademySettings() {
               <div className="pt-3 border-t border-[#172B5014] flex items-center justify-end gap-2">
                 <button
                   type="button"
+                  disabled={isSavingCenter}
                   onClick={() => setIsCenterModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-[#172B50] hover:bg-gray-100 rounded-xl cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#F4510B] text-white text-xs font-black hover:brightness-110 active:scale-95 shadow-md shadow-[#F4510B]/25 cursor-pointer"
+                  disabled={isSavingCenter}
+                  onClick={handleSaveCenter}
+                  className="px-5 py-2 rounded-xl bg-[#F4510B] text-white text-xs font-black hover:brightness-110 active:scale-95 shadow-md shadow-[#F4510B]/25 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
-                  {editingCenter ? 'Save Center' : 'Create Center'}
+                  {isSavingCenter ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>{editingCenter ? 'Saving Center...' : 'Creating Center...'}</span>
+                    </>
+                  ) : (
+                    editingCenter ? 'Save Center' : 'Create Center'
+                  )}
                 </button>
               </div>
             </form>
