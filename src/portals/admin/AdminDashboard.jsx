@@ -908,7 +908,7 @@ export default function AdminDashboard() {
               {/* Tile 2: Equipment & Kits */}
               <button
                 type="button"
-                onClick={() => setCurrentView('equipment')}
+                onClick={() => setCurrentView('equipment', 'inventory')}
                 className="bg-white rounded-xl p-2 border border-[#16A34A15] shadow-2xs hover:border-[#0284C735] hover:shadow-xs active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center text-center group h-[96px] sm:h-[100px]"
               >
                 <div className="w-7 h-7 rounded-lg bg-[#F0F9FF] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">

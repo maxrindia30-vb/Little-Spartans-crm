@@ -104,6 +104,11 @@ export default function SuperCoachPortalView() {
   // Attendance sub-view toggle: Coach Attendance Register vs Student Progression
   const [attendanceSubView, setAttendanceSubView] = useState('coach_register');
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (setCurrentView) setCurrentView(tab);
+  };
+
   // Keep activeTab synced with currentView when sidebar triggers navigation
   React.useEffect(() => {
     if (['dashboard', 'evaluations', 'locations', 'coaches', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
@@ -531,7 +536,7 @@ export default function SuperCoachPortalView() {
           todayClasses={todayClasses}
           assignedLocations={assignedLocations}
           setSelectedLocation={setSelectedLocation}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           setIsCreateScheduleModalOpen={setIsCreateScheduleModalOpen}
           handleOpenIssueModal={handleOpenIssueModal}
           handleOpenReassign={handleOpenReassign}

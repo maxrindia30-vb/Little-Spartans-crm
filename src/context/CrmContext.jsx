@@ -365,8 +365,8 @@ export function CrmProvider({ children }) {
           compensationHistory: (Array.isArray(parsed.compensationHistory) ? parsed.compensationHistory : []).filter(h => !h.id?.startsWith('CH-')),
           notifications: (Array.isArray(parsed.notifications) ? parsed.notifications : []).filter(n => !n.id?.startsWith('NOTIF-')),
           superCoaches: (Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : (initialAcademyData.superCoaches || [])).filter(sc => sc.id !== 'SCOACH-1' && !sc.name?.includes('Kabir')),
-          equipment: Array.isArray(parsed.equipment) ? parsed.equipment : [],
-          equipmentReports: Array.isArray(parsed.equipmentReports) ? parsed.equipmentReports : [],
+          equipment: (Array.isArray(parsed.equipment) && parsed.equipment.length > 0) ? parsed.equipment : initialEquipmentInventory,
+          equipmentReports: (Array.isArray(parsed.equipmentReports) && parsed.equipmentReports.length > 0) ? parsed.equipmentReports : initialEquipmentReports,
           evaluations: (Array.isArray(parsed.evaluations) && parsed.evaluations.length > 0
             ? parsed.evaluations
             : (initialAcademyData.evaluations || [])),
@@ -466,6 +466,8 @@ export function CrmProvider({ children }) {
         resolvedSubTab = 'coaches';
       } else if (view === 'people') {
         resolvedSubTab = ['students', 'parents', 'coaches'].includes(activeSubTab) ? activeSubTab : 'students';
+      } else if (view === 'equipment' || view === 'equipment_management') {
+        resolvedSubTab = ['inventory', 'reports'].includes(activeSubTab) ? activeSubTab : 'inventory';
       }
     }
 
@@ -4066,36 +4068,97 @@ export function CrmProvider({ children }) {
 
   // Equipment Management Actions
   const addEquipmentItem = (itemPayload) => {
+    const rawLoc = (itemPayload.location || '').trim();
+    if (!itemPayload.name || !itemPayload.name.trim()) {
+      addToast('Equipment Name is required.', 'error');
+      return { success: false, error: 'Name is required' };
+    }
+    if (!rawLoc) {
+      addToast('Academy Location is required.', 'error');
+      return { success: false, error: 'Location is required' };
+    }
+
+    // Check duplicate in the SAME location
+    const existingSameLoc = (data.equipment || []).find(
+      e => e.location?.toUpperCase() === rawLoc.toUpperCase() && e.name?.trim().toLowerCase() === itemPayload.name.trim().toLowerCase()
+    );
+    if (existingSameLoc) {
+      addToast(`Equipment "${itemPayload.name.trim()}" already exists in ${rawLoc} inventory. Updating stock instead.`, 'info');
+      return updateEquipmentItem(existingSameLoc.id, {
+        totalQty: (existingSameLoc.totalQty || 0) + (Number(itemPayload.totalQty) || 0),
+        availableQty: (existingSameLoc.availableQty || 0) + (Number(itemPayload.availableQty) || Number(itemPayload.totalQty) || 0),
+        condition: itemPayload.condition || existingSameLoc.condition,
+        remarks: itemPayload.remarks ? `${existingSameLoc.remarks ? existingSameLoc.remarks + ' | ' : ''}${itemPayload.remarks}` : existingSameLoc.remarks
+      }, 'Added additional stock to existing record');
+    }
+
+    const totalQty = Number(itemPayload.totalQty) || 0;
+    const damagedQty = Number(itemPayload.damagedQty) || 0;
+    const missingQty = Number(itemPayload.missingQty) || 0;
+    const availableQty = itemPayload.availableQty !== undefined ? Number(itemPayload.availableQty) : Math.max(0, totalQty - damagedQty - missingQty);
+
     const newItem = {
       ...itemPayload,
-      id: itemPayload.id || `EQ-${itemPayload.location?.slice(0, 3).toUpperCase() || 'GEN'}-${Date.now().toString().slice(-4)}`,
-      totalQty: Number(itemPayload.totalQty) || 0,
-      availableQty: Number(itemPayload.availableQty) || Number(itemPayload.totalQty) || 0,
-      damagedQty: Number(itemPayload.damagedQty) || 0,
-      missingQty: Number(itemPayload.missingQty) || 0,
+      id: itemPayload.id || `EQ-${rawLoc.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`,
+      name: itemPayload.name.trim(),
+      category: itemPayload.category || 'Football',
+      location: rawLoc,
+      totalQty,
+      availableQty,
+      damagedQty,
+      missingQty,
       condition: itemPayload.condition || 'Good',
       purchaseDate: itemPayload.purchaseDate || new Date().toISOString().split('T')[0],
       lastInspectionDate: itemPayload.lastInspectionDate || new Date().toISOString().split('T')[0],
-      lastUpdatedBy: itemPayload.lastUpdatedBy || 'Administrator',
+      lastUpdatedBy: itemPayload.lastUpdatedBy || currentUserProfiles[currentPortal]?.name || 'Administrator',
+      imageUrl: itemPayload.imageUrl || '',
       remarks: itemPayload.remarks || '',
       history: [
         {
           id: `EQH-${Date.now()}`,
           timestamp: new Date().toISOString(),
           action: 'Item Registered',
-          user: itemPayload.lastUpdatedBy || 'Administrator',
-          role: currentPortal === 'super_coach' ? 'Super Coach' : 'Admin',
-          details: `Initial stock registered: ${itemPayload.totalQty} units.`
+          user: itemPayload.lastUpdatedBy || currentUserProfiles[currentPortal]?.name || 'Administrator',
+          role: currentPortal === 'super_coach' ? 'Super Coach' : currentPortal === 'coach' ? 'Coach' : 'Admin',
+          details: `Initial stock registered for ${rawLoc}: ${totalQty} total units (${availableQty} available).`
         }
       ]
     };
 
+    // If added to fulfill a coach request, mark that request as Fulfilled
+    let updatedReports = data.equipmentReports || [];
+    if (itemPayload.linkedRequestId) {
+      updatedReports = updatedReports.map(r => {
+        if (r.id === itemPayload.linkedRequestId) {
+          return {
+            ...r,
+            status: 'Fulfilled',
+            equipmentId: newItem.id,
+            fulfilledAt: new Date().toISOString(),
+            history: [
+              ...(r.history || []),
+              {
+                id: `EQRH-${Date.now()}`,
+                timestamp: new Date().toISOString(),
+                action: 'Equipment Added & Fulfilled',
+                user: newItem.lastUpdatedBy,
+                role: currentPortal === 'super_coach' ? 'Super Coach' : 'Admin',
+                details: `Added new equipment record ${newItem.id} to satisfy request.`
+              }
+            ]
+          };
+        }
+        return r;
+      });
+    }
+
     setData(prev => ({
       ...prev,
-      equipment: [newItem, ...(prev.equipment || [])]
+      equipment: [newItem, ...(prev.equipment || [])],
+      equipmentReports: updatedReports
     }));
 
-    addToast(`Equipment "${newItem.name}" added to ${newItem.location} inventory.`, 'success');
+    addToast(`Equipment "${newItem.name}" registered for ${newItem.location} inventory.`, 'success');
     return { success: true, item: newItem };
   };
 
@@ -4106,23 +4169,33 @@ export function CrmProvider({ children }) {
       return { success: false };
     }
 
+    const totalQty = updates.totalQty !== undefined ? Number(updates.totalQty) : existing.totalQty;
+    const damagedQty = updates.damagedQty !== undefined ? Number(updates.damagedQty) : existing.damagedQty;
+    const missingQty = updates.missingQty !== undefined ? Number(updates.missingQty) : existing.missingQty;
+    const availableQty = updates.availableQty !== undefined 
+      ? Number(updates.availableQty) 
+      : Math.max(0, totalQty - damagedQty - missingQty);
+
+    const userName = updates.lastUpdatedBy || currentUserProfiles[currentPortal]?.name || 'Admin';
+
     const updatedItem = {
       ...existing,
       ...updates,
-      totalQty: updates.totalQty !== undefined ? Number(updates.totalQty) : existing.totalQty,
-      availableQty: updates.availableQty !== undefined ? Number(updates.availableQty) : existing.availableQty,
-      damagedQty: updates.damagedQty !== undefined ? Number(updates.damagedQty) : existing.damagedQty,
-      missingQty: updates.missingQty !== undefined ? Number(updates.missingQty) : existing.missingQty,
-      lastUpdatedBy: updates.lastUpdatedBy || currentUserProfiles[currentPortal]?.name || 'Admin',
+      totalQty,
+      availableQty,
+      damagedQty,
+      missingQty,
+      condition: updates.condition || existing.condition,
+      lastUpdatedBy: userName,
       lastInspectionDate: updates.lastInspectionDate || new Date().toISOString().split('T')[0],
       history: [
         {
           id: `EQH-${Date.now()}`,
           timestamp: new Date().toISOString(),
-          action: updates.action || 'Inventory Updated',
-          user: updates.lastUpdatedBy || currentUserProfiles[currentPortal]?.name || 'Admin',
+          action: updates.action || 'Inventory Calibrated',
+          user: userName,
           role: currentPortal === 'super_coach' ? 'Super Coach' : currentPortal === 'coach' ? 'Coach' : 'Admin',
-          details: auditNote || `Condition: ${updates.condition || existing.condition}; Available: ${updates.availableQty ?? existing.availableQty}`
+          details: auditNote || `Stock calibrated: Total: ${totalQty}, Available: ${availableQty}, Damaged: ${damagedQty}, Missing: ${missingQty}, Condition: ${updates.condition || existing.condition}`
         },
         ...(existing.history || [])
       ]
@@ -4148,14 +4221,46 @@ export function CrmProvider({ children }) {
   };
 
   const submitEquipmentReport = (reportPayload) => {
+    const coachName = reportPayload.coachName || currentUserProfiles[currentPortal]?.name || 'Coach';
+    const loc = reportPayload.location || 'KK NAGAR';
+    const reqType = reportPayload.requestType || 'New Equipment Required';
+    const reqQty = Number(reportPayload.requiredQty) || 1;
+    const damagedCount = Number(reportPayload.damagedCount) || 0;
+    const missingCount = Number(reportPayload.missingCount) || 0;
+
     const newReport = {
       ...reportPayload,
-      id: `EQREP-${Date.now().toString().slice(-4)}`,
-      status: REPORT_STATUSES.PENDING_REVIEW,
-      submittedBy: reportPayload.submittedBy || currentUserProfiles[currentPortal]?.name || 'Coach',
+      id: `EQREQ-${Date.now().toString().slice(-4)}`,
+      coachName,
+      coachId: reportPayload.coachId || '',
+      location: loc,
+      equipmentName: reportPayload.equipmentName || 'Equipment Item',
+      equipmentId: reportPayload.equipmentId || '',
+      category: reportPayload.category || 'Other sports equipment',
+      requestType: reqType,
+      requiredQty: reqQty,
+      damagedCount,
+      missingCount,
+      reportedCondition: reportPayload.reportedCondition || 'Good',
+      remarks: reportPayload.remarks || '',
+      photoUrl: reportPayload.photoUrl || reportPayload.photoNote || '',
+      photoNote: reportPayload.photoNote || '',
+      submissionDate: reportPayload.submissionDate || new Date().toISOString().split('T')[0],
+      status: 'Pending Review',
+      submittedBy: coachName,
       submittedRole: 'coach',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      history: [
+        {
+          id: `EQRH-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          action: 'Request Submitted',
+          user: coachName,
+          role: 'Coach',
+          details: `${reqType}: ${reportPayload.equipmentName} (Req: ${reqQty} units) submitted for ${loc}.`
+        }
+      ]
     };
 
     setData(prev => ({
@@ -4163,74 +4268,125 @@ export function CrmProvider({ children }) {
       equipmentReports: [newReport, ...(prev.equipmentReports || [])]
     }));
 
-    addToast(`Equipment report submitted for "${newReport.equipmentName}". Super Coach notified for verification.`, 'success');
+    addToast(`Equipment request submitted for "${newReport.equipmentName}". Super Coach notified.`, 'success');
     return { success: true, report: newReport };
   };
 
-  const verifyEquipmentReport = (reportId, verificationData = {}) => {
-    const report = (data.equipmentReports || []).find(r => r.id === reportId);
-    if (!report) return { success: false, message: 'Report not found' };
+  const reviewEquipmentRequest = (requestId, reviewData = {}) => {
+    const report = (data.equipmentReports || []).find(r => r.id === requestId);
+    if (!report) return { success: false, message: 'Request not found' };
 
-    const reviewerName = verificationData.reviewer || currentUserProfiles.super_coach?.name || 'Super Coach';
-    const notes = verificationData.notes || 'Verified on site by Super Coach';
-    const status = verificationData.status || REPORT_STATUSES.VERIFIED_BY_SUPER_COACH;
+    const reviewerName = reviewData.reviewer || currentUserProfiles[currentPortal]?.name || 'Super Coach';
+    const notes = reviewData.notes || 'Reviewed by Super Coach';
+    const status = reviewData.status || 'Reviewed';
+    const action = reviewData.action || status;
 
     const updatedReport = {
       ...report,
       status,
       superCoachReview: {
         reviewer: reviewerName,
-        role: 'Super Coach',
+        role: currentPortal === 'admin' ? 'Admin' : 'Super Coach',
         timestamp: new Date().toISOString(),
         notes,
-        action: verificationData.action || 'Verified'
+        action
       },
-      updatedAt: new Date().toISOString()
-    };
-
-    let updatedEquipment = [...(data.equipment || [])];
-    if (verificationData.updateInventory && report.equipmentId) {
-      updatedEquipment = updatedEquipment.map(item => {
-        if (item.id === report.equipmentId) {
-          const damagedCount = Number(report.damagedCount) || 0;
-          const missingCount = Number(report.missingCount) || 0;
-          const newDamaged = Math.max(item.damagedQty || 0, damagedCount);
-          const newMissing = Math.max(item.missingQty || 0, missingCount);
-          const newAvailable = Math.max(0, item.totalQty - newDamaged - newMissing);
-
-          return {
-            ...item,
-            condition: report.reportedCondition || item.condition,
-            damagedQty: newDamaged,
-            missingQty: newMissing,
-            availableQty: newAvailable,
-            lastInspectionDate: new Date().toISOString().split('T')[0],
-            lastUpdatedBy: reviewerName,
-            history: [
-              {
-                id: `EQH-${Date.now()}`,
-                timestamp: new Date().toISOString(),
-                action: 'Verified by Super Coach',
-                user: reviewerName,
-                role: 'Super Coach',
-                details: `Super Coach verified report ${reportId}: ${notes}`
-              },
-              ...(item.history || [])
-            ]
-          };
+      updatedAt: new Date().toISOString(),
+      history: [
+        ...(report.history || []),
+        {
+          id: `EQRH-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          action: `Request ${action}`,
+          user: reviewerName,
+          role: currentPortal === 'admin' ? 'Admin' : 'Super Coach',
+          details: notes
         }
-        return item;
-      });
-    }
+      ]
+    };
 
     setData(prev => ({
       ...prev,
-      equipment: updatedEquipment,
-      equipmentReports: (prev.equipmentReports || []).map(r => r.id === reportId ? updatedReport : r)
+      equipmentReports: (prev.equipmentReports || []).map(r => r.id === requestId ? updatedReport : r)
     }));
 
-    addToast(`Equipment Report ${reportId} verified by Super Coach!`, 'success');
+    addToast(`Equipment Request ${requestId} ${status} successfully.`, 'success');
     return { success: true, report: updatedReport };
+  };
+
+  const fulfillEquipmentRequest = (requestId, fulfillmentData = {}) => {
+    const report = (data.equipmentReports || []).find(r => r.id === requestId);
+    if (!report) return { success: false, message: 'Request not found' };
+
+    const userName = fulfillmentData.fulfilledBy || currentUserProfiles[currentPortal]?.name || 'Super Coach';
+    const notes = fulfillmentData.notes || 'Equipment stocked and fulfilled.';
+
+    const updatedReport = {
+      ...report,
+      status: 'Fulfilled',
+      fulfilledAt: new Date().toISOString(),
+      fulfilledBy: userName,
+      updatedAt: new Date().toISOString(),
+      history: [
+        ...(report.history || []),
+        {
+          id: `EQRH-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          action: 'Request Fulfilled',
+          user: userName,
+          role: currentPortal === 'admin' ? 'Admin' : 'Super Coach',
+          details: notes
+        }
+      ]
+    };
+
+    setData(prev => ({
+      ...prev,
+      equipmentReports: (prev.equipmentReports || []).map(r => r.id === requestId ? updatedReport : r)
+    }));
+
+    addToast(`Equipment Request ${requestId} marked as Fulfilled.`, 'success');
+    return { success: true, report: updatedReport };
+  };
+
+  const confirmEquipmentCheck = (location, coachName) => {
+    const loc = location || 'KK NAGAR';
+    const cName = coachName || currentUserProfiles[currentPortal]?.name || 'Coach';
+    const today = new Date().toISOString().split('T')[0];
+
+    const updatedEquipment = (data.equipment || []).map(item => {
+      if (item.location?.toUpperCase() === loc.toUpperCase()) {
+        return {
+          ...item,
+          lastInspectionDate: today,
+          lastUpdatedBy: `${cName} (Coach)`,
+          history: [
+            {
+              id: `EQH-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+              timestamp: new Date().toISOString(),
+              action: 'Equipment Check Confirmed',
+              user: cName,
+              role: 'Coach',
+              details: `Physical inspection confirmed on site for ${loc} training session.`
+            },
+            ...(item.history || [])
+          ]
+        };
+      }
+      return item;
+    });
+
+    setData(prev => ({
+      ...prev,
+      equipment: updatedEquipment
+    }));
+
+    addToast(`Equipment Check confirmed for ${loc} by Coach ${cName}.`, 'success');
+    return { success: true };
+  };
+
+  const verifyEquipmentReport = (reportId, verificationData = {}) => {
+    return reviewEquipmentRequest(reportId, verificationData);
   };
 
   const adminApproveEquipmentReport = (reportId, approvalData = {}) => {
@@ -4239,7 +4395,7 @@ export function CrmProvider({ children }) {
 
     const reviewerName = approvalData.reviewer || currentUserProfiles.admin?.name || 'Administrator';
     const notes = approvalData.notes || 'Admin approved maintenance/replacement.';
-    const status = approvalData.status || REPORT_STATUSES.APPROVED_BY_ADMIN;
+    const status = approvalData.status || 'Approved';
 
     const updatedReport = {
       ...report,
@@ -4251,7 +4407,18 @@ export function CrmProvider({ children }) {
         notes,
         action: approvalData.action || 'Approved'
       },
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      history: [
+        ...(report.history || []),
+        {
+          id: `EQRH-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          action: `Admin Sanction (${status})`,
+          user: reviewerName,
+          role: 'Admin',
+          details: notes
+        }
+      ]
     };
 
     setData(prev => ({
@@ -4259,11 +4426,11 @@ export function CrmProvider({ children }) {
       equipmentReports: (prev.equipmentReports || []).map(r => r.id === reportId ? updatedReport : r)
     }));
 
-    addToast(`Equipment Report ${reportId} sanctioned by Admin (${approvalData.action || 'Approved'}).`, 'success');
+    addToast(`Equipment Request ${reportId} approved by Admin.`, 'success');
     return { success: true, report: updatedReport };
   };
 
-  const updateSuperCoachLocations = (superCoachId, assignedLocations) => {
+    const updateSuperCoachLocations = (superCoachId, assignedLocations) => {
     setData(prev => ({
       ...prev,
       superCoaches: (prev.superCoaches || []).map(sc => 
@@ -5189,6 +5356,10 @@ export function CrmProvider({ children }) {
         submitEquipmentReport,
         verifyEquipmentReport,
         adminApproveEquipmentReport,
+        submitEquipmentRequest: submitEquipmentReport,
+        reviewEquipmentRequest,
+        fulfillEquipmentRequest,
+        confirmEquipmentCheck,
         updateSuperCoachLocations,
         reassignScheduleCoach,
         reportCoachIssue,

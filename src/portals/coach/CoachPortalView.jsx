@@ -823,10 +823,10 @@ export default function CoachPortalView() {
                           <Shield className="w-4.5 h-4.5 text-[#0284C7]" />
                         </div>
                         <span className="text-xs font-black text-[#172B50] leading-tight">
-                          Equipment
+                          Equipment Check
                         </span>
                         <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                          Inspection & Gear
+                          Verify &amp; Report
                         </span>
                       </button>
                     </div>
@@ -1181,10 +1181,10 @@ export default function CoachPortalView() {
                         <Shield className="w-4.5 h-4.5 text-[#F4510B]" />
                       </div>
                       <span className="text-xs font-black text-[#172B50] leading-tight">
-                        Gear Inspection
+                        Equipment Check
                       </span>
                       <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                        Condition Reports
+                        Location Inspection
                       </span>
                     </button>
 

@@ -399,6 +399,7 @@ export default function Sidebar() {
   // =========================================================================
   const coachNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'equipment', label: 'Equipment Check', icon: Package },
     { id: 'batches', label: 'My Batches', icon: Layers },
     { id: 'classes', label: 'My Schedule', icon: Calendar },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
