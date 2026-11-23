@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -23,6 +23,8 @@ import {
   Users,
   GraduationCap,
   X,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -31,6 +33,9 @@ import { getCommonLocations } from '../../services/locationService';
 import {
   DEMO_STATUSES,
   DEMO_STATUS_CONFIG,
+  CONVERSION_STAGES,
+  CONVERSION_STAGE_CONFIG,
+  calculateAgeFromDob,
   filterCoachesForDemo,
   calculateDemoMetrics,
 } from '../../services/demoService';
@@ -56,6 +61,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     data,
     addDemo,
     updateDemoStatus,
+    updateDemoConversionStatus,
     rescheduleDemo,
     convertDemoToStudent,
     navigateToPersonRecord,
@@ -75,12 +81,29 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
+  // Active conversion dropdown menu
+  const [activeConversionDropdown, setActiveConversionDropdown] = useState(null);
+
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setActiveConversionDropdown(null);
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, []);
+
+  const handleUpdateConversionStage = (demoId, stage) => {
+    if (updateDemoConversionStatus) {
+      updateDemoConversionStatus(demoId, stage);
+    }
+  };
+
   // Add Demo Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addForm, setAddForm] = useState({
     enquiryId: '',
     childName: '',
-    childAge: '6',
+    childAge: '',
     gender: 'Male',
     dob: '',
     parentName: '',
@@ -90,8 +113,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     program: data.programs[0]?.name || 'Spartan Gymnastics & Agility',
     demoDate: todayYmd,
     demoTime: '17:00',
-    coachId: '',
-    coachName: '',
     notes: '',
   });
 
@@ -122,15 +143,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
   });
   const [convertResult, setConvertResult] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
-
-  // Eligible coaches dynamically filtered by location + program for add modal
-  const eligibleCoachesForAdd = useMemo(() => {
-    return filterCoachesForDemo({
-      coaches: data.coaches || [],
-      location: addForm.location,
-      program: addForm.program,
-    });
-  }, [data.coaches, addForm.location, addForm.program]);
 
   // Eligible coaches for reschedule modal
   const eligibleCoachesForReschedule = useMemo(() => {
@@ -190,10 +202,13 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
   // Handlers
   const handleOpenAddModal = (fromEnquiry = null) => {
     if (fromEnquiry) {
+      const derivedAge = fromEnquiry.dob
+        ? calculateAgeFromDob(fromEnquiry.dob)
+        : (fromEnquiry.childAge || '');
       setAddForm({
         enquiryId: fromEnquiry.id || '',
         childName: fromEnquiry.childName || '',
-        childAge: fromEnquiry.childAge || '6',
+        childAge: derivedAge !== null ? String(derivedAge) : '',
         gender: fromEnquiry.gender || 'Male',
         dob: fromEnquiry.dob || '',
         parentName: fromEnquiry.parentName || '',
@@ -203,15 +218,13 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         program: fromEnquiry.interestedProgram || data.programs[0]?.name || '',
         demoDate: todayYmd,
         demoTime: '17:00',
-        coachId: '',
-        coachName: '',
         notes: fromEnquiry.notes ? `Enquiry note: ${fromEnquiry.notes}` : '',
       });
     } else {
       setAddForm({
         enquiryId: '',
         childName: '',
-        childAge: '6',
+        childAge: '',
         gender: 'Male',
         dob: '',
         parentName: '',
@@ -221,8 +234,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         program: data.programs[0]?.name || 'Spartan Gymnastics & Agility',
         demoDate: todayYmd,
         demoTime: '17:00',
-        coachId: '',
-        coachName: '',
         notes: '',
       });
     }
@@ -231,10 +242,9 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
   const handleSaveAddDemo = (e) => {
     e.preventDefault();
-    const coachObj = (data.coaches || []).find((c) => c.id === addForm.coachId);
     const payload = {
       ...addForm,
-      coachName: coachObj ? coachObj.name : addForm.coachName || 'Assigned Coach',
+      conversionStatus: 'Pending Demo',
     };
 
     const res = addDemo(payload);
@@ -681,7 +691,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                   <th className="py-3 px-4">Athlete / Child</th>
                   <th className="py-3 px-4">Parent / Contact</th>
                   <th className="py-3 px-4">Location &amp; Sport</th>
-                  <th className="py-3 px-4">Assigned Coach</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Conversion</th>
                   <th className="py-3 px-4 text-right">Actions</th>
@@ -691,7 +700,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 {paginatedDemos.map((demo) => {
                   const cfg = DEMO_STATUS_CONFIG[demo.status] || DEMO_STATUS_CONFIG[DEMO_STATUSES.SCHEDULED];
                   const isCompleted = demo.status === DEMO_STATUSES.COMPLETED;
-                  const isConverted = Boolean(demo.convertedToStudent);
+                  const currentConversion = demo.conversionStatus || (demo.convertedToStudent ? 'Converted to Student' : 'Pending Demo');
+                  const convCfg = CONVERSION_STAGE_CONFIG[currentConversion] || CONVERSION_STAGE_CONFIG['Pending Demo'];
 
                   return (
                     <tr key={demo.id} className="hover:bg-[#FFF4E8]/30 transition-colors">
@@ -749,14 +759,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                         </div>
                       </td>
 
-                      {/* Coach */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#172B50]">
-                          <UserCheck className="w-3.5 h-3.5 text-[#172B50] opacity-60" />
-                          {demo.coachName || 'Unassigned'}
-                        </span>
-                      </td>
-
                       {/* Status */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <button
@@ -770,22 +772,62 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                         </button>
                       </td>
 
-                      {/* Conversion Status */}
+                      {/* Conversion Status Dropdown */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        {isConverted ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            <span>Enrolled ({demo.studentId})</span>
-                          </span>
-                        ) : isCompleted ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B30]">
-                            Ready for Admission
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-semibold text-[#172B50] opacity-50">
-                            Pending Demo
-                          </span>
-                        )}
+                        <div className="relative inline-block text-left">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveConversionDropdown(activeConversionDropdown === demo.id ? null : demo.id);
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold border transition-all cursor-pointer shadow-2xs ${convCfg.badgeClass}`}
+                            title="Click to update conversion status"
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${convCfg.dotClass}`} />
+                            <span>{currentConversion}</span>
+                            <ChevronDown
+                              className={`w-3 h-3 opacity-60 ml-0.5 transition-transform duration-150 ${
+                                activeConversionDropdown === demo.id ? 'rotate-180' : ''
+                              }`}
+                            />
+                          </button>
+
+                          {activeConversionDropdown === demo.id && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute left-0 mt-1.5 w-48 rounded-xl bg-white shadow-xl border border-[#172B501A] py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100"
+                            >
+                              <div className="px-3 py-1 text-[10px] font-extrabold text-[#172B50]/60 uppercase tracking-wider border-b border-[#172B5010] mb-1">
+                                Conversion Status
+                              </div>
+                              {CONVERSION_STAGES.map((stage) => {
+                                const isSelected = stage === currentConversion;
+                                const stageCfg = CONVERSION_STAGE_CONFIG[stage] || CONVERSION_STAGE_CONFIG['Pending Demo'];
+                                return (
+                                  <button
+                                    key={stage}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleUpdateConversionStage(demo.id, stage);
+                                      setActiveConversionDropdown(null);
+                                    }}
+                                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between gap-2 hover:bg-[#FFF4E8]/60 transition-colors cursor-pointer ${
+                                      isSelected ? 'font-black text-[#F4510B] bg-[#FFF4E8]/40' : 'font-medium text-[#172B50]'
+                                    }`}
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <span className={`w-2 h-2 rounded-full ${stageCfg.dotClass}`} />
+                                      <span>{stage}</span>
+                                    </span>
+                                    {isSelected && <Check className="w-3.5 h-3.5 text-[#F4510B]" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </td>
 
                       {/* Actions */}
@@ -808,7 +850,19 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                           <RotateCcw className="w-3.5 h-3.5" />
                         </button>
 
-                        {!isConverted ? (
+                        {demo.studentId ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (demo.studentId && navigateToPersonRecord) {
+                                navigateToPersonRecord('student', demo.studentId);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-[#172B50] hover:bg-slate-200 cursor-pointer"
+                          >
+                            <span>View Athlete</span>
+                          </button>
+                        ) : (
                           <button
                             type="button"
                             onClick={() => handleOpenConvertModal(demo)}
@@ -821,18 +875,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                           >
                             <UserPlus className="w-3 h-3" />
                             <span>Convert to Student</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (demo.studentId && navigateToPersonRecord) {
-                                navigateToPersonRecord('student', demo.studentId);
-                              }
-                            }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-[#172B50] hover:bg-slate-200 cursor-pointer"
-                          >
-                            <span>View Athlete</span>
                           </button>
                         )}
                       </td>
@@ -890,7 +932,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title={addForm.enquiryId ? `Book Demo for Lead: ${addForm.enquiryId}` : 'Book New Demo Class'}
-        subtitle="Hierarchy: Academy Location → Sports Program → Filtered Coach"
+        subtitle="Schedule a trial sports session for a prospective athlete"
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleSaveAddDemo} className="space-y-4">
@@ -900,8 +942,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               <select
                 required
                 value={addForm.location}
-                onChange={(e) => setAddForm({ ...addForm, location: e.target.value, coachId: '' })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold"
+                onChange={(e) => setAddForm({ ...addForm, location: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
               >
                 {activeLocations.map((loc) => (
                   <option key={loc.id} value={loc.name}>
@@ -916,8 +958,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               <select
                 required
                 value={addForm.program}
-                onChange={(e) => setAddForm({ ...addForm, program: e.target.value, coachId: '' })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold"
+                onChange={(e) => setAddForm({ ...addForm, program: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
               >
                 {(data.programs || []).map((p) => (
                   <option key={p.id} value={p.name}>
@@ -928,39 +970,59 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">Child / Athlete Name *</label>
+            <input
+              type="text"
+              required
+              value={addForm.childName}
+              onChange={(e) => setAddForm({ ...addForm, childName: e.target.value })}
+              placeholder="e.g. Aarav Sharma"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+            />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Child / Athlete Name *</label>
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Child Date of Birth (DOB) *</label>
               <input
-                type="text"
+                type="date"
                 required
-                value={addForm.childName}
-                onChange={(e) => setAddForm({ ...addForm, childName: e.target.value })}
-                placeholder="e.g. Aarav Sharma"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                max={todayYmd}
+                value={addForm.dob}
+                onChange={(e) => {
+                  const newDob = e.target.value;
+                  const autoAge = calculateAgeFromDob(newDob);
+                  setAddForm({
+                    ...addForm,
+                    dob: newDob,
+                    childAge: autoAge !== null ? String(autoAge) : '',
+                  });
+                }}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Age / Gender</label>
-              <div className="grid grid-cols-2 gap-1.5">
-                <input
-                  type="number"
-                  min="2"
-                  max="18"
-                  value={addForm.childAge}
-                  onChange={(e) => setAddForm({ ...addForm, childAge: e.target.value })}
-                  placeholder="Age"
-                  className="w-full px-2 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-                />
-                <select
-                  value={addForm.gender}
-                  onChange={(e) => setAddForm({ ...addForm, gender: e.target.value })}
-                  className="w-full px-2 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-              </div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Age</label>
+              <input
+                type="text"
+                readOnly
+                value={addForm.childAge ? `${addForm.childAge} yrs` : ''}
+                placeholder="Auto-calculated from DOB"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] bg-slate-50 text-[#172B50] font-bold cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Gender</label>
+              <select
+                value={addForm.gender}
+                onChange={(e) => setAddForm({ ...addForm, gender: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
           </div>
 
@@ -989,7 +1051,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#172B50] mb-1">Demo Date *</label>
               <input
@@ -997,7 +1059,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 required
                 value={addForm.demoDate}
                 onChange={(e) => setAddForm({ ...addForm, demoDate: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white"
               />
             </div>
             <div>
@@ -1007,27 +1069,8 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 required
                 value={addForm.demoTime}
                 onChange={(e) => setAddForm({ ...addForm, demoTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] bg-white"
               />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Assigned Coach</label>
-              <select
-                value={addForm.coachId}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  const c = data.coaches.find((x) => x.id === id);
-                  setAddForm({ ...addForm, coachId: id, coachName: c ? c.name : '' });
-                }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-              >
-                <option value="">Select Coach</option>
-                {eligibleCoachesForAdd.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.center})
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 

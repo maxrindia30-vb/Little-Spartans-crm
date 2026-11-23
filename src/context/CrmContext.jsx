@@ -1097,6 +1097,40 @@ export function CrmProvider({ children }) {
     return { success: true };
   };
 
+  const updateDemoConversionStatus = (id, newConversionStatus) => {
+    const target = (data.demos || []).find(d => d.id === id);
+    if (!target) return { success: false, error: 'Demo not found' };
+
+    const now = new Date().toISOString();
+    const prevStatus = target.conversionStatus || (target.convertedToStudent ? 'Converted to Student' : 'Pending Demo');
+    const historyEntry = {
+      id: `HIST-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp: now,
+      action: `Conversion status changed to ${newConversionStatus}`,
+      fromStatus: prevStatus,
+      toStatus: newConversionStatus,
+      date: target.demoDate,
+      time: target.demoTime,
+      location: target.location,
+      note: `Conversion status updated from "${prevStatus}" to "${newConversionStatus}".`,
+      updatedBy: 'Admin',
+    };
+
+    setData(prev => ({
+      ...prev,
+      demos: (prev.demos || []).map(d => d.id === id ? {
+        ...d,
+        conversionStatus: newConversionStatus,
+        convertedToStudent: newConversionStatus === 'Converted to Student' ? true : d.convertedToStudent,
+        updatedAt: now,
+        history: [historyEntry, ...(d.history || [])],
+      } : d),
+    }));
+
+    addToast(`Demo ${id} conversion status updated to "${newConversionStatus}".`, 'info');
+    return { success: true };
+  };
+
   const updateDemoStatus = (id, newStatus, note = '') => {
     const target = (data.demos || []).find(d => d.id === id);
     if (!target) return { success: false, error: 'Demo not found' };
@@ -1206,6 +1240,7 @@ export function CrmProvider({ children }) {
         demos: (prev.demos || []).map(d => d.id === demo.id ? {
           ...d,
           convertedToStudent: true,
+          conversionStatus: 'Converted to Student',
           studentId: res.student.id,
           status: DEMO_STATUSES.COMPLETED,
           updatedAt: new Date().toISOString(),
@@ -2951,17 +2986,40 @@ export function CrmProvider({ children }) {
   };
 
   const addLocation = (locPayload) => {
-    const normalizedName = (locPayload.name || '').trim().toUpperCase();
-    if (!normalizedName) {
-      addToast('Center / Location name is required.', 'error');
-      return { success: false };
+    const rawName = (locPayload.name || '').trim();
+    if (!rawName) {
+      addToast('Center Name is required.', 'error');
+      return { success: false, error: 'Center Name is required.' };
     }
-    const duplicate = (data.locations || []).some(
-      (loc) => loc.name.trim().toUpperCase() === normalizedName
+    const rawCode = (locPayload.code || '').trim().toUpperCase();
+    if (!rawCode) {
+      addToast('Center Code is required.', 'error');
+      return { success: false, error: 'Center Code is required.' };
+    }
+    const rawAddress = (locPayload.address || '').trim();
+    if (!rawAddress) {
+      addToast('Full Street Address is required.', 'error');
+      return { success: false, error: 'Full Street Address is required.' };
+    }
+
+    const currentLocations = data.locations || [];
+
+    // Duplicate Center Name check (case-insensitive)
+    const duplicateName = currentLocations.some(
+      (loc) => loc.name && loc.name.trim().toUpperCase() === rawName.toUpperCase()
     );
-    if (duplicate) {
-      addToast(`Center "${normalizedName}" already exists.`, 'error');
-      return { success: false };
+    if (duplicateName) {
+      addToast(`Center "${rawName}" already exists.`, 'error');
+      return { success: false, error: `Center "${rawName}" already exists. Please choose a unique name.` };
+    }
+
+    // Duplicate Center Code check (case-insensitive)
+    const duplicateCode = currentLocations.some(
+      (loc) => loc.code && loc.code.trim().toUpperCase() === rawCode
+    );
+    if (duplicateCode) {
+      addToast(`Center Code "${rawCode}" is already in use.`, 'error');
+      return { success: false, error: `Center Code "${rawCode}" is already in use by another center.` };
     }
 
     const courtsList = Array.isArray(locPayload.facilities || locPayload.courts)
@@ -2978,27 +3036,30 @@ export function CrmProvider({ children }) {
           .map((p) => p.trim())
           .filter(Boolean);
 
-    const generatedCode = locPayload.code 
-      ? locPayload.code.trim().toUpperCase() 
-      : `LS-${normalizedName.substring(0, 3).replace(/\s+/g, '')}`;
+    // Generate unique numerical or timestamp-based ID
+    const numericIds = currentLocations
+      .map((l) => parseInt(String(l.id || '').replace(/\D/g, ''), 10))
+      .filter((n) => !isNaN(n));
+    const nextNum = numericIds.length > 0 ? Math.max(...numericIds) + 1 : currentLocations.length + 1;
+    const generatedId = locPayload.id || `LOC-${nextNum}`;
 
     const newLocation = {
-      id: `LOC-${Math.floor(100 + Math.random() * 900)}`,
-      name: normalizedName,
-      code: generatedCode,
+      id: generatedId,
+      name: rawName,
+      code: rawCode,
       city: (locPayload.city || 'Chennai').trim(),
       state: (locPayload.state || 'Tamil Nadu').trim(),
       pinCode: (locPayload.pinCode || '600001').trim(),
-      address: (locPayload.address || `${normalizedName}, Chennai`).trim(),
-      contactPerson: (locPayload.contactPerson || 'Academy Operations Lead').trim(),
+      address: rawAddress,
+      contactPerson: (locPayload.contactPerson || 'Operations Lead').trim(),
       contactPhone: (locPayload.contactPhone || '+91 98765 43210').trim(),
       operatingDays: (locPayload.operatingDays || 'Mon - Sat').trim(),
       operatingHours: (locPayload.operatingHours || '06:00 AM - 08:30 PM').trim(),
-      capacity: parseInt(locPayload.capacity) || 150,
+      capacity: parseInt(locPayload.capacity, 10) || 150,
       facilities: courtsList.length > 0 ? courtsList : ['Main Turf Ground', 'Training Court A'],
       courts: courtsList.length > 0 ? courtsList : ['Main Turf Ground', 'Training Court A'],
       programs: programsList.length > 0 ? programsList : ['Spartan Gymnastics & Agility', 'Junior Football Champions'],
-      status: locPayload.status || 'Active',
+      status: locPayload.status === 'Inactive' ? 'Inactive' : 'Active',
       createdAt: new Date().toISOString()
     };
 
@@ -3011,41 +3072,63 @@ export function CrmProvider({ children }) {
       action: 'Add Center',
       field: 'New Center Created',
       oldValue: 'None',
-      newValue: `${normalizedName} (${generatedCode})`,
+      newValue: `${rawName} (${rawCode})`,
       status: 'Verified',
       ipAddress: '127.0.0.1'
     };
 
     setData((prev) => {
-      const updatedLocations = [...(prev.locations || []), newLocation];
+      const prevLocations = prev.locations || [];
+      const updatedLocations = [...prevLocations, newLocation];
       const activeCenters = updatedLocations
         .filter((l) => l.status !== 'Inactive')
         .map((l) => l.name);
       return {
         ...prev,
         locations: updatedLocations,
-        academy: { ...prev.academy, centers: activeCenters },
+        academy: { ...(prev.academy || {}), centers: activeCenters },
         settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])]
       };
     });
 
-    addToast(`Academy center "${normalizedName}" added successfully.`, 'success');
+    addToast(`Academy center "${rawName}" added successfully.`, 'success');
     return { success: true, location: newLocation };
   };
 
   const updateLocation = (id, updates) => {
-    const existing = (data.locations || []).find((l) => l.id === id);
+    const currentLocations = data.locations || [];
+    const existing = currentLocations.find((l) => l.id === id);
     if (!existing) {
       addToast('Center location not found.', 'error');
-      return { success: false };
+      return { success: false, error: 'Center location not found.' };
     }
-    const nextName = (updates.name || existing.name).trim().toUpperCase();
-    const duplicate = (data.locations || []).some(
-      (loc) => loc.id !== id && loc.name.trim().toUpperCase() === nextName
+    const nextName = (updates.name || existing.name).trim();
+    if (!nextName) {
+      addToast('Center Name is required.', 'error');
+      return { success: false, error: 'Center Name is required.' };
+    }
+    const nextCode = (updates.code || existing.code || '').trim().toUpperCase();
+    if (!nextCode) {
+      addToast('Center Code is required.', 'error');
+      return { success: false, error: 'Center Code is required.' };
+    }
+
+    // Duplicate name check (excluding self)
+    const duplicateName = currentLocations.some(
+      (loc) => loc.id !== id && loc.name && loc.name.trim().toUpperCase() === nextName.toUpperCase()
     );
-    if (duplicate) {
+    if (duplicateName) {
       addToast(`Center "${nextName}" already exists.`, 'error');
-      return { success: false };
+      return { success: false, error: `Center "${nextName}" already exists. Please choose a unique name.` };
+    }
+
+    // Duplicate code check (excluding self)
+    const duplicateCode = currentLocations.some(
+      (loc) => loc.id !== id && loc.code && loc.code.trim().toUpperCase() === nextCode
+    );
+    if (duplicateCode) {
+      addToast(`Center Code "${nextCode}" is already in use.`, 'error');
+      return { success: false, error: `Center Code "${nextCode}" is already in use by another center.` };
     }
 
     const courtsList = Array.isArray(updates.facilities || updates.courts)
@@ -3073,7 +3156,7 @@ export function CrmProvider({ children }) {
       action: 'Update Center',
       field: `${nextName} Details`,
       oldValue: `${oldName} (${existing.code || 'Code'})`,
-      newValue: `${nextName} (${updates.code || existing.code})`,
+      newValue: `${nextName} (${nextCode})`,
       status: 'Verified',
       ipAddress: '127.0.0.1'
     };
@@ -3085,7 +3168,7 @@ export function CrmProvider({ children }) {
               ...loc,
               ...updates,
               name: nextName,
-              code: updates.code ? updates.code.trim().toUpperCase() : loc.code,
+              code: nextCode,
               facilities: courtsList.length > 0 ? courtsList : loc.facilities,
               courts: courtsList.length > 0 ? courtsList : loc.courts,
               programs: programsList.length > 0 ? programsList : loc.programs,
@@ -3101,7 +3184,7 @@ export function CrmProvider({ children }) {
       return {
         ...prev,
         locations: updatedLocations,
-        academy: { ...prev.academy, centers: activeCenters },
+        academy: { ...(prev.academy || {}), centers: activeCenters },
         settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])],
         programs: (prev.programs || []).map((p) => ({
           ...p,
@@ -4725,6 +4808,7 @@ export function CrmProvider({ children }) {
         addDemo,
         updateDemo,
         updateDemoStatus,
+        updateDemoConversionStatus,
         rescheduleDemo,
         convertDemoToStudent,
         addPayment,

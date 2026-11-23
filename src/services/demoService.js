@@ -92,6 +92,61 @@ export const DEMO_STATUS_CONFIG = {
   },
 };
 
+export const CONVERSION_STAGES = [
+  'Pending Demo',
+  'Demo Attended',
+  'Demo Absent',
+  'Re-demo Requested',
+  'Converted to Student',
+  'Not Converted',
+];
+
+export const CONVERSION_STAGE_CONFIG = {
+  'Pending Demo': {
+    label: 'Pending Demo',
+    badgeClass: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100',
+    dotClass: 'bg-amber-500',
+  },
+  'Demo Attended': {
+    label: 'Demo Attended',
+    badgeClass: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100',
+    dotClass: 'bg-blue-500',
+  },
+  'Demo Absent': {
+    label: 'Demo Absent',
+    badgeClass: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100',
+    dotClass: 'bg-rose-500',
+  },
+  'Re-demo Requested': {
+    label: 'Re-demo Requested',
+    badgeClass: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100',
+    dotClass: 'bg-purple-500',
+  },
+  'Converted to Student': {
+    label: 'Converted to Student',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100',
+    dotClass: 'bg-emerald-500',
+  },
+  'Not Converted': {
+    label: 'Not Converted',
+    badgeClass: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200',
+    dotClass: 'bg-slate-400',
+  },
+};
+
+export function calculateAgeFromDob(dob) {
+  if (!dob) return null;
+  const birth = new Date(`${dob}T00:00:00`);
+  if (Number.isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : 0;
+}
+
 export const ENQUIRY_STAGES = {
   NEW: 'New Enquiry',
   FOLLOW_UP: 'Follow-up',
@@ -146,6 +201,9 @@ export function validateDemoPayload(payload, activeLocations = []) {
   if (!payload.childName || !payload.childName.trim()) {
     errors.push("Child's name is required.");
   }
+  if (!payload.dob || !String(payload.dob).trim()) {
+    errors.push("Child's Date of Birth (DOB) is required.");
+  }
   if (!payload.parentName || !payload.parentName.trim()) {
     errors.push("Parent/Guardian name is required.");
   }
@@ -186,13 +244,16 @@ export function buildDemoRecord(payload, existingDemos = [], createdBy = 'Admin'
   const id = `DEMO-${String(count).padStart(3, '0')}`;
   const now = new Date().toISOString();
 
+  const computedAge = payload.dob ? calculateAgeFromDob(payload.dob) : null;
+  const childAge = computedAge !== null ? String(computedAge) : (payload.childAge || '');
+
   return {
     id,
     enquiryId: payload.enquiryId || '',
     childName: payload.childName.trim(),
-    childAge: payload.childAge || '',
-    gender: payload.gender || '',
-    dob: payload.dob || '',
+    childAge,
+    gender: payload.gender || 'Male',
+    dob: payload.dob ? String(payload.dob).trim() : '',
     parentName: payload.parentName.trim(),
     phone: payload.phone.trim(),
     email: payload.email ? payload.email.trim() : '',
@@ -201,11 +262,12 @@ export function buildDemoRecord(payload, existingDemos = [], createdBy = 'Admin'
     demoDate: payload.demoDate,
     demoTime: payload.demoTime,
     coachId: payload.coachId || '',
-    coachName: payload.coachName || 'Assigned Coach',
+    coachName: payload.coachName || '',
     notes: payload.notes || '',
     status: payload.status || DEMO_STATUSES.SCHEDULED,
-    convertedToStudent: false,
-    studentId: null,
+    conversionStatus: payload.conversionStatus || 'Pending Demo',
+    convertedToStudent: payload.conversionStatus === 'Converted to Student' || false,
+    studentId: payload.studentId || null,
     createdAt: now,
     updatedAt: now,
     history: [
@@ -218,7 +280,7 @@ export function buildDemoRecord(payload, existingDemos = [], createdBy = 'Admin'
         date: payload.demoDate,
         time: payload.demoTime,
         location: payload.location.trim(),
-        coachName: payload.coachName || 'Assigned Coach',
+        coachName: payload.coachName || '',
         note: payload.notes || 'Initial demo session scheduled via Admin Portal.',
         updatedBy: createdBy,
       },
