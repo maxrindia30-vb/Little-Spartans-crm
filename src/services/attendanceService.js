@@ -22,6 +22,8 @@
 export const ATTENDANCE_STATUSES = {
   PRESENT: 'Present',
   ABSENT: 'Absent',
+  LEAVE: 'Leave',
+  COMPENSATION: 'Compensation',
   NOT_MARKED: 'Not Marked'
 };
 
@@ -214,9 +216,11 @@ export function filterStudentsForAttendance(
  * Looks up a student's saved attendance status for a given date and batch/location.
  * Returns 'Present' | 'Absent' | 'Not Marked'.
  */
-export function getSavedAttendanceRecord(records = [], { studentId, batchId = 'All', date, location = 'All' }) {
+export function getSavedAttendanceRecord(records = [], { studentId, childId, batchId = 'All', date, location = 'All' } = {}) {
+  const targetId = studentId || childId;
   return records.find((rec) => {
-    if (rec.studentId !== studentId || rec.date !== date) return false;
+    const recId = rec.studentId || rec.childId;
+    if (recId !== targetId || (rec.date !== date && rec.sessionDate !== date)) return false;
     if (location !== 'All' && rec.location !== location) return false;
     if (batchId !== 'All' && rec.batchId !== batchId) return false;
     return true;
@@ -329,27 +333,46 @@ export function upsertBatchAttendanceRecords(
       continue;
     }
 
-    if (status !== ATTENDANCE_STATUSES.PRESENT && status !== ATTENDANCE_STATUSES.ABSENT) {
+    const validStatuses = [
+      ATTENDANCE_STATUSES.PRESENT,
+      ATTENDANCE_STATUSES.ABSENT,
+      ATTENDANCE_STATUSES.LEAVE,
+      ATTENDANCE_STATUSES.COMPENSATION
+    ];
+
+    if (!validStatuses.includes(status)) {
       return {
         success: false,
-        error: `Invalid attendance status "${status}" for ${student.name}. Allowed: Present or Absent.`
+        error: `Invalid attendance status "${status}" for ${student.name}. Allowed: Present, Absent, Leave, or Compensation.`
       };
     }
 
     const updatedRecord = {
-      id: `ATT-${date}-${effectiveBatchId}-${studentId}`,
+      id: entry.id || `ATT-${date}-${effectiveBatchId}-${studentId}`,
+      childId: student.childId || student.id,
       studentId,
+      childName: student.name,
       studentName: student.name,
+      parentId: student.parentId || 'LS-KKN-2026-001',
+      parentName: student.parentName || '',
+      coachId: effectiveCoachId,
+      coachName: effectiveCoachName,
+      locationId: student.locationId || (effectiveLocation === 'KK NAGAR' ? 'LOC-002' : 'LOC-001'),
       location: effectiveLocation,
+      programId: student.programId || (student.program === 'Athletics' ? 'PROG-ATH' : 'PROG-001'),
       program: student.program,
       batchId: effectiveBatchId,
       batchName: effectiveBatchName,
-      coachId: effectiveCoachId,
-      coachName: effectiveCoachName,
+      sessionDate: date,
       date,
+      sessionStartTime: entry.sessionStartTime || (resolvedBatch?.timing ? resolvedBatch.timing.split(' - ')[0] : '08:00 AM'),
+      sessionEndTime: entry.sessionEndTime || (resolvedBatch?.timing ? resolvedBatch.timing.split(' - ')[1] : '09:00 AM'),
       status,
+      coachRemarks: entry.coachRemarks || entry.remarks || (status === ATTENDANCE_STATUSES.COMPENSATION ? 'Compensation Session' : ''),
+      compensationSessionId: entry.compensationSessionId || null,
       markedBy,
       markedByRole: role,
+      createdAt: entry.createdAt || nowIso,
       updatedAt: nowIso
     };
 

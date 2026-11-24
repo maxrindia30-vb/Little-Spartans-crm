@@ -14,7 +14,8 @@ import {
   Layers,
   User,
   Hash,
-  ChevronDown
+  ChevronDown,
+  RotateCcw
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import { getCommonLocations } from '../../services/locationService';
@@ -224,11 +225,13 @@ export default function AttendanceManagement({
     const markableRows = studentRows.filter(
       row =>
         row.currentStatus === ATTENDANCE_STATUSES.PRESENT ||
-        row.currentStatus === ATTENDANCE_STATUSES.ABSENT
+        row.currentStatus === ATTENDANCE_STATUSES.ABSENT ||
+        row.currentStatus === ATTENDANCE_STATUSES.LEAVE ||
+        row.currentStatus === ATTENDANCE_STATUSES.COMPENSATION
     );
 
     if (markableRows.length === 0) {
-      addToast('Mark at least one student Present or Absent before saving.', 'error');
+      addToast('Mark at least one student Present, Absent, Leave or Compensation before saving.', 'error');
       return;
     }
 
@@ -795,25 +798,32 @@ export default function AttendanceManagement({
                               currentStatus === ATTENDANCE_STATUSES.PRESENT
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : currentStatus === ATTENDANCE_STATUSES.ABSENT
-                                ? 'bg-[#FFF4E8] text-[#F4510B] border border-[#F4510B40]'
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : currentStatus === ATTENDANCE_STATUSES.LEAVE
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : currentStatus === ATTENDANCE_STATUSES.COMPENSATION
+                                ? 'bg-purple-50 text-purple-700 border border-purple-200'
                                 : 'bg-slate-100 text-[#172B50]/70 border border-[#172B5020]'
                             }`}
                           >
-                            {currentStatus === ATTENDANCE_STATUSES.PRESENT && <Check className="w-3 h-3" />}
-                            {currentStatus === ATTENDANCE_STATUSES.ABSENT && <X className="w-3 h-3" />}
+                            {currentStatus === ATTENDANCE_STATUSES.PRESENT && <Check className="w-3 h-3 text-emerald-600" />}
+                            {currentStatus === ATTENDANCE_STATUSES.ABSENT && <X className="w-3 h-3 text-rose-600" />}
+                            {currentStatus === ATTENDANCE_STATUSES.LEAVE && <Clock className="w-3 h-3 text-amber-600" />}
+                            {currentStatus === ATTENDANCE_STATUSES.COMPENSATION && <RotateCcw className="w-3 h-3 text-purple-600" />}
                             {currentStatus === ATTENDANCE_STATUSES.NOT_MARKED && <Clock className="w-3 h-3" />}
                             <span>{currentStatus}</span>
                             {isDirty && <span className="text-[9px] ml-0.5 opacity-80">(Edited)</span>}
                           </span>
 
-                          {/* Present / Absent toggle buttons */}
+                          {/* Present / Absent / Leave / Compensation Action Buttons */}
                           <div className="inline-flex items-center bg-[#FFF4E8] p-1 rounded-xl border border-[#172B5015] gap-1">
                             <button
                               type="button"
                               onClick={() => handleStageStatus(row, ATTENDANCE_STATUSES.PRESENT)}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer ${
+                              title="Mark Present (Green)"
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer ${
                                 currentStatus === ATTENDANCE_STATUSES.PRESENT
-                                  ? 'bg-[#172B50] text-white shadow-xs'
+                                  ? 'bg-emerald-600 text-white shadow-xs'
                                   : 'text-[#172B50] hover:bg-white'
                               }`}
                             >
@@ -823,13 +833,40 @@ export default function AttendanceManagement({
                             <button
                               type="button"
                               onClick={() => handleStageStatus(row, ATTENDANCE_STATUSES.ABSENT)}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer ${
+                              title="Mark Absent (Red)"
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer ${
                                 currentStatus === ATTENDANCE_STATUSES.ABSENT
-                                  ? 'bg-[#F4510B] text-white shadow-xs'
+                                  ? 'bg-rose-600 text-white shadow-xs'
                                   : 'text-[#172B50] hover:bg-white'
                               }`}
                             >
                               Absent
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleStageStatus(row, ATTENDANCE_STATUSES.LEAVE)}
+                              title="Mark Leave (Amber)"
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer ${
+                                currentStatus === ATTENDANCE_STATUSES.LEAVE
+                                  ? 'bg-amber-600 text-white shadow-xs'
+                                  : 'text-[#172B50] hover:bg-white'
+                              }`}
+                            >
+                              Leave
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleStageStatus(row, ATTENDANCE_STATUSES.COMPENSATION)}
+                              title="Mark Compensation (Purple)"
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer ${
+                                currentStatus === ATTENDANCE_STATUSES.COMPENSATION
+                                  ? 'bg-purple-600 text-white shadow-xs'
+                                  : 'text-[#172B50] hover:bg-white'
+                              }`}
+                            >
+                              Comp
                             </button>
                           </div>
                         </div>

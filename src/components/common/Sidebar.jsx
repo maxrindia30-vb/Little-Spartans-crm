@@ -52,7 +52,8 @@ import {
   CalendarPlus,
   Megaphone,
   Layers,
-  Rocket
+  Rocket,
+  ArrowLeftRight
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
@@ -161,10 +162,12 @@ export default function Sidebar() {
       label: 'Attendance Management',
       icon: CalendarCheck,
       children: [
+        { id: 'attendance_overview', label: 'Attendance Overview', view: 'attendance_compensation', subTab: 'attendance_overview' },
+        { id: 'location_wise', label: 'Location Attendance', view: 'attendance_compensation', subTab: 'location_wise' },
         { id: 'student_attendance', label: 'Kids Attendance', view: 'attendance_compensation', subTab: 'student_attendance' },
         { id: 'coach_attendance', label: 'Coach Attendance', view: 'attendance_compensation', subTab: 'coach_attendance' },
-        { id: 'coach_leaves', label: 'Leave Approvals', view: 'attendance_compensation', subTab: 'coach_leaves' },
-        { id: 'student_compensation', label: 'Kids Compensation', view: 'attendance_compensation', subTab: 'student_compensation' },
+        { id: 'leave_requests', label: 'Leave Requests', view: 'attendance_compensation', subTab: 'leave_requests' },
+        { id: 'compensation_management', label: 'Compensation Classes', view: 'attendance_compensation', subTab: 'compensation_management' },
       ],
     },
     {
@@ -258,7 +261,7 @@ export default function Sidebar() {
     if (child.view === 'programs' && ['batches', 'schedules'].includes(currentView)) {
       return (child.subTab || child.id) === currentView;
     }
-    if (child.view === 'attendance_compensation' && ['student_attendance', 'coach_attendance', 'coach_leaves', 'student_compensation'].includes(currentView)) {
+    if (child.view === 'attendance_compensation' && ['attendance_overview', 'location_wise', 'student_attendance', 'coach_attendance', 'leave_requests', 'compensation_management', 'coach_leaves', 'student_compensation'].includes(currentView)) {
       return (child.subTab || child.id) === currentView;
     }
     if (child.view === 'settings' || child.view === 'terms_policies') {
@@ -277,7 +280,7 @@ export default function Sidebar() {
     if (child.subTab) {
       if (child.view === 'people' && !activeSubTab) return child.subTab === 'students';
       if (child.view === 'programs' && !activeSubTab) return child.subTab === 'batches';
-      if (child.view === 'attendance_compensation' && !activeSubTab) return child.subTab === 'student_attendance';
+      if (child.view === 'attendance_compensation' && !activeSubTab) return child.subTab === 'attendance_overview';
       if (child.view === 'fees_payments' && !activeSubTab) return child.subTab === 'packages';
       if (child.view === 'equipment' && !activeSubTab) return child.subTab === 'inventory';
       if (child.view === 'access_management' && !activeSubTab) return child.subTab === 'overview';
@@ -414,16 +417,18 @@ export default function Sidebar() {
   ];
 
   // =========================================================================
-  // 4. PARENT NAVIGATION
+  // 4. PARENT NAVIGATION (Matching Reference Screenshot)
   // =========================================================================
   const parentNavItems = [
-    { id: 'children', label: 'My Child', icon: GraduationCap },
-    { id: 'programs_achievements', label: 'Programs & Achievements', icon: Rocket },
-    { id: 'classes', label: 'Classes & Schedule', icon: Calendar },
-    { id: 'attendance_compensation', label: 'Attendance & Compensation', icon: CalendarCheck },
+    { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'programs_achievements', label: 'Programs & Achievements', icon: Award },
+    { id: 'communication', label: 'Announcements', icon: Megaphone },
+    { id: 'feedback', label: 'Feedback & Suggestions', icon: MessageSquare },
+    { id: 'leave_requests', label: 'Leave Requests', icon: CalendarPlus },
+    { id: 'compensation_class', label: 'Compensation Class', icon: ArrowLeftRight },
+    { id: 'children', label: "My Child's Profile", icon: User },
     { id: 'fees_payments', label: 'Fees & Payments', icon: CreditCard },
-    { id: 'competitions', label: 'Sports & Events', icon: Trophy },
-    { id: 'communication', label: 'Communication', icon: MessageSquare },
   ];
 
   // Section title & items depending on active portal
@@ -819,10 +824,12 @@ export default function Sidebar() {
               const Icon = item.icon;
               const isActive =
                 currentView === item.id ||
+                (item.id === 'attendance' && (currentView === 'attendance' || currentView === 'attendance_compensation')) ||
                 (item.id === 'child_evaluations' && currentView === 'evaluations') ||
                 (item.id === 'programs_achievements' && (currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs')) ||
                 (item.id === 'classes' && currentView === 'schedule') ||
-                (item.id === 'leave_requests' && (currentView === 'leaves' || currentView === 'workspace'));
+                (item.id === 'leave_requests' && (currentView === 'leaves' || currentView === 'workspace' || currentView === 'leave_requests')) ||
+                (item.id === 'compensation_class' && (currentView === 'compensation_class' || currentView === 'compensation'));
 
               return (
                 <button

@@ -24,7 +24,9 @@ import {
   Layers,
   X,
   Hash,
-  Check
+  Check,
+  CalendarCheck,
+  ArrowLeftRight
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
@@ -42,6 +44,26 @@ export default function StudentManagement() {
   const [viewStudent, setViewStudent] = useState(null);
   const [editingStudent, setEditingStudent] = useState(null);
   const [openFeeDropdownId, setOpenFeeDropdownId] = useState(null);
+
+  // Attendance details for the selected profile modal
+  const viewStudentAttendance = useMemo(() => {
+    if (!viewStudent) return [];
+    const sid = viewStudent.id;
+    const cid = viewStudent.childId;
+    return (data.attendanceRecords || []).filter(
+      r => r.studentId === sid || r.childId === sid || (cid && (r.studentId === cid || r.childId === cid))
+    );
+  }, [viewStudent, data.attendanceRecords]);
+
+  const viewStudentAttStats = useMemo(() => {
+    const present = viewStudentAttendance.filter(r => r.status === 'Present').length;
+    const absent = viewStudentAttendance.filter(r => r.status === 'Absent').length;
+    const leave = viewStudentAttendance.filter(r => r.status === 'Leave').length;
+    const compensation = viewStudentAttendance.filter(r => r.status === 'Compensation').length;
+    const denom = present + absent;
+    const pct = denom > 0 ? Math.round((present / denom) * 100) : 100;
+    return { present, absent, leave, compensation, pct, total: viewStudentAttendance.length };
+  }, [viewStudentAttendance]);
 
   // Close fee status dropdown on outside click or Escape
   useEffect(() => {
@@ -788,6 +810,88 @@ export default function StudentManagement() {
               <p className="text-xs text-[#172B50] opacity-80 leading-relaxed">
                 {viewStudent.medicalNote || 'No special restrictions recorded. Certified fit for agility and strength routines.'}
               </p>
+            </div>
+
+            {/* Student Attendance & Training History (Admin Centralized Attendance Integration) */}
+            <div className="p-4 rounded-xl bg-white border border-[#172B5018] space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-[#172B5010]">
+                <div className="flex items-center gap-2">
+                  <CalendarCheck className="w-4 h-4 text-[#F4510B]" />
+                  <span className="text-xs font-black uppercase text-[#172B50]">
+                    Attendance Performance &amp; History
+                  </span>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800">
+                  {viewStudentAttStats.pct}% Attendance
+                </span>
+              </div>
+
+              {/* 4 Mini Stat Badges */}
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-100">
+                  <span className="text-base font-black text-emerald-800 leading-none block">{viewStudentAttStats.present}</span>
+                  <span className="text-[10px] font-bold text-emerald-700">Present</span>
+                </div>
+                <div className="p-2 rounded-lg bg-rose-50 border border-rose-100">
+                  <span className="text-base font-black text-rose-800 leading-none block">{viewStudentAttStats.absent}</span>
+                  <span className="text-[10px] font-bold text-rose-700">Absent</span>
+                </div>
+                <div className="p-2 rounded-lg bg-amber-50 border border-amber-100">
+                  <span className="text-base font-black text-amber-800 leading-none block">{viewStudentAttStats.leave}</span>
+                  <span className="text-[10px] font-bold text-amber-700">Leave</span>
+                </div>
+                <div className="p-2 rounded-lg bg-purple-50 border border-purple-100">
+                  <span className="text-base font-black text-purple-800 leading-none block">{viewStudentAttStats.compensation}</span>
+                  <span className="text-[10px] font-bold text-purple-700">Compensation</span>
+                </div>
+              </div>
+
+              {/* Attendance History Table */}
+              <div className="max-h-40 overflow-y-auto rounded-lg border border-[#172B5010]">
+                <table className="w-full text-left text-[11px]">
+                  <thead className="bg-[#FFF4E8]/60 text-[#172B50]/70 uppercase text-[9px] font-bold sticky top-0">
+                    <tr>
+                      <th className="py-1.5 px-2.5">Date</th>
+                      <th className="py-1.5 px-2">Batch / Coach</th>
+                      <th className="py-1.5 px-2 text-center">Status</th>
+                      <th className="py-1.5 px-2">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#172B500A]">
+                    {viewStudentAttendance.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="py-3 text-center text-[#172B50]/50 text-xs">
+                          No attendance sessions recorded yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      viewStudentAttendance.slice(0, 10).map((att) => (
+                        <tr key={att.id} className="hover:bg-slate-50">
+                          <td className="py-1.5 px-2.5 font-bold text-[#172B50] whitespace-nowrap">
+                            {att.date || att.sessionDate}
+                          </td>
+                          <td className="py-1.5 px-2 text-[#172B50]/80">
+                            {att.batchName || att.batchId} • {att.coachName}
+                          </td>
+                          <td className="py-1.5 px-2 text-center whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                              att.status === 'Present' ? 'bg-emerald-100 text-emerald-800' :
+                              att.status === 'Absent' ? 'bg-rose-100 text-rose-800' :
+                              att.status === 'Leave' ? 'bg-amber-100 text-amber-800' :
+                              'bg-purple-100 text-purple-800'
+                            }`}>
+                              {att.status}
+                            </span>
+                          </td>
+                          <td className="py-1.5 px-2 text-[#172B50]/70 truncate max-w-[120px]">
+                            {att.coachRemarks || '–'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Parent Contact */}

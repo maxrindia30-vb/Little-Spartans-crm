@@ -386,9 +386,39 @@ export function CrmProvider({ children }) {
             : (initialAcademyData.demos || [])).filter(d => !isDummyDemo(d)),
           payments: (Array.isArray(parsed.payments) ? parsed.payments : []).filter(p => !isDummyPayment(p)),
           classSchedules: (Array.isArray(parsed.classSchedules) ? parsed.classSchedules : []).filter(s => !isDummySchedule(s)),
-          attendanceRecords: (Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : []).filter(a => !isDummyAttendance(a)),
+          attendanceRecords: (() => {
+            const loaded = (Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : []).filter(a => !isDummyAttendance(a));
+            const initial = initialAcademyData.attendanceRecords || [];
+            const map = new Map();
+            initial.forEach(r => map.set(r.id, r));
+            loaded.forEach(r => map.set(r.id, r));
+            return Array.from(map.values());
+          })(),
           coachAttendanceRecords: Array.isArray(parsed.coachAttendanceRecords) ? parsed.coachAttendanceRecords : [],
-          compensationRequests: (Array.isArray(parsed.compensationRequests) ? parsed.compensationRequests : []).filter(r => !r.id?.startsWith('CR-')),
+          compensationRequests: (() => {
+            const loaded = Array.isArray(parsed.compensationRequests) ? parsed.compensationRequests : [];
+            const initial = initialAcademyData.compensationRequests || [];
+            const map = new Map();
+            initial.forEach(r => map.set(r.id, r));
+            loaded.forEach(r => map.set(r.id, r));
+            return Array.from(map.values());
+          })(),
+          compensationSlots: (() => {
+            const loaded = Array.isArray(parsed.compensationSlots) ? parsed.compensationSlots : [];
+            const initial = initialAcademyData.compensationSlots || [];
+            const map = new Map();
+            initial.forEach(s => map.set(s.id, s));
+            loaded.forEach(s => map.set(s.id, s));
+            return Array.from(map.values());
+          })(),
+          studentLeaveRequests: (() => {
+            const loaded = Array.isArray(parsed.studentLeaveRequests) ? parsed.studentLeaveRequests : [];
+            const initial = initialAcademyData.studentLeaveRequests || [];
+            const map = new Map();
+            initial.forEach(l => map.set(l.id, l));
+            loaded.forEach(l => map.set(l.id, l));
+            return Array.from(map.values());
+          })(),
           compensationHistory: (Array.isArray(parsed.compensationHistory) ? parsed.compensationHistory : []).filter(h => !h.id?.startsWith('CH-')),
           notifications: (Array.isArray(parsed.notifications) ? parsed.notifications : []).filter(n => !n.id?.startsWith('NOTIF-')),
           superCoaches: (Array.isArray(parsed.superCoaches) && parsed.superCoaches.length > 0 ? parsed.superCoaches : (initialAcademyData.superCoaches || [])).filter(sc => sc.id !== 'SCOACH-1' && !sc.name?.includes('Kabir')),
@@ -2520,6 +2550,477 @@ export function CrmProvider({ children }) {
   const applyLeave = (leaveData) => applyCoachLeave(leaveData);
   const updateLeaveStatus = (id, newStatus, reviewer, reviewNotes) =>
     reviewCoachLeave(id, { status: newStatus, reviewedBy: reviewer, reviewNotes });
+
+  // ==========================================================================
+  // Student Attendance, Leave & Compensation Slot Workflow
+  // ==========================================================================
+  const applyStudentLeave = ({
+    childId,
+    startDate,
+    endDate,
+    reason,
+    notes = '',
+    requestCompensation = false,
+    preferredCompensationDate = '',
+    preferredTimeSlot = ''
+  }) => {
+    if (!childId || !startDate || !reason) {
+      addToast('Child, start date, and reason are required.', 'error');
+      return { success: false, error: 'Missing required fields' };
+    }
+    const finalEndDate = endDate || startDate;
+
+    const child = (data.students || []).find(
+      s => s.id === childId || s.childId === childId || s.name === childId
+    );
+    if (!child) {
+      addToast('Student athlete not found.', 'error');
+      return { success: false, error: 'Student not found' };
+    }
+
+    // Duplicate/overlap prevention
+    const existingLeaves = data.studentLeaveRequests || [];
+    const overlap = existingLeaves.find(l =>
+      (l.childId === child.id || l.studentId === child.id) &&
+      l.status !== 'Rejected' &&
+      !(l.endDate < startDate || l.startDate > finalEndDate)
+    );
+    if (overlap) {
+      addToast(`Overlapping leave request already exists (${overlap.startDate} to ${overlap.endDate}).`, 'error');
+      return { success: false, error: 'Overlapping leave already exists' };
+    }
+
+    const nextId = `SLR-${Date.now().toString().slice(-4)}`;
+    const newLeave = {
+      id: nextId,
+      childId: child.id,
+      studentId: child.id,
+      childName: child.name,
+      studentName: child.name,
+      parentId: child.parentId || 'LS-KKN-2026-001',
+      parentName: child.parentName || '',
+      location: child.center,
+      locationId: child.locationId || (child.center === 'KK NAGAR' ? 'LOC-002' : 'LOC-001'),
+      program: child.program,
+      batch: child.batch || (child.enrolledClasses && child.enrolledClasses[0]) || 'LE - B1',
+      startDate,
+      endDate: finalEndDate,
+      reason,
+      notes,
+      requestCompensation: Boolean(requestCompensation),
+      preferredCompensationDate: preferredCompensationDate || '',
+      preferredTimeSlot: preferredTimeSlot || '',
+      status: 'Pending',
+      createdAt: new Date().toISOString()
+    };
+
+    let newCompRequest = null;
+    if (requestCompensation) {
+      newCompRequest = {
+        id: `CR-${Date.now().toString().slice(-4)}`,
+        leaveRequestId: nextId,
+        studentId: child.id,
+        childId: child.childId || child.id,
+        studentName: child.name,
+        childName: child.name,
+        parentId: child.parentId || 'LS-KKN-2026-001',
+        parentName: child.parentName || '',
+        location: child.center,
+        locationId: child.locationId || (child.center === 'KK NAGAR' ? 'LOC-002' : 'LOC-001'),
+        program: child.program,
+        batch: child.batch || 'LE - B1',
+        missedDate: startDate,
+        reason,
+        status: 'Pending',
+        preferredDate: preferredCompensationDate || '',
+        preferredTime: preferredTimeSlot || '',
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    const adminNotif = createNotificationRecord({
+      targetRole: 'admin',
+      targetLocation: child.center,
+      title: `Student Leave Submitted: ${child.name}`,
+      message: `${child.name} submitted a leave request for ${startDate}${finalEndDate !== startDate ? ` to ${finalEndDate}` : ''} (${reason}).`,
+      type: 'info'
+    });
+
+    const superCoachNotif = createNotificationRecord({
+      targetRole: 'super_coach',
+      targetLocation: child.center,
+      title: `Student Leave Submitted: ${child.name}`,
+      message: `${child.name} submitted a leave request for ${startDate} (${child.center} • ${child.program}).`,
+      type: 'info'
+    });
+
+    setData(prev => ({
+      ...prev,
+      studentLeaveRequests: [newLeave, ...(prev.studentLeaveRequests || [])],
+      compensationRequests: newCompRequest
+        ? [newCompRequest, ...(prev.compensationRequests || [])]
+        : prev.compensationRequests,
+      notifications: [adminNotif, superCoachNotif, ...(prev.notifications || [])].slice(0, 80)
+    }));
+
+    logSettingsAudit({
+      category: 'Session & Attendance',
+      action: 'Student Leave Submitted',
+      field: `${child.name} - ${startDate} (${reason})`,
+      oldValue: '—',
+      newValue: 'Pending Review'
+    });
+
+    addToast('Leave request submitted successfully. Awaiting approval.', 'success');
+    return { success: true, leave: newLeave, compensationRequest: newCompRequest };
+  };
+
+  const reviewStudentLeave = (requestId, { status, reviewer = 'Admin', reviewNotes = '' }) => {
+    const targetLeave = (data.studentLeaveRequests || []).find(l => l.id === requestId);
+    if (!targetLeave) {
+      addToast('Leave request not found.', 'error');
+      return { success: false, error: 'Leave request not found' };
+    }
+
+    const todayYmd = new Date().toISOString().split('T')[0];
+
+    const updatedLeave = {
+      ...targetLeave,
+      status,
+      reviewedBy: reviewer,
+      reviewDate: todayYmd,
+      reviewNotes: reviewNotes || (status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin')
+    };
+
+    const parentNotif = createNotificationRecord({
+      targetRole: 'parent',
+      targetParentId: targetLeave.parentId,
+      targetLocation: targetLeave.location,
+      title: `Leave Request ${status}: ${targetLeave.childName}`,
+      message: `Leave request for ${targetLeave.startDate} has been ${status.toLowerCase()} by ${reviewer}.${reviewNotes ? ` Reason: ${reviewNotes}` : ''}`,
+      type: status === 'Approved' ? 'success' : 'warning'
+    });
+
+    setData(prev => {
+      const nextLeaves = (prev.studentLeaveRequests || []).map(l => l.id === requestId ? updatedLeave : l);
+      const nextCompRequests = (prev.compensationRequests || []).map(c => {
+        if (c.leaveRequestId === requestId) {
+          return {
+            ...c,
+            status: status === 'Approved' ? (c.status === 'Scheduled' ? 'Scheduled' : 'Approved') : 'Rejected',
+            adminNotes: reviewNotes || c.adminNotes
+          };
+        }
+        return c;
+      });
+
+      return {
+        ...prev,
+        studentLeaveRequests: nextLeaves,
+        compensationRequests: nextCompRequests,
+        notifications: [parentNotif, ...(prev.notifications || [])].slice(0, 80)
+      };
+    });
+
+    logSettingsAudit({
+      category: 'Session & Attendance',
+      action: `Student Leave ${status}`,
+      field: `${targetLeave.childName} - ${targetLeave.startDate}`,
+      oldValue: targetLeave.status,
+      newValue: status
+    });
+
+    addToast(`Leave request ${status.toLowerCase()} successfully.`, 'success');
+    return { success: true, leave: updatedLeave };
+  };
+
+  const createCompensationSlot = (slotData) => {
+    const {
+      location,
+      program,
+      batch,
+      date,
+      startTime,
+      endTime,
+      coachId,
+      coachName,
+      maxCapacity = 10
+    } = slotData;
+
+    if (!location || !program || !batch || !date || !startTime || !endTime) {
+      addToast('Please complete all required slot parameters.', 'error');
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    const assignedCoach = (data.coaches || []).find(c => c.id === coachId || c.name === coachName) || data.coaches?.[0];
+    const effectiveCoachId = assignedCoach?.id || coachId || 'COACH-SAM';
+    const effectiveCoachName = assignedCoach?.name || coachName || 'Coach Sam';
+
+    // Conflict check: ensure coach isn't already assigned to another compensation slot on this date & time
+    const conflict = (data.compensationSlots || []).find(s =>
+      s.id !== slotData.id &&
+      s.date === date &&
+      s.coachId === effectiveCoachId &&
+      s.status !== 'Cancelled' &&
+      !(s.endTime <= startTime || s.startTime >= endTime)
+    );
+    if (conflict) {
+      addToast(`Conflict: ${effectiveCoachName} already has another session at ${conflict.startTime} - ${conflict.endTime}.`, 'error');
+      return { success: false, error: 'Coach schedule conflict' };
+    }
+
+    const nextId = `SLOT-${Date.now().toString().slice(-4)}`;
+    const newSlot = {
+      id: nextId,
+      location,
+      locationId: location === 'KK NAGAR' ? 'LOC-002' : 'LOC-001',
+      program,
+      programId: program === 'Athletics' ? 'PROG-ATH' : 'PROG-001',
+      batch,
+      batchId: batch,
+      date,
+      startTime,
+      endTime,
+      coachId: effectiveCoachId,
+      coachName: effectiveCoachName,
+      maxCapacity: Number(maxCapacity) || 10,
+      availableSeats: Number(maxCapacity) || 10,
+      enrolledChildren: [],
+      status: 'Available',
+      createdAt: new Date().toISOString()
+    };
+
+    setData(prev => ({
+      ...prev,
+      compensationSlots: [newSlot, ...(prev.compensationSlots || [])]
+    }));
+
+    logSettingsAudit({
+      category: 'Session & Attendance',
+      action: 'Compensation Slot Created',
+      field: `${location} • ${date} (${startTime} - ${endTime})`,
+      oldValue: '—',
+      newValue: `${effectiveCoachName} (Cap: ${maxCapacity})`
+    });
+
+    addToast('Compensation slot created successfully.', 'success');
+    return { success: true, slot: newSlot };
+  };
+
+  const updateCompensationSlot = (slotId, updateData) => {
+    const existing = (data.compensationSlots || []).find(s => s.id === slotId);
+    if (!existing) {
+      addToast('Compensation slot not found.', 'error');
+      return { success: false, error: 'Slot not found' };
+    }
+
+    const updated = {
+      ...existing,
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    };
+
+    setData(prev => ({
+      ...prev,
+      compensationSlots: (prev.compensationSlots || []).map(s => s.id === slotId ? updated : s)
+    }));
+
+    addToast('Compensation slot updated.', 'success');
+    return { success: true, slot: updated };
+  };
+
+  const deleteCompensationSlot = (slotId) => {
+    setData(prev => ({
+      ...prev,
+      compensationSlots: (prev.compensationSlots || []).filter(s => s.id !== slotId)
+    }));
+    addToast('Compensation slot removed.', 'info');
+    return { success: true };
+  };
+
+  const allocateCompensationSlot = ({ requestId, slotId, adminNotes = '' }) => {
+    const compReq = (data.compensationRequests || []).find(r => r.id === requestId);
+    if (!compReq) {
+      addToast('Compensation request not found.', 'error');
+      return { success: false, error: 'Request not found' };
+    }
+
+    const slot = (data.compensationSlots || []).find(s => s.id === slotId);
+    if (!slot) {
+      addToast('Compensation slot not found.', 'error');
+      return { success: false, error: 'Slot not found' };
+    }
+
+    if (slot.availableSeats <= 0) {
+      addToast('This compensation slot is fully booked.', 'error');
+      return { success: false, error: 'Slot fully booked' };
+    }
+
+    const alreadyEnrolled = (slot.enrolledChildren || []).some(
+      c => c.childId === compReq.studentId || c.studentId === compReq.studentId
+    );
+    if (alreadyEnrolled) {
+      addToast('Student is already enrolled in this slot.', 'error');
+      return { success: false, error: 'Already enrolled' };
+    }
+
+    const enrolledChild = {
+      childId: compReq.studentId,
+      studentId: compReq.studentId,
+      childName: compReq.studentName,
+      studentName: compReq.studentName,
+      parentId: compReq.parentId,
+      parentName: compReq.parentName,
+      originalLeaveId: compReq.leaveRequestId,
+      originalMissedDate: compReq.missedDate,
+      status: 'Confirmed'
+    };
+
+    const nextSeats = slot.availableSeats - 1;
+    const nextEnrolled = [...(slot.enrolledChildren || []), enrolledChild];
+    const updatedSlot = {
+      ...slot,
+      availableSeats: nextSeats,
+      enrolledChildren: nextEnrolled,
+      status: nextSeats === 0 ? 'Full' : 'Scheduled'
+    };
+
+    const updatedCompReq = {
+      ...compReq,
+      status: 'Scheduled',
+      confirmedDate: slot.date,
+      confirmedTime: `${slot.startTime} – ${slot.endTime}`,
+      confirmedLocation: slot.location,
+      confirmedBatch: slot.batch,
+      confirmedCoach: slot.coachName,
+      confirmedCoachId: slot.coachId,
+      slotId: slot.id,
+      adminNotes: adminNotes || compReq.adminNotes,
+      updatedAt: new Date().toISOString()
+    };
+
+    const parentNotif = createNotificationRecord({
+      targetRole: 'parent',
+      targetParentId: compReq.parentId,
+      targetLocation: slot.location,
+      title: `Compensation Class Confirmed: ${compReq.studentName}`,
+      message: `Your child ${compReq.studentName}'s compensation class is confirmed for ${slot.date} (${slot.startTime} – ${slot.endTime}) at ${slot.location} under ${slot.coachName}.`,
+      type: 'success'
+    });
+
+    const coachNotif = createNotificationRecord({
+      targetRole: 'coach',
+      targetCoachId: slot.coachId,
+      targetLocation: slot.location,
+      title: `Compensation Student Added: ${compReq.studentName}`,
+      message: `${compReq.studentName} has been scheduled for your compensation session on ${slot.date} (${slot.startTime} – ${slot.endTime}).`,
+      type: 'info'
+    });
+
+    setData(prev => {
+      const nextSlots = (prev.compensationSlots || []).map(s => s.id === slotId ? updatedSlot : s);
+      const nextReqs = (prev.compensationRequests || []).map(r => r.id === requestId ? updatedCompReq : r);
+      const nextLeaves = (prev.studentLeaveRequests || []).map(l => {
+        if (l.id === compReq.leaveRequestId) {
+          return {
+            ...l,
+            compensationScheduled: true,
+            compensationDate: slot.date,
+            compensationTime: `${slot.startTime} – ${slot.endTime}`,
+            compensationSlotId: slot.id
+          };
+        }
+        return l;
+      });
+
+      return {
+        ...prev,
+        compensationSlots: nextSlots,
+        compensationRequests: nextReqs,
+        studentLeaveRequests: nextLeaves,
+        notifications: [parentNotif, coachNotif, ...(prev.notifications || [])].slice(0, 80)
+      };
+    });
+
+    logSettingsAudit({
+      category: 'Session & Attendance',
+      action: 'Compensation Slot Allocated',
+      field: `${compReq.studentName} → ${slot.location} • ${slot.date}`,
+      oldValue: 'Unassigned',
+      newValue: `${slot.coachName} (${slot.startTime} - ${slot.endTime})`
+    });
+
+    addToast(`Confirmed compensation session for ${compReq.studentName} on ${slot.date}.`, 'success');
+    return { success: true, slot: updatedSlot, request: updatedCompReq };
+  };
+
+  const completeCompensationSession = ({ slotId, childId, attendanceStatus = 'Present', coachRemarks = '' }) => {
+    const slot = (data.compensationSlots || []).find(s => s.id === slotId);
+    if (!slot) return { success: false, error: 'Slot not found' };
+
+    const child = (data.students || []).find(s => s.id === childId);
+    if (!child) return { success: false, error: 'Student not found' };
+
+    // Mark slot completed
+    const updatedSlot = {
+      ...slot,
+      status: 'Completed',
+      enrolledChildren: (slot.enrolledChildren || []).map(c =>
+        c.childId === childId ? { ...c, status: 'Completed' } : c
+      )
+    };
+
+    // Upsert attendance record with status 'Compensation'
+    const newAttRecord = {
+      id: `ATT-${slot.date}-${slot.batchId || 'COMP'}-${childId}`,
+      childId,
+      studentId: childId,
+      childName: child.name,
+      studentName: child.name,
+      parentId: child.parentId || 'LS-KKN-2026-001',
+      parentName: child.parentName || '',
+      coachId: slot.coachId,
+      coachName: slot.coachName,
+      locationId: slot.locationId || (slot.location === 'KK NAGAR' ? 'LOC-002' : 'LOC-001'),
+      location: slot.location,
+      programId: slot.programId || 'PROG-ATH',
+      program: slot.program,
+      batchId: slot.batchId || slot.batch,
+      batchName: slot.batch,
+      sessionDate: slot.date,
+      date: slot.date,
+      sessionStartTime: slot.startTime,
+      sessionEndTime: slot.endTime,
+      status: 'Compensation',
+      coachRemarks: coachRemarks || `Compensation Session for approved leave`,
+      compensationSessionId: slot.id,
+      markedBy: currentPortal === 'coach' ? (data.coaches?.[0]?.name || 'Coach') : 'Admin',
+      markedByRole: currentPortal,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setData(prev => {
+      const nextSlots = (prev.compensationSlots || []).map(s => s.id === slotId ? updatedSlot : s);
+      const nextAtt = [newAttRecord, ...(prev.attendanceRecords || []).filter(r => r.id !== newAttRecord.id)];
+      const nextReqs = (prev.compensationRequests || []).map(r => {
+        if (r.slotId === slotId && (r.studentId === childId || r.childId === childId)) {
+          return { ...r, status: 'Completed', updatedAt: new Date().toISOString() };
+        }
+        return r;
+      });
+
+      return {
+        ...prev,
+        compensationSlots: nextSlots,
+        attendanceRecords: nextAtt,
+        compensationRequests: nextReqs
+      };
+    });
+
+    addToast(`Compensation session marked Completed for ${child.name}.`, 'success');
+    return { success: true };
+  };
 
   // ==========================================================================
   // Coach Attendance & Live Camera Verification Workflow
@@ -6579,6 +7080,14 @@ export function CrmProvider({ children }) {
         resubmitCoachLeave,
         deleteCoachLeave,
         getCoachApprovedLeaveForDate,
+        // Student Attendance, Leave & Compensation Workflow
+        applyStudentLeave,
+        reviewStudentLeave,
+        createCompensationSlot,
+        updateCompensationSlot,
+        deleteCompensationSlot,
+        allocateCompensationSlot,
+        completeCompensationSession,
         // Coach Camera Attendance Workflow
         checkInCoach,
         checkOutCoach,

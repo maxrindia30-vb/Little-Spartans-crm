@@ -75,6 +75,7 @@ import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 import FeesPaymentsModule from '../admin/FeesPaymentsModule';
 import SportsEventsModule from '../admin/SportsEventsModule';
 import ProgramsAchievementsModule from './ProgramsAchievementsModule';
+import ParentAttendanceModule from './ParentAttendanceModule';
 
 const COMP_STATUS_STYLES = {
   Pending: 'bg-amber-100 text-amber-900',
@@ -1431,6 +1432,17 @@ export default function ParentPortalView() {
           selectedChildId={selectedChildId}
           onSelectChild={setSelectedChildId}
           initialTab={currentView === 'progress' ? 'achievements' : 'explore'}
+        />
+      )}
+
+      {/* 7.6. ATTENDANCE & COMPENSATION MODULE */}
+      {(currentView === 'attendance' || currentView === 'attendance_compensation' || currentView === 'leave_requests' || currentView === 'compensation_class') && (
+        <ParentAttendanceModule
+          parentProfile={parentProfile}
+          myChildren={myChildren}
+          activeChild={activeChild}
+          setActiveChild={(child) => setSelectedChildId(child.id)}
+          initialSelectedDate="2026-11-19"
         />
       )}
 

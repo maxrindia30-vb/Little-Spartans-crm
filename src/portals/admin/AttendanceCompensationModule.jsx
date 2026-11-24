@@ -29,6 +29,9 @@ import AttendanceManagement from './AttendanceManagement';
 import CoachAttendanceRegister from './CoachAttendanceRegister';
 import StudentCompensationManager from './StudentCompensationManager';
 import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
+import SuperCoachAttendanceOverview from '../supercoach/SuperCoachAttendanceOverview';
+import AdminLeaveManagementTab from './AdminLeaveManagementTab';
+import AdminCompensationSlotManager from './AdminCompensationSlotManager';
 import Modal from '../../components/common/Modal';
 
 const STATUS_BADGE_MAP = {
@@ -60,14 +63,18 @@ export default function AttendanceCompensationModule() {
   const activeLocations = getCommonLocations(data);
   const todayYmd = new Date().toISOString().split('T')[0];
 
-  // Resolve active subtab with resilient fallback to student_attendance
+  const [selectedLoc, setSelectedLoc] = useState('KK NAGAR');
+
+  // Resolve active subtab with resilient fallback to attendance_overview
   const resolveTab = (tab) => {
+    if (tab === 'attendance_overview' || tab === 'overview') return 'attendance_overview';
+    if (tab === 'location_wise' || tab === 'location_attendance' || tab === 'locations') return 'location_wise';
     if (tab === 'student_att' || tab === 'student_attendance' || tab === 'attendance') return 'student_attendance';
     if (tab === 'coach_att' || tab === 'coach_attendance') return 'coach_attendance';
-    if (tab === 'student_comp' || tab === 'student_compensation' || tab === 'compensation') return 'student_compensation';
-    if (currentView === 'leaves' || currentView === 'coach_leaves') return 'coach_leaves';
-    if (tab === 'coach_leaves' || tab === 'coach_leave_requests' || tab === 'leave_requests' || tab === 'leaves') return 'coach_leaves';
-    return 'student_attendance';
+    if (tab === 'leave_requests' || tab === 'leaves' || tab === 'coach_leaves' || tab === 'student_leaves') return 'leave_requests';
+    if (tab === 'compensation_management' || tab === 'student_compensation' || tab === 'compensation' || tab === 'slots') return 'compensation_management';
+    if (currentView === 'leaves' || currentView === 'coach_leaves') return 'leave_requests';
+    return 'attendance_overview';
   };
 
   const currentTab = resolveTab(activeSubTab);
@@ -77,6 +84,11 @@ export default function AttendanceCompensationModule() {
       setActiveSubTab(currentTab);
     }
   }, [activeSubTab, currentTab, setActiveSubTab]);
+
+  const pendingLeavesCount = (data.studentLeaveRequests || []).filter(r => r.status === 'Pending').length + 
+    (data.coachLeaveRequests || []).filter(r => r.status === 'Pending' || r.status === 'Pending Admin Review' || r.status === 'Pending Admin Final Approval').length;
+  
+  const pendingCompCount = (data.compensationRequests || []).filter(r => r.status === 'Pending').length;
 
   // Student Compensation Filters
   const [compSearch, setCompSearch] = useState('');
@@ -348,76 +360,112 @@ export default function AttendanceCompensationModule() {
           </div>
         </div>
 
-        {/* Tab Switcher: Exactly 3 Navigation Tabs matching reference UI */}
+        {/* Tab Switcher: 6 Tabs matching Admin Centralized Attendance Management */}
         <div className="flex items-center bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start sm:self-auto overflow-x-auto max-w-full">
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('student_attendance')}
-            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-              currentTab === 'student_attendance'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-            }`}
-          >
-            Student Attendance
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('coach_attendance')}
-            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-              currentTab === 'coach_attendance'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-            }`}
-          >
-            Coach Attendance
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('coach_leaves')}
-            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-              currentTab === 'coach_leaves'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-            }`}
-          >
-            Coach Leaves{(data.coachLeaveRequests || []).filter(r => r.status === 'Pending').length > 0 ? ` (${(data.coachLeaveRequests || []).filter(r => r.status === 'Pending').length} Pending)` : ''}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('student_compensation')}
-            className={`inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-              currentTab === 'student_compensation'
-                ? 'bg-[#F4510B] text-white shadow-xs'
-                : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
-            }`}
-          >
-            Student Compensation ({studentRequests.filter(r => r.status === 'Pending').length} Pending)
-          </button>
+          {[
+            { id: 'attendance_overview', label: 'Attendance Overview' },
+            { id: 'location_wise', label: 'Location Attendance' },
+            { id: 'student_attendance', label: 'Student Register' },
+            { id: 'coach_attendance', label: 'Coach Attendance' },
+            { 
+              id: 'leave_requests', 
+              label: `Leave Requests${pendingLeavesCount > 0 ? ` (${pendingLeavesCount})` : ''}` 
+            },
+            { 
+              id: 'compensation_management', 
+              label: `Compensation Management${pendingCompCount > 0 ? ` (${pendingCompCount})` : ''}` 
+            },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveSubTab(tab.id)}
+              className={`inline-flex items-center justify-center px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                currentTab === tab.id
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* SUBTAB 1: Student Attendance */}
+      {/* SUBTAB 1: Attendance Overview */}
+      {currentTab === 'attendance_overview' && (
+        <SuperCoachAttendanceOverview allowedLocations={['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM', 'ANNA NAGAR', 'KOLATHUR']} />
+      )}
+
+      {/* SUBTAB 2: Location-wise Attendance strictly isolating records */}
+      {currentTab === 'location_wise' && (
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded-2xl border border-[#172B501A] shadow-card">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-[#F4510B]" />
+                <div>
+                  <h3 className="text-sm font-extrabold text-[#172B50]">Location-wise Attendance Isolation</h3>
+                  <p className="text-xs text-gray-500">Strictly isolates student rosters, batches, and attendance marks to the selected center</p>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-[#F4510B] bg-[#FFF4E8] px-3 py-1 rounded-full border border-[#F4510B30] self-start sm:self-auto">
+                Selected: {selectedLoc}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-gray-100">
+              {['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM', 'ANNA NAGAR', 'KOLATHUR'].map(loc => {
+                const isSelected = selectedLoc === loc;
+                const locStudentsCount = (data.students || []).filter(s => s.center === loc).length;
+                return (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setSelectedLoc(loc)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#172B50] text-white shadow-sm ring-2 ring-[#172B50]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span>{loc}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      isSelected ? 'bg-[#F4510B] text-white' : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {locStudentsCount} Students
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <AttendanceManagement
+            key={selectedLoc}
+            initialLocation={selectedLoc}
+            allowedLocations={[selectedLoc]}
+            fixedLocation={true}
+          />
+        </div>
+      )}
+
+      {/* SUBTAB 3: Student Attendance Register */}
       {currentTab === 'student_attendance' && (
         <AttendanceManagement />
       )}
 
-      {/* SUBTAB 2: Coach Attendance */}
+      {/* SUBTAB 4: Coach Attendance */}
       {currentTab === 'coach_attendance' && (
         <CoachAttendanceRegister />
       )}
 
-      {/* SUBTAB: Coach Leave Approvals (Sequential Admin Final Authority) */}
-      {currentTab === 'coach_leaves' && (
-        <CoachLeaveRequestsManager mode="admin" />
+      {/* SUBTAB 5: Leave Requests (Centralized Student Leaves & Coach Leaves) */}
+      {currentTab === 'leave_requests' && (
+        <AdminLeaveManagementTab />
       )}
 
-      {/* SUBTAB 3: Student Compensation Classes (Section 4.8) */}
-      {currentTab === 'student_compensation' && (
-        <StudentCompensationManager />
+      {/* SUBTAB 6: Compensation Class Management */}
+      {currentTab === 'compensation_management' && (
+        <AdminCompensationSlotManager />
       )}
 
       {/* SUBTAB 4: Coach Compensation Classes */}

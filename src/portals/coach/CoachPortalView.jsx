@@ -240,16 +240,19 @@ export default function CoachPortalView() {
       .filter(
         r =>
           r.currentStatus === ATTENDANCE_STATUSES.PRESENT ||
-          r.currentStatus === ATTENDANCE_STATUSES.ABSENT
+          r.currentStatus === ATTENDANCE_STATUSES.ABSENT ||
+          r.currentStatus === ATTENDANCE_STATUSES.LEAVE ||
+          r.currentStatus === ATTENDANCE_STATUSES.COMPENSATION
       )
       .map(r => ({
         studentId: r.student.id,
         batchId: effectiveCoachBatch.id,
         status: r.currentStatus,
+        coachRemarks: r.coachRemarks || (r.currentStatus === ATTENDANCE_STATUSES.COMPENSATION ? 'Compensation session' : ''),
       }));
 
     if (entries.length === 0) {
-      addToast('Mark at least one athlete Present or Absent before saving.', 'error');
+      addToast('Mark at least one athlete Present, Absent, Leave or Compensation before saving.', 'error');
       return;
     }
 

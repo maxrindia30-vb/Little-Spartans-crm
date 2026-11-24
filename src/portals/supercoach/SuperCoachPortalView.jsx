@@ -48,6 +48,7 @@ import EquipmentManagementModule from '../common/EquipmentManagementModule';
 import { checkScheduleConflict } from '../../services/scheduleService';
 import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
 import AttendanceManagement from '../admin/AttendanceManagement';
+import SuperCoachAttendanceOverview from './SuperCoachAttendanceOverview';
 import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
 import EvaluationReviewModule from './EvaluationReviewModule';
@@ -946,7 +947,18 @@ export default function SuperCoachPortalView() {
           </div>
 
           {/* Sub-tab Navigation matching Admin Attendance Module */}
-          <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
+          <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit overflow-x-auto max-w-full">
+            <button
+              type="button"
+              onClick={() => setAttendanceSubView('attendance_overview')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'attendance_overview'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Attendance Overview
+            </button>
             <button
               type="button"
               onClick={() => setAttendanceSubView('coach_calendar')}
@@ -1004,6 +1016,12 @@ export default function SuperCoachPortalView() {
               Student Progression Oversight
             </button>
           </div>
+
+          {attendanceSubView === 'attendance_overview' && (
+            <SuperCoachAttendanceOverview
+              allowedLocations={assignedLocations}
+            />
+          )}
 
           {attendanceSubView === 'student_attendance' && (
             <AttendanceManagement
