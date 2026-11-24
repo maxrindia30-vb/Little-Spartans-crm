@@ -384,7 +384,6 @@ export default function Sidebar() {
   // 2. SUPER COACH NAVIGATION: MULTI-LOCATION MANAGEMENT
   // =========================================================================
   const superCoachNavItems = [
-    { id: 'dashboard', label: 'Operations Dashboard', icon: Activity },
     { id: 'evaluations', label: 'Evaluation Review', icon: ShieldCheck },
     { id: 'locations', label: 'Multi-Location Hub', icon: MapPin },
     { id: 'coaches', label: 'Coach Management', icon: UserCheck },
@@ -398,7 +397,6 @@ export default function Sidebar() {
   // 3. COACH NAVIGATION: LOCATION INSPECTION & CLASSES
   // =========================================================================
   const coachNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'equipment', label: 'Equipment Check', icon: Package },
     { id: 'batches', label: 'My Batches', icon: Layers },
     { id: 'classes', label: 'My Schedule', icon: Calendar },
@@ -416,7 +414,6 @@ export default function Sidebar() {
   // 4. PARENT NAVIGATION
   // =========================================================================
   const parentNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'children', label: 'My Child', icon: GraduationCap },
     { id: 'programs_achievements', label: 'Programs & Achievements', icon: Rocket },
     { id: 'classes', label: 'Classes & Schedule', icon: Calendar },
@@ -813,7 +810,9 @@ export default function Sidebar() {
               })}
             </div>
           ) : (
-            navItems.map(item => {
+            navItems
+              .filter((item) => item.id !== 'dashboard')
+              .map((item) => {
               const Icon = item.icon;
               const isActive =
                 currentView === item.id ||
