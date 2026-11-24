@@ -53,6 +53,7 @@ import {
   LEAVE_STATUSES,
   HALF_DAY_SESSIONS,
   getCoachApprovedLeaveForDate,
+  checkDuplicateLeaveConflict,
   validateCoachLeavePayload,
 } from '../services/coachLeaveService';
 
@@ -2031,7 +2032,7 @@ export function CrmProvider({ children }) {
   };
 
   // ==========================================================================
-  // Coach Leave Request Workflow (Unified Coach Portal <-> Super Admin <-> Admin)
+  // Coach Leave Request Sequential Workflow (Coach -> Super Coach -> Admin)
   // ==========================================================================
   const applyCoachLeave = (leavePayload = {}) => {
     const coachId = leavePayload.coachId || '';
@@ -2061,23 +2062,40 @@ export function CrmProvider({ children }) {
       return { success: false, errors: validation.errors };
     }
 
-    // Duplicate detection: prevent identical active pending request for same coach and dates
-    const existingPending = (data.coachLeaveRequests || []).find(
-      (r) =>
-        r.coachId === coachId &&
-        r.status === LEAVE_STATUSES.PENDING &&
-        r.startDate <= endDate &&
-        (r.endDate || r.startDate) >= startDate
+    // Duplicate detection: prevent active/pending/approved request for same coach and dates
+    const conflict = checkDuplicateLeaveConflict(
+      data.coachLeaveRequests || [],
+      coachId,
+      startDate,
+      endDate
     );
-    if (existingPending) {
-      addToast(`A pending leave request (${existingPending.id}) is already awaiting review for these dates.`, 'error');
-      return { success: false, duplicate: true, error: 'Duplicate pending leave request', existingId: existingPending.id };
+    if (conflict) {
+      const msg = `Duplicate Leave Conflict: A leave request (${conflict.id} - ${conflict.status}) is already recorded for these dates.`;
+      addToast(msg, 'error');
+      return {
+        success: false,
+        duplicate: true,
+        error: msg,
+        existingId: conflict.id,
+      };
     }
 
     // Generate collision-free Leave Request ID: CLR-001, CLR-002...
     const nextId = generateUniquePrefixedId(data.coachLeaveRequests || [], 'CLR');
     const today = new Date().toISOString().split('T')[0];
     const nowIso = new Date().toISOString();
+
+    const initialHistory = [
+      {
+        action: 'Leave Request Submitted',
+        status: LEAVE_STATUSES.PENDING_SUPER_COACH,
+        by: coachName,
+        reviewerId: coachId,
+        role: 'coach',
+        comments: reason,
+        timestamp: nowIso,
+      },
+    ];
 
     const newRequest = {
       id: nextId,
@@ -2092,30 +2110,34 @@ export function CrmProvider({ children }) {
       reason,
       attachmentUrl,
       attachmentName,
-      status: LEAVE_STATUSES.PENDING,
+      status: LEAVE_STATUSES.PENDING_SUPER_COACH,
       appliedOn: today,
       submittedAt: nowIso,
+      superCoachReview: null,
+      adminReview: null,
       reviewedBy: null,
       reviewedRole: null,
       reviewedAt: null,
       reviewNotes: '',
+      approvalHistory: initialHistory,
+      approvalTimeline: initialHistory,
     };
 
-    // Cross-portal notification for Admins & Super Admins
-    const adminNotif = createNotificationRecord({
-      targetRole: 'admin',
+    // Notification for Super Coach
+    const superCoachNotif = createNotificationRecord({
+      targetRole: 'super_coach',
       targetLocation: location,
-      title: `Coach Leave Request: ${coachName}`,
-      message: `${coachName} (${coachId}) submitted a ${leaveType} leave request for ${startDate} to ${endDate}. Reason: ${reason}`,
+      title: `Coach Leave Submitted: ${coachName}`,
+      message: `${coachName} (${coachId}) submitted a ${leaveType} leave request (${startDate} to ${endDate}) pending your review. Reason: ${reason}`,
       type: 'warning',
     });
 
-    const superAdminNotif = createNotificationRecord({
-      targetRole: 'super_admin',
+    const adminNotif = createNotificationRecord({
+      targetRole: 'admin',
       targetLocation: location,
-      title: `Coach Leave Request: ${coachName}`,
-      message: `${coachName} submitted ${leaveType} leave (${startDate} to ${endDate}) pending review.`,
-      type: 'warning',
+      title: `Coach Leave Initialized: ${coachName}`,
+      message: `${coachName} applied for ${leaveType} leave (${startDate} to ${endDate}). Pending Super Coach initial review.`,
+      type: 'info',
     });
 
     setData((prev) => {
@@ -2124,23 +2146,43 @@ export function CrmProvider({ children }) {
         ...prev,
         coachLeaveRequests: nextCoachLeaves,
         leaveRequests: nextCoachLeaves, // Synchronize for backwards compatibility
-        notifications: [adminNotif, superAdminNotif, ...(prev.notifications || [])].slice(0, 80),
+        notifications: [superCoachNotif, adminNotif, ...(prev.notifications || [])].slice(0, 80),
       };
     });
 
-    addToast(`Leave request ${nextId} submitted successfully. Status: Pending.`, 'success');
+    logSettingsAudit({
+      category: 'Leave Management',
+      action: 'Leave Application Submitted',
+      field: `${coachName} - ${leaveType} (${startDate} to ${endDate})`,
+      oldValue: 'None',
+      newValue: LEAVE_STATUSES.PENDING_SUPER_COACH,
+    });
+
+    addToast(`Leave request ${nextId} submitted successfully. Status: Pending Super Coach Review.`, 'success');
     return { success: true, request: newRequest };
   };
 
-  const reviewCoachLeave = (requestId, { status, reviewedBy, reviewedRole, reviewNotes } = {}) => {
+  const reviewCoachLeave = (
+    requestId,
+    { status, reviewerId, reviewedBy, reviewedRole, reviewNotes } = {}
+  ) => {
     const validStatuses = [
+      LEAVE_STATUSES.PENDING_ADMIN,
       LEAVE_STATUSES.APPROVED,
       LEAVE_STATUSES.REJECTED,
-      LEAVE_STATUSES.SUPER_COACH_APPROVED,
-      LEAVE_STATUSES.SUPER_COACH_REJECTED
+      LEAVE_STATUSES.RETURNED,
+      LEAVE_STATUSES.SUPER_COACH_REJECTED,
+      'Pending Admin Final Approval',
+      'Approved',
+      'Rejected',
+      'Returned for Correction',
+      'Rejected by Super Coach',
+      'Super Coach Approved',
+      'Super Coach Rejected',
     ];
+
     if (!validStatuses.includes(status)) {
-      addToast('Invalid review status. Must be Super Coach Approved/Rejected or Admin Final Approved/Rejected.', 'error');
+      addToast('Invalid review status for leave approval workflow.', 'error');
       return { success: false, error: 'Invalid status' };
     }
 
@@ -2150,49 +2192,252 @@ export function CrmProvider({ children }) {
       return { success: false, error: 'Request not found' };
     }
 
-    const reviewerName = reviewedBy || currentUser?.name || (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin (Super Admin)');
-    const reviewerRoleName = reviewedRole || currentUser?.badge || currentUser?.role || (currentPortal === 'super_coach' ? 'super_coach' : 'admin');
-    const nowIso = new Date().toISOString();
+    // Prevent duplicate action if already in target status
+    if (targetReq.status === status) {
+      addToast(`Leave request ${requestId} is already in status "${status}".`, 'info');
+      return { success: false, error: 'Already in target status' };
+    }
 
-    const timelineEntry = {
-      action: status,
+    const isSuperCoachAction =
+      status === LEAVE_STATUSES.PENDING_ADMIN ||
+      status === 'Pending Admin Final Approval' ||
+      status === 'Super Coach Approved' ||
+      status === LEAVE_STATUSES.RETURNED ||
+      status === 'Returned for Correction' ||
+      status === LEAVE_STATUSES.SUPER_COACH_REJECTED ||
+      status === 'Rejected by Super Coach';
+
+    const nowIso = new Date().toISOString();
+    const effectiveReviewerId =
+      reviewerId || currentUser?.id || (isSuperCoachAction ? 'SC-001' : 'ADM-001');
+    const reviewerName =
+      reviewedBy ||
+      currentUser?.name ||
+      (isSuperCoachAction ? 'Super Coach (Director)' : 'Administration Command');
+    const reviewerRoleName =
+      reviewedRole ||
+      currentUser?.badge ||
+      currentUser?.role ||
+      (isSuperCoachAction ? 'super_coach' : 'admin');
+
+    const defaultNotes =
+      status === LEAVE_STATUSES.PENDING_ADMIN || status === 'Pending Admin Final Approval' || status === 'Super Coach Approved'
+        ? 'Reviewed and recommended for approval by Super Coach. Forwarded for Admin final signoff.'
+        : status === LEAVE_STATUSES.RETURNED || status === 'Returned for Correction'
+        ? 'Returned to coach for correction / additional details.'
+        : status === LEAVE_STATUSES.SUPER_COACH_REJECTED || status === 'Rejected by Super Coach'
+        ? 'Declined by Super Coach based on training schedule and coaching coverage.'
+        : status === LEAVE_STATUSES.APPROVED || status === 'Approved'
+        ? 'Approved with final signoff by Academy Administration.'
+        : 'Declined with final signoff by Academy Administration.';
+
+    const finalNotes = (reviewNotes || defaultNotes).trim();
+
+    // Standardize canonical status
+    let canonicalStatus = status;
+    if (status === 'Super Coach Approved') canonicalStatus = LEAVE_STATUSES.PENDING_ADMIN;
+    if (status === 'Super Coach Rejected') canonicalStatus = LEAVE_STATUSES.SUPER_COACH_REJECTED;
+
+    const actionTitle =
+      canonicalStatus === LEAVE_STATUSES.PENDING_ADMIN
+        ? 'Recommended Approval'
+        : canonicalStatus === LEAVE_STATUSES.RETURNED
+        ? 'Returned for Correction'
+        : canonicalStatus === LEAVE_STATUSES.SUPER_COACH_REJECTED
+        ? 'Rejected by Super Coach'
+        : canonicalStatus === LEAVE_STATUSES.APPROVED
+        ? 'Final Approved by Admin'
+        : 'Final Rejected by Admin';
+
+    const historyEntry = {
+      action: actionTitle,
+      status: canonicalStatus,
       by: reviewerName,
+      reviewerId: effectiveReviewerId,
       role: reviewerRoleName,
+      comments: finalNotes,
       timestamp: nowIso,
-      notes: reviewNotes || (
-        status === LEAVE_STATUSES.SUPER_COACH_APPROVED
-          ? 'Recommended and initially approved by Super Coach. Forwarded for Admin final signoff.'
-          : status === LEAVE_STATUSES.SUPER_COACH_REJECTED
-          ? 'Declined by Super Coach based on training schedule requirements.'
-          : status === LEAVE_STATUSES.APPROVED
-          ? 'Approved with final signoff by Academy Administration.'
-          : 'Declined with final signoff by Academy Administration.'
-      )
     };
 
-    const updatedTimeline = [timelineEntry, ...(targetReq.approvalTimeline || [])];
+    const updatedHistory = [historyEntry, ...(targetReq.approvalHistory || targetReq.approvalTimeline || [])];
+
+    // Maintain review records
+    let superCoachReview = targetReq.superCoachReview;
+    let adminReview = targetReq.adminReview;
+
+    if (isSuperCoachAction) {
+      superCoachReview = {
+        decision:
+          canonicalStatus === LEAVE_STATUSES.PENDING_ADMIN
+            ? 'Recommended Approval'
+            : canonicalStatus === LEAVE_STATUSES.RETURNED
+            ? 'Returned for Correction'
+            : 'Rejected',
+        reviewerId: effectiveReviewerId,
+        reviewerName,
+        comments: finalNotes,
+        timestamp: nowIso,
+      };
+    } else {
+      adminReview = {
+        decision: canonicalStatus === LEAVE_STATUSES.APPROVED ? 'Approved' : 'Rejected',
+        reviewerId: effectiveReviewerId,
+        reviewerName,
+        comments: finalNotes,
+        timestamp: nowIso,
+      };
+    }
 
     const updatedRequest = {
       ...targetReq,
-      status,
+      status: canonicalStatus,
       reviewedBy: reviewerName,
       reviewedRole: reviewerRoleName,
       reviewedAt: nowIso,
-      reviewNotes: timelineEntry.notes,
-      approvalTimeline: updatedTimeline,
-      superCoachReviewedAt: (status === LEAVE_STATUSES.SUPER_COACH_APPROVED || status === LEAVE_STATUSES.SUPER_COACH_REJECTED) ? nowIso : targetReq.superCoachReviewedAt,
-      adminReviewedAt: (status === LEAVE_STATUSES.APPROVED || status === LEAVE_STATUSES.REJECTED) ? nowIso : targetReq.adminReviewedAt
+      reviewNotes: finalNotes,
+      superCoachReview,
+      adminReview,
+      approvalHistory: updatedHistory,
+      approvalTimeline: updatedHistory,
+      superCoachReviewedAt: isSuperCoachAction ? nowIso : targetReq.superCoachReviewedAt,
+      adminReviewedAt: !isSuperCoachAction ? nowIso : targetReq.adminReviewedAt,
     };
 
-    // Notify the Coach
-    const notifType = (status === LEAVE_STATUSES.APPROVED || status === LEAVE_STATUSES.SUPER_COACH_APPROVED) ? 'success' : 'error';
+    // Cross-portal notification to the Coach
+    const notifType =
+      canonicalStatus === LEAVE_STATUSES.APPROVED || canonicalStatus === LEAVE_STATUSES.PENDING_ADMIN
+        ? 'success'
+        : canonicalStatus === LEAVE_STATUSES.RETURNED
+        ? 'warning'
+        : 'error';
+
     const coachNotif = createNotificationRecord({
       targetRole: 'coach',
       targetCoachId: targetReq.coachId,
       targetLocation: targetReq.location,
-      title: `Leave Request Update: ${status}`,
-      message: `Your ${targetReq.leaveType} leave request for ${targetReq.startDate} to ${targetReq.endDate} is now "${status}" by ${reviewerName}.${reviewNotes ? ` Note: ${reviewNotes}` : ''}`,
+      title: `Leave Status Update: ${canonicalStatus}`,
+      message: `Your ${targetReq.leaveType} leave request (${targetReq.startDate} to ${targetReq.endDate}) is now "${canonicalStatus}" by ${reviewerName}.${finalNotes ? ` Note: ${finalNotes}` : ''}`,
       type: notifType,
+    });
+
+    // If Super Coach recommended approval, notify Admin
+    const adminForwardNotif =
+      canonicalStatus === LEAVE_STATUSES.PENDING_ADMIN
+        ? createNotificationRecord({
+            targetRole: 'admin',
+            targetLocation: targetReq.location,
+            title: `Leave Pending Final Signoff: ${targetReq.coachName}`,
+            message: `Super Coach ${reviewerName} recommended approval for ${targetReq.coachName}'s ${targetReq.leaveType} leave (${targetReq.startDate} to ${targetReq.endDate}). Awaiting Admin final approval.`,
+            type: 'warning',
+          })
+        : null;
+
+    setData((prev) => {
+      const nextCoachLeaves = (prev.coachLeaveRequests || []).map((r) =>
+        r.id === requestId ? updatedRequest : r
+      );
+      const newNotifs = [coachNotif];
+      if (adminForwardNotif) newNotifs.push(adminForwardNotif);
+
+      return {
+        ...prev,
+        coachLeaveRequests: nextCoachLeaves,
+        leaveRequests: nextCoachLeaves,
+        notifications: [...newNotifs, ...(prev.notifications || [])].slice(0, 80),
+      };
+    });
+
+    logSettingsAudit({
+      category: 'Leave Management',
+      action: `Leave Review (${actionTitle})`,
+      field: `${targetReq.coachName} - ${targetReq.leaveType} (${targetReq.startDate})`,
+      oldValue: targetReq.status || 'Pending Super Coach Review',
+      newValue: canonicalStatus,
+    });
+
+    addToast(`Coach leave request ${requestId} updated to "${canonicalStatus}".`, 'success');
+    return { success: true, request: updatedRequest };
+  };
+
+  const resubmitCoachLeave = (requestId, updatedPayload = {}) => {
+    const targetReq = (data.coachLeaveRequests || []).find((r) => r.id === requestId);
+    if (!targetReq) {
+      addToast(`Leave request ${requestId} not found.`, 'error');
+      return { success: false, error: 'Request not found' };
+    }
+
+    const startDate = updatedPayload.startDate || targetReq.startDate;
+    const endDate = updatedPayload.endDate || targetReq.endDate;
+    const leaveType = updatedPayload.leaveType || targetReq.leaveType;
+    const halfDaySession =
+      leaveType === LEAVE_TYPES.HALF_DAY
+        ? updatedPayload.halfDaySession || targetReq.halfDaySession || HALF_DAY_SESSIONS.MORNING
+        : null;
+    const reason = (updatedPayload.reason || targetReq.reason || '').trim();
+    const attachmentName = updatedPayload.attachmentName !== undefined ? updatedPayload.attachmentName : targetReq.attachmentName;
+    const attachmentUrl = updatedPayload.attachmentUrl !== undefined ? updatedPayload.attachmentUrl : targetReq.attachmentUrl;
+
+    const validation = validateCoachLeavePayload({
+      coachId: targetReq.coachId,
+      coachName: targetReq.coachName,
+      startDate,
+      endDate,
+      leaveType,
+      reason,
+    });
+
+    if (!validation.isValid) {
+      addToast(validation.errors[0] || 'Incomplete leave request details.', 'error');
+      return { success: false, errors: validation.errors };
+    }
+
+    // Check duplicate excluding self
+    const conflict = checkDuplicateLeaveConflict(
+      data.coachLeaveRequests || [],
+      targetReq.coachId,
+      startDate,
+      endDate,
+      requestId
+    );
+    if (conflict) {
+      addToast(`Another leave request (${conflict.id} - ${conflict.status}) overlaps with these dates.`, 'error');
+      return { success: false, duplicate: true, error: 'Conflict with existing leave' };
+    }
+
+    const nowIso = new Date().toISOString();
+    const historyEntry = {
+      action: 'Resubmitted after Correction',
+      status: LEAVE_STATUSES.PENDING_SUPER_COACH,
+      by: targetReq.coachName,
+      reviewerId: targetReq.coachId,
+      role: 'coach',
+      comments: reason,
+      timestamp: nowIso,
+    };
+
+    const updatedHistory = [historyEntry, ...(targetReq.approvalHistory || [])];
+
+    const updatedRequest = {
+      ...targetReq,
+      startDate,
+      endDate,
+      leaveType,
+      halfDaySession,
+      reason,
+      attachmentName,
+      attachmentUrl,
+      status: LEAVE_STATUSES.PENDING_SUPER_COACH,
+      submittedAt: nowIso,
+      approvalHistory: updatedHistory,
+      approvalTimeline: updatedHistory,
+    };
+
+    const superCoachNotif = createNotificationRecord({
+      targetRole: 'super_coach',
+      targetLocation: targetReq.location,
+      title: `Corrected Leave Resubmitted: ${targetReq.coachName}`,
+      message: `${targetReq.coachName} corrected and resubmitted leave request ${requestId} for ${startDate} to ${endDate}. Pending review.`,
+      type: 'warning',
     });
 
     setData((prev) => {
@@ -2203,19 +2448,19 @@ export function CrmProvider({ children }) {
         ...prev,
         coachLeaveRequests: nextCoachLeaves,
         leaveRequests: nextCoachLeaves,
-        notifications: [coachNotif, ...(prev.notifications || [])].slice(0, 80),
+        notifications: [superCoachNotif, ...(prev.notifications || [])].slice(0, 80),
       };
     });
 
     logSettingsAudit({
       category: 'Leave Management',
-      action: `Leave Review (${status})`,
-      field: `${targetReq.coachName} - ${targetReq.leaveType} (${targetReq.startDate})`,
-      oldValue: targetReq.status || 'Pending',
-      newValue: status
+      action: 'Leave Resubmitted after Correction',
+      field: `${targetReq.coachName} - ${leaveType} (${startDate} to ${endDate})`,
+      oldValue: targetReq.status,
+      newValue: LEAVE_STATUSES.PENDING_SUPER_COACH,
     });
 
-    addToast(`Coach leave request ${requestId} has been updated to "${status}".`, 'success');
+    addToast(`Leave request ${requestId} resubmitted successfully to Super Coach.`, 'success');
     return { success: true, request: updatedRequest };
   };
 
@@ -5957,6 +6202,7 @@ export function CrmProvider({ children }) {
         updateLeaveStatus,
         applyCoachLeave,
         reviewCoachLeave,
+        resubmitCoachLeave,
         deleteCoachLeave,
         getCoachApprovedLeaveForDate,
         createTicket,

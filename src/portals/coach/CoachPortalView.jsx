@@ -68,6 +68,7 @@ export default function CoachPortalView() {
     data, 
     saveBatchAttendance,
     applyLeave, 
+    applyCoachLeave,
     updateCompensationRequest,
     updateCoachCompensation,
     completeClassSchedule,
@@ -250,29 +251,35 @@ export default function CoachPortalView() {
     spirit: 10
   });
 
-  // Leave Modal
+  // Leave Modal State
   const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [athleteSearch, setAthleteSearch] = useState('');
+  const [leaveType, setLeaveType] = useState('Full Day');
   const [leaveStart, setLeaveStart] = useState('2026-11-25');
   const [leaveEnd, setLeaveEnd] = useState('2026-11-26');
   const [leaveReason, setLeaveReason] = useState('');
+  const [leaveAttachment, setLeaveAttachment] = useState('');
 
   const handleApplyCoachLeave = (e) => {
     e.preventDefault();
     if (!leaveReason.trim()) return;
 
-    applyLeave({
-      type: 'Coach',
-      applicantName: coachProfile.name,
+    const res = applyCoachLeave({
       coachId: coachProfile.id,
+      coachName: coachProfile.name,
+      location: coachProfile.center || 'KK NAGAR',
+      leaveType,
       startDate: leaveStart,
-      endDate: leaveEnd,
-      reason: leaveReason,
-      reviewedBy: 'Pending Head Coach'
+      endDate: leaveType === 'Half Day' ? leaveStart : leaveEnd,
+      reason: leaveReason.trim(),
+      attachmentName: leaveAttachment.trim(),
     });
 
-    setIsLeaveOpen(false);
-    setLeaveReason('');
+    if (res.success) {
+      setIsLeaveOpen(false);
+      setLeaveReason('');
+      setLeaveAttachment('');
+    }
   };
 
   const handleSaveEvaluation = () => {
@@ -1854,6 +1861,8 @@ export default function CoachPortalView() {
               fixedCoach={true}
               portalRole="coach"
             />
+          ) : coachAttSubView === 'my_leaves' ? (
+            <CoachLeaveRequestsManager mode="coach" coachProfile={coachProfile} />
           ) : (
             <CoachAttendanceRegister 
               currentPortal="coach" 
@@ -2089,8 +2098,8 @@ export default function CoachPortalView() {
         />
       )}
 
-      {/* 9. MY WORKSPACE (Module 7.8: Leave, Announcements, Profile, Performance) */}
-      {(currentView === 'workspace' || currentView === 'leaves' || currentView === 'leave_requests' || currentView === 'profile' || currentView === 'announcements' || currentView === 'performance') && (
+      {/* 9. MY WORKSPACE (Profile, Credentials, Circulars & Leave Management) */}
+      {(currentView === 'workspace' || currentView === 'profile' || currentView === 'announcements' || currentView === 'performance') && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
@@ -2104,7 +2113,7 @@ export default function CoachPortalView() {
 
             <button
               onClick={() => setIsLeaveOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
             >
               <CalendarOff className="w-4 h-4" />
               <span>Apply Coach Leave</span>
@@ -2116,7 +2125,7 @@ export default function CoachPortalView() {
             <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4 text-xs">
               <div className="flex items-center gap-4 pb-4 border-b border-[#172B5015]">
                 <div className="w-16 h-16 rounded-2xl bg-[#172B50] flex items-center justify-center text-white text-xl font-bold">
-                  VS
+                  {(coachProfile.name || 'C').charAt(0)}
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-[#172B50]">{coachProfile.name}</h3>
@@ -2135,18 +2144,26 @@ export default function CoachPortalView() {
             {/* Leave Status Card */}
             <div className="bg-white rounded-2xl p-6 border border-[#172B501A] shadow-card space-y-4 text-xs">
               <div className="flex justify-between items-center pb-2 border-b border-[#172B5015]">
-                <h4 className="font-black text-[#172B50]">My Leave Record</h4>
-                <span className="text-xs text-[#F4510B] font-bold">1 Pending</span>
+                <h4 className="font-black text-[#172B50]">Leave Overview</h4>
+                <span className="text-xs text-[#F4510B] font-bold">
+                  {(data.coachLeaveRequests || []).filter(r => r.coachId === coachProfile.id && (r.status === 'Pending Super Coach Review' || r.status === 'Pending Admin Final Approval')).length} Pending
+                </span>
               </div>
-              <div className="p-3.5 bg-[#FFF4E8] rounded-xl border border-[#172B5015]">
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-[#172B50]">National Coaches Clinic</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#172B50] text-white">
-                    Pending
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#172B50] opacity-75 mt-1">Nov 20 to Nov 21, 2026</p>
-                <p className="text-[11px] text-[#F4510B] mt-1 italic">"Substitute assigned to Coach Rahul"</p>
+              <div className="space-y-2 max-h-36 overflow-y-auto">
+                {(data.coachLeaveRequests || []).filter(r => r.coachId === coachProfile.id).slice(0, 2).map((lr) => (
+                  <div key={lr.id} className="p-2.5 bg-[#FFF4E8] rounded-xl border border-[#172B5015]">
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs font-bold text-[#172B50] truncate max-w-[140px]">{lr.reason || lr.leaveType}</span>
+                      <span className="px-2 py-0.5 rounded text-[9.5px] font-bold bg-[#172B50] text-white whitespace-nowrap">
+                        {lr.status}
+                      </span>
+                    </div>
+                    <p className="text-[10.5px] text-[#172B50] opacity-75 mt-0.5">{lr.startDate} to {lr.endDate}</p>
+                  </div>
+                ))}
+                {(data.coachLeaveRequests || []).filter(r => r.coachId === coachProfile.id).length === 0 && (
+                  <p className="text-slate-400 text-center py-4">No leave requests logged</p>
+                )}
               </div>
             </div>
 
@@ -2166,7 +2183,17 @@ export default function CoachPortalView() {
               </div>
             </div>
           </div>
+
+          {/* Embedded Leave Applications Register */}
+          <div className="pt-2">
+            <CoachLeaveRequestsManager mode="coach" coachProfile={coachProfile} />
+          </div>
         </div>
+      )}
+
+      {/* 10. LEAVE REQUESTS DEDICATED VIEW */}
+      {(currentView === 'leaves' || currentView === 'leave_requests') && (
+        <CoachLeaveRequestsManager mode="coach" coachProfile={coachProfile} />
       )}
 
       {/* Apply Leave Modal */}
@@ -2174,40 +2201,95 @@ export default function CoachPortalView() {
         isOpen={isLeaveOpen}
         onClose={() => setIsLeaveOpen(false)}
         title="Apply Coach Leave"
-        subtitle="Request substitute coverage for training batch"
+        subtitle="Request planned leave for Super Coach & Admin sequential review"
       >
-        <form onSubmit={handleApplyCoachLeave} className="space-y-3.5">
+        <form onSubmit={handleApplyCoachLeave} className="space-y-3.5 text-xs">
+          {/* Status notice */}
+          <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-[11px] leading-relaxed">
+            <span className="font-bold block">Approval Process:</span>
+            On submission, status will be <strong>"Pending Super Coach Review"</strong>. Once recommended by Super Coach, it moves to <strong>"Pending Admin Final Approval"</strong>.
+          </div>
+
+          {/* Leave Type */}
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Leave Type *</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setLeaveType('Full Day')}
+                className={`py-1.5 px-3 rounded-lg font-bold text-xs border transition-all cursor-pointer ${
+                  leaveType === 'Full Day'
+                    ? 'bg-[#172B50] text-white border-[#172B50]'
+                    : 'bg-white text-[#172B50] border-[#172B5020]'
+                }`}
+              >
+                Full Day Leave
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeaveType('Half Day')}
+                className={`py-1.5 px-3 rounded-lg font-bold text-xs border transition-all cursor-pointer ${
+                  leaveType === 'Half Day'
+                    ? 'bg-[#172B50] text-white border-[#172B50]'
+                    : 'bg-white text-[#172B50] border-[#172B5020]'
+                }`}
+              >
+                Half Day Leave
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">From Date</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">From Date *</label>
               <input
                 type="date"
                 required
                 value={leaveStart}
-                onChange={(e) => setLeaveStart(e.target.value)}
+                onChange={(e) => {
+                  setLeaveStart(e.target.value);
+                  if (leaveType === 'Half Day' || leaveEnd < e.target.value) {
+                    setLeaveEnd(e.target.value);
+                  }
+                }}
                 className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">To Date</label>
+              <label className="text-xs font-bold text-[#172B50] block mb-1">
+                {leaveType === 'Half Day' ? 'Date (Half Day)' : 'To Date *'}
+              </label>
               <input
                 type="date"
                 required
-                value={leaveEnd}
+                disabled={leaveType === 'Half Day'}
+                value={leaveType === 'Half Day' ? leaveStart : leaveEnd}
+                min={leaveStart}
                 onChange={(e) => setLeaveEnd(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+                className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none disabled:opacity-60 disabled:bg-slate-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172B50] block mb-1">Reason & Substitute Note *</label>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Reason for Leave *</label>
             <textarea
               rows="3"
               required
               value={leaveReason}
               onChange={(e) => setLeaveReason(e.target.value)}
-              placeholder="e.g. Attending NIS Gymnastics Clinic. Coach Rahul will cover Friday batch."
+              placeholder="State the reason for taking leave (e.g. medical appointment, tournament travel, family emergency)..."
+              className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">Optional Attachment Name</label>
+            <input
+              type="text"
+              value={leaveAttachment}
+              onChange={(e) => setLeaveAttachment(e.target.value)}
+              placeholder="e.g. Medical_Certificate.pdf"
               className="w-full px-3 py-2 text-xs bg-white text-[#172B50] border border-[#172B5025] rounded-xl focus:ring-2 focus:ring-[#F4510B] outline-none"
             />
           </div>
@@ -2216,15 +2298,15 @@ export default function CoachPortalView() {
             <button
               type="button"
               onClick={() => setIsLeaveOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-[#172B50] hover:bg-[#FFF4E8] rounded-xl cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110"
+              className="px-5 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl shadow-sm hover:brightness-110 cursor-pointer"
             >
-              Submit Leave
+              Submit Leave Request
             </button>
           </div>
         </form>

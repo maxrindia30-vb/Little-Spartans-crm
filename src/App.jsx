@@ -111,6 +111,7 @@ export default function App() {
       case 'attendance':
       case 'compensation':
       case 'leaves':
+      case 'coach_leaves':
         return <AttendanceCompensationModule />;
 
       // 6. Fees & Payments (Fee Structures, Student Assignments, Invoices, Payments, Pending Fees)

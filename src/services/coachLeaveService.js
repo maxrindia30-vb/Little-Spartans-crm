@@ -1,8 +1,14 @@
 /**
  * Little Spartans ZenConnect CRM - Coach Leave Management Service
  *
- * Implements atomic, synchronized leave request workflow across:
- *   Coach Portal <--> Super Admin Portal <--> Admin Portal <--> Coach Attendance Register
+ * Implements centralized, sequential leave approval workflow:
+ *   Coach Portal (Submission)
+ *      ↓ [Pending Super Coach Review]
+ *   Super Coach Portal (Review & Recommendation / Correction / Rejection)
+ *      ↓ [Pending Admin Final Approval]
+ *   Admin Portal (Final Approval / Final Rejection)
+ *      ↓ [Approved / Rejected]
+ *   Synchronized across Coach Attendance Register & all 3 Portals
  */
 
 export const LEAVE_TYPES = {
@@ -11,17 +17,125 @@ export const LEAVE_TYPES = {
 };
 
 export const LEAVE_STATUSES = {
-  PENDING: 'Pending',
-  SUPER_COACH_APPROVED: 'Super Coach Approved',
-  SUPER_COACH_REJECTED: 'Super Coach Rejected',
+  PENDING_SUPER_COACH: 'Pending Super Coach Review',
+  PENDING_ADMIN: 'Pending Admin Final Approval',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
+  RETURNED: 'Returned for Correction',
+  SUPER_COACH_REJECTED: 'Rejected by Super Coach',
+  // Backwards compatibility aliases
+  PENDING: 'Pending Super Coach Review',
+  SUPER_COACH_APPROVED: 'Pending Admin Final Approval',
 };
 
 export const HALF_DAY_SESSIONS = {
   MORNING: 'First Half (Morning)',
   EVENING: 'Second Half (Evening)',
 };
+
+/**
+ * Status helper checks supporting sequential multi-tier flow
+ */
+export function isPendingSuperCoach(status) {
+  return status === LEAVE_STATUSES.PENDING_SUPER_COACH || status === 'Pending';
+}
+
+export function isPendingAdmin(status) {
+  return status === LEAVE_STATUSES.PENDING_ADMIN || status === 'Super Coach Approved';
+}
+
+export function isApproved(status) {
+  return status === LEAVE_STATUSES.APPROVED;
+}
+
+export function isRejected(status) {
+  return (
+    status === LEAVE_STATUSES.REJECTED ||
+    status === LEAVE_STATUSES.SUPER_COACH_REJECTED ||
+    status === 'Super Coach Rejected'
+  );
+}
+
+export function isReturned(status) {
+  return status === LEAVE_STATUSES.RETURNED;
+}
+
+/**
+ * Status presentation configuration (badge colors, labels, icons)
+ */
+export function getLeaveStatusBadge(status) {
+  if (isApproved(status)) {
+    return {
+      label: 'Approved (Final)',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      pillClass: 'bg-emerald-500 text-white',
+      borderClass: 'border-emerald-300',
+      bgLight: 'bg-emerald-50',
+      textColor: 'text-emerald-700',
+      step: 3,
+      stepLabel: 'Approved',
+    };
+  }
+  if (isPendingAdmin(status)) {
+    return {
+      label: 'Pending Admin Final Approval',
+      badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
+      pillClass: 'bg-blue-600 text-white',
+      borderClass: 'border-blue-300',
+      bgLight: 'bg-blue-50',
+      textColor: 'text-blue-700',
+      step: 2,
+      stepLabel: 'Admin Review',
+    };
+  }
+  if (isReturned(status)) {
+    return {
+      label: 'Returned for Correction',
+      badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
+      pillClass: 'bg-amber-500 text-white',
+      borderClass: 'border-amber-300',
+      bgLight: 'bg-amber-50',
+      textColor: 'text-amber-700',
+      step: 1,
+      stepLabel: 'Action Required',
+    };
+  }
+  if (status === LEAVE_STATUSES.SUPER_COACH_REJECTED || status === 'Super Coach Rejected') {
+    return {
+      label: 'Rejected by Super Coach',
+      badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
+      pillClass: 'bg-rose-500 text-white',
+      borderClass: 'border-rose-300',
+      bgLight: 'bg-rose-50',
+      textColor: 'text-rose-700',
+      step: 2,
+      stepLabel: 'Rejected',
+    };
+  }
+  if (isRejected(status)) {
+    return {
+      label: 'Rejected by Admin',
+      badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
+      pillClass: 'bg-rose-600 text-white',
+      borderClass: 'border-rose-300',
+      bgLight: 'bg-rose-50',
+      textColor: 'text-rose-700',
+      step: 3,
+      stepLabel: 'Rejected',
+    };
+  }
+  // Default: Pending Super Coach Review
+  return {
+    label: 'Pending Super Coach Review',
+    badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
+    pillClass: 'bg-amber-600 text-white',
+    borderClass: 'border-amber-300',
+    bgLight: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    step: 1,
+    stepLabel: 'Super Coach Review',
+  };
+}
 
 /**
  * Calculates number of calendar days between two YMD date strings inclusive
@@ -67,17 +181,49 @@ export function formatLeaveDateRange(startDate, endDate, leaveType = LEAVE_TYPES
 
 /**
  * Checks whether a given coach has an APPROVED leave covering a specific YMD date.
- * Strictly ignores Pending and Rejected leave requests.
+ * Strictly ignores Pending, Returned and Rejected leave requests.
  */
 export function getCoachApprovedLeaveForDate(coachLeaveRequests = [], coachId, dateYmd) {
   if (!coachId || !dateYmd) return null;
   return (
     (coachLeaveRequests || []).find((req) => {
-      if (req.status !== LEAVE_STATUSES.APPROVED) return false;
+      if (!isApproved(req.status)) return false;
       if (req.coachId !== coachId) return false;
       const s = req.startDate;
       const e = req.endDate || req.startDate;
       return dateYmd >= s && dateYmd <= e;
+    }) || null
+  );
+}
+
+/**
+ * Checks for date overlap against existing active/pending/approved leave requests
+ * for the same coach to prevent duplicate submissions.
+ */
+export function checkDuplicateLeaveConflict(coachLeaveRequests = [], coachId, startDate, endDate, excludeId = null) {
+  if (!coachId || !startDate) return null;
+  const targetEnd = endDate || startDate;
+
+  return (
+    (coachLeaveRequests || []).find((req) => {
+      if (excludeId && req.id === excludeId) return false;
+      if (req.coachId !== coachId) return false;
+
+      // Only check active requests: Pending, Recommended, or Approved
+      // Rejected leaves or Returned for correction do not block a new submission
+      if (
+        req.status === LEAVE_STATUSES.REJECTED ||
+        req.status === LEAVE_STATUSES.SUPER_COACH_REJECTED ||
+        req.status === 'Rejected' ||
+        req.status === 'Super Coach Rejected'
+      ) {
+        return false;
+      }
+
+      const reqStart = req.startDate;
+      const reqEnd = req.endDate || req.startDate;
+      const overlaps = startDate <= reqEnd && targetEnd >= reqStart;
+      return overlaps;
     }) || null
   );
 }

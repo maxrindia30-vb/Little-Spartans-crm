@@ -44,7 +44,8 @@ const STATUS_BADGE_MAP = {
 
 export default function AttendanceCompensationModule() {
   const { 
-    data, 
+    data,
+    currentView, 
     activeSubTab, 
     setActiveSubTab, 
     submitCompensationRequest,
@@ -64,7 +65,8 @@ export default function AttendanceCompensationModule() {
     if (tab === 'student_att' || tab === 'student_attendance' || tab === 'attendance') return 'student_attendance';
     if (tab === 'coach_att' || tab === 'coach_attendance') return 'coach_attendance';
     if (tab === 'student_comp' || tab === 'student_compensation' || tab === 'compensation') return 'student_compensation';
-    if (tab === 'coach_leaves' || tab === 'coach_leave_requests' || tab === 'leave_requests') return 'coach_leaves';
+    if (currentView === 'leaves' || currentView === 'coach_leaves') return 'coach_leaves';
+    if (tab === 'coach_leaves' || tab === 'coach_leave_requests' || tab === 'leave_requests' || tab === 'leaves') return 'coach_leaves';
     return 'student_attendance';
   };
 
@@ -406,6 +408,11 @@ export default function AttendanceCompensationModule() {
       {/* SUBTAB 2: Coach Attendance */}
       {currentTab === 'coach_attendance' && (
         <CoachAttendanceRegister />
+      )}
+
+      {/* SUBTAB: Coach Leave Approvals (Sequential Admin Final Authority) */}
+      {currentTab === 'coach_leaves' && (
+        <CoachLeaveRequestsManager mode="admin" />
       )}
 
       {/* SUBTAB 3: Student Compensation Classes (Section 4.8) */}

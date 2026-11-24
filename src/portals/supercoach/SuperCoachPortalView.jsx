@@ -95,7 +95,7 @@ export default function SuperCoachPortalView() {
 
   // Internal active tab if navigated within Super Coach Portal
   const [activeTab, setActiveTab] = useState(() => {
-    if (['dashboard', 'evaluations', 'locations', 'coaches', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
+    if (['dashboard', 'evaluations', 'locations', 'coaches', 'leaves', 'coach_leaves', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
       return currentView;
     }
     return 'dashboard';
@@ -111,7 +111,7 @@ export default function SuperCoachPortalView() {
 
   // Keep activeTab synced with currentView when sidebar triggers navigation
   React.useEffect(() => {
-    if (['dashboard', 'evaluations', 'locations', 'coaches', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
+    if (['dashboard', 'evaluations', 'locations', 'coaches', 'leaves', 'coach_leaves', 'equipment', 'schedules', 'attendance', 'reports'].includes(currentView)) {
       setActiveTab(currentView);
     }
   }, [currentView]);
@@ -707,6 +707,18 @@ export default function SuperCoachPortalView() {
       )}
 
       {/* ============================================================ */}
+      {/* 4B. LEAVE MANAGEMENT (Coach -> Super Coach Review Desk)       */}
+      {/* ============================================================ */}
+      {(activeTab === 'leaves' || activeTab === 'coach_leaves') && (
+        <div className="space-y-6">
+          <CoachLeaveRequestsManager
+            mode="super_coach"
+            allowedLocations={assignedLocations}
+          />
+        </div>
+      )}
+
+      {/* ============================================================ */}
       {/* 5. TAB 4: EQUIPMENT MANAGEMENT MODULE                         */}
       {/* ============================================================ */}
       {activeTab === 'equipment' && (
@@ -985,6 +997,13 @@ export default function SuperCoachPortalView() {
             <AttendanceManagement
               allowedLocations={assignedLocations}
               portalRole="super_coach"
+            />
+          )}
+
+          {attendanceSubView === 'coach_leaves' && (
+            <CoachLeaveRequestsManager
+              mode="super_coach"
+              allowedLocations={assignedLocations}
             />
           )}
 
