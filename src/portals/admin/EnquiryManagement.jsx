@@ -43,6 +43,7 @@ import {
   Sparkles,
   Inbox,
   Share2,
+  History,
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
