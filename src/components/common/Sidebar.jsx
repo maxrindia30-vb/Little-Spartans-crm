@@ -422,7 +422,8 @@ export default function Sidebar() {
   const parentNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'programs_achievements', label: 'Programs & Achievements', icon: Award },
+    { id: 'programs', label: 'Programs', icon: Rocket },
+    { id: 'achievements', label: 'Achievements', icon: Trophy },
     { id: 'communication', label: 'Announcements', icon: Megaphone },
     { id: 'feedback', label: 'Feedback & Suggestions', icon: MessageSquare },
     { id: 'leave_requests', label: 'Leave Requests', icon: CalendarPlus },
@@ -826,7 +827,9 @@ export default function Sidebar() {
                 currentView === item.id ||
                 (item.id === 'attendance' && (currentView === 'attendance' || currentView === 'attendance_compensation')) ||
                 (item.id === 'child_evaluations' && currentView === 'evaluations') ||
-                (item.id === 'programs_achievements' && (currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs')) ||
+                (item.id === 'programs_achievements' && (currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs' || currentView === 'achievements')) ||
+                (item.id === 'programs' && (currentView === 'programs' || currentView === 'programs_achievements')) ||
+                (item.id === 'achievements' && (currentView === 'achievements' || currentView === 'progress')) ||
                 (item.id === 'classes' && currentView === 'schedule') ||
                 (item.id === 'leave_requests' && (currentView === 'leaves' || currentView === 'workspace' || currentView === 'leave_requests')) ||
                 (item.id === 'compensation_class' && (currentView === 'compensation_class' || currentView === 'compensation'));

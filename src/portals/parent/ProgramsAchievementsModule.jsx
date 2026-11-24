@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Award,
   Rocket,
@@ -49,6 +49,15 @@ export default function ProgramsAchievementsModule({
 
   // Active Main Tab: 'explore' (Explore Programs) vs 'achievements' (My Child's Achievements)
   const [activeTab, setActiveTab] = useState(initialTab || 'explore');
+
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  // Program Category Filter: 'all' | 'foundational' | 'ball_sports' | 'athletics'
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Multi-Child Resolution
   const activeChild = useMemo(() => {
@@ -188,6 +197,8 @@ export default function ProgramsAchievementsModule({
       {
         id: 'PROG-FM',
         name: 'Foundational Movement',
+        category: 'Early Childhood & Movement',
+        categoryKey: 'foundational',
         subtitle: 'Balance · Coordination · Movement',
         ageGroup: 'Ages 3 – 5',
         minAge: 3,
@@ -206,6 +217,8 @@ export default function ProgramsAchievementsModule({
       {
         id: 'PROG-FT',
         name: 'Football',
+        category: 'Ball & Team Sports',
+        categoryKey: 'ball_sports',
         subtitle: 'Dribbling · Passing · Teamwork',
         ageGroup: 'Ages 5 – 12',
         minAge: 5,
@@ -224,6 +237,8 @@ export default function ProgramsAchievementsModule({
       {
         id: 'PROG-BB',
         name: 'Basketball',
+        category: 'Ball & Team Sports',
+        categoryKey: 'ball_sports',
         subtitle: 'Dribbling · Shooting · Agility',
         ageGroup: 'Ages 7 – 14',
         minAge: 7,
@@ -242,6 +257,8 @@ export default function ProgramsAchievementsModule({
       {
         id: 'PROG-ATH',
         name: 'Athletics',
+        category: 'Track, Speed & Athletics',
+        categoryKey: 'athletics',
         subtitle: 'Running · Jumping · Speed',
         ageGroup: 'Ages 6 – 14',
         minAge: 6,
@@ -272,9 +289,21 @@ export default function ProgramsAchievementsModule({
       };
       const ResolvedIcon = typeof p.icon === 'string' && iconMap[p.icon] ? iconMap[p.icon] : Activity;
 
+      const categoryKey = p.categoryKey || (
+        p.name?.toLowerCase().includes('ball') || p.name?.toLowerCase().includes('foot') || p.name?.toLowerCase().includes('basket') ? 'ball_sports' :
+        p.name?.toLowerCase().includes('athletics') || p.name?.toLowerCase().includes('track') || p.name?.toLowerCase().includes('run') ? 'athletics' :
+        (p.minAge && p.minAge <= 4) ? 'foundational' : 'ball_sports'
+      );
+      const category = p.category || (
+        categoryKey === 'foundational' ? 'Early Childhood & Movement' :
+        categoryKey === 'athletics' ? 'Track, Speed & Athletics' : 'Ball & Team Sports'
+      );
+
       return {
         id: p.id,
         name: p.name,
+        category,
+        categoryKey,
         subtitle: p.subtitle || `${p.name} Coaching Curriculum`,
         ageGroup: p.ageGroup || `Ages ${p.minAge || 4} – ${p.maxAge || 12}`,
         minAge: p.minAge || 4,
@@ -305,9 +334,22 @@ export default function ProgramsAchievementsModule({
     return combined.filter((p) => p.status === 'Active');
   }, [data.programs]);
 
+  // Child's currently enrolled program
+  const enrolledProgram = useMemo(() => {
+    const childProgName = (activeChild.program || '').toLowerCase().trim();
+    return allProgramsList.find(p => p.name.toLowerCase().trim() === childProgName) ||
+      allProgramsList.find(p => p.id === 'PROG-ATH' || p.name === 'Athletics') ||
+      allProgramsList[0];
+  }, [allProgramsList, activeChild.program]);
+
   // Filtered Programs based on Active Child Location and UI Filters
   const filteredPrograms = useMemo(() => {
     return allProgramsList.filter((prog) => {
+      // Category Filter
+      if (selectedCategory !== 'all' && prog.categoryKey !== selectedCategory) {
+        return false;
+      }
+
       // Location Filtering: respect active child location & selection
       if (selectedLocation !== 'All Locations') {
         const normLoc = selectedLocation.toLowerCase().trim();
@@ -340,7 +382,7 @@ export default function ProgramsAchievementsModule({
 
       return true;
     });
-  }, [allProgramsList, selectedLocation, selectedProgram, selectedAgeGroup, selectedDays, childCenter]);
+  }, [allProgramsList, selectedCategory, selectedLocation, selectedProgram, selectedAgeGroup, selectedDays, childCenter]);
 
   // Available Locations for dropdown: restrict to child's center and available centers
   const filterLocationsList = useMemo(() => {
@@ -402,6 +444,93 @@ export default function ProgramsAchievementsModule({
 
     setIsEnquiryModalOpen(false);
     addToast(`Enquiry submitted for ${selectedProgramDetail.name}! Admissions will reach out.`, 'success');
+  };
+
+  const renderProgramCard = (prog) => {
+    const ProgIcon = prog.icon;
+    const isEnrolled = (activeChild.program || '').toLowerCase().trim() === prog.name.toLowerCase().trim();
+
+    return (
+      <div
+        key={prog.id}
+        className="bg-white rounded-3xl border border-[#172B50]/12 p-4 shadow-card hover:shadow-lg hover:border-[#F4510B]/40 transition-all flex flex-col justify-between group"
+      >
+        <div>
+          {/* Top Banner Image with Badges */}
+          <div className="relative w-full h-36 rounded-2xl overflow-hidden bg-[#FFF4E8] mb-3">
+            <img
+              src={prog.image}
+              alt={prog.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            {/* Age Badge */}
+            <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-[#16A34A] text-[10px] font-black shadow-xs">
+              {prog.ageGroup}
+            </span>
+            {/* Enrolled Badge if active child */}
+            {isEnrolled && (
+              <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full bg-[#F4510B] text-white text-[10px] font-black shadow-xs">
+                Enrolled
+              </span>
+            )}
+          </div>
+
+          {/* Program Header */}
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-7 h-7 rounded-xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center shrink-0">
+              <ProgIcon className="w-4 h-4 text-[#F4510B]" />
+            </div>
+            <h4 className="text-base font-black text-[#172B50] truncate">{prog.name}</h4>
+          </div>
+          <p className="text-xs font-semibold text-[#172B50]/70 line-clamp-1">{prog.subtitle}</p>
+          <p className="text-[11px] text-[#172B50]/65 mt-2 line-clamp-2 leading-relaxed">
+            {prog.description}
+          </p>
+
+          {/* Key Skills Tags */}
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {(prog.skills || []).slice(0, 3).map((skill, sIdx) => (
+              <span
+                key={sIdx}
+                className="px-2 py-0.5 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 text-[10px] font-semibold"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+
+          {/* Available Centers */}
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#172B50]/75">
+            <span className="flex items-center gap-1 text-[11px]">
+              <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+              {prog.sessionsPerWeek}
+            </span>
+            <span className="text-[11px] font-black text-[#F4510B]">{prog.monthlyFee}</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedProgramDetail(prog);
+              setIsDemoModalOpen(true);
+            }}
+            className="w-full py-2 bg-[#F4510B] hover:bg-[#d64103] text-white text-xs font-black rounded-xl transition-all shadow-xs cursor-pointer text-center"
+          >
+            Book Free Demo
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedProgramDetail(prog)}
+            className="w-full py-2 bg-white hover:bg-[#FFF4E8] text-[#172B50] border border-[#172B50]/20 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+          >
+            View Details
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -692,214 +821,218 @@ export default function ProgramsAchievementsModule({
           </div>
 
           {/* ============================================================ */}
-          {/* D. SPLIT LAYOUT: Our Programs (Left) | Achievements Preview  */}
+          {/* D. SEPARATED PROGRAMS DASHBOARD (FULL WIDTH)                 */}
           {/* ============================================================ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* LEFT: OUR PROGRAMS (8 Cols on LG) */}
-            <div className="lg:col-span-8 space-y-3.5 text-left">
-              <div>
-                <h2 className="text-lg font-black text-[#172B50] tracking-tight">Our Programs</h2>
-                <p className="text-xs font-semibold text-[#172B50]/65">
-                  Age-appropriate sports programs for every Little Spartan.
-                </p>
+          <div className="space-y-6 text-left">
+            {/* Quick Banner linking to Achievements Vault */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-[#FFF5EC] via-[#FFF9F4] to-white border border-[#F4510B]/20 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#F4510B] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Trophy className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-[#172B50]">
+                    {activeChild.name}'s Milestone &amp; Achievement Vault
+                  </h4>
+                  <p className="text-xs text-[#172B50]/70 font-semibold mt-0.5">
+                    {kpiCounts.badges} Badges Earned &bull; {kpiCounts.milestones} Milestones Unlocked &bull; {kpiCounts.certificates} Verified Certificates
+                  </p>
+                </div>
               </div>
-
-              {/* 2x2 Programs Grid matching reference screenshot */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {filteredPrograms.map((prog) => {
-                  const ProgIcon = prog.icon;
-                  return (
-                    <div
-                      key={prog.id}
-                      onClick={() => setSelectedProgramDetail(prog)}
-                      className="bg-white rounded-2xl border border-[#172B50]/12 p-3 shadow-2xs hover:shadow-card hover:border-[#F4510B]/40 transition-all cursor-pointer flex gap-3 group"
-                    >
-                      {/* Thumbnail Image */}
-                      <div className="w-24 sm:w-28 h-24 sm:h-28 rounded-xl overflow-hidden shrink-0 bg-[#FFF4E8]">
-                        <img
-                          src={prog.image}
-                          alt={prog.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 flex flex-col justify-between py-0.5 min-w-0">
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <ProgIcon className="w-4 h-4 text-[#F4510B] shrink-0" />
-                            <h3 className="text-sm font-black text-[#172B50] truncate">{prog.name}</h3>
-                          </div>
-                          <p className="text-[10.5px] font-semibold text-[#172B50]/60 mt-0.5 truncate">
-                            {prog.subtitle}
-                          </p>
-
-                          <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full bg-[#DCFCE7] text-[#16A34A] text-[10px] font-black border border-[#16A34A]/20">
-                            {prog.ageGroup}
-                          </span>
-                        </div>
-
-                        {/* Bottom Row */}
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-[10px] font-bold text-[#172B50]/70 flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-[#172B50]/50" />
-                            <span>{prog.sessionsPerWeek}</span>
-                          </span>
-
-                          <div className="w-6 h-6 rounded-full border border-[#F4510B]/40 flex items-center justify-center text-[#F4510B] group-hover:bg-[#F4510B] group-hover:text-white transition-colors">
-                            <ArrowRight className="w-3 h-3" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('achievements')}
+                className="px-4 py-2 rounded-xl bg-[#172B50] hover:bg-[#F4510B] text-white text-xs font-black transition-all flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-xs cursor-pointer group"
+              >
+                <span>View My Child's Achievements</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
             </div>
 
-            {/* RIGHT: CHILD ACHIEVEMENTS PREVIEW (4 Cols on LG) */}
-            <div className="lg:col-span-4 bg-white rounded-3xl border border-[#172B50]/12 p-4 sm:p-5 shadow-card space-y-4 text-left">
-              {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-[#172B50]/10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-[#FFF0E6] text-[#F4510B] flex items-center justify-center shrink-0 border border-[#F4510B]/20 shadow-2xs">
-                    <Trophy className="w-4 h-4 text-[#F4510B]" />
+            {/* SECTION 1: MY CHILD'S ENROLLED PROGRAM SPOTLIGHT */}
+            {enrolledProgram && (
+              <div className="bg-white rounded-3xl border-2 border-[#F4510B]/30 p-5 shadow-card relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-[#F4510B] text-white text-[10px] font-black uppercase tracking-wider px-4 py-1 rounded-bl-2xl shadow-xs">
+                  Currently Enrolled &bull; Active
+                </div>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-[#FFF4E8] ring-2 ring-[#F4510B]/20 shadow-xs">
+                      <img
+                        src={enrolledProgram.image}
+                        alt={enrolledProgram.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#FFF4E8] text-[#F4510B] text-[10px] font-black border border-[#F4510B]/20">
+                          {activeChild.name}'s Active Program
+                        </span>
+                        <span className="text-xs font-bold text-gray-500">
+                          Batch: {activeChild.batch || 'LE - B1'}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-black text-[#172B50] mt-1">{enrolledProgram.name}</h3>
+                      <p className="text-xs text-[#172B50]/70 font-semibold">{enrolledProgram.subtitle}</p>
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs font-bold text-[#172B50]/80">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                          {childCenter} Center
+                        </span>
+                        <span>&bull;</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#172B50]/60" />
+                          {enrolledProgram.days} (08:00 AM – 09:00 AM)
+                        </span>
+                        <span>&bull;</span>
+                        <span className="text-emerald-700 font-extrabold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          Attendance: 90%
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-black text-[#172B50] leading-none">
-                      {activeChild.name}'s Achievements
-                    </h3>
-                    <p className="text-[10.5px] font-bold text-[#172B50]/60 mt-1">
-                      {activeChild.name} | Age: {activeChild.age || 5} | {activeChild.batch || 'LE - B1'}
-                    </p>
-                  </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('achievements')}
-                  className="w-7 h-7 rounded-full border border-[#F4510B]/30 flex items-center justify-center text-[#F4510B] hover:bg-[#FFF4E8] transition-all cursor-pointer"
-                  title="View full achievements"
-                >
-                  <ChevronRight className="w-4 h-4 text-[#F4510B]" />
-                </button>
-              </div>
-
-              {/* 3 Metric Summary Boxes (Peach, Purple, Mint) */}
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-2.5 rounded-2xl bg-[#FFF4E8] border border-[#F4510B]/20 shadow-2xs">
-                  <Award className="w-4 h-4 text-[#F4510B] mx-auto mb-1" />
-                  <div className="text-lg font-black text-[#172B50] leading-none">{kpiCounts.badges}</div>
-                  <div className="text-[10px] font-bold text-[#172B50]/70 mt-0.5">Badges</div>
-                </div>
-
-                <div className="p-2.5 rounded-2xl bg-[#FAF5FF] border border-purple-200 shadow-2xs">
-                  <Trophy className="w-4 h-4 text-purple-600 mx-auto mb-1" />
-                  <div className="text-lg font-black text-[#172B50] leading-none">{kpiCounts.milestones}</div>
-                  <div className="text-[10px] font-bold text-[#172B50]/70 mt-0.5">Milestones</div>
-                </div>
-
-                <div className="p-2.5 rounded-2xl bg-[#F0FDF4] border border-emerald-200 shadow-2xs">
-                  <FileText className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-                  <div className="text-lg font-black text-[#172B50] leading-none">{kpiCounts.certificates}</div>
-                  <div className="text-[10px] font-bold text-[#172B50]/70 mt-0.5">Certificates</div>
-                </div>
-              </div>
-
-              {/* Recent Achievement Section */}
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between text-xs font-black text-[#172B50]">
-                  <span>Recent Achievement</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('achievements')}
-                    className="text-[10.5px] text-[#F4510B] font-bold hover:underline cursor-pointer flex items-center gap-0.5"
-                  >
-                    <span>View All</span>
-                    <span>→</span>
-                  </button>
-                </div>
-
-                {/* Highlight Card */}
-                <div className="p-3 rounded-2xl bg-[#FFFBF7] border border-[#F4510B]/20 flex items-center gap-3 shadow-2xs">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0">
-                    <Medal className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-xs font-black text-[#172B50] truncate">Balance Champion</h4>
-                    <p className="text-[10px] font-semibold text-[#172B50]/70 mt-0.5 leading-snug">
-                      For excellent body control and stability.
-                    </p>
-                    <span className="text-[9.5px] font-bold text-[#172B50]/50 block mt-1">20 Nov, 2026</span>
+                  <div className="flex items-center gap-2 w-full md:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProgramDetail(enrolledProgram)}
+                      className="flex-1 md:flex-none px-4 py-2.5 bg-[#FFF4E8] hover:bg-[#F4510B] text-[#F4510B] hover:text-white rounded-xl text-xs font-black transition-all border border-[#F4510B]/30 cursor-pointer"
+                    >
+                      Curriculum &amp; Timetable
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('achievements')}
+                      className="flex-1 md:flex-none px-4 py-2.5 bg-[#172B50] hover:bg-[#F4510B] text-white rounded-xl text-xs font-black transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span>Track Progress</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Progress Highlights (Dynamic Bars from Approved Evaluation Data) */}
-              <div className="space-y-2 pt-1 border-t border-[#172B50]/10">
-                <div className="flex items-center gap-1.5 text-xs font-black text-[#172B50]">
-                  <BarChart2 className="w-4 h-4 text-[#F4510B]" />
-                  <span>Progress Highlights</span>
+            {/* SECTION 2: CATEGORY SEPARATOR PILLS */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-[#172B50] tracking-tight">Separated Programs Directory</h2>
+                  <p className="text-xs font-semibold text-[#172B50]/65 mt-0.5">
+                    Explore individual sports development pathways tailored for specific age groups and skill milestones
+                  </p>
                 </div>
 
-                <div className="space-y-2.5 pt-1">
-                  {/* Balance */}
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1 font-semibold text-[#172B50]">
-                      <span>Balance</span>
-                      <span className="font-black text-[#172B50]">{progressHighlights.balance}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${progressHighlights.balance}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Jumping & Landing */}
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1 font-semibold text-[#172B50]">
-                      <span>Jumping &amp; Landing</span>
-                      <span className="font-black text-[#172B50]">{progressHighlights.jumping}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${progressHighlights.jumping}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Throwing & Catching */}
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1 font-semibold text-[#172B50]">
-                      <span>Throwing &amp; Catching</span>
-                      <span className="font-black text-[#172B50]">{progressHighlights.throwing}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${progressHighlights.throwing}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Running */}
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1 font-semibold text-[#172B50]">
-                      <span>Running</span>
-                      <span className="font-black text-[#172B50]">{progressHighlights.running}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${progressHighlights.running}%` }}
-                      />
-                    </div>
-                  </div>
+                {/* Category Pills */}
+                <div className="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-[#172B50]/15 shadow-2xs overflow-x-auto self-start sm:self-auto max-w-full">
+                  {[
+                    { id: 'all', label: `All Programs (${allProgramsList.length})` },
+                    { id: 'foundational', label: 'Early Years (Ages 3–5)' },
+                    { id: 'ball_sports', label: 'Ball Sports (Ages 5–14)' },
+                    { id: 'athletics', label: 'Track & Athletics (Ages 6–14)' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
+                        selectedCategory === cat.id
+                          ? 'bg-[#F4510B] text-white shadow-xs'
+                          : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* SECTION 3: CATEGORIZED PROGRAM SECTIONS */}
+              {/* Category Group 1: Early Childhood & Movement (Ages 3 – 5) */}
+              {(selectedCategory === 'all' || selectedCategory === 'foundational') && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between border-b border-[#172B50]/10 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-orange-100 text-[#F4510B] flex items-center justify-center">
+                        <Activity className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-[#172B50]">Early Childhood &amp; Motor Skills</h3>
+                        <p className="text-[11px] text-[#172B50]/65 font-semibold">
+                          Designed for toddlers to build balance, spatial orientation, and safe landing habits
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-orange-50 text-[#F4510B] text-[10px] font-black border border-orange-200">
+                      Ages 3 – 5
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredPrograms
+                      .filter((p) => p.categoryKey === 'foundational')
+                      .map((prog) => renderProgramCard(prog))}
+                  </div>
+                </div>
+              )}
+
+              {/* Category Group 2: Ball Sports & Team Play (Ages 5 – 14) */}
+              {(selectedCategory === 'all' || selectedCategory === 'ball_sports') && (
+                <div className="space-y-3 pt-4">
+                  <div className="flex items-center justify-between border-b border-[#172B50]/10 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <Trophy className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-[#172B50]">Ball &amp; Team Sports</h3>
+                        <p className="text-[11px] text-[#172B50]/65 font-semibold">
+                          Tactical awareness, ball mastery, short passes, court footwork, and team communication
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-200">
+                      Ages 5 – 14
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredPrograms
+                      .filter((p) => p.categoryKey === 'ball_sports')
+                      .map((prog) => renderProgramCard(prog))}
+                  </div>
+                </div>
+              )}
+
+              {/* Category Group 3: Track, Speed & Athletics (Ages 6 – 14) */}
+              {(selectedCategory === 'all' || selectedCategory === 'athletics') && (
+                <div className="space-y-3 pt-4">
+                  <div className="flex items-center justify-between border-b border-[#172B50]/10 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                        <Award className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-[#172B50]">Speed, Track &amp; Athletic Conditioning</h3>
+                        <p className="text-[11px] text-[#172B50]/65 font-semibold">
+                          Explosive sprint mechanics, hurdle jump technique, pacing stamina, and ladder agility
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-200">
+                      Ages 6 – 14
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredPrograms
+                      .filter((p) => p.categoryKey === 'athletics')
+                      .map((prog) => renderProgramCard(prog))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
