@@ -33,6 +33,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
+import BrandIdentityPaletteSection from './BrandIdentityPaletteSection';
 import TermsManagementModule from './TermsManagementModule';
 
 const SETTINGS_TABS = [
@@ -136,38 +137,6 @@ export default function AcademySettings() {
 
   // Audit Search
   const [auditSearch, setAuditSearch] = useState('');
-
-  // Brand Palette Constants (Strictly Enforced 4 Brand Colors)
-  const brandColors = [
-    {
-      name: 'Warm Cream',
-      hex: '#FFF4E8',
-      swatchBg: '#FFF4E8',
-      borderStyle: 'border border-[#172B5015]',
-      usage: 'Main Background & Navbar'
-    },
-    {
-      name: 'Spartan Orange',
-      hex: '#F4510B',
-      swatchBg: '#F4510B',
-      borderStyle: 'border border-[#F4510B]',
-      usage: 'Active Nav, CTAs & Highlights'
-    },
-    {
-      name: 'Navy Blue',
-      hex: '#172B50',
-      swatchBg: '#172B50',
-      borderStyle: 'border border-[#172B50]',
-      usage: 'Headings, Titles & Primary Text'
-    },
-    {
-      name: 'Pure White',
-      hex: '#FFFFFF',
-      swatchBg: '#FFFFFF',
-      borderStyle: 'border border-[#172B5015]',
-      usage: 'Cards, Containers & Surfaces'
-    }
-  ];
 
   // Centers list from CRM data
   const centersList = data.locations || [];
@@ -511,43 +480,7 @@ export default function AcademySettings() {
               </div>
 
               {/* Sub-Box: Official Brand Identity Palette (Strictly Enforced) */}
-              <div className="bg-[#FFF9F5]/70 rounded-2xl p-4 sm:p-4.5 border border-[#F4510B18] space-y-3.5">
-                <div className="flex items-center gap-2.5">
-                  <Palette className="w-4 h-4 text-[#F4510B] shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-black text-[#172B50] tracking-tight">
-                      Official Brand Identity Palette (Strictly Enforced)
-                    </h3>
-                    <p className="text-[11px] text-[#172B50]/65 font-medium">
-                      Only four official colors across all portals and responsive modules.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Four Brand Swatch Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {brandColors.map((color) => (
-                    <div
-                      key={color.name}
-                      className="bg-[#FFF4E8] rounded-xl p-3 border border-[#172B5012] flex flex-col justify-between space-y-2.5 shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          style={{ backgroundColor: color.swatchBg }}
-                          className={`w-10 h-10 rounded-xl shrink-0 shadow-2xs ${color.borderStyle}`}
-                        />
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-[#172B50] truncate">{color.name}</p>
-                          <p className="text-[11px] font-mono font-bold text-[#F4510B]">{color.hex}</p>
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-[#172B50]/65 font-semibold pt-1.5 border-t border-[#172B5010] leading-tight">
-                        {color.usage}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <BrandIdentityPaletteSection compact={true} showStandardsInfo={false} />
             </div>
 
             {/* ------------------------------------------------------ */}
@@ -879,46 +812,12 @@ export default function AcademySettings() {
       {/* ============================================================ */}
       {activeTab === 'brand' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-[26px] p-6 border border-[#172B5014] shadow-xs space-y-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-[#172B50] tracking-tight">
-                Brand &amp; Identity Standards
-              </h2>
-              <p className="text-xs sm:text-sm text-[#172B50]/70 font-medium mt-1">
-                Visual tokens, brand colors, typography hierarchy, and portal theme consistency.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {brandColors.map((c) => (
-                <div key={c.name} className="p-5 rounded-2xl bg-[#FFF4E8] border border-[#172B5015] space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      style={{ backgroundColor: c.swatchBg }}
-                      className={`w-12 h-12 rounded-xl shrink-0 shadow-xs ${c.borderStyle}`}
-                    />
-                    <div>
-                      <h4 className="text-sm font-black text-[#172B50]">{c.name}</h4>
-                      <p className="text-xs font-mono font-black text-[#F4510B]">{c.hex}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-[#172B50]/80 pt-2 border-t border-[#172B5015] leading-relaxed">
-                    {c.usage}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-5 rounded-2xl bg-[#F8FAFC] border border-[#172B5014] space-y-3">
-              <h4 className="text-sm font-black text-[#172B50] flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#F4510B]" />
-                <span>Portal Visual Uniformity Covenant</span>
-              </h4>
-              <p className="text-xs text-[#172B50]/75 leading-relaxed">
-                The Little Spartans brand experience strictly prohibits external or improvised color accents. Admin, Super Coach, Coach, and Parent portals uniformly share these four verified tokens ensuring seamless SaaS visual hierarchy.
-              </p>
-            </div>
-          </div>
+          <BrandIdentityPaletteSection
+            compact={false}
+            showStandardsInfo={true}
+            title="Official Brand Identity Palette (Strictly Enforced)"
+            subtitle="Only four official colors across all portals and responsive modules."
+          />
         </div>
       )}
 

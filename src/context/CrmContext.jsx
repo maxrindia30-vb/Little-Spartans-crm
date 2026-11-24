@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { initialAcademyData } from '../data/mockData';
 import {
+  DEFAULT_BRAND_PALETTE,
+  applyBrandPaletteToDom,
+  getStoredBrandPalette,
+  saveStoredBrandPalette,
+  isValidHex,
+  normalizeHex
+} from '../services/brandPaletteService';
+import {
   checkScheduleConflict,
   buildRecurringSchedules,
 } from '../services/scheduleService';
@@ -387,6 +395,9 @@ export function CrmProvider({ children }) {
           settingsAuditLogs: Array.isArray(parsed.settingsAuditLogs) && parsed.settingsAuditLogs.length > 0
             ? parsed.settingsAuditLogs
             : (initialAcademyData.settingsAuditLogs || []),
+          brandPalette: (Array.isArray(parsed.brandPalette) && parsed.brandPalette.length === 4)
+            ? parsed.brandPalette
+            : getStoredBrandPalette(),
         };
       }
     } catch (e) {
@@ -396,6 +407,7 @@ export function CrmProvider({ children }) {
       ...initialAcademyData,
       equipment: initialEquipmentInventory,
       equipmentReports: initialEquipmentReports,
+      brandPalette: getStoredBrandPalette(),
     };
   });
 
@@ -3592,6 +3604,89 @@ export function CrmProvider({ children }) {
     addToast('Academy General Information updated successfully.', 'success');
   };
 
+  // Apply brand identity CSS variables dynamically whenever brandPalette changes
+  useEffect(() => {
+    applyBrandPaletteToDom(data.brandPalette || getStoredBrandPalette());
+  }, [data.brandPalette]);
+
+  // Update Official Brand Identity Palette
+  const updateBrandPalette = (newPalette, auditNote = '') => {
+    if (currentPortal !== 'admin') {
+      addToast('Only authorized Administrators can modify the official brand identity palette.', 'error');
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    if (!Array.isArray(newPalette) || newPalette.length !== 4) {
+      addToast('Invalid brand palette structure.', 'error');
+      return { success: false, error: 'Invalid palette' };
+    }
+
+    // Validate all 4 colors
+    for (const c of newPalette) {
+      if (!isValidHex(c.hex)) {
+        addToast(`Invalid HEX color format for ${c.name}: "${c.hex}". Please use format #RRGGBB.`, 'error');
+        return { success: false, error: `Invalid HEX for ${c.name}` };
+      }
+    }
+
+    const currentPalette = data.brandPalette || getStoredBrandPalette();
+    const normalizedPalette = newPalette.map(c => ({
+      ...c,
+      hex: normalizeHex(c.hex),
+      swatchBg: normalizeHex(c.hex)
+    }));
+
+    // Generate audit entries for changed colors
+    const changedColors = [];
+    normalizedPalette.forEach(newCol => {
+      const oldCol = currentPalette.find(p => p.name === newCol.name || p.key === newCol.key);
+      if (!oldCol || normalizeHex(oldCol.hex) !== newCol.hex) {
+        changedColors.push({
+          name: newCol.name,
+          oldHex: oldCol ? normalizeHex(oldCol.hex) : newCol.defaultHex,
+          newHex: newCol.hex
+        });
+      }
+    });
+
+    const user = currentUserProfiles[currentPortal]?.name || 'Administrator';
+    const newAudits = changedColors.map((ch, idx) => ({
+      id: `SET-LOG-PALETTE-${Date.now()}-${idx}`,
+      timestamp: new Date().toISOString(),
+      user,
+      role: 'Super Admin',
+      category: 'Brand & Identity',
+      action: 'Color Modified',
+      field: `${ch.name} Token`,
+      oldValue: ch.oldHex,
+      newValue: ch.newHex,
+      status: 'Applied Globally',
+      ipAddress: '127.0.0.1',
+      details: auditNote || `Brand color updated from ${ch.oldHex} to ${ch.newHex}`
+    }));
+
+    // Update state and persistence
+    setData(prev => ({
+      ...prev,
+      brandPalette: normalizedPalette,
+      settingsAuditLogs: [...newAudits, ...(prev.settingsAuditLogs || [])]
+    }));
+
+    saveStoredBrandPalette(normalizedPalette);
+    applyBrandPaletteToDom(normalizedPalette);
+
+    addToast('Official Brand Identity Palette updated and applied globally across all portals!', 'success');
+    return { success: true, palette: normalizedPalette };
+  };
+
+  const resetBrandPalette = () => {
+    if (currentPortal !== 'admin') {
+      addToast('Only Administrators can reset the brand identity palette.', 'error');
+      return { success: false };
+    }
+    return updateBrandPalette(DEFAULT_BRAND_PALETTE, 'Reset to initial default brand colors');
+  };
+
   // Update Academic Year
   const updateAcademicYear = (newYear) => {
     if (!newYear || !newYear.trim()) return;
@@ -5386,6 +5481,9 @@ export function CrmProvider({ children }) {
         settingsAuditLogs: data.settingsAuditLogs || initialAcademyData.settingsAuditLogs || [],
         academicCalendar: data.academicCalendar || initialAcademyData.academicCalendar,
         updateAcademyGeneralInfo,
+        brandPalette: data.brandPalette || DEFAULT_BRAND_PALETTE,
+        updateBrandPalette,
+        resetBrandPalette,
         updateAcademicYear,
         addAcademicTerm,
         addAcademicHoliday,
