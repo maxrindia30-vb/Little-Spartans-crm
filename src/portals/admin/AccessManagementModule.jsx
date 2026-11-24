@@ -281,10 +281,34 @@ export default function AccessManagementModule() {
   const [permissionMatrix, setPermissionMatrix] = useState(INITIAL_PERMISSION_MATRIX);
   const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState('coach');
 
-  // Activity Log state
+  // Activity Log state with live CRM Audit Trail integration
   const [activityLogs, setActivityLogs] = useState(INITIAL_ACTIVITY_LOGS);
   const [activitySearch, setActivitySearch] = useState('');
   const [activityStatusFilter, setActivityStatusFilter] = useState('ALL');
+
+  const allActivityLogs = useMemo(() => {
+    const liveFromAudit = (data?.settingsAuditLogs || []).map((audit) => {
+      let roleKey = 'super_admin';
+      const rLower = (audit.role || '').toLowerCase();
+      if (rLower.includes('coach')) roleKey = 'coach';
+      else if (rLower.includes('parent')) roleKey = 'parent';
+      else if (rLower.includes('admin')) roleKey = 'super_admin';
+
+      return {
+        id: audit.id || `LOG-${Math.random().toString(36).slice(2, 7)}`,
+        user: audit.user || 'Administrator',
+        role: roleKey,
+        action: `[${audit.category || 'Audit'}] ${audit.action}: ${audit.field} ${audit.newValue && audit.newValue !== '—' ? `→ ${audit.newValue}` : ''}`.trim(),
+        location: audit.location || 'Global',
+        timestamp: audit.timestamp
+          ? new Date(audit.timestamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+          : 'Just now',
+        status: audit.status === 'Failed' ? 'Failed' : audit.status === 'Warning' ? 'Warning' : 'Success',
+      };
+    });
+
+    return [...liveFromAudit, ...activityLogs];
+  }, [data?.settingsAuditLogs, activityLogs]);
 
   // Modals
   const [modalType, setModalType] = useState(null); // 'add_user' | 'edit_user' | 'view_profile' | 'assign_locations' | 'reset_password' | 'confirm_status' | 'invite_user'
@@ -389,17 +413,17 @@ export default function AccessManagementModule() {
 
   // Filtered Activity Logs
   const filteredActivityLogs = useMemo(() => {
-    return activityLogs.filter(a => {
+    return allActivityLogs.filter(a => {
       const matchesSearch = 
-        a.user.toLowerCase().includes(activitySearch.toLowerCase()) ||
-        a.action.toLowerCase().includes(activitySearch.toLowerCase()) ||
-        a.location.toLowerCase().includes(activitySearch.toLowerCase());
+        (a.user || '').toLowerCase().includes(activitySearch.toLowerCase()) ||
+        (a.action || '').toLowerCase().includes(activitySearch.toLowerCase()) ||
+        (a.location || '').toLowerCase().includes(activitySearch.toLowerCase());
       
       const matchesStatus = activityStatusFilter === 'ALL' || a.status === activityStatusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [activityLogs, activitySearch, activityStatusFilter]);
+  }, [allActivityLogs, activitySearch, activityStatusFilter]);
 
   // Metrics
   const metrics = useMemo(() => {
@@ -781,7 +805,7 @@ export default function AccessManagementModule() {
           { id: 'accounts', label: 'Accounts', icon: ShieldCheck, badge: users.length },
           { id: 'locations', label: 'Location Access', icon: MapPin, badge: ACADEMY_CENTERS.length },
           { id: 'permissions', label: 'Roles & Permissions', icon: CheckSquare, badge: '13 Modules' },
-          { id: 'activity', label: 'Activity History', icon: History, badge: activityLogs.length }
+          { id: 'activity', label: 'Activity History', icon: History, badge: allActivityLogs.length }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

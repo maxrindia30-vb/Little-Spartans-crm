@@ -12,6 +12,8 @@ export const LEAVE_TYPES = {
 
 export const LEAVE_STATUSES = {
   PENDING: 'Pending',
+  SUPER_COACH_APPROVED: 'Super Coach Approved',
+  SUPER_COACH_REJECTED: 'Super Coach Rejected',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
 };

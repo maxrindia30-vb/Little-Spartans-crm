@@ -151,11 +151,17 @@ export default function CoachLeaveRequestsManager({
     }
   };
 
-  // Approve Request Action
+  const isSuperCoach = mode === 'super_coach' || currentPortal === 'super_coach';
+
+  // Approve Request Action (Two-Tier: Super Coach Recommended -> Admin Final Approval)
   const handleApprove = (request, notes = '') => {
-    const finalNotes = notes || quickReviewNotes || 'Approved by Academy Administration.';
+    const nextStatus = isSuperCoach ? LEAVE_STATUSES.SUPER_COACH_APPROVED : LEAVE_STATUSES.APPROVED;
+    const defaultNote = isSuperCoach
+      ? 'Initial review approved by Super Coach. Forwarded for Admin final signoff.'
+      : 'Approved with final signoff by Academy Administration.';
+    const finalNotes = notes || quickReviewNotes || defaultNote;
     const res = reviewCoachLeave(request.id, {
-      status: LEAVE_STATUSES.APPROVED,
+      status: nextStatus,
       reviewedBy: reviewerName,
       reviewedRole,
       reviewNotes: finalNotes,
@@ -172,10 +178,13 @@ export default function CoachLeaveRequestsManager({
   // Reject Request Action
   const handleConfirmReject = () => {
     if (!rejectingTarget) return;
-    const finalNotes =
-      rejectionReasonInput.trim() || 'Declined according to staffing schedule requirements.';
+    const nextStatus = isSuperCoach ? LEAVE_STATUSES.SUPER_COACH_REJECTED : LEAVE_STATUSES.REJECTED;
+    const defaultNote = isSuperCoach
+      ? 'Declined by Super Coach based on training schedule requirements.'
+      : 'Declined with final signoff by Academy Administration.';
+    const finalNotes = rejectionReasonInput.trim() || defaultNote;
     const res = reviewCoachLeave(rejectingTarget.id, {
-      status: LEAVE_STATUSES.REJECTED,
+      status: nextStatus,
       reviewedBy: reviewerName,
       reviewedRole,
       reviewNotes: finalNotes,
@@ -236,9 +245,10 @@ export default function CoachLeaveRequestsManager({
   const metrics = useMemo(() => {
     const total = scopedRequests.length;
     const pending = scopedRequests.filter((r) => r.status === LEAVE_STATUSES.PENDING).length;
+    const superCoachApproved = scopedRequests.filter((r) => r.status === LEAVE_STATUSES.SUPER_COACH_APPROVED).length;
     const approved = scopedRequests.filter((r) => r.status === LEAVE_STATUSES.APPROVED).length;
-    const rejected = scopedRequests.filter((r) => r.status === LEAVE_STATUSES.REJECTED).length;
-    return { total, pending, approved, rejected };
+    const rejected = scopedRequests.filter((r) => r.status === LEAVE_STATUSES.REJECTED || r.status === LEAVE_STATUSES.SUPER_COACH_REJECTED).length;
+    return { total, pending, superCoachApproved, approved, rejected };
   }, [scopedRequests]);
 
   return (
@@ -499,17 +509,27 @@ export default function CoachLeaveRequestsManager({
                         {req.status === LEAVE_STATUSES.APPROVED ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            <span>Approved</span>
+                            <span>Approved (Final)</span>
+                          </span>
+                        ) : req.status === LEAVE_STATUSES.SUPER_COACH_APPROVED ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-blue-100 text-blue-900 border border-blue-300" title="Awaiting Admin Final Signoff">
+                            <ShieldCheck className="w-3 h-3 text-blue-600" />
+                            <span>Super Coach Approved</span>
+                          </span>
+                        ) : req.status === LEAVE_STATUSES.SUPER_COACH_REJECTED ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-rose-100 text-rose-800 border border-rose-300">
+                            <XCircle className="w-3 h-3 text-rose-600" />
+                            <span>Super Coach Rejected</span>
                           </span>
                         ) : req.status === LEAVE_STATUSES.REJECTED ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-rose-100 text-rose-800 border border-rose-300">
                             <XCircle className="w-3 h-3 text-rose-600" />
-                            <span>Rejected</span>
+                            <span>Rejected by Admin</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
                             <Clock className="w-3 h-3 text-amber-600" />
-                            <span>Pending</span>
+                            <span>Pending Review</span>
                           </span>
                         )}
                       </td>
@@ -527,14 +547,17 @@ export default function CoachLeaveRequestsManager({
                             <Eye className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Review Actions (Admin / Super Admin mode) */}
-                          {mode !== 'coach' && req.status === LEAVE_STATUSES.PENDING && (
+                          {/* Review Actions (Two-Tier Workflow) */}
+                          {mode !== 'coach' && (
+                            (isSuperCoach && req.status === LEAVE_STATUSES.PENDING) ||
+                            (!isSuperCoach && (req.status === LEAVE_STATUSES.PENDING || req.status === LEAVE_STATUSES.SUPER_COACH_APPROVED))
+                          ) && (
                             <>
                               <button
                                 type="button"
                                 onClick={() => handleApprove(req)}
                                 className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors cursor-pointer"
-                                title="Approve Leave Request"
+                                title={isSuperCoach ? "Super Coach Initial Approval (Forward to Admin)" : "Admin Final Approval"}
                               >
                                 <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                               </button>
@@ -545,7 +568,7 @@ export default function CoachLeaveRequestsManager({
                                   setRejectionReasonInput('');
                                 }}
                                 className="p-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-2xs transition-colors cursor-pointer"
-                                title="Reject Leave Request"
+                                title={isSuperCoach ? "Super Coach Reject" : "Admin Reject"}
                               >
                                 <X className="w-3.5 h-3.5 stroke-[2.5]" />
                               </button>
@@ -780,7 +803,9 @@ export default function CoachLeaveRequestsManager({
               className={`p-3.5 rounded-2xl flex items-center justify-between border ${
                 selectedDetailRequest.status === LEAVE_STATUSES.APPROVED
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                  : selectedDetailRequest.status === LEAVE_STATUSES.REJECTED
+                  : selectedDetailRequest.status === LEAVE_STATUSES.SUPER_COACH_APPROVED
+                  ? 'bg-blue-50 border-blue-200 text-blue-900'
+                  : selectedDetailRequest.status === LEAVE_STATUSES.REJECTED || selectedDetailRequest.status === LEAVE_STATUSES.SUPER_COACH_REJECTED
                   ? 'bg-rose-50 border-rose-200 text-rose-900'
                   : 'bg-amber-50 border-amber-200 text-amber-900'
               }`}
@@ -788,7 +813,9 @@ export default function CoachLeaveRequestsManager({
               <div className="flex items-center gap-2.5">
                 {selectedDetailRequest.status === LEAVE_STATUSES.APPROVED ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                ) : selectedDetailRequest.status === LEAVE_STATUSES.REJECTED ? (
+                ) : selectedDetailRequest.status === LEAVE_STATUSES.SUPER_COACH_APPROVED ? (
+                  <ShieldCheck className="w-5 h-5 text-blue-600" />
+                ) : selectedDetailRequest.status === LEAVE_STATUSES.REJECTED || selectedDetailRequest.status === LEAVE_STATUSES.SUPER_COACH_REJECTED ? (
                   <XCircle className="w-5 h-5 text-rose-600" />
                 ) : (
                   <Clock className="w-5 h-5 text-amber-600" />
@@ -798,9 +825,13 @@ export default function CoachLeaveRequestsManager({
                   <span className="text-[11px] opacity-80 block">
                     {selectedDetailRequest.status === LEAVE_STATUSES.APPROVED
                       ? 'Approved leave directly locks normal coach attendance for these dates.'
+                      : selectedDetailRequest.status === LEAVE_STATUSES.SUPER_COACH_APPROVED
+                      ? 'Super Coach has approved this leave. Awaiting Admin final signoff.'
+                      : selectedDetailRequest.status === LEAVE_STATUSES.SUPER_COACH_REJECTED
+                      ? 'Declined by Super Coach based on schedule requirements.'
                       : selectedDetailRequest.status === LEAVE_STATUSES.REJECTED
-                      ? 'Request was rejected and has no effect on attendance.'
-                      : 'Pending review by authorized Admin or Super Admin.'}
+                      ? 'Request was rejected by Administration and has no effect on attendance.'
+                      : 'Pending review by authorized Super Coach or Administrator.'}
                   </span>
                 </div>
               </div>
@@ -875,8 +906,35 @@ export default function CoachLeaveRequestsManager({
               </div>
             )}
 
-            {/* Decision History (if reviewed) */}
-            {selectedDetailRequest.reviewedBy && (
+            {/* Decision & Two-Tier Approval Timeline */}
+            {selectedDetailRequest.approvalTimeline && selectedDetailRequest.approvalTimeline.length > 0 ? (
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 block">
+                  Two-Tier Approval Audit Timeline
+                </span>
+                <div className="space-y-2">
+                  {selectedDetailRequest.approvalTimeline.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                      <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${
+                        item.action.includes('Approved') ? 'bg-emerald-500' : 'bg-rose-500'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-[#172B50]">{item.action}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {new Date(item.timestamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#172B50]/75">By: {item.by} ({item.role})</p>
+                        {item.notes && (
+                          <p className="text-[11px] text-slate-600 italic mt-0.5">"{item.notes}"</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : selectedDetailRequest.reviewedBy && (
               <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 space-y-1 text-xs">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 block">
                   Review &amp; Decision History
@@ -895,11 +953,14 @@ export default function CoachLeaveRequestsManager({
               </div>
             )}
 
-            {/* Admin / Super Admin Review Actions (if Pending) */}
-            {mode !== 'coach' && selectedDetailRequest.status === LEAVE_STATUSES.PENDING && (
+            {/* Review Actions (Two-Tier Workflow) */}
+            {mode !== 'coach' && (
+              (isSuperCoach && selectedDetailRequest.status === LEAVE_STATUSES.PENDING) ||
+              (!isSuperCoach && (selectedDetailRequest.status === LEAVE_STATUSES.PENDING || selectedDetailRequest.status === LEAVE_STATUSES.SUPER_COACH_APPROVED))
+            ) && (
               <div className="p-3.5 bg-[#FFF4E8] rounded-xl border border-[#F4510B25] space-y-2.5">
                 <span className="text-xs font-black text-[#172B50] block">
-                  Administrative Review Decision
+                  {isSuperCoach ? 'Super Coach Initial Recommendation' : 'Admin Final Signoff'}
                 </span>
                 <input
                   type="text"
@@ -917,14 +978,14 @@ export default function CoachLeaveRequestsManager({
                     }}
                     className="px-4 py-1.5 rounded-lg font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white shadow-2xs transition-colors cursor-pointer"
                   >
-                    Reject Request
+                    {isSuperCoach ? 'Reject (Super Coach)' : 'Reject (Admin Final)'}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApprove(selectedDetailRequest, quickReviewNotes)}
                     className="px-4 py-1.5 rounded-lg font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors cursor-pointer"
                   >
-                    Approve Leave
+                    {isSuperCoach ? 'Approve & Forward to Admin' : 'Admin Final Approval'}
                   </button>
                 </div>
               </div>

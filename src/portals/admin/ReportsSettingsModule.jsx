@@ -149,15 +149,20 @@ export default function ReportsSettingsModule() {
           Status: p.status
         }));
       } else if (exportEntity === 'attendance') {
-        exportData = (data.attendanceHistory || []).map(a => ({
-          ID: a.id,
-          Date: a.date,
-          SessionName: a.sessionName,
-          Discipline: a.discipline,
-          TotalStudents: a.total,
-          PresentCount: a.present,
-          Rate: `${a.percentage}%`,
-          LeadCoach: a.coach
+        const liveRecords = data.attendanceRecords && data.attendanceRecords.length > 0
+          ? data.attendanceRecords
+          : (data.attendanceHistory || []);
+        exportData = liveRecords.map(a => ({
+          RecordID: a.id || a.recordId || 'ATT-REC',
+          Date: a.date || a.sessionDate || '—',
+          Location: a.location || a.center || '—',
+          Program: a.program || a.discipline || '—',
+          Batch: a.batchName || a.batch || a.sessionName || '—',
+          CoachName: a.coachName || a.markedBy || a.coach || '—',
+          ChildName: a.studentName || a.childName || 'All Registered',
+          Status: a.status || (a.present ? `${a.present}/${a.total} Present` : 'Present'),
+          Remarks: a.remarks || a.notes || '—',
+          RecordedAt: a.markedAt || a.timestamp || '—',
         }));
       }
 
@@ -316,7 +321,9 @@ export default function ReportsSettingsModule() {
                   <option value="demos">Demo Class Bookings ({(data.demos || []).length})</option>
                   <option value="fees">Fee Assignments & Dues ({(data.studentFeeAssignments || []).length})</option>
                   <option value="payments">Payment Receipts ({(data.payments || []).length})</option>
-                  <option value="attendance">Attendance Sessions ({(data.attendanceHistory || []).length})</option>
+                  <option value="attendance">
+                    Attendance Records ({(data.attendanceRecords && data.attendanceRecords.length > 0 ? data.attendanceRecords : (data.attendanceHistory || [])).length})
+                  </option>
                 </select>
               </div>
 

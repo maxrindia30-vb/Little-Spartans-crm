@@ -31,6 +31,7 @@ import CoachPortalView from './portals/coach/CoachPortalView';
 import SuperCoachPortalView from './portals/supercoach/SuperCoachPortalView';
 import SupportPortalView from './portals/support/SupportPortalView';
 import EquipmentManagementModule from './portals/common/EquipmentManagementModule';
+import EvaluationReviewModule from './portals/supercoach/EvaluationReviewModule';
 
 export default function App() {
   const {
@@ -99,6 +100,11 @@ export default function App() {
       case 'batches':
       case 'schedules':
         return <ProgramsClassesModule />;
+
+      // Evaluation & Quality Assurance (Two-Way Super Coach <-> Admin Evaluation Sync)
+      case 'evaluations':
+      case 'evaluation_review':
+        return <EvaluationReviewModule />;
 
       // 5. Attendance & Compensation (Student Attendance, Coach Attendance, Compensation Classes)
       case 'attendance_compensation':

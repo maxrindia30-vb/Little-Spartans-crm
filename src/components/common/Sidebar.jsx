@@ -152,6 +152,7 @@ export default function Sidebar() {
       children: [
         { id: 'batches', label: 'Create Batch', view: 'programs', subTab: 'batches' },
         { id: 'schedules', label: 'Class Schedule', view: 'programs', subTab: 'schedules' },
+        { id: 'evaluations', label: 'Evaluation Reviews', view: 'evaluations' },
       ],
     },
     {

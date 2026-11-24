@@ -40,6 +40,7 @@ export default function EvaluationReviewModule() {
   const {
     data,
     currentUser,
+    currentPortal,
     submitEvaluation,
     updateEvaluation,
     approveEvaluation,
@@ -48,16 +49,22 @@ export default function EvaluationReviewModule() {
     addToast
   } = useCrm();
 
-  // Super Coach authorized locations
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || currentUser?.badge === 'Super Admin' || currentPortal === 'admin';
+
+  // Super Coach & Admin authorized locations
   const assignedLocations = useMemo(() => {
+    if (isAdmin) {
+      return (data.locations || []).map((l) => l.name || l.code);
+    }
     return currentUser?.assignedLocations || ['KK NAGAR', 'KILPAUK', 'MAHALINGAPURAM'];
-  }, [currentUser]);
+  }, [currentUser, isAdmin, data.locations]);
 
   const assignedLocationsNormalized = useMemo(() => {
     return assignedLocations.map((l) => (l || '').toLowerCase().trim());
   }, [assignedLocations]);
 
   const isLocationAuthorized = (locName) => {
+    if (isAdmin) return true;
     if (!locName) return false;
     const norm = String(locName).toLowerCase().trim();
     return assignedLocationsNormalized.some(

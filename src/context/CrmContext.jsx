@@ -2003,6 +2003,15 @@ export function CrmProvider({ children }) {
         : prev.students
     }));
 
+    const targetBatch = (data.classes || []).find(c => c.id === batchId);
+    logSettingsAudit({
+      category: 'Session & Attendance',
+      action: 'Save Batch Attendance',
+      field: `${targetBatch?.name || batchId} (${location || targetBatch?.center || 'Location'} • ${date})`,
+      oldValue: '—',
+      newValue: `${result.savedCount} athlete(s) recorded by ${markedBy || 'Staff'}`
+    });
+
     addToast(
       `Saved ${result.savedCount} attendance record${result.savedCount === 1 ? '' : 's'} for ${date}.`,
       'success'
@@ -2124,8 +2133,14 @@ export function CrmProvider({ children }) {
   };
 
   const reviewCoachLeave = (requestId, { status, reviewedBy, reviewedRole, reviewNotes } = {}) => {
-    if (status !== LEAVE_STATUSES.APPROVED && status !== LEAVE_STATUSES.REJECTED) {
-      addToast('Invalid review status. Must be Approved or Rejected.', 'error');
+    const validStatuses = [
+      LEAVE_STATUSES.APPROVED,
+      LEAVE_STATUSES.REJECTED,
+      LEAVE_STATUSES.SUPER_COACH_APPROVED,
+      LEAVE_STATUSES.SUPER_COACH_REJECTED
+    ];
+    if (!validStatuses.includes(status)) {
+      addToast('Invalid review status. Must be Super Coach Approved/Rejected or Admin Final Approved/Rejected.', 'error');
       return { success: false, error: 'Invalid status' };
     }
 
@@ -2135,31 +2150,49 @@ export function CrmProvider({ children }) {
       return { success: false, error: 'Request not found' };
     }
 
-    const reviewerName = reviewedBy || (currentPortal === 'super_coach' ? 'Super Admin' : 'Admin');
-    const reviewerRole = reviewedRole || (currentPortal === 'super_coach' ? 'super_admin' : 'admin');
+    const reviewerName = reviewedBy || currentUser?.name || (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin (Super Admin)');
+    const reviewerRoleName = reviewedRole || currentUser?.badge || currentUser?.role || (currentPortal === 'super_coach' ? 'super_coach' : 'admin');
     const nowIso = new Date().toISOString();
+
+    const timelineEntry = {
+      action: status,
+      by: reviewerName,
+      role: reviewerRoleName,
+      timestamp: nowIso,
+      notes: reviewNotes || (
+        status === LEAVE_STATUSES.SUPER_COACH_APPROVED
+          ? 'Recommended and initially approved by Super Coach. Forwarded for Admin final signoff.'
+          : status === LEAVE_STATUSES.SUPER_COACH_REJECTED
+          ? 'Declined by Super Coach based on training schedule requirements.'
+          : status === LEAVE_STATUSES.APPROVED
+          ? 'Approved with final signoff by Academy Administration.'
+          : 'Declined with final signoff by Academy Administration.'
+      )
+    };
+
+    const updatedTimeline = [timelineEntry, ...(targetReq.approvalTimeline || [])];
 
     const updatedRequest = {
       ...targetReq,
       status,
       reviewedBy: reviewerName,
-      reviewedRole: reviewerRole,
+      reviewedRole: reviewerRoleName,
       reviewedAt: nowIso,
-      reviewNotes:
-        reviewNotes ||
-        (status === LEAVE_STATUSES.APPROVED
-          ? 'Approved by Academy Administration.'
-          : 'Declined according to staffing schedule requirements.'),
+      reviewNotes: timelineEntry.notes,
+      approvalTimeline: updatedTimeline,
+      superCoachReviewedAt: (status === LEAVE_STATUSES.SUPER_COACH_APPROVED || status === LEAVE_STATUSES.SUPER_COACH_REJECTED) ? nowIso : targetReq.superCoachReviewedAt,
+      adminReviewedAt: (status === LEAVE_STATUSES.APPROVED || status === LEAVE_STATUSES.REJECTED) ? nowIso : targetReq.adminReviewedAt
     };
 
     // Notify the Coach
+    const notifType = (status === LEAVE_STATUSES.APPROVED || status === LEAVE_STATUSES.SUPER_COACH_APPROVED) ? 'success' : 'error';
     const coachNotif = createNotificationRecord({
       targetRole: 'coach',
       targetCoachId: targetReq.coachId,
       targetLocation: targetReq.location,
-      title: `Leave Request ${status}: ${targetReq.id}`,
-      message: `Your ${targetReq.leaveType} leave request for ${targetReq.startDate} to ${targetReq.endDate} has been ${status.toLowerCase()} by ${reviewerName}.${reviewNotes ? ` Note: ${reviewNotes}` : ''}`,
-      type: status === LEAVE_STATUSES.APPROVED ? 'success' : 'error',
+      title: `Leave Request Update: ${status}`,
+      message: `Your ${targetReq.leaveType} leave request for ${targetReq.startDate} to ${targetReq.endDate} is now "${status}" by ${reviewerName}.${reviewNotes ? ` Note: ${reviewNotes}` : ''}`,
+      type: notifType,
     });
 
     setData((prev) => {
@@ -2174,7 +2207,15 @@ export function CrmProvider({ children }) {
       };
     });
 
-    addToast(`Coach leave request ${requestId} has been ${status}.`, 'success');
+    logSettingsAudit({
+      category: 'Leave Management',
+      action: `Leave Review (${status})`,
+      field: `${targetReq.coachName} - ${targetReq.leaveType} (${targetReq.startDate})`,
+      oldValue: targetReq.status || 'Pending',
+      newValue: status
+    });
+
+    addToast(`Coach leave request ${requestId} has been updated to "${status}".`, 'success');
     return { success: true, request: updatedRequest };
   };
 
@@ -2383,12 +2424,35 @@ export function CrmProvider({ children }) {
   };
 
   const addCoach = (coachPayload) => {
+    const rawName = (coachPayload.name || '').trim();
+    const rawPhone = (coachPayload.phone || '').trim().replace(/\D/g, '');
+    const rawEmail = (coachPayload.email || '').trim().toLowerCase();
+
+    // Prevent duplicate coach (shared master data verification)
+    const isDuplicate = (data.coaches || []).some((c) => {
+      const cPhone = (c.phone || '').trim().replace(/\D/g, '');
+      const cEmail = (c.email || '').trim().toLowerCase();
+      const cName = (c.name || '').trim().toLowerCase();
+      if (rawEmail && cEmail && cEmail === rawEmail) return true;
+      if (rawPhone && cPhone && cPhone === rawPhone) return true;
+      if (rawName && cName && cName === rawName.toLowerCase() && (c.center || '').toUpperCase() === (coachPayload.center || '').toUpperCase()) return true;
+      return false;
+    });
+
+    if (isDuplicate) {
+      addToast(`Coach with matching contact info (${coachPayload.name || rawEmail || rawPhone}) already exists in Master Directory.`, 'error');
+      return null;
+    }
+
     const nextSeq = (data.coaches || []).reduce((max, c) => {
       const match = (c.id || '').match(/COACH-(\d+)/i);
       const num = match ? parseInt(match[1], 10) : 0;
       return num > max ? num : max;
     }, (data.coaches || []).length);
     const coachId = coachPayload.id || `COACH-${String(nextSeq + 1).padStart(3, '0')}`;
+
+    const performer = currentUser?.name ? `${currentUser.name} (${currentUser.badge || currentUser.role || 'Admin'})` : (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin (Super Admin)');
+    const performerRole = currentUser?.badge || currentUser?.role || (currentPortal === 'super_coach' ? 'Super Coach' : 'Super Admin');
 
     const newCoach = {
       ...coachPayload,
@@ -2397,12 +2461,15 @@ export function CrmProvider({ children }) {
       rating: coachPayload.rating || '5.0',
       activeBatches: coachPayload.activeBatches || 0,
       studentsCount: coachPayload.studentsCount || 0,
+      assignedLocations: Array.isArray(coachPayload.assignedLocations) && coachPayload.assignedLocations.length > 0
+        ? coachPayload.assignedLocations
+        : [coachPayload.center || 'KK NAGAR'],
       auditLog: coachPayload.auditLog || [
         {
           action: 'Coach Registered',
-          performedBy: 'Admin (Super Admin)',
+          performedBy: performer,
           timestamp: new Date().toISOString(),
-          details: 'Initial onboarding registration completed via Admin Portal'
+          details: `Initial onboarding registration completed via ${currentPortal === 'super_coach' ? 'Super Coach Portal' : 'Admin Portal'}`
         }
       ]
     };
@@ -2412,20 +2479,31 @@ export function CrmProvider({ children }) {
       coaches: [...(prev.coaches || []), newCoach]
     }));
 
+    logSettingsAudit({
+      category: 'Coach Management',
+      action: 'Register Coach',
+      field: newCoach.name,
+      oldValue: '—',
+      newValue: `${newCoach.id} (${newCoach.center || 'All'})`
+    });
+
     return newCoach;
   };
 
   const updateCoach = (coachId, updates) => {
+    const existing = (data.coaches || []).find((c) => c.id === coachId);
+    const performer = currentUser?.name ? `${currentUser.name} (${currentUser.badge || currentUser.role || 'Admin'})` : (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin (Super Admin)');
+
     setData((prev) => ({
       ...prev,
       coaches: (prev.coaches || []).map((c) => {
         if (c.id === coachId) {
           const auditHistory = c.auditLog || [];
           const newAuditEntry = {
-            action: updates.auditAction || 'Profile Updated',
-            performedBy: 'Admin (Super Admin)',
+            action: updates.auditAction || (updates.status && updates.status !== c.status ? `Status changed to ${updates.status}` : 'Profile Updated'),
+            performedBy: performer,
             timestamp: new Date().toISOString(),
-            details: updates.auditNote || 'Coach profile details updated by administrator'
+            details: updates.auditNote || `Coach profile details updated by ${currentPortal === 'super_coach' ? 'Super Coach' : 'Administrator'}`
           };
           const cleanUpdates = { ...updates };
           delete cleanUpdates.auditAction;
@@ -2439,14 +2517,47 @@ export function CrmProvider({ children }) {
         return c;
       })
     }));
+
+    if (existing) {
+      const fieldChanged = updates.status !== undefined && updates.status !== existing.status
+        ? 'Status'
+        : (updates.name && updates.name !== existing.name ? 'Name' : 'Profile Details');
+      const oldVal = updates.status !== undefined && updates.status !== existing.status
+        ? existing.status
+        : (updates.name && updates.name !== existing.name ? existing.name : 'Active Profile');
+      const newVal = updates.status !== undefined && updates.status !== existing.status
+        ? updates.status
+        : (updates.name && updates.name !== existing.name ? updates.name : 'Updated');
+
+      logSettingsAudit({
+        category: 'Coach Management',
+        action: updates.status && updates.status !== existing.status ? 'Toggle Coach Status' : 'Update Coach',
+        field: `${existing.name} (${coachId}) - ${fieldChanged}`,
+        oldValue: oldVal,
+        newValue: newVal
+      });
+    }
+
     return { success: true };
   };
 
   const deleteCoach = (coachId) => {
+    const existing = (data.coaches || []).find((c) => c.id === coachId);
     setData((prev) => ({
       ...prev,
       coaches: (prev.coaches || []).filter((c) => c.id !== coachId)
     }));
+
+    if (existing) {
+      logSettingsAudit({
+        category: 'Coach Management',
+        action: 'Delete Coach',
+        field: `${existing.name} (${coachId})`,
+        oldValue: existing.status || 'Active',
+        newValue: 'Deleted'
+      });
+    }
+
     return { success: true };
   };
 
@@ -4013,7 +4124,7 @@ export function CrmProvider({ children }) {
     }
 
     const newProgram = {
-      id: `PRG-${Math.floor(100 + Math.random() * 900)}`,
+      id: programPayload.id || `PRG-${Math.floor(100 + Math.random() * 900)}`,
       name,
       description: (programPayload.description || '').trim(),
       ageGroup: (programPayload.ageGroup || 'All Ages').trim(),
@@ -4030,6 +4141,14 @@ export function CrmProvider({ children }) {
       ...prev,
       programs: [newProgram, ...(prev.programs || [])],
     }));
+
+    logSettingsAudit({
+      category: 'Program Management',
+      action: 'Create Program',
+      field: newProgram.name,
+      oldValue: '—',
+      newValue: `${newProgram.id} (${(newProgram.locations || []).join(', ') || 'All Locations'})`
+    });
 
     addToast(`Sports Program "${name}" created.`, 'success');
     return { success: true, program: newProgram };
@@ -4072,6 +4191,14 @@ export function CrmProvider({ children }) {
       ),
     }));
 
+    logSettingsAudit({
+      category: 'Program Management',
+      action: 'Update Program',
+      field: `${oldName} (${id})`,
+      oldValue: oldName,
+      newValue: nextName
+    });
+
     addToast(`Sports Program "${nextName}" updated.`, 'info');
     return { success: true };
   };
@@ -4086,6 +4213,15 @@ export function CrmProvider({ children }) {
         p.id === id ? { ...p, status: nextStatus } : p
       ),
     }));
+
+    logSettingsAudit({
+      category: 'Program Management',
+      action: 'Toggle Program Status',
+      field: `${existing.name} (${id})`,
+      oldValue: existing.status,
+      newValue: nextStatus
+    });
+
     addToast(`Program "${existing.name}" marked as ${nextStatus}.`, nextStatus === 'Active' ? 'success' : 'warning');
     return { success: true, status: nextStatus };
   };
@@ -4117,7 +4253,7 @@ export function CrmProvider({ children }) {
       : [];
 
     const newBatch = {
-      id: `CLS-${Math.floor(100 + Math.random() * 900)}`,
+      id: batchPayload.id || `CLS-${Math.floor(100 + Math.random() * 900)}`,
       name,
       program,
       center,
@@ -4150,6 +4286,14 @@ export function CrmProvider({ children }) {
         };
       }),
     }));
+
+    logSettingsAudit({
+      category: 'Class & Batch Management',
+      action: 'Create Batch',
+      field: `${newBatch.name} (${newBatch.center})`,
+      oldValue: '—',
+      newValue: `${newBatch.program} | Cap: ${newBatch.capacity} | ${newBatch.schedule}`
+    });
 
     addToast(`Training Batch "${name}" created under ${program} (${center}).`, 'success');
     return { success: true, batch: newBatch };
@@ -4207,6 +4351,14 @@ export function CrmProvider({ children }) {
       })),
     }));
 
+    logSettingsAudit({
+      category: 'Class & Batch Management',
+      action: 'Update Batch',
+      field: `${oldName} (${id})`,
+      oldValue: `${existing.program} | Cap: ${existing.capacity}`,
+      newValue: `${updates.program || existing.program} | Cap: ${nextCapacity}`
+    });
+
     addToast(`Training Batch "${nextName}" updated.`, 'info');
     return { success: true };
   };
@@ -4221,6 +4373,15 @@ export function CrmProvider({ children }) {
         c.id === id ? { ...c, status: nextStatus } : c
       ),
     }));
+
+    logSettingsAudit({
+      category: 'Class & Batch Management',
+      action: 'Toggle Batch Status',
+      field: `${existing.name} (${id})`,
+      oldValue: existing.status,
+      newValue: nextStatus
+    });
+
     addToast(`Batch "${existing.name}" marked as ${nextStatus}.`, nextStatus === 'Active' ? 'success' : 'warning');
     return { success: true, status: nextStatus };
   };
@@ -4232,6 +4393,15 @@ export function CrmProvider({ children }) {
       ...prev,
       classes: (prev.classes || []).filter((c) => c.id !== id),
     }));
+
+    logSettingsAudit({
+      category: 'Class & Batch Management',
+      action: 'Delete Batch',
+      field: `${existing.name} (${id})`,
+      oldValue: existing.status || 'Active',
+      newValue: 'Deleted'
+    });
+
     addToast(`Training Batch "${existing.name}" removed successfully.`, 'info');
     return { success: true };
   };
@@ -4474,6 +4644,14 @@ export function CrmProvider({ children }) {
       equipmentReports: updatedReports
     }));
 
+    logSettingsAudit({
+      category: 'Equipment Management',
+      action: 'Register Equipment',
+      field: `${newItem.name} (${newItem.location})`,
+      oldValue: '—',
+      newValue: `Total: ${newItem.totalQty}, Avail: ${newItem.availableQty}, Cond: ${newItem.condition}`
+    });
+
     addToast(`Equipment "${newItem.name}" registered for ${newItem.location} inventory.`, 'success');
     return { success: true, item: newItem };
   };
@@ -4522,6 +4700,14 @@ export function CrmProvider({ children }) {
       equipment: (prev.equipment || []).map(e => e.id === id ? updatedItem : e)
     }));
 
+    logSettingsAudit({
+      category: 'Equipment Management',
+      action: 'Update Equipment Stock',
+      field: `${updatedItem.name} (${updatedItem.location})`,
+      oldValue: `Total: ${existing.totalQty}, Avail: ${existing.availableQty}, Dmg: ${existing.damagedQty || 0}, Miss: ${existing.missingQty || 0}`,
+      newValue: `Total: ${totalQty}, Avail: ${availableQty}, Dmg: ${damagedQty}, Miss: ${missingQty} | ${auditNote || 'Stock Updated'}`
+    });
+
     addToast(`Equipment "${updatedItem.name}" updated successfully.`, 'success');
     return { success: true, item: updatedItem };
   };
@@ -4532,6 +4718,17 @@ export function CrmProvider({ children }) {
       ...prev,
       equipment: (prev.equipment || []).filter(e => e.id !== id)
     }));
+
+    if (existing) {
+      logSettingsAudit({
+        category: 'Equipment Management',
+        action: 'Delete Equipment',
+        field: `${existing.name} (${existing.location})`,
+        oldValue: `Total: ${existing.totalQty}`,
+        newValue: 'Deleted'
+      });
+    }
+
     addToast(`Equipment record "${existing?.name || id}" removed.`, 'info');
     return { success: true };
   };
@@ -4742,6 +4939,14 @@ export function CrmProvider({ children }) {
       equipmentReports: (prev.equipmentReports || []).map(r => r.id === reportId ? updatedReport : r)
     }));
 
+    logSettingsAudit({
+      category: 'Equipment Management',
+      action: 'Admin Sanction Equipment Request',
+      field: `${report.equipmentName} (${report.location})`,
+      oldValue: report.status,
+      newValue: status
+    });
+
     addToast(`Equipment Request ${reportId} approved by Admin.`, 'success');
     return { success: true, report: updatedReport };
   };
@@ -4785,6 +4990,16 @@ export function CrmProvider({ children }) {
       type: 'info'
     });
 
+    const reassignRecord = {
+      reassignedAt: new Date().toISOString(),
+      reassignedBy,
+      fromCoachName: existing.coachName || 'Unassigned',
+      fromCoachId: existing.coachId || '',
+      toCoachName: newCoachName,
+      toCoachId: newCoachId,
+      note: note || ''
+    };
+
     setData(prev => ({
       ...prev,
       classSchedules: (prev.classSchedules || []).map(s => 
@@ -4795,12 +5010,21 @@ export function CrmProvider({ children }) {
               coachName: newCoachName,
               reassignedBy,
               reassignNote: note,
+              reassignHistory: [reassignRecord, ...(s.reassignHistory || [])],
               updatedAt: new Date().toISOString()
             }
           : s
       ),
       notifications: [coachNotif, ...(prev.notifications || [])].slice(0, 80)
     }));
+
+    logSettingsAudit({
+      category: 'Coach Scheduling',
+      action: 'Reassign Coach',
+      field: `${existing.className || existing.batch} (${existing.location} • ${existing.date})`,
+      oldValue: existing.coachName || 'Unassigned',
+      newValue: `${newCoachName} (by ${reassignedBy})`
+    });
 
     addToast(`Coach reassigned to ${newCoachName} for "${existing.className || existing.batch}". Synced to Coach & Admin portals.`, 'success');
     return { success: true };
@@ -5452,10 +5676,41 @@ export function CrmProvider({ children }) {
   };
 
   const updateEvaluation = (id, updates) => {
+    const existing = (data.evaluations || []).find((ev) => ev.id === id);
+    const performer = currentUser?.name ? `${currentUser.name} (${currentUser.badge || currentUser.role || 'Admin'})` : (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin');
+
+    const previousVersion = existing ? {
+      versionId: `VER-${Date.now()}`,
+      savedAt: new Date().toISOString(),
+      savedBy: performer,
+      skills: existing.skills,
+      status: existing.status,
+      coachObservation: existing.coachObservation,
+      superCoachNotes: existing.superCoachNotes
+    } : null;
+
     setData((prev) => ({
       ...prev,
-      evaluations: (prev.evaluations || []).map((ev) => (ev.id === id ? { ...ev, ...updates } : ev)),
+      evaluations: (prev.evaluations || []).map((ev) =>
+        ev.id === id
+          ? {
+              ...ev,
+              ...updates,
+              versions: previousVersion ? [previousVersion, ...(ev.versions || [])] : (ev.versions || []),
+              updatedAt: new Date().toISOString()
+            }
+          : ev
+      ),
     }));
+
+    logSettingsAudit({
+      category: 'Evaluation & Performance',
+      action: 'Update Evaluation',
+      field: `${existing?.studentName || 'Student'} (${id})`,
+      oldValue: existing?.status || 'Draft',
+      newValue: updates.status || 'Updated'
+    });
+
     addToast('Evaluation changes saved successfully!', 'success');
   };
 
@@ -5463,6 +5718,25 @@ export function CrmProvider({ children }) {
     let approvedStudentId = null;
     let approvedSkills = null;
     let approvedObservation = null;
+    const existing = (data.evaluations || []).find((ev) => ev.id === id);
+    const reviewer = currentUser?.name ? `${currentUser.name} (${currentUser.badge || currentUser.role || 'Admin'})` : (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin (Super Admin)');
+
+    const approvalEntry = {
+      action: 'Approved',
+      approvedBy: reviewer,
+      timestamp: new Date().toISOString(),
+      notes: reviewNotes || 'Evaluation approved and verified for publishing.'
+    };
+
+    const previousVersion = existing ? {
+      versionId: `VER-${Date.now()}`,
+      savedAt: new Date().toISOString(),
+      savedBy: reviewer,
+      skills: existing.skills,
+      status: existing.status,
+      coachObservation: existing.coachObservation,
+      superCoachNotes: existing.superCoachNotes
+    } : null;
 
     setData((prev) => {
       const updatedEvals = (prev.evaluations || []).map((ev) => {
@@ -5476,6 +5750,8 @@ export function CrmProvider({ children }) {
             superCoachNotes: reviewNotes !== undefined ? reviewNotes : ev.superCoachNotes,
             approvedAt: new Date().toISOString(),
             publishedToParent: true,
+            approvalHistory: [approvalEntry, ...(ev.approvalHistory || [])],
+            versions: previousVersion ? [previousVersion, ...(ev.versions || [])] : (ev.versions || [])
           };
         }
         return ev;
@@ -5511,10 +5787,40 @@ export function CrmProvider({ children }) {
         students: updatedStudents,
       };
     });
+
+    logSettingsAudit({
+      category: 'Evaluation & Performance',
+      action: 'Approve Evaluation',
+      field: `${existing?.studentName || 'Student'} (${id})`,
+      oldValue: existing?.status || 'Pending Review',
+      newValue: 'Approved & Published'
+    });
+
     addToast(`Evaluation ${id} approved and published to Parent Portal!`, 'success');
   };
 
   const returnEvaluation = (id, returnReason, superCoachNotes) => {
+    const existing = (data.evaluations || []).find((ev) => ev.id === id);
+    const reviewer = currentUser?.name ? `${currentUser.name} (${currentUser.badge || currentUser.role || 'Admin'})` : (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin');
+
+    const historyEntry = {
+      action: 'Returned',
+      reviewedBy: reviewer,
+      timestamp: new Date().toISOString(),
+      reason: returnReason,
+      notes: superCoachNotes || ''
+    };
+
+    const previousVersion = existing ? {
+      versionId: `VER-${Date.now()}`,
+      savedAt: new Date().toISOString(),
+      savedBy: reviewer,
+      skills: existing.skills,
+      status: existing.status,
+      coachObservation: existing.coachObservation,
+      superCoachNotes: existing.superCoachNotes
+    } : null;
+
     setData((prev) => ({
       ...prev,
       evaluations: (prev.evaluations || []).map((ev) => {
@@ -5526,30 +5832,59 @@ export function CrmProvider({ children }) {
             superCoachNotes: superCoachNotes !== undefined ? superCoachNotes : ev.superCoachNotes,
             returnedAt: new Date().toISOString(),
             publishedToParent: false,
+            approvalHistory: [historyEntry, ...(ev.approvalHistory || [])],
+            versions: previousVersion ? [previousVersion, ...(ev.versions || [])] : (ev.versions || [])
           };
         }
         return ev;
       }),
     }));
+
+    logSettingsAudit({
+      category: 'Evaluation & Performance',
+      action: 'Return Evaluation',
+      field: `${existing?.studentName || 'Student'} (${id})`,
+      oldValue: existing?.status || 'Pending Review',
+      newValue: `Returned: ${returnReason}`
+    });
+
     addToast(`Evaluation ${id} returned to coach for revision.`, 'info');
   };
 
   const bulkApproveEvaluations = (ids) => {
     const idSet = new Set(ids);
+    const reviewer = currentUser?.name ? `${currentUser.name} (${currentUser.badge || currentUser.role || 'Admin'})` : (currentPortal === 'super_coach' ? 'Super Coach' : 'Admin');
+
     setData((prev) => ({
       ...prev,
       evaluations: (prev.evaluations || []).map((ev) => {
         if (idSet.has(ev.id)) {
+          const approvalEntry = {
+            action: 'Approved',
+            approvedBy: reviewer,
+            timestamp: new Date().toISOString(),
+            notes: 'Bulk approval'
+          };
           return {
             ...ev,
             status: 'Approved',
             approvedAt: new Date().toISOString(),
             publishedToParent: true,
+            approvalHistory: [approvalEntry, ...(ev.approvalHistory || [])]
           };
         }
         return ev;
       }),
     }));
+
+    logSettingsAudit({
+      category: 'Evaluation & Performance',
+      action: 'Bulk Approve Evaluations',
+      field: `${ids.length} Evaluations`,
+      oldValue: 'Pending Review',
+      newValue: 'Approved & Published'
+    });
+
     addToast(`${ids.length} evaluation(s) approved and published to Parent Portal!`, 'success');
   };
 
