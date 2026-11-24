@@ -415,13 +415,13 @@ export default function CoachPortalView() {
       
       {/* 1. COACH DASHBOARD */}
       {currentView === 'dashboard' && (
-        <div className="space-y-6 animate-slide-up pb-8">
+        <div className="space-y-4 sm:space-y-4.5 animate-slide-up pb-6">
           
           {/* ============================================================ */}
           {/* 1. TOP HEADER: Good Morning, Coach! & Action Icons            */}
           {/* ============================================================ */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-            <div className="text-left space-y-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pt-0.5">
+            <div className="text-left space-y-0.5">
               <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
                 <span>Good Morning, Coach {coachFirstName ? coachFirstName.charAt(0).toUpperCase() + coachFirstName.slice(1) : 'Coach'}!</span>
                 <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform cursor-default select-none">👋</span>
@@ -437,27 +437,27 @@ export default function CoachPortalView() {
               <button
                 type="button"
                 onClick={() => addToast('Search my assigned athletes')}
-                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
                 title="Search Athletes"
               >
-                <Search className="w-4 h-4 text-[#172B50]" />
+                <Search className="w-3.5 h-3.5 text-[#172B50]" />
               </button>
 
               {/* 2. Notification */}
               <button
                 type="button"
                 onClick={() => addToast('No unread coach notices')}
-                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
+                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer relative"
                 title="Notifications"
               >
-                <Bell className="w-4 h-4 text-[#172B50]" />
-                <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
+                <Bell className="w-3.5 h-3.5 text-[#172B50]" />
+                <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-1.5 right-1.5 ring-1 ring-white" />
               </button>
 
               {/* 3. Profile */}
               <div 
                 onClick={() => setCurrentView('workspace')}
-                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
+                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full ring-2 ring-white shadow-2xs overflow-hidden cursor-pointer hover:ring-[#F4510B] transition-all" 
                 title="Coach Workspace & Profile"
               >
                 <img
@@ -471,10 +471,10 @@ export default function CoachPortalView() {
               <button
                 type="button"
                 onClick={() => setIsLeaveOpen(true)}
-                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
+                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-white border border-[#172B5015] shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B40] transition-all cursor-pointer"
                 title="Apply Leave"
               >
-                <CalendarOff className="w-4 h-4 text-[#172B50]" />
+                <CalendarOff className="w-3.5 h-3.5 text-[#172B50]" />
               </button>
 
               {/* 5. Live Calendar */}
@@ -486,50 +486,424 @@ export default function CoachPortalView() {
           </div>
 
           {/* ============================================================ */}
-          {/* 2. FOUR PIPELINE SECTIONS WITH SVG FORK / BRACKET CONNECTORS  */}
+          {/* 1. TOP ROW: Today's Training Schedule, Coaching Performance & Faculty Toolkit */}
+          {/* ============================================================ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4 items-stretch">
+            
+            {/* Card 1: Today's Training Sessions Table */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[20px] p-3.5 sm:p-4 border border-[#172B5012] shadow-[0_4px_20px_rgba(23,43,80,0.03)] h-[360px] min-h-[360px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center gap-2 pb-2.5 border-b border-[#172B5010]">
+                  <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                    <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+                  </div>
+                  <h2 className="text-[15.5px] sm:text-[16.5px] font-black text-[#172B50] tracking-tight">
+                    Today's Training Schedule
+                  </h2>
+                </div>
+              </div>
+
+              {mySchedules.length === 0 ? (
+                <div className="min-h-[200px] flex-1 flex flex-col items-center justify-center text-center py-4 px-3 my-auto">
+                  <div className="w-9 h-9 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-1.5 shadow-2xs">
+                    <CalendarDays className="w-4.5 h-4.5" />
+                  </div>
+                  <p className="text-xs font-black text-[#172B50]">
+                    No classes assigned today
+                  </p>
+                  <p className="text-[10.5px] text-[#172B50]/60 mt-0.5 max-w-[220px]">
+                    Classes assigned to you will automatically appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[235px] mt-1 pr-0.5 scrollbar-thin">
+                  <table className="w-full text-left text-xs whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[9.5px]">
+                        <th className="py-1.5 px-2">TIME</th>
+                        <th className="py-1.5 px-2">BATCH</th>
+                        <th className="py-1.5 px-2">LOCATION</th>
+                        <th className="py-1.5 px-2">STUDENTS</th>
+                        <th className="py-1.5 px-2 text-right">ACTION</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#172B500C]">
+                      {mySchedules.slice(0, 5).map((cls) => (
+                        <tr 
+                          key={cls.id} 
+                          className="hover:bg-[#FFF4E8]/30 transition-colors"
+                        >
+                          <td className="py-2 px-2">
+                            <div className="flex items-center gap-1.5 font-black text-[#172B50]">
+                              <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
+                              <span>{cls.startTime || '09:00 AM'}</span>
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 font-extrabold text-[#172B50] max-w-[130px] truncate">
+                            {cls.className || cls.batch || 'Training Batch'}
+                          </td>
+                          <td className="py-2 px-2">
+                            <div className="flex items-center gap-1 font-bold text-[#172B50]/75">
+                              <MapPin className="w-3 h-3 text-[#F4510B] shrink-0" />
+                              <span>{cls.location}</span>
+                            </div>
+                          </td>
+                          <td className="py-2 px-2">
+                            <span className="font-bold text-[#172B50]/80">
+                              {cls.enrolledCount ?? 15} athletes
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setCurrentView('attendance')}
+                              className="px-2 py-0.5 rounded text-[9.5px] font-black bg-[#F4510B] text-white hover:bg-[#d94103] transition-colors cursor-pointer"
+                            >
+                              Attendance
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[10.5px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+                  Daily Timetable
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('classes')}
+                  className="text-[11px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+                >
+                  <span>Explore all sessions</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            </FloatingCard>
+
+            {/* Card 2: Coaching Performance & Turnout */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[20px] p-3.5 sm:p-4 border border-[#172B5012] shadow-[0_4px_20px_rgba(23,43,80,0.03)] h-[360px] min-h-[360px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#172B5010]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                      <BarChart2 className="w-4 h-4 text-[#F4510B]" />
+                    </div>
+                    <h2 className="text-[15.5px] sm:text-[16.5px] font-black text-[#172B50] tracking-tight">
+                      Coaching Performance
+                    </h2>
+                  </div>
+                  <span className="text-[10px] font-extrabold text-[#F4510B] bg-[#FFF5ED] px-2 py-0.5 rounded-full border border-[#F4510B20] select-none">
+                    {mySchedules.length} Sessions
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex-1 flex flex-col justify-center py-1.5 my-auto">
+                <div className="grid grid-cols-2 gap-2.5">
+                  {/* KPI 1 */}
+                  <div 
+                    onClick={() => setCurrentView('schedules')}
+                    className="p-2.5 sm:p-3 rounded-xl bg-[#F0F7FF] border border-[#0284C720] flex flex-col justify-between hover:border-[#0284C750] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5.5 h-5.5 rounded-md bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
+                          <CalendarDays className="w-3 h-3 text-[#0284C7]" />
+                        </div>
+                        <span className="text-[10.5px] font-black text-[#172B50] group-hover:text-[#0284C7] transition-colors">
+                          Schedules
+                        </span>
+                      </div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7]" />
+                    </div>
+                    <div className="mt-2 flex items-baseline justify-between">
+                      <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
+                        {mySchedules.length}
+                      </span>
+                      <span className="text-[9px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Timetables
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 2 */}
+                  <div 
+                    onClick={() => setCurrentView('batches')}
+                    className="p-2.5 sm:p-3 rounded-xl bg-[#FAF5FF] border border-[#9333EA20] flex flex-col justify-between hover:border-[#9333EA50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5.5 h-5.5 rounded-md bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-3 h-3 text-[#9333EA]" />
+                        </div>
+                        <span className="text-[10.5px] font-black text-[#172B50] group-hover:text-[#9333EA] transition-colors">
+                          Athletes
+                        </span>
+                      </div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#9333EA]" />
+                    </div>
+                    <div className="mt-2 flex items-baseline justify-between">
+                      <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
+                        {myStudents.length}
+                      </span>
+                      <span className="text-[9px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Assigned
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 3 */}
+                  <div 
+                    onClick={() => setCurrentView('compensation')}
+                    className="p-2.5 sm:p-3 rounded-xl bg-[#F0FDF4] border border-[#16A34A20] flex flex-col justify-between hover:border-[#16A34A50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5.5 h-5.5 rounded-md bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
+                          <RefreshCw className="w-3 h-3 text-[#16A34A]" />
+                        </div>
+                        <span className="text-[10.5px] font-black text-[#172B50] group-hover:text-[#16A34A] transition-colors">
+                          Makeups
+                        </span>
+                      </div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                    </div>
+                    <div className="mt-2 flex items-baseline justify-between">
+                      <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
+                        {totalCompSlotCount}
+                      </span>
+                      <span className="text-[9px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        Slots
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KPI 4 */}
+                  <div 
+                    onClick={() => setCurrentView('evaluations')}
+                    className="p-2.5 sm:p-3 rounded-xl bg-[#FFF5ED] border border-[#F4510B20] flex flex-col justify-between hover:border-[#F4510B50] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5.5 h-5.5 rounded-md bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
+                          <Star className="w-3 h-3 text-[#F4510B]" />
+                        </div>
+                        <span className="text-[10.5px] font-black text-[#172B50] group-hover:text-[#F4510B] transition-colors">
+                          Rating
+                        </span>
+                      </div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#F4510B]" />
+                    </div>
+                    <div className="mt-2 flex items-baseline justify-between">
+                      <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
+                        {coachProfile.rating || '4.9'}★
+                      </span>
+                      <span className="text-[9px] font-bold text-[#172B50]/55 uppercase tracking-wide">
+                        5.0 Scale
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs px-1">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65">
+                    Faculty Status
+                  </span>
+                  <span className="text-[10px] font-black text-[#F4510B] bg-[#FFF5ED] px-2 py-0.5 rounded-md border border-[#F4510B20]">
+                    Active • {coachProfile.center}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[10.5px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+                  Evaluations & Logs
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('evaluations')}
+                  className="text-[11px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
+                >
+                  <span>Explore evaluations</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            </FloatingCard>
+
+            {/* Card 3: Coach Faculty Toolkit */}
+            <FloatingCard 
+              maxTilt={2} 
+              scale={1.006} 
+              glare={false}
+              className="w-full bg-white rounded-[20px] p-3.5 sm:p-4 border border-[#172B5012] shadow-[0_4px_20px_rgba(23,43,80,0.03)] h-[360px] min-h-[360px]"
+              contentClassName="flex flex-col justify-between h-full"
+            >
+              <div>
+                <div className="flex items-center gap-2 pb-2.5 border-b border-[#172B5010]">
+                  <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
+                    <Building2 className="w-4 h-4 text-[#F4510B]" />
+                  </div>
+                  <div>
+                    <h2 className="text-[15.5px] sm:text-[16.5px] font-black text-[#172B50] tracking-tight">
+                      Coach Faculty Toolkit
+                    </h2>
+                    <p className="text-[11px] font-medium text-[#172B50]/60">
+                      Operations, safety & workspace
+                    </p>
+                  </div>
+                </div>
+
+                <div className="min-h-[210px] flex flex-col justify-center mt-1.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Tile 1: Mark Attendance */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('attendance')}
+                      className="bg-[#0B3B60] text-white rounded-xl p-2.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[96px] group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                        <ClipboardCheck className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-[11.5px] font-black text-white leading-tight">
+                        Mark Attendance
+                      </span>
+                      <span className="text-[9px] font-medium text-white/70 mt-0.5">
+                        Roll Call Register
+                      </span>
+                    </button>
+
+                    {/* Tile 2: Class Timetables */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('classes')}
+                      className="bg-white text-[#172B50] rounded-xl p-2.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[96px] group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                        <CalendarDays className="w-4 h-4 text-[#F4510B]" />
+                      </div>
+                      <span className="text-[11.5px] font-black text-[#172B50] leading-tight">
+                        Class Schedules
+                      </span>
+                      <span className="text-[9px] font-medium text-[#172B50]/60 mt-0.5">
+                        {mySchedules.length} Sessions
+                      </span>
+                    </button>
+
+                    {/* Tile 3: Equipment Inspection */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('equipment')}
+                      className="bg-white text-[#172B50] rounded-xl p-2.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[96px] group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                        <Shield className="w-4 h-4 text-[#F4510B]" />
+                      </div>
+                      <span className="text-[11.5px] font-black text-[#172B50] leading-tight">
+                        Equipment Check
+                      </span>
+                      <span className="text-[9px] font-medium text-[#172B50]/60 mt-0.5">
+                        Location Inspection
+                      </span>
+                    </button>
+
+                    {/* Tile 4: My Workspace */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('workspace')}
+                      className="bg-white text-[#172B50] rounded-xl p-2.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#0284C735] hover:bg-[#F0F9FF] active:scale-95 transition-all cursor-pointer min-h-[96px] group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[#F0F9FF] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                        <UserCheck className="w-4 h-4 text-[#0284C7]" />
+                      </div>
+                      <span className="text-[11.5px] font-black text-[#172B50] leading-tight">
+                        My Workspace
+                      </span>
+                      <span className="text-[9px] font-medium text-[#172B50]/60 mt-0.5">
+                        Profile & Leave
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
+                <span className="text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                  Faculty Workspace
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('workspace')}
+                  className="text-[11px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+                >
+                  <span>Open Workspace</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            </FloatingCard>
+
+          </div>
+
+          {/* ============================================================ */}
+          {/* 2. BOTTOM ROW: Assigned Batches, Athlete Roll Call, Replacement Sessions & Operations */}
           {/* ============================================================ */}
           <div className="relative">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 items-stretch">
               
               {/* Card 1: Assigned Batches (Peach) */}
               <FloatingCard 
                 maxTilt={3} 
                 scale={1.01} 
                 glare={false}
-                className="relative bg-[#FFF9F5] rounded-[24px] p-4 sm:p-4.5 border border-[#F4510B18] shadow-[0_4px_25px_rgba(244,81,11,0.03)] h-full"
+                className="relative bg-[#FFF9F5] rounded-[20px] p-3.5 sm:p-4 border border-[#F4510B18] shadow-[0_4px_20px_rgba(244,81,11,0.03)] h-full"
                 contentClassName="flex flex-col justify-between h-full"
               >
                 <div>
-                  <div className="flex items-center gap-3 mb-3.5">
-                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-white text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
                       <Inbox className="w-4 h-4 text-[#F4510B]" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                      <h3 className="text-[14.5px] sm:text-[15px] font-black text-[#172B50] tracking-tight leading-tight">
                         Assigned Batches
                       </h3>
-                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                      <p className="text-[11px] font-medium text-[#172B50]/60 mt-0.5">
                         My active training groups
                       </p>
                     </div>
                   </div>
 
                   {coachAssignedBatches.length === 0 ? (
-                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
-                      <div className="w-10 h-10 rounded-xl bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-2 shadow-2xs">
-                        <Inbox className="w-5 h-5 text-[#F4510B]" />
+                    <div className="min-h-[205px] py-4 text-center flex flex-col items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-white text-[#F4510B] border border-[#F4510B20] flex items-center justify-center mb-1.5 shadow-2xs">
+                        <Inbox className="w-4.5 h-4.5 text-[#F4510B]" />
                       </div>
                       <p className="text-xs font-black text-[#172B50]">No batches assigned</p>
                     </div>
                   ) : (
-                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                    <div className="min-h-[205px] max-h-[205px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
                       {coachAssignedBatches.map((b) => (
                         <div
                           key={b.id}
-                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#F4510B30] transition-colors"
+                          className="bg-white rounded-lg px-2.5 py-1.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#F4510B30] transition-colors"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">{b.name}</p>
+                            <p className="text-[11.5px] font-black text-[#172B50] truncate leading-tight">{b.name}</p>
                             <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
                               {b.program} • {b.center} ({b.enrolledCount || 0}/{b.capacity || 20})
                             </p>
@@ -540,7 +914,7 @@ export default function CoachPortalView() {
                               setClassesSubView('batches');
                               setCurrentView('classes');
                             }}
-                            className="px-2 py-1 rounded-lg text-[10px] font-extrabold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
+                            className="px-2 py-0.5 rounded text-[9.5px] font-extrabold bg-[#FFF4E8] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition-colors cursor-pointer"
                           >
                             View
                           </button>
@@ -550,8 +924,8 @@ export default function CoachPortalView() {
                   )}
                 </div>
 
-                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2 shrink-0">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
                     Batch Management
                   </span>
                   <button
@@ -560,7 +934,7 @@ export default function CoachPortalView() {
                       setClassesSubView('batches');
                       setCurrentView('classes');
                     }}
-                    className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
+                    className="text-[11px] font-black text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
                   >
                     <span>View All ({coachAssignedBatches.length})</span>
                     <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -568,7 +942,7 @@ export default function CoachPortalView() {
                 </div>
 
                 {/* Desktop Connector 1 */}
-                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                <div className="hidden lg:block absolute -right-[20px] top-[48%] -translate-y-1/2 w-[20px] h-[90px] pointer-events-none z-20">
                   <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
                     <path d="M 0,28 C 9,28 10,52 14,52 C 18,52 19,22 24,22" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
                     <path d="M 14,52 L 24,52" stroke="#0284C7" strokeWidth="1.8" strokeLinecap="round" />
@@ -582,40 +956,40 @@ export default function CoachPortalView() {
                 maxTilt={3} 
                 scale={1.01} 
                 glare={false}
-                className="relative bg-[#F4FAFF] rounded-[24px] p-4 sm:p-4.5 border border-[#0284C718] shadow-[0_4px_25px_rgba(2,132,199,0.03)] h-full"
+                className="relative bg-[#F4FAFF] rounded-[20px] p-3.5 sm:p-4 border border-[#0284C718] shadow-[0_4px_20px_rgba(2,132,199,0.03)] h-full"
                 contentClassName="flex flex-col justify-between h-full"
               >
                 <div>
-                  <div className="flex items-center gap-3 mb-3.5">
-                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-white text-[#0284C7] border border-[#0284C725] shadow-2xs flex items-center justify-center shrink-0">
                       <GraduationCap className="w-4 h-4 text-[#0284C7]" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                      <h3 className="text-[14.5px] sm:text-[15px] font-black text-[#172B50] tracking-tight leading-tight">
                         Athlete Roll Call
                       </h3>
-                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                      <p className="text-[11px] font-medium text-[#172B50]/60 mt-0.5">
                         Assigned spartan students
                       </p>
                     </div>
                   </div>
 
                   {myStudents.length === 0 ? (
-                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
-                      <div className="w-10 h-10 rounded-xl bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-2 shadow-2xs">
-                        <GraduationCap className="w-5 h-5 text-[#0284C7]" />
+                    <div className="min-h-[205px] py-4 text-center flex flex-col items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-white text-[#0284C7] border border-[#0284C720] flex items-center justify-center mb-1.5 shadow-2xs">
+                        <GraduationCap className="w-4.5 h-4.5 text-[#0284C7]" />
                       </div>
                       <p className="text-xs font-black text-[#172B50]">No athletes enrolled</p>
                     </div>
                   ) : (
-                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                    <div className="min-h-[205px] max-h-[205px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
                       {myStudents.map((s) => (
                         <div
                           key={s.id}
-                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#0284C730] transition-colors"
+                          className="bg-white rounded-lg px-2.5 py-1.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#0284C730] transition-colors"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">{s.name}</p>
+                            <p className="text-[11.5px] font-black text-[#172B50] truncate leading-tight">{s.name}</p>
                             <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
                               {s.program || 'Athlete'} • Age {s.age || '6'} ({s.center})
                             </p>
@@ -623,10 +997,10 @@ export default function CoachPortalView() {
                           <button
                             type="button"
                             onClick={() => setCurrentView('attendance')}
-                            className="w-6.5 h-6.5 rounded-lg bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer"
+                            className="w-5.5 h-5.5 rounded-md bg-white border border-[#172B5018] flex items-center justify-center text-[#172B50] hover:bg-emerald-50 hover:text-emerald-600 transition-all cursor-pointer shrink-0"
                             title="Mark Attendance"
                           >
-                            <Check className="w-3.5 h-3.5" />
+                            <Check className="w-3 h-3" />
                           </button>
                         </div>
                       ))}
@@ -634,14 +1008,14 @@ export default function CoachPortalView() {
                   )}
                 </div>
 
-                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2 shrink-0">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
                     Roster Oversight
                   </span>
                   <button
                     type="button"
                     onClick={() => setCurrentView('students')}
-                    className="text-[11.5px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
+                    className="text-[11px] font-black text-[#0284C7] hover:text-[#0369a1] flex items-center gap-1 group cursor-pointer transition-colors"
                   >
                     <span>View Athletes ({myStudents.length})</span>
                     <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -649,7 +1023,7 @@ export default function CoachPortalView() {
                 </div>
 
                 {/* Desktop Connector 2 */}
-                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                <div className="hidden lg:block absolute -right-[20px] top-[48%] -translate-y-1/2 w-[20px] h-[90px] pointer-events-none z-20">
                   <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
                     <path d="M 0,22 C 9,22 10,52 14,52 C 18,52 19,22 24,22" stroke="#F4510B" strokeWidth="1.8" fill="none" strokeLinecap="round" />
                     <path d="M 0,52 L 24,52" stroke="#F4510B" strokeWidth="1.8" strokeLinecap="round" />
@@ -663,48 +1037,48 @@ export default function CoachPortalView() {
                 maxTilt={3} 
                 scale={1.01} 
                 glare={false}
-                className="relative bg-[#F4FDF7] rounded-[24px] p-4 sm:p-4.5 border border-[#16A34A18] shadow-[0_4px_25px_rgba(22,163,74,0.03)] h-full"
+                className="relative bg-[#F4FDF7] rounded-[20px] p-3.5 sm:p-4 border border-[#16A34A18] shadow-[0_4px_20px_rgba(22,163,74,0.03)] h-full"
                 contentClassName="flex flex-col justify-between h-full"
               >
                 <div>
-                  <div className="flex items-center gap-3 mb-3.5">
-                    <div className="w-8.5 h-8.5 rounded-xl bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-white text-[#16A34A] border border-[#16A34A25] shadow-2xs flex items-center justify-center shrink-0">
                       <RefreshCw className="w-4 h-4 text-[#16A34A]" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                      <h3 className="text-[14.5px] sm:text-[15px] font-black text-[#172B50] tracking-tight leading-tight">
                         Replacement Sessions
                       </h3>
-                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                      <p className="text-[11px] font-medium text-[#172B50]/60 mt-0.5">
                         Assigned makeup classes
                       </p>
                     </div>
                   </div>
 
                   {assignedStudentReplacements.length === 0 ? (
-                    <div className="min-h-[258px] py-6 text-center flex flex-col items-center justify-center">
-                      <div className="w-10 h-10 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-2 shadow-2xs">
-                        <RefreshCw className="w-5 h-5 text-[#16A34A]" />
+                    <div className="min-h-[205px] py-4 text-center flex flex-col items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-white text-[#16A34A] border border-[#16A34A20] flex items-center justify-center mb-1.5 shadow-2xs">
+                        <RefreshCw className="w-4.5 h-4.5 text-[#16A34A]" />
                       </div>
                       <p className="text-xs font-black text-[#172B50]">No makeup sessions</p>
                       <p className="text-[10px] font-medium text-[#172B50]/55 mt-0.5">Admin-assigned slots appear here</p>
                     </div>
                   ) : (
-                    <div className="min-h-[258px] max-h-[258px] overflow-y-auto space-y-1.5 pr-1">
+                    <div className="min-h-[205px] max-h-[205px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
                       {assignedStudentReplacements.map((r) => (
                         <div
                           key={r.id}
-                          className="bg-white rounded-xl px-3 py-2 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#16A34A30] transition-colors"
+                          className="bg-white rounded-lg px-2.5 py-1.5 border border-[#172B500C] shadow-2xs flex items-center justify-between gap-2 shrink-0 hover:border-[#16A34A30] transition-colors"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-black text-[#172B50] truncate leading-tight">
+                            <p className="text-[11.5px] font-black text-[#172B50] truncate leading-tight">
                               {r.studentName}
                             </p>
                             <p className="text-[10px] font-medium text-[#172B50]/60 mt-0.5 truncate leading-tight">
                               {r.replacementSlot || `${r.replacementDate} (${r.replacementStartTime})`}
                             </p>
                           </div>
-                          <span className="px-2 py-0.5 rounded-full text-[9.5px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                             {r.status}
                           </span>
                         </div>
@@ -713,14 +1087,14 @@ export default function CoachPortalView() {
                   )}
                 </div>
 
-                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2 shrink-0">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
                     Compensation
                   </span>
                   <button
                     type="button"
                     onClick={() => setCurrentView('compensation')}
-                    className="text-[11.5px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
+                    className="text-[11px] font-black text-[#16A34A] hover:text-[#15803d] flex items-center gap-1 group cursor-pointer transition-colors"
                   >
                     <span>View All ({assignedStudentReplacements.length})</span>
                     <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -728,7 +1102,7 @@ export default function CoachPortalView() {
                 </div>
 
                 {/* Desktop Connector 3 */}
-                <div className="hidden lg:block absolute -right-[22px] top-[48%] -translate-y-1/2 w-[22px] h-[105px] pointer-events-none z-20">
+                <div className="hidden lg:block absolute -right-[20px] top-[48%] -translate-y-1/2 w-[20px] h-[90px] pointer-events-none z-20">
                   <svg className="w-full h-full" viewBox="0 0 24 105" fill="none" preserveAspectRatio="none">
                     <path d="M 0,82 C 10,82 12,30 24,30" stroke="#0284C7" strokeWidth="1.8" fill="none" strokeLinecap="round" />
                     <circle cx="2" cy="82" r="2" fill="#0284C7" />
@@ -742,39 +1116,39 @@ export default function CoachPortalView() {
                 maxTilt={3} 
                 scale={1.01} 
                 glare={false}
-                className="relative bg-white rounded-[24px] p-4 sm:p-4.5 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-full"
+                className="relative bg-white rounded-[20px] p-3.5 sm:p-4 border border-[#172B5012] shadow-[0_4px_20px_rgba(23,43,80,0.03)] h-full"
                 contentClassName="flex flex-col justify-between h-full"
               >
                 <div>
-                  <div className="flex items-center gap-3 mb-3.5">
-                    <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-[#FFF5ED] text-[#F4510B] border border-[#F4510B25] shadow-2xs flex items-center justify-center shrink-0">
                       <Activity className="w-4 h-4 text-[#F4510B]" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-black text-[#172B50] tracking-tight">
+                      <h3 className="text-[14.5px] sm:text-[15px] font-black text-[#172B50] tracking-tight leading-tight">
                         Coach Operations
                       </h3>
-                      <p className="text-[11px] font-medium text-[#172B50]/60">
+                      <p className="text-[11px] font-medium text-[#172B50]/60 mt-0.5">
                         Daily faculty workflow
                       </p>
                     </div>
                   </div>
 
-                  <div className="min-h-[258px] max-h-[258px] flex flex-col justify-center">
+                  <div className="min-h-[205px] max-h-[205px] flex flex-col justify-center">
                     <div className="grid grid-cols-2 gap-2">
                       {/* Tile 1: Mark Attendance */}
                       <button
                         type="button"
                         onClick={() => setCurrentView('attendance')}
-                        className="bg-[#0B3B60] text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                        className="bg-[#0B3B60] text-white rounded-xl p-2.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[96px] group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                          <ClipboardCheck className="w-4.5 h-4.5 text-white" />
+                        <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                          <ClipboardCheck className="w-4 h-4 text-white" />
                         </div>
-                        <span className="text-xs font-black text-white leading-tight">
+                        <span className="text-[11.5px] font-black text-white leading-tight">
                           Mark Attendance
                         </span>
-                        <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
+                        <span className="text-[9px] font-medium text-white/70 mt-0.5">
                           Daily Register
                         </span>
                       </button>
@@ -783,15 +1157,15 @@ export default function CoachPortalView() {
                       <button
                         type="button"
                         onClick={() => setCurrentView('classes')}
-                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                        className="bg-white text-[#172B50] rounded-xl p-2.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[96px] group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                          <CalendarDays className="w-4.5 h-4.5 text-[#172B50]" />
+                        <div className="w-7 h-7 rounded-lg bg-[#FFF4E8] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                          <CalendarDays className="w-4 h-4 text-[#172B50]" />
                         </div>
-                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                        <span className="text-[11.5px] font-black text-[#172B50] leading-tight">
                           My Timetable
                         </span>
-                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        <span className="text-[9px] font-medium text-[#172B50]/60 mt-0.5">
                           {mySchedules.length} Sessions
                         </span>
                       </button>
@@ -800,15 +1174,15 @@ export default function CoachPortalView() {
                       <button
                         type="button"
                         onClick={() => setIsLeaveOpen(true)}
-                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                        className="bg-white text-[#172B50] rounded-xl p-2.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[96px] group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                          <CalendarOff className="w-4.5 h-4.5 text-[#F4510B]" />
+                        <div className="w-7 h-7 rounded-lg bg-[#FFF5ED] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                          <CalendarOff className="w-4 h-4 text-[#F4510B]" />
                         </div>
-                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                        <span className="text-[11.5px] font-black text-[#172B50] leading-tight">
                           Apply Leave
                         </span>
-                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        <span className="text-[9px] font-medium text-[#172B50]/60 mt-0.5">
                           Faculty Time-off
                         </span>
                       </button>
@@ -817,15 +1191,15 @@ export default function CoachPortalView() {
                       <button
                         type="button"
                         onClick={() => setCurrentView('equipment')}
-                        className="bg-white text-[#172B50] rounded-xl p-3 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
+                        className="bg-white text-[#172B50] rounded-xl p-2.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#172B5035] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[96px] group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#F0F7FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                          <Shield className="w-4.5 h-4.5 text-[#0284C7]" />
+                        <div className="w-7 h-7 rounded-lg bg-[#F0F7FF] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                          <Shield className="w-4 h-4 text-[#0284C7]" />
                         </div>
-                        <span className="text-xs font-black text-[#172B50] leading-tight">
+                        <span className="text-[11.5px] font-black text-[#172B50] leading-tight">
                           Equipment Check
                         </span>
-                        <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
+                        <span className="text-[9px] font-medium text-[#172B50]/60 mt-0.5">
                           Verify &amp; Report
                         </span>
                       </button>
@@ -833,14 +1207,14 @@ export default function CoachPortalView() {
                   </div>
                 </div>
 
-                <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2.5 shrink-0">
-                  <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
+                <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-2 shrink-0">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65 uppercase tracking-wider">
                     Quick Operations
                   </span>
                   <button
                     type="button"
                     onClick={() => setCurrentView('workspace')}
-                    className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
+                    className="text-[11px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
                   >
                     <span>My Workspace</span>
                     <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -849,380 +1223,6 @@ export default function CoachPortalView() {
               </FloatingCard>
 
             </div>
-          </div>
-
-          {/* ============================================================ */}
-          {/* 3. MIDDLE ROW: Today's Classes, Performance & Faculty Toolkit */}
-          {/* ============================================================ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            
-            {/* Card 1: Today's Training Sessions Table */}
-            <FloatingCard 
-              maxTilt={2} 
-              scale={1.006} 
-              glare={false}
-              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
-              contentClassName="flex flex-col justify-between h-full"
-            >
-              <div>
-                <div className="flex items-center gap-2.5 pb-3.5 border-b border-[#172B5010]">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
-                    <CalendarDays className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
-                  </div>
-                  <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
-                    Today's Training Schedule
-                  </h2>
-                </div>
-              </div>
-
-              {mySchedules.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-4 my-auto">
-                  <div className="w-11 h-11 rounded-2xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center mb-2.5 shadow-2xs">
-                    <CalendarDays className="w-5.5 h-5.5" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-black text-[#172B50]">
-                    No classes assigned today
-                  </p>
-                  <p className="text-[11px] text-[#172B50]/60 mt-1 max-w-[240px]">
-                    Classes assigned to you will automatically appear here
-                  </p>
-                </div>
-              ) : (
-                <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[300px] mt-1 pr-0.5 scrollbar-thin">
-                  <table className="w-full text-left text-xs whitespace-nowrap">
-                    <thead>
-                      <tr className="border-b border-[#172B5010] text-[#172B50]/60 font-black uppercase tracking-wider text-[10px]">
-                        <th className="py-2 px-2.5">TIME</th>
-                        <th className="py-2 px-2.5">BATCH</th>
-                        <th className="py-2 px-2.5">LOCATION</th>
-                        <th className="py-2 px-2.5">STUDENTS</th>
-                        <th className="py-2 px-2.5 text-right">ACTION</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#172B500C]">
-                      {mySchedules.slice(0, 5).map((cls) => (
-                        <tr 
-                          key={cls.id} 
-                          className="hover:bg-[#FFF4E8]/30 transition-colors"
-                        >
-                          <td className="py-2.5 px-2.5">
-                            <div className="flex items-center gap-1.5 font-black text-[#172B50]">
-                              <Clock className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                              <span>{cls.startTime || '09:00 AM'}</span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-2.5 font-extrabold text-[#172B50] max-w-[130px] truncate">
-                            {cls.className || cls.batch || 'Training Batch'}
-                          </td>
-                          <td className="py-2.5 px-2.5">
-                            <div className="flex items-center gap-1 font-bold text-[#172B50]/75">
-                              <MapPin className="w-3 h-3 text-[#F4510B] shrink-0" />
-                              <span>{cls.location}</span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-2.5">
-                            <span className="font-bold text-[#172B50]/80">
-                              {cls.enrolledCount ?? 15} athletes
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-2.5 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setCurrentView('attendance')}
-                              className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#F4510B] text-white hover:bg-[#d94103] transition-colors cursor-pointer"
-                            >
-                              Attendance
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
-                <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
-                  Daily Timetable
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('classes')}
-                  className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
-                >
-                  <span>Explore all sessions</span>
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-              </div>
-            </FloatingCard>
-
-            {/* Card 2: Coaching Performance & Turnout */}
-            <FloatingCard 
-              maxTilt={2} 
-              scale={1.006} 
-              glare={false}
-              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
-              contentClassName="flex flex-col justify-between h-full"
-            >
-              <div>
-                <div className="flex items-center justify-between pb-3.5 border-b border-[#172B5010]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
-                      <BarChart2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
-                    </div>
-                    <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
-                      Coaching Performance
-                    </h2>
-                  </div>
-                  <span className="text-[10.5px] font-extrabold text-[#F4510B] bg-[#FFF5ED] px-2.5 py-1 rounded-full border border-[#F4510B20] select-none">
-                    {mySchedules.length} Sessions
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-center py-2.5 my-auto">
-                <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
-                  {/* KPI 1 */}
-                  <div 
-                    onClick={() => setCurrentView('schedules')}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-[#F0F7FF] border border-[#0284C720] flex flex-col justify-between hover:border-[#0284C750] transition-all cursor-pointer group shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-6 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
-                          <CalendarDays className="w-3.5 h-3.5 text-[#0284C7]" />
-                        </div>
-                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#0284C7] transition-colors">
-                          Schedules
-                        </span>
-                      </div>
-                      <span className="w-2 h-2 rounded-full bg-[#0284C7]" />
-                    </div>
-                    <div className="mt-3 flex items-baseline justify-between">
-                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                        {mySchedules.length}
-                      </span>
-                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                        Timetables
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* KPI 2 */}
-                  <div 
-                    onClick={() => setCurrentView('batches')}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF5FF] border border-[#9333EA20] flex flex-col justify-between hover:border-[#9333EA50] transition-all cursor-pointer group shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-6 rounded-lg bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
-                          <GraduationCap className="w-3.5 h-3.5 text-[#9333EA]" />
-                        </div>
-                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#9333EA] transition-colors">
-                          Athletes
-                        </span>
-                      </div>
-                      <span className="w-2 h-2 rounded-full bg-[#9333EA]" />
-                    </div>
-                    <div className="mt-3 flex items-baseline justify-between">
-                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                        {myStudents.length}
-                      </span>
-                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                        Assigned
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* KPI 3 */}
-                  <div 
-                    onClick={() => setCurrentView('compensation')}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-[#F0FDF4] border border-[#16A34A20] flex flex-col justify-between hover:border-[#16A34A50] transition-all cursor-pointer group shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-6 rounded-lg bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
-                          <RefreshCw className="w-3.5 h-3.5 text-[#16A34A]" />
-                        </div>
-                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#16A34A] transition-colors">
-                          Makeups
-                        </span>
-                      </div>
-                      <span className="w-2 h-2 rounded-full bg-[#16A34A]" />
-                    </div>
-                    <div className="mt-3 flex items-baseline justify-between">
-                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                        {totalCompSlotCount}
-                      </span>
-                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                        Slots
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* KPI 4 */}
-                  <div 
-                    onClick={() => setCurrentView('evaluations')}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-[#FFF5ED] border border-[#F4510B20] flex flex-col justify-between hover:border-[#F4510B50] transition-all cursor-pointer group shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-6 rounded-lg bg-[#FFE2D1] text-[#F4510B] flex items-center justify-center shrink-0">
-                          <Star className="w-3.5 h-3.5 text-[#F4510B]" />
-                        </div>
-                        <span className="text-[11px] font-black text-[#172B50] group-hover:text-[#F4510B] transition-colors">
-                          Rating
-                        </span>
-                      </div>
-                      <span className="w-2 h-2 rounded-full bg-[#F4510B]" />
-                    </div>
-                    <div className="mt-3 flex items-baseline justify-between">
-                      <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight">
-                        {coachProfile.rating || '4.9'}★
-                      </span>
-                      <span className="text-[9.5px] font-bold text-[#172B50]/55 uppercase tracking-wide">
-                        5.0 Scale
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-3 border-t border-[#172B500C] flex items-center justify-between text-xs px-1">
-                  <span className="text-[11px] font-bold text-[#172B50]/65">
-                    Faculty Status
-                  </span>
-                  <span className="text-[11px] font-black text-[#F4510B] bg-[#FFF5ED] px-2.5 py-0.5 rounded-lg border border-[#F4510B20]">
-                    Active • {coachProfile.center}
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
-                <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
-                  Evaluations & Logs
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('evaluations')}
-                  className="text-[11.5px] font-black text-[#F4510B] hover:text-[#d44307] flex items-center gap-1 group cursor-pointer transition-colors"
-                >
-                  <span>Explore evaluations</span>
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-              </div>
-            </FloatingCard>
-
-            {/* Card 3: Coach Faculty Toolkit */}
-            <FloatingCard 
-              maxTilt={2} 
-              scale={1.006} 
-              glare={false}
-              className="w-full bg-white rounded-[28px] p-5 sm:p-6 border border-[#172B5012] shadow-[0_4px_25px_rgba(23,43,80,0.03)] h-[440px] min-h-[440px]"
-              contentClassName="flex flex-col justify-between h-full"
-            >
-              <div>
-                <div className="flex items-center gap-3 pb-3.5 border-b border-[#172B5010]">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0 shadow-2xs">
-                    <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F4510B]" />
-                  </div>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-black text-[#172B50] tracking-tight">
-                      Coach Faculty Toolkit
-                    </h2>
-                    <p className="text-[11px] font-medium text-[#172B50]/60">
-                      Operations, safety & workspace
-                    </p>
-                  </div>
-                </div>
-
-                <div className="min-h-[265px] flex flex-col justify-center mt-2.5">
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {/* Tile 1: Mark Attendance */}
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('attendance')}
-                      className="bg-[#0B3B60] text-white rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center text-center shadow-sm hover:bg-[#082d4a] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                    >
-                      <div className="w-8.5 h-8.5 rounded-xl bg-white/10 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                        <ClipboardCheck className="w-4.5 h-4.5 text-white" />
-                      </div>
-                      <span className="text-xs font-black text-white leading-tight">
-                        Mark Attendance
-                      </span>
-                      <span className="text-[9.5px] font-medium text-white/70 mt-0.5">
-                        Roll Call Register
-                      </span>
-                    </button>
-
-                    {/* Tile 2: Class Timetables */}
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('classes')}
-                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                    >
-                      <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF5ED] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                        <CalendarDays className="w-4.5 h-4.5 text-[#F4510B]" />
-                      </div>
-                      <span className="text-xs font-black text-[#172B50] leading-tight">
-                        Class Schedules
-                      </span>
-                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                        {mySchedules.length} Sessions
-                      </span>
-                    </button>
-
-                    {/* Tile 3: Equipment Inspection */}
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('equipment')}
-                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#F4510B35] hover:bg-[#FFF4E8]/40 active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                    >
-                      <div className="w-8.5 h-8.5 rounded-xl bg-[#FFF4E8] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                        <Shield className="w-4.5 h-4.5 text-[#F4510B]" />
-                      </div>
-                      <span className="text-xs font-black text-[#172B50] leading-tight">
-                        Equipment Check
-                      </span>
-                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                        Location Inspection
-                      </span>
-                    </button>
-
-                    {/* Tile 4: My Workspace */}
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView('workspace')}
-                      className="bg-white text-[#172B50] rounded-2xl p-3 sm:p-3.5 border border-[#172B5015] flex flex-col items-center justify-center text-center shadow-2xs hover:border-[#0284C735] hover:bg-[#F0F9FF] active:scale-95 transition-all cursor-pointer min-h-[120px] group"
-                    >
-                      <div className="w-8.5 h-8.5 rounded-xl bg-[#F0F9FF] flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                        <UserCheck className="w-4.5 h-4.5 text-[#0284C7]" />
-                      </div>
-                      <span className="text-xs font-black text-[#172B50] leading-tight">
-                        My Workspace
-                      </span>
-                      <span className="text-[9.5px] font-medium text-[#172B50]/60 mt-0.5">
-                        Profile & Leave
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-auto shrink-0">
-                <span className="text-[11px] font-bold text-[#172B50]/65 uppercase tracking-wider">
-                  Faculty Workspace
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('workspace')}
-                  className="text-[11.5px] font-black text-[#172B50] hover:text-[#F4510B] flex items-center gap-1 group cursor-pointer transition-colors"
-                >
-                  <span>Open Workspace</span>
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-              </div>
-            </FloatingCard>
-
           </div>
 
         </div>
