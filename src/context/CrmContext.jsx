@@ -65,6 +65,12 @@ import {
   validateCheckInPayload,
   validateCheckOutPayload,
 } from '../services/coachAttendanceService';
+import {
+  validatePassword,
+  generateSecureTemporaryPassword,
+  hashPassword,
+  verifyPassword,
+} from '../services/passwordService';
 
 const CrmContext = createContext();
 
@@ -3021,22 +3027,46 @@ export function CrmProvider({ children }) {
     return { success: true };
   };
 
-  // Module 5: Account Management (Admin Creates Parent & Coach Accounts)
+  // Module 5: Account Management (Admin Creates Parent, Coach, Super Coach, Admin Accounts)
   const createAccount = (accountData) => {
-    // Check email uniqueness
-    const exists = (data.userAccounts || []).some(
-      a => a.email.toLowerCase() === accountData.email.trim().toLowerCase()
-    );
-    if (exists) {
-      addToast(`Error: An account with email "${accountData.email}" already exists.`, 'error');
-      return { success: false, error: 'Email already exists' };
+    const normalizedEmail = (accountData.email || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      addToast('Email is required to create an account.', 'error');
+      return { success: false, error: 'Email is required' };
     }
 
-    const normalizedEmail = accountData.email.trim().toLowerCase();
+    // Prevent duplicate email accounts
+    const exists = (data.userAccounts || []).some(
+      a => a.email && a.email.toLowerCase() === normalizedEmail
+    );
+    if (exists) {
+      const msg = `Error: An account with email "${accountData.email}" already exists.`;
+      addToast(msg, 'error');
+      return { success: false, error: msg };
+    }
+
     const targetLoc = accountData.center || accountData.locations?.[0] || 'KK NAGAR';
     const locs = accountData.locations?.length ? accountData.locations : [targetLoc];
+    const role = accountData.role || 'coach';
 
-    // Determine ID: for parents, check if child linked or generate common ID
+    // Password Resolution & Hashing
+    let rawPassword = (accountData.password || '').trim();
+    let isTemporary = !!accountData.isTemporaryPassword;
+
+    if (!rawPassword) {
+      rawPassword = generateSecureTemporaryPassword();
+      isTemporary = true;
+    } else {
+      const passValidation = validatePassword(rawPassword);
+      if (!passValidation.isValid) {
+        addToast('Password does not meet Little Spartans security criteria.', 'error');
+        return { success: false, error: 'Password requirements not met' };
+      }
+    }
+
+    const pHash = hashPassword(rawPassword);
+
+    // Determine ID
     const childrenNames = Array.isArray(accountData.linkedStudents) ? accountData.linkedStudents : [];
     const matchedChild = (data.students || []).find(s => 
       childrenNames.includes(s.name) ||
@@ -3047,42 +3077,57 @@ export function CrmProvider({ children }) {
       ? matchedChild.id
       : generateCommonMemberId(data.students || [], data.parents || [], targetLoc);
 
-    const tempPassword = accountData.role === 'parent'
-      ? generateParentPassword(accountData.phone)
-      : `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
+    const accountId =
+      role === 'parent'
+        ? `ACC-${commonMemberId}`
+        : role === 'super_coach'
+        ? `SC-${String((data.superCoaches || []).length + 1).padStart(3, '0')}`
+        : role === 'coach'
+        ? `COA-${String((data.coaches || []).length + 1).padStart(3, '0')}`
+        : `USR-${String((data.userAccounts || []).length + 1).padStart(3, '0')}`;
 
     const newAccount = {
-      id: accountData.role === 'parent' ? `ACC-${commonMemberId}` : `ACC-${String((data.userAccounts || []).length + 1).padStart(3, '0')}`,
-      ...accountData,
+      id: accountId,
+      name: accountData.name.trim(),
       email: normalizedEmail,
+      phone: accountData.phone?.trim() || '+91 98765 00000',
+      role,
       center: targetLoc,
       locations: locs,
       status: 'Active',
-      isTemporaryPassword: true,
-      password: tempPassword,
-      tempPasswordDisplay: tempPassword,
+      isTemporaryPassword: isTemporary,
+      mustChangePassword: isTemporary,
+      passwordStatus: isTemporary ? 'Reset Required' : 'Set',
+      passwordHash: pHash,
       createdAt: new Date().toISOString().split('T')[0],
       lastLogin: 'Never',
-      permissions: accountData.role === 'coach' 
-        ? ["MARK_CLASS_ATTENDANCE", "UPDATE_STUDENT_PERFORMANCE", "VIEW_ASSIGNED_CLASSES"]
-        : ["VIEW_OWN_CHILDREN", "MAKE_PAYMENTS", "REQUEST_COMPENSATION"]
+      permissions:
+        role === 'super_coach'
+          ? ['OPERATIONS_OVERSIGHT', 'EVALUATION_REVIEW', 'BATCH_MANAGEMENT', 'FACULTY_SCHEDULES']
+          : role === 'coach'
+          ? ['MARK_CLASS_ATTENDANCE', 'UPDATE_STUDENT_PERFORMANCE', 'VIEW_ASSIGNED_CLASSES']
+          : role === 'parent'
+          ? ['VIEW_OWN_CHILDREN', 'MAKE_PAYMENTS', 'REQUEST_COMPENSATION']
+          : ['ADMIN_FULL_ACCESS'],
+      notes: accountData.notes || `Assigned ${role.toUpperCase()} credentials`
     };
 
     setData(prev => {
       let nextParents = prev.parents || [];
       let nextStudents = prev.students || [];
+      let nextCoaches = prev.coaches || [];
+      let nextSuperCoaches = prev.superCoaches || [];
 
+      // Sync to data.parents if parent
       if (
-        accountData.role === 'parent' &&
+        role === 'parent' &&
         !nextParents.some(p => (p.email || '').toLowerCase() === normalizedEmail)
       ) {
-        const parentId = commonMemberId;
-
         nextParents = [
           {
-            id: parentId,
-            name: accountData.name.trim(),
-            phone: accountData.phone?.trim() || '',
+            id: commonMemberId,
+            name: newAccount.name,
+            phone: newAccount.phone,
             email: normalizedEmail,
             center: targetLoc,
             address: `${targetLoc}, Chennai`,
@@ -3092,52 +3137,166 @@ export function CrmProvider({ children }) {
             pendingDue: '₹0',
             portalAccess: true,
             status: 'Active',
-            password: tempPassword,
-            tempPassword: tempPassword,
-            tempPasswordDisplay: tempPassword,
-            createdAt: new Date().toISOString().split('T')[0],
+            passwordHash: pHash,
+            createdAt: newAccount.createdAt,
           },
           ...nextParents,
         ];
+      }
 
-        nextStudents = nextStudents.map(stu =>
-          childrenNames.includes(stu.name)
-            ? { ...stu, parentId, parentName: accountData.name.trim(), parentEmail: normalizedEmail }
-            : stu
-        );
+      // Sync to data.coaches if coach
+      if (
+        role === 'coach' &&
+        !nextCoaches.some(c => (c.email || '').toLowerCase() === normalizedEmail)
+      ) {
+        nextCoaches = [
+          {
+            id: accountId,
+            name: newAccount.name,
+            role: 'Academy Coach',
+            specialization: 'Multi-Sport Training',
+            phone: newAccount.phone,
+            email: normalizedEmail,
+            center: targetLoc,
+            assignedLocations: locs,
+            programs: ['Foundational Movement'],
+            assignedBatches: [],
+            rating: 5.0,
+            status: 'Active',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          },
+          ...nextCoaches,
+        ];
+      }
+
+      // Sync to data.superCoaches if super coach
+      if (
+        role === 'super_coach' &&
+        !nextSuperCoaches.some(sc => (sc.email || '').toLowerCase() === normalizedEmail)
+      ) {
+        nextSuperCoaches = [
+          {
+            id: accountId,
+            name: newAccount.name,
+            title: 'Super Coach',
+            email: normalizedEmail,
+            phone: newAccount.phone,
+            assignedLocations: locs,
+            role: 'super_coach',
+          },
+          ...nextSuperCoaches,
+        ];
       }
 
       return {
         ...prev,
         parents: nextParents,
         students: nextStudents,
+        coaches: nextCoaches,
+        superCoaches: nextSuperCoaches,
         userAccounts: [newAccount, ...(prev.userAccounts || [])]
       };
     });
 
-    addToast(`Account created for ${newAccount.name}! Temp password: ${tempPassword}`);
-    return { success: true, account: newAccount, tempPassword };
+    logSettingsAudit({
+      category: 'Access & Security',
+      action: 'Create User Account',
+      field: `${newAccount.name} (${newAccount.role})`,
+      oldValue: '—',
+      newValue: `Account created for ${newAccount.email} at ${locs.join(', ')}`
+    });
+
+    addToast(
+      isTemporary
+        ? `Account created for ${newAccount.name}! Temp password: ${rawPassword}`
+        : `Account created for ${newAccount.name} successfully!`,
+      'success'
+    );
+
+    return { success: true, account: newAccount, temporaryPassword: isTemporary ? rawPassword : null };
   };
 
-  const resetAccountPassword = (accountId) => {
-    const newTemp = `Spartan@${Math.floor(1000 + Math.random() * 9000)}`;
+  const resetAccountPassword = (accountId, newPassword = null, isTemporary = true) => {
+    let resolvedPassword = (newPassword || '').trim();
+    if (!resolvedPassword) {
+      resolvedPassword = generateSecureTemporaryPassword();
+      isTemporary = true;
+    } else {
+      const passValidation = validatePassword(resolvedPassword);
+      if (!passValidation.isValid) {
+        addToast('New password does not meet security requirements.', 'error');
+        return { success: false, error: 'Password requirements not met' };
+      }
+    }
+
+    const pHash = hashPassword(resolvedPassword);
+    const target = (data.userAccounts || []).find(a => a.id === accountId);
+
     setData(prev => ({
       ...prev,
       userAccounts: (prev.userAccounts || []).map(a => 
-        a.id === accountId ? { ...a, isTemporaryPassword: true, tempPasswordDisplay: newTemp } : a
+        a.id === accountId
+          ? {
+              ...a,
+              passwordHash: pHash,
+              isTemporaryPassword: !!isTemporary,
+              mustChangePassword: !!isTemporary,
+              passwordStatus: isTemporary ? 'Reset Required' : 'Set',
+              lastPasswordReset: {
+                by: currentUser?.name || 'Administrator',
+                timestamp: new Date().toISOString(),
+              },
+            }
+          : a
       )
     }));
-    addToast(`Temporary password reset to ${newTemp}. Invitation re-sent!`);
+
+    logSettingsAudit({
+      category: 'Access & Security',
+      action: 'Reset Password',
+      field: `${target?.name || accountId} (${target?.role || 'User'})`,
+      oldValue: 'Active Password',
+      newValue: isTemporary ? 'Temporary Password Generated' : 'Password Reset By Administrator'
+    });
+
+    addToast(
+      isTemporary
+        ? `Temporary password for ${target?.name || 'user'}: ${resolvedPassword}`
+        : `Password for ${target?.name || 'user'} reset successfully!`,
+      'success'
+    );
+
+    return { success: true, temporaryPassword: isTemporary ? resolvedPassword : null };
   };
 
-  const toggleAccountStatus = (accountId) => {
+  const toggleAccountStatus = (accountId, newStatus = null, reason = '') => {
     setData(prev => ({
       ...prev,
-      userAccounts: (prev.userAccounts || []).map(a => 
-        a.id === accountId ? { ...a, status: a.status === 'Active' ? 'Deactivated' : 'Active' } : a
-      )
+      userAccounts: (prev.userAccounts || []).map(a => {
+        if (a.id === accountId) {
+          const nextStatus = newStatus || (a.status === 'Active' ? 'Inactive' : 'Active');
+          return { ...a, status: nextStatus, statusReason: reason || a.statusReason };
+        }
+        return a;
+      }),
+      coaches: (prev.coaches || []).map(c => {
+        if (c.id === accountId || c.email === accountId) {
+          const nextStatus = newStatus || (c.status === 'Active' ? 'Inactive' : 'Active');
+          return { ...c, status: nextStatus };
+        }
+        return c;
+      })
     }));
-    addToast('Account status updated.');
+
+    logSettingsAudit({
+      category: 'Access & Security',
+      action: 'Toggle Account Status',
+      field: accountId,
+      oldValue: 'Status Changed',
+      newValue: newStatus || 'Toggled'
+    });
+
+    addToast('Account status updated successfully.', 'success');
   };
 
   const deleteAccount = (accountId, accountEmail) => {

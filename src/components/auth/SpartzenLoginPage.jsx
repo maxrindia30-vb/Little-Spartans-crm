@@ -10,9 +10,10 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import SportsBallsCorner from './SportsBallsCorner';
+import { verifyPassword } from '../../services/passwordService';
 
 export default function SpartzenLoginPage() {
-  const { login, addToast, setCurrentPortal } = useCrm();
+  const { login, addToast, setCurrentPortal, data } = useCrm();
 
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -37,6 +38,46 @@ export default function SpartzenLoginPage() {
     }
 
     const input = emailOrPhone.toLowerCase().trim();
+
+    // 1. Check against registered user accounts in CRM Context
+    const matchedAccount = (data?.userAccounts || []).find(
+      (a) =>
+        (a.email && a.email.toLowerCase() === input) ||
+        (a.phone && a.phone.replace(/\D/g, '') === input.replace(/\D/g, '') && input.replace(/\D/g, '').length >= 10)
+    );
+
+    if (matchedAccount) {
+      if (matchedAccount.status === 'Inactive' || matchedAccount.status === 'Suspended') {
+        setErrorMsg(`Account is ${matchedAccount.status.toLowerCase()}. Please contact academy administration.`);
+        return;
+      }
+
+      let isValidPass = false;
+      if (matchedAccount.passwordHash) {
+        isValidPass = verifyPassword(password, matchedAccount.passwordHash);
+      } else if (matchedAccount.password) {
+        isValidPass = matchedAccount.password === password;
+      } else {
+        isValidPass = true;
+      }
+
+      if (!isValidPass) {
+        setErrorMsg('Invalid password. Please enter the correct password.');
+        return;
+      }
+
+      const role = matchedAccount.role || 'coach';
+      setCurrentPortal(role);
+      login(role, matchedAccount);
+      if (matchedAccount.mustChangePassword || matchedAccount.isTemporaryPassword) {
+        addToast('Notice: You logged in with a temporary password. Please update your password in settings.', 'warning');
+      } else {
+        addToast(`Welcome back, ${matchedAccount.name}! Signed in to ${role === 'super_coach' ? 'SUPER COACH' : role.toUpperCase()} Portal.`);
+      }
+      return;
+    }
+
+    // 2. Demo fallback role detection
     let targetRole = 'admin';
 
     if (input.includes('parent') || input.includes('rohan')) {

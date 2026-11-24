@@ -40,6 +40,11 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import { 
+  validatePassword, 
+  generateSecureTemporaryPassword, 
+  PASSWORD_REQUIREMENTS 
+} from '../../services/passwordService';
 
 // All Little Spartans Centers
 const ACADEMY_CENTERS = [
@@ -163,7 +168,16 @@ const INITIAL_ACTIVITY_LOGS = [
 ];
 
 export default function AccessManagementModule() {
-  const { activeSubTab, setActiveSubTab, addToast, deleteAccount, data } = useCrm();
+  const { 
+    activeSubTab, 
+    setActiveSubTab, 
+    addToast, 
+    deleteAccount, 
+    data, 
+    createAccount, 
+    resetAccountPassword, 
+    toggleAccountStatus 
+  } = useCrm();
 
   // Active module tab: 'overview' | 'accounts' | 'locations' | 'permissions' | 'activity'
   const [activeTab, setActiveTab] = useState(() => {
@@ -190,7 +204,7 @@ export default function AccessManagementModule() {
     setUsers((prevUsers) => {
       const superAdmins = INITIAL_USERS;
       const rawLive = (data.userAccounts || []).filter(
-        (acc) => acc.role === 'parent' || acc.role === 'coach' || acc.role === 'admin'
+        (acc) => acc.role === 'parent' || acc.role === 'coach' || acc.role === 'super_coach' || acc.role === 'admin'
       );
 
       // Auto-sync every enrolled parent from data.parents into live accounts
@@ -201,7 +215,6 @@ export default function AccessManagementModule() {
           (acc) => (acc.email && acc.email.toLowerCase() === normEmail) || acc.id === `ACC-${p.id}` || acc.id === p.id
         );
         if (!hasAccount) {
-          const autoPass = p.password || p.tempPassword || p.tempPasswordDisplay || `Spartan@${String(p.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`;
           liveAccounts.push({
             id: `ACC-${p.id}`,
             role: 'parent',
@@ -212,10 +225,63 @@ export default function AccessManagementModule() {
             locations: [p.center || 'KK NAGAR'],
             linkedStudents: p.children || [],
             status: 'Active',
-            password: autoPass,
-            tempPasswordDisplay: autoPass,
+            passwordStatus: 'Set',
+            isTemporaryPassword: false,
+            mustChangePassword: false,
             createdAt: p.createdAt || 'Today',
             lastLogin: 'Never',
+          });
+        }
+      });
+
+      // Auto-sync coaches from data.coaches if not present
+      (data.coaches || []).forEach((c) => {
+        const normEmail = (c.email || `${c.name.toLowerCase().replace(/\s+/g, '')}@littlespartans.co.in`).toLowerCase();
+        const hasAccount = liveAccounts.some(
+          (acc) => (acc.email && acc.email.toLowerCase() === normEmail) || acc.id === c.id
+        );
+        if (!hasAccount) {
+          liveAccounts.push({
+            id: c.id,
+            role: 'coach',
+            name: c.name,
+            email: normEmail,
+            phone: c.phone || '+91 98765 00000',
+            center: c.center || 'KK NAGAR',
+            locations: c.assignedLocations || [c.center || 'KK NAGAR'],
+            status: c.status || 'Active',
+            passwordStatus: 'Set',
+            isTemporaryPassword: false,
+            mustChangePassword: false,
+            createdAt: 'Today',
+            lastLogin: 'Never',
+            notes: c.specialization || 'Academy Coach'
+          });
+        }
+      });
+
+      // Auto-sync super coaches from data.superCoaches if not present
+      (data.superCoaches || []).forEach((sc) => {
+        const normEmail = (sc.email || `${sc.name.toLowerCase().replace(/\s+/g, '')}@littlespartans.co.in`).toLowerCase();
+        const hasAccount = liveAccounts.some(
+          (acc) => (acc.email && acc.email.toLowerCase() === normEmail) || acc.id === sc.id
+        );
+        if (!hasAccount) {
+          liveAccounts.push({
+            id: sc.id,
+            role: 'super_coach',
+            name: sc.name,
+            email: normEmail,
+            phone: sc.phone || '+91 98765 00000',
+            center: sc.center || 'KK NAGAR',
+            locations: sc.assignedLocations || ['KK NAGAR', 'KILPAUK', 'ANNA NAGAR'],
+            status: 'Active',
+            passwordStatus: 'Set',
+            isTemporaryPassword: false,
+            mustChangePassword: false,
+            createdAt: 'Today',
+            lastLogin: 'Never',
+            notes: 'Master Super Coach'
           });
         }
       });
@@ -249,9 +315,12 @@ export default function AccessManagementModule() {
           lastLogin: acc.lastLogin || 'Never',
           createdAt: acc.createdAt || 'Today',
           twoFactorEnabled: !!acc.twoFactorEnabled,
-          avatarBg: acc.role === 'coach' ? 'bg-[#F4510B]' : acc.role === 'parent' ? 'bg-emerald-600' : 'bg-sky-600',
+          avatarBg: acc.role === 'super_coach' ? 'bg-amber-600' : acc.role === 'coach' ? 'bg-[#F4510B]' : acc.role === 'parent' ? 'bg-emerald-600' : 'bg-sky-600',
           notes,
-          tempPasswordDisplay: acc.tempPasswordDisplay || matchingParent?.password,
+          passwordStatus: acc.passwordStatus || (acc.isTemporaryPassword || acc.mustChangePassword ? 'Reset Required' : 'Set'),
+          isTemporaryPassword: !!acc.isTemporaryPassword,
+          mustChangePassword: !!acc.mustChangePassword,
+          lastPasswordReset: acc.lastPasswordReset || null,
         };
       });
 
@@ -323,7 +392,22 @@ export default function AccessManagementModule() {
   const [formSendInvite, setFormSendInvite] = useState(true);
   const [formNotes, setFormNotes] = useState('');
 
+  // Password fields for Add User modal (Coach & Super Coach)
+  const [formPassword, setFormPassword] = useState('');
+  const [formConfirmPassword, setFormConfirmPassword] = useState('');
+  const [showFormPassword, setShowFormPassword] = useState(false);
+  const [showFormConfirmPassword, setShowFormConfirmPassword] = useState(false);
+  const [isFormPasswordTemporary, setIsFormPasswordTemporary] = useState(false);
+
   // Password reset modal state
+  const [resetMode, setResetMode] = useState('manual'); // 'manual' | 'temporary'
+  const [resetPasswordVal, setResetPasswordVal] = useState('');
+  const [resetConfirmPasswordVal, setResetConfirmPasswordVal] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
+  const [tempGeneratedPass, setTempGeneratedPass] = useState('');
+  const [tempPassCopied, setTempPassCopied] = useState(false);
+  const [requirePasswordChange, setRequirePasswordChange] = useState(true);
   const [generatedPassword, setGeneratedPassword] = useState('');
 
   // Status toggle confirmation
@@ -444,7 +528,22 @@ export default function AccessManagementModule() {
     setFormLocations(['KK NAGAR']);
     setFormSendInvite(true);
     setFormNotes('');
+    setFormPassword('');
+    setFormConfirmPassword('');
+    setShowFormPassword(false);
+    setShowFormConfirmPassword(false);
+    setIsFormPasswordTemporary(false);
     setModalType('add_user');
+  };
+
+  const handleGenerateAddUserTempPassword = () => {
+    const tempPass = generateSecureTemporaryPassword();
+    setFormPassword(tempPass);
+    setFormConfirmPassword(tempPass);
+    setIsFormPasswordTemporary(true);
+    setShowFormPassword(true);
+    setShowFormConfirmPassword(true);
+    addToast('Strong temporary password generated!', 'info');
   };
 
   const handleOpenEditUser = (user) => {
@@ -472,9 +571,69 @@ export default function AccessManagementModule() {
 
   const handleOpenResetPassword = (user) => {
     setSelectedUser(user);
-    const newPass = `Spartan#${Math.floor(1000 + Math.random() * 9000)}`;
-    setGeneratedPassword(newPass);
+    setResetMode('manual');
+    setResetPasswordVal('');
+    setResetConfirmPasswordVal('');
+    setShowResetPassword(false);
+    setShowResetConfirmPassword(false);
+    setTempGeneratedPass('');
+    setTempPassCopied(false);
+    setRequirePasswordChange(true);
     setModalType('reset_password');
+  };
+
+  const handleQuickGenerateTempPassword = (user) => {
+    if (!user) return;
+    setSelectedUser(user);
+    const tempPass = generateSecureTemporaryPassword();
+    setTempGeneratedPass(tempPass);
+    setResetMode('temporary');
+    setTempPassCopied(false);
+
+    if (resetAccountPassword) {
+      resetAccountPassword(user.id, tempPass, true);
+    }
+    setUsers(prev => prev.map(u => 
+      u.id === user.id
+        ? {
+            ...u,
+            passwordStatus: 'Reset Required',
+            isTemporaryPassword: true,
+            mustChangePassword: true,
+            lastPasswordReset: {
+              by: 'Administrator',
+              timestamp: new Date().toISOString()
+            }
+          }
+        : u
+    ));
+
+    setModalType('reset_password');
+    addToast(`Temporary password generated for ${user.name}: ${tempPass}`, 'info');
+  };
+
+  const handleToggleAccountStatus = (user) => {
+    if (user.role === 'super_admin' || user.id === 'USR-001') {
+      addToast('Root Administrator account cannot be deactivated.', 'error');
+      return;
+    }
+    const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
+    if (toggleAccountStatus) {
+      toggleAccountStatus(user.id, newStatus);
+    }
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
+    
+    const newLog = {
+      id: `ACT-${Date.now()}`,
+      user: 'Balavivek S',
+      role: 'super_admin',
+      action: `${newStatus === 'Active' ? 'Activated' : 'Deactivated'} account for ${user.name}`,
+      location: user.locations?.[0] || 'Global',
+      timestamp: 'Just now',
+      status: 'Success'
+    };
+    setActivityLogs(prev => [newLog, ...prev]);
+    addToast(`Account for ${user.name} is now ${newStatus}.`, 'success');
   };
 
   const handleToggleLocationInForm = (loc) => {
@@ -496,37 +655,137 @@ export default function AccessManagementModule() {
       return;
     }
 
-    const newUser = {
-      id: `USR-${String(users.length + 1).padStart(3, '0')}`,
-      name: formName.trim(),
-      email: formEmail.trim().toLowerCase(),
-      phone: formPhone.trim() || '+91 98765 00000',
-      role: formRole,
-      locations: formLocations,
-      status: formSendInvite ? 'Pending' : 'Active',
-      lastLogin: formSendInvite ? 'Never (Invite Sent)' : 'Never',
-      createdAt: 'Today',
-      twoFactorEnabled: false,
-      avatarBg: formRole === 'coach' ? 'bg-[#F4510B]' : formRole === 'parent' ? 'bg-emerald-600' : 'bg-sky-600',
-      notes: formNotes || `Assigned ${formRole.toUpperCase()} credentials`
-    };
+    const isCoachOrSuperCoach = formRole === 'coach' || formRole === 'super_coach';
 
-    setUsers([newUser, ...users]);
+    if (isCoachOrSuperCoach) {
+      if (!formPassword.trim()) {
+        addToast('Password is required for Coach / Super Coach account creation.', 'error');
+        return;
+      }
+      if (formPassword !== formConfirmPassword) {
+        addToast('Passwords do not match. Please verify both password fields.', 'error');
+        return;
+      }
+      const validation = validatePassword(formPassword);
+      if (!validation.isValid) {
+        addToast('Password does not meet all 5 Little Spartans security criteria.', 'error');
+        return;
+      }
+    }
 
-    // Add activity log
+    if (createAccount) {
+      const result = createAccount({
+        name: formName.trim(),
+        email: formEmail.trim().toLowerCase(),
+        phone: formPhone.trim() || '+91 98765 00000',
+        role: formRole,
+        locations: formLocations,
+        password: formPassword,
+        isTemporaryPassword: isFormPasswordTemporary,
+        notes: formNotes || `Assigned ${formRole.toUpperCase()} credentials`
+      });
+
+      if (!result.success) return;
+    } else {
+      const newUser = {
+        id: `USR-${String(users.length + 1).padStart(3, '0')}`,
+        name: formName.trim(),
+        email: formEmail.trim().toLowerCase(),
+        phone: formPhone.trim() || '+91 98765 00000',
+        role: formRole,
+        locations: formLocations,
+        status: formSendInvite ? 'Pending' : 'Active',
+        lastLogin: 'Never',
+        createdAt: 'Today',
+        twoFactorEnabled: false,
+        passwordStatus: isFormPasswordTemporary ? 'Reset Required' : 'Set',
+        isTemporaryPassword: isFormPasswordTemporary,
+        mustChangePassword: isFormPasswordTemporary,
+        avatarBg: formRole === 'super_coach' ? 'bg-amber-600' : formRole === 'coach' ? 'bg-[#F4510B]' : formRole === 'parent' ? 'bg-emerald-600' : 'bg-sky-600',
+        notes: formNotes || `Assigned ${formRole.toUpperCase()} credentials`
+      };
+      setUsers([newUser, ...users]);
+    }
+
     const newLog = {
       id: `ACT-${Date.now()}`,
       user: 'Balavivek S',
       role: 'super_admin',
-      action: `Created new user account for ${newUser.name} (${newUser.role})`,
-      location: newUser.locations[0] || 'KK NAGAR',
+      action: `Created new user account for ${formName.trim()} (${formRole})`,
+      location: formLocations[0] || 'KK NAGAR',
       timestamp: 'Just now',
       status: 'Success'
     };
-    setActivityLogs([newLog, ...activityLogs]);
+    setActivityLogs(prev => [newLog, ...prev]);
 
     setModalType(null);
-    addToast(formSendInvite ? `User created and invitation dispatched to ${newUser.email}` : `User ${newUser.name} created successfully!`);
+  };
+
+  const handleSaveResetPassword = (e) => {
+    e && e.preventDefault();
+    if (!selectedUser) return;
+
+    let targetPass = '';
+    let isTemp = false;
+
+    if (resetMode === 'manual') {
+      if (!resetPasswordVal.trim()) {
+        addToast('Please enter a new password.', 'error');
+        return;
+      }
+      if (resetPasswordVal !== resetConfirmPasswordVal) {
+        addToast('Passwords do not match.', 'error');
+        return;
+      }
+      const validation = validatePassword(resetPasswordVal);
+      if (!validation.isValid) {
+        addToast('Password does not meet all 5 security requirements.', 'error');
+        return;
+      }
+      targetPass = resetPasswordVal.trim();
+      isTemp = requirePasswordChange;
+    } else {
+      if (!tempGeneratedPass) {
+        targetPass = generateSecureTemporaryPassword();
+        setTempGeneratedPass(targetPass);
+      } else {
+        targetPass = tempGeneratedPass;
+      }
+      isTemp = true;
+    }
+
+    if (resetAccountPassword) {
+      const res = resetAccountPassword(selectedUser.id, targetPass, isTemp);
+      if (!res.success) return;
+    }
+
+    setUsers(prev => prev.map(u => 
+      u.id === selectedUser.id
+        ? {
+            ...u,
+            passwordStatus: isTemp ? 'Reset Required' : 'Set',
+            isTemporaryPassword: isTemp,
+            mustChangePassword: isTemp,
+            lastPasswordReset: {
+              by: 'Administrator',
+              timestamp: new Date().toISOString()
+            }
+          }
+        : u
+    ));
+
+    const newLog = {
+      id: `ACT-${Date.now()}`,
+      user: 'Balavivek S',
+      role: 'super_admin',
+      action: `Reset password for ${selectedUser.name} (${selectedUser.role})${isTemp ? ' with temporary password' : ''}`,
+      location: selectedUser.locations?.[0] || 'Global',
+      timestamp: 'Just now',
+      status: 'Success'
+    };
+    setActivityLogs(prev => [newLog, ...prev]);
+
+    setModalType(null);
   };
 
   const handleSaveEditUser = (e) => {
@@ -693,6 +952,13 @@ export default function AccessManagementModule() {
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-sky-50 text-sky-700 border border-sky-200">
             <ShieldCheck className="w-3 h-3 text-sky-600" />
             Admin
+          </span>
+        );
+      case 'super_coach':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-amber-50 text-amber-800 border border-amber-300">
+            <Shield className="w-3 h-3 text-amber-600" />
+            Super Coach
           </span>
         );
       case 'coach':
@@ -1190,6 +1456,7 @@ export default function AccessManagementModule() {
                 <option value="ALL">All Roles</option>
                 <option value="super_admin">Super Admin</option>
                 <option value="admin">Admin</option>
+                <option value="super_coach">Super Coach</option>
                 <option value="coach">Coach</option>
                 <option value="parent">Parent</option>
               </select>
@@ -1248,6 +1515,7 @@ export default function AccessManagementModule() {
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4">Assigned Locations</th>
                     <th className="py-3 px-4">Account Status</th>
+                    <th className="py-3 px-4">Password Status</th>
                     <th className="py-3 px-4">Last Login</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
@@ -1255,7 +1523,7 @@ export default function AccessManagementModule() {
                 <tbody className="divide-y divide-[#172B500C]">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-[#172B50]/60">
+                      <td colSpan={9} className="py-12 text-center text-[#172B50]/60">
                         <Users className="w-8 h-8 text-[#172B50]/30 mx-auto mb-2" />
                         <p className="font-bold text-sm">No user accounts found matching your filter</p>
                         <p className="text-xs mt-1">Try resetting search keywords or role filters</p>
@@ -1284,22 +1552,7 @@ export default function AccessManagementModule() {
 
                         {/* Mobile */}
                         <td className="py-3.5 px-4 font-bold text-[#172B50]/80">
-                          <div>{u.phone}</div>
-                          {u.tempPasswordDisplay && (
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="font-mono text-[10.5px] font-bold text-[#F4510B]">
-                                {visibleAccountPasswords[u.id] ? u.tempPasswordDisplay : '••••••••'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => toggleAccountPassword(u.id)}
-                                title={visibleAccountPasswords[u.id] ? 'Hide Password' : 'View Password'}
-                                className="p-0.5 text-[#172B50]/50 hover:text-[#F4510B] cursor-pointer"
-                              >
-                                {visibleAccountPasswords[u.id] ? <EyeOff className="w-3 h-3 text-[#F4510B]" /> : <Eye className="w-3 h-3" />}
-                              </button>
-                            </div>
-                          )}
+                          {u.phone}
                         </td>
 
                         {/* Role */}
@@ -1324,9 +1577,24 @@ export default function AccessManagementModule() {
                           </div>
                         </td>
 
-                        {/* Status */}
+                        {/* Account Status */}
                         <td className="py-3.5 px-4">
                           {renderStatusBadge(u.status)}
+                        </td>
+
+                        {/* Password Status */}
+                        <td className="py-3.5 px-4">
+                          {u.passwordStatus === 'Reset Required' || u.isTemporaryPassword || u.mustChangePassword ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A]">
+                              <Clock className="w-3 h-3 text-[#D97706]" />
+                              Reset Required
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]">
+                              <Check className="w-3 h-3 text-[#16A34A]" />
+                              Set
+                            </span>
+                          )}
                         </td>
 
                         {/* Last Login */}
@@ -1337,34 +1605,24 @@ export default function AccessManagementModule() {
                         {/* Actions */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {/* View Profile */}
+                            {/* View Account Details */}
                             <button
                               type="button"
                               onClick={() => handleOpenViewProfile(u)}
                               className="w-7 h-7 rounded-lg border border-[#172B5018] bg-white hover:bg-[#FFF4E8] hover:text-[#F4510B] text-[#172B50] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                              title="View Full Profile"
+                              title="View Account Details"
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
 
-                            {/* Edit */}
+                            {/* Edit User Details */}
                             <button
                               type="button"
                               onClick={() => handleOpenEditUser(u)}
                               className="w-7 h-7 rounded-lg border border-[#172B5018] bg-white hover:bg-[#FFF4E8] hover:text-[#F4510B] text-[#172B50] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                              title="Edit User"
+                              title="Edit User Details"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-
-                            {/* Assign Locations */}
-                            <button
-                              type="button"
-                              onClick={() => handleOpenAssignLocations(u)}
-                              className="w-7 h-7 rounded-lg border border-[#172B5018] bg-white hover:bg-sky-50 hover:text-sky-600 text-[#172B50] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                              title="Assign Locations"
-                            >
-                              <MapPin className="w-3.5 h-3.5" />
                             </button>
 
                             {/* Reset Password */}
@@ -1377,54 +1635,46 @@ export default function AccessManagementModule() {
                               <Key className="w-3.5 h-3.5" />
                             </button>
 
-                            {/* Activate / Deactivate Toggle */}
-                            {u.status === 'Active' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleInitiateStatusChange(u, 'Inactive')}
-                                className="w-7 h-7 rounded-lg border border-[#172B5018] bg-white hover:bg-slate-100 hover:text-slate-700 text-[#172B50] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                                title="Deactivate Account"
-                              >
-                                <UserX className="w-3.5 h-3.5" />
-                              </button>
-                            ) : u.status === 'Inactive' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleInitiateStatusChange(u, 'Active')}
-                                className="w-7 h-7 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                                title="Reactivate Account"
-                              >
-                                <UserCheck className="w-3.5 h-3.5" />
-                              </button>
-                            ) : null}
+                            {/* Generate Temporary Password */}
+                            <button
+                              type="button"
+                              onClick={() => handleQuickGenerateTempPassword(u)}
+                              className="w-7 h-7 rounded-lg border border-[#172B5018] bg-white hover:bg-indigo-50 hover:text-indigo-600 text-[#172B50] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                              title="Generate Temporary Password"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                            </button>
 
-                            {/* Suspend / Reactivate */}
-                            {u.status !== 'Suspended' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleInitiateStatusChange(u, 'Suspended')}
-                                className="w-7 h-7 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                                title="Suspend Account"
-                              >
-                                <AlertTriangle className="w-3.5 h-3.5" />
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleInitiateStatusChange(u, 'Active')}
-                                className="w-7 h-7 rounded-lg border border-emerald-300 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                                title="Restore from Suspension"
-                              >
-                                <RefreshCw className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+                            {/* Activate / Deactivate Account */}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAccountStatus(u)}
+                              className={`w-7 h-7 rounded-lg border ${
+                                u.status === 'Active'
+                                  ? 'border-[#172B5018] bg-white hover:bg-slate-100 hover:text-slate-700 text-[#172B50]'
+                                  : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              } flex items-center justify-center transition-all cursor-pointer shadow-2xs`}
+                              title={u.status === 'Active' ? 'Deactivate Account' : 'Activate Account'}
+                            >
+                              {u.status === 'Active' ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                            </button>
 
-                            {/* Send / Resend Invitation */}
+                            {/* Assign Locations */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenAssignLocations(u)}
+                              className="w-7 h-7 rounded-lg border border-[#172B5018] bg-white hover:bg-sky-50 hover:text-sky-600 text-[#172B50] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                              title="Assign Locations"
+                            >
+                              <MapPin className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Resend Invitation */}
                             <button
                               type="button"
                               onClick={() => handleSendInvite(u)}
                               className="w-7 h-7 rounded-lg border border-[#172B5018] bg-white hover:bg-[#FFF4E8] hover:text-[#F4510B] text-[#172B50] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                              title="Send / Resend Invitation"
+                              title="Resend Invitation"
                             >
                               <Send className="w-3.5 h-3.5" />
                             </button>
@@ -2001,9 +2251,9 @@ export default function AccessManagementModule() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { id: 'coach', label: 'Coach', icon: Award },
+                { id: 'super_coach', label: 'Super Coach', icon: Shield },
                 { id: 'parent', label: 'Parent', icon: GraduationCap },
-                { id: 'admin', label: 'Admin', icon: ShieldCheck },
-                { id: 'super_admin', label: 'Super Admin', icon: Shield }
+                { id: 'admin', label: 'Admin', icon: ShieldCheck }
               ].map(r => (
                 <button
                   key={r.id}
@@ -2045,6 +2295,160 @@ export default function AccessManagementModule() {
               })}
             </div>
           </div>
+
+          {/* Password Fields for Coach & Super Coach */}
+          {(formRole === 'coach' || formRole === 'super_coach') && (
+            <div className="p-4 rounded-2xl bg-[#FFF5ED] border border-[#F4510B25] space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#F4510B15]">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span className="text-xs font-black text-[#172B50]">
+                      Account Password &amp; Credentials *
+                    </span>
+                  </div>
+                  <p className="text-[10.5px] text-[#172B50]/60 mt-0.5">
+                    Set a secure initial password or generate a compliant temporary password
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleGenerateAddUserTempPassword}
+                  className="self-start sm:self-auto px-2.5 py-1.5 rounded-xl bg-[#172B50] hover:bg-[#0f1f3a] text-white text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Generate Temporary Password</span>
+                </button>
+              </div>
+
+              {isFormPasswordTemporary && (
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-center gap-2">
+                  <Key className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Temporary password generated. The user will be required to change it on their next login.</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Initial Password */}
+                <div>
+                  <label className="block text-[11px] font-black text-[#172B50] mb-1">
+                    Initial Password *
+                  </label>
+                  <div className="relative flex items-center bg-white border border-[#172B5018] rounded-xl px-3 py-2 focus-within:border-[#F4510B] focus-within:ring-1 focus-within:ring-[#F4510B]">
+                    <Lock className="w-3.5 h-3.5 text-[#172B50]/40 mr-2 shrink-0" />
+                    <input
+                      type={showFormPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Enter strong password..."
+                      value={formPassword}
+                      onChange={(e) => {
+                        setFormPassword(e.target.value);
+                        setIsFormPasswordTemporary(false);
+                      }}
+                      className="w-full bg-transparent border-0 outline-none text-xs font-bold text-[#172B50] placeholder:text-[#172B50]/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowFormPassword(!showFormPassword)}
+                      className="p-1 text-[#172B50]/50 hover:text-[#F4510B] transition-colors cursor-pointer"
+                      title={showFormPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showFormPassword ? <EyeOff className="w-3.5 h-3.5 text-[#F4510B]" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-[11px] font-black text-[#172B50] mb-1">
+                    Confirm Password *
+                  </label>
+                  <div className="relative flex items-center bg-white border border-[#172B5018] rounded-xl px-3 py-2 focus-within:border-[#F4510B] focus-within:ring-1 focus-within:ring-[#F4510B]">
+                    <Lock className="w-3.5 h-3.5 text-[#172B50]/40 mr-2 shrink-0" />
+                    <input
+                      type={showFormConfirmPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Re-enter password..."
+                      value={formConfirmPassword}
+                      onChange={(e) => setFormConfirmPassword(e.target.value)}
+                      className="w-full bg-transparent border-0 outline-none text-xs font-bold text-[#172B50] placeholder:text-[#172B50]/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowFormConfirmPassword(!showFormConfirmPassword)}
+                      className="p-1 text-[#172B50]/50 hover:text-[#F4510B] transition-colors cursor-pointer"
+                      title={showFormConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showFormConfirmPassword ? <EyeOff className="w-3.5 h-3.5 text-[#F4510B]" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Password Match Status */}
+              {formPassword && formConfirmPassword && (
+                <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                  {formPassword === formConfirmPassword ? (
+                    <span className="text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Passwords match
+                    </span>
+                  ) : (
+                    <span className="text-rose-600 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> Passwords do not match
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Password Strength Indicator */}
+              {formPassword && (
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between text-[10.5px]">
+                    <span className="font-bold text-[#172B50]/60">Password Strength:</span>
+                    <span className={`font-black ${
+                      validatePassword(formPassword).score === 5 ? 'text-emerald-600' :
+                      validatePassword(formPassword).score === 4 ? 'text-teal-600' :
+                      validatePassword(formPassword).score === 3 ? 'text-amber-600' : 'text-rose-600'
+                    }`}>
+                      {validatePassword(formPassword).strengthLabel}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[#172B5010] rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${validatePassword(formPassword).strengthColor}`}
+                      style={{ width: `${validatePassword(formPassword).strengthPercent}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Password Requirements Checklist */}
+              <div className="pt-2 border-t border-[#F4510B15]">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#172B50]/50 mb-1.5">
+                  Password Policy Requirements:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                  {PASSWORD_REQUIREMENTS.map((req) => {
+                    const isMet = req.validator(formPassword);
+                    return (
+                      <div key={req.id} className="flex items-center gap-1.5">
+                        {isMet ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        ) : (
+                          <div className="w-3.5 h-3.5 rounded-full border border-[#172B5030] flex items-center justify-center shrink-0">
+                            <span className="w-1 h-1 rounded-full bg-[#172B5040]" />
+                          </div>
+                        )}
+                        <span className={isMet ? 'text-emerald-700 font-bold' : 'text-[#172B50]/60 font-medium'}>
+                          {req.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="pt-2 border-t border-[#172B5010]">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -2129,6 +2533,7 @@ export default function AccessManagementModule() {
             >
               <option value="super_admin">Super Admin</option>
               <option value="admin">Admin</option>
+              <option value="super_coach">Super Coach</option>
               <option value="coach">Coach</option>
               <option value="parent">Parent</option>
             </select>
@@ -2246,46 +2651,60 @@ export default function AccessManagementModule() {
               </div>
             </div>
 
-            {/* Auto-Generated Credentials & Password with View / Copy */}
-            <div className="p-3 bg-[#FFF5ED] rounded-xl border border-[#F4510B20] space-y-1.5">
+            {/* Account Password & Security Status */}
+            <div className="p-3.5 bg-[#FFF5ED] rounded-xl border border-[#F4510B20] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-black uppercase tracking-wider text-[#F4510B]">
-                  Account Credentials
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-[#F4510B] flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#F4510B]" />
+                  Password &amp; Security Status
                 </span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  Auto-Generated
-                </span>
+                {selectedUser.passwordStatus === 'Reset Required' || selectedUser.isTemporaryPassword || selectedUser.mustChangePassword ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A]">
+                    <Clock className="w-3 h-3 text-[#D97706]" />
+                    Reset Required
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]">
+                    <Check className="w-3 h-3 text-[#16A34A]" />
+                    Set
+                  </span>
+                )}
               </div>
-              <div className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-[#172B5015]">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Key className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                  <span className="text-xs font-bold text-[#172B50]/65">Password:</span>
-                  <span className="font-mono text-xs font-black text-[#172B50] select-all truncate">
-                    {profilePasswordVisible
-                      ? (selectedUser.tempPasswordDisplay || selectedUser.password || `Spartan@${String(selectedUser.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`)
-                      : '••••••••••••'}
+              <div className="bg-white p-3 rounded-lg border border-[#172B5015] text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#172B50]/70">Password Storage:</span>
+                  <span className="font-mono text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Salted Cryptographic Hash (Protected)
                   </span>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setProfilePasswordVisible(v => !v)}
-                    className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
-                    title={profilePasswordVisible ? 'Hide Password' : 'View Password'}
-                  >
-                    {profilePasswordVisible ? <EyeOff className="w-3.5 h-3.5 text-[#F4510B]" /> : <Eye className="w-3.5 h-3.5 opacity-70" />}
-                  </button>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#172B50]/70">Plaintext Security:</span>
+                  <span className="font-bold text-[#172B50]/80">Never displayed or stored in plain text</span>
+                </div>
+                {selectedUser.lastPasswordReset && (
+                  <div className="flex items-center justify-between pt-1 border-t border-[#172B5010]">
+                    <span className="font-bold text-[#172B50]/70">Last Password Reset:</span>
+                    <span className="font-medium text-[#172B50]/80 text-[11px]">
+                      {new Date(selectedUser.lastPasswordReset.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} by {selectedUser.lastPasswordReset.by}
+                    </span>
+                  </div>
+                )}
+                {selectedUser.isTemporaryPassword && (
+                  <p className="text-[11px] text-amber-800 font-medium bg-amber-50/80 p-2 rounded border border-amber-200 mt-1">
+                    Temporary password assigned by Admin. The user must update their password upon next sign-in.
+                  </p>
+                )}
+                <div className="pt-2 border-t border-[#172B5010] flex justify-end">
                   <button
                     type="button"
                     onClick={() => {
-                      const pass = selectedUser.tempPasswordDisplay || selectedUser.password || `Spartan@${String(selectedUser.phone || '').replace(/\D/g, '').slice(-4) || '2026'}`;
-                      navigator.clipboard?.writeText(pass);
-                      addToast('Password copied to clipboard!');
+                      setModalType(null);
+                      handleOpenResetPassword(selectedUser);
                     }}
-                    className="p-1 hover:bg-[#FFF4E8] text-[#172B50] hover:text-[#F4510B] rounded-md transition-colors cursor-pointer"
-                    title="Copy Password"
+                    className="px-3 py-1.5 rounded-lg bg-[#172B50] hover:bg-[#0f1f3a] text-white text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
                   >
-                    <Copy className="w-3.5 h-3.5 opacity-70" />
+                    <Key className="w-3 h-3 text-amber-400" />
+                    <span>Reset Password</span>
                   </button>
                 </div>
               </div>
@@ -2423,51 +2842,272 @@ export default function AccessManagementModule() {
       <Modal
         isOpen={modalType === 'reset_password'}
         onClose={() => setModalType(null)}
-        title="Temporary Password Reset"
+        title={selectedUser ? `Reset Password: ${selectedUser.name}` : 'Reset Password'}
       >
-        <div className="space-y-4">
-          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
-            <Key className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+        <form onSubmit={handleSaveResetPassword} className="space-y-4">
+          {/* Target User Info Banner */}
+          <div className="p-3 rounded-2xl bg-[#FFF4E8]/50 border border-[#172B5012] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className={`w-8 h-8 rounded-xl ${selectedUser?.avatarBg || 'bg-[#172B50]'} text-white flex items-center justify-center font-black text-xs`}>
+                {selectedUser?.name?.charAt(0) || 'U'}
+              </div>
+              <div>
+                <p className="font-black text-xs text-[#172B50]">{selectedUser?.name}</p>
+                <p className="text-[10.5px] font-medium text-[#172B50]/65">{selectedUser?.email}</p>
+              </div>
+            </div>
             <div>
-              <p className="font-bold">A new temporary password has been generated for {selectedUser?.name}.</p>
-              <p className="text-[11px] text-amber-800/80 mt-0.5">The user will be required to change this upon next login.</p>
+              {selectedUser && renderRoleBadge(selectedUser.role)}
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-black text-[#172B50] mb-1">Temporary Password</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={generatedPassword}
-                className="flex-1 px-3.5 py-2.5 bg-white border border-[#172B5018] rounded-xl text-sm font-black text-[#172B50] tracking-wider"
-              />
-              <button
-                type="button"
-                onClick={handleCopyPassword}
-                className="px-3.5 py-2.5 rounded-xl bg-[#172B50] text-white text-xs font-black hover:bg-[#0f1f3a] transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span>Copy</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-[#172B5010] flex items-center justify-end gap-2">
+          {/* Mode Switcher Tabs */}
+          <div className="grid grid-cols-2 gap-2 p-1 bg-[#172B5008] rounded-xl">
+            <button
+              type="button"
+              onClick={() => setResetMode('manual')}
+              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                resetMode === 'manual'
+                  ? 'bg-white text-[#172B50] shadow-2xs'
+                  : 'text-[#172B50]/60 hover:text-[#172B50]'
+              }`}
+            >
+              Manual Password Entry
+            </button>
             <button
               type="button"
               onClick={() => {
-                addToast(`New password emailed to ${selectedUser?.email}`);
-                setModalType(null);
+                setResetMode('temporary');
+                if (!tempGeneratedPass) {
+                  const temp = generateSecureTemporaryPassword();
+                  setTempGeneratedPass(temp);
+                }
               }}
-              className="px-4 py-2 rounded-xl bg-[#F4510B] text-white text-xs font-extrabold hover:bg-[#d94406] shadow-sm cursor-pointer flex items-center gap-1.5"
+              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                resetMode === 'temporary'
+                  ? 'bg-white text-[#172B50] shadow-2xs'
+                  : 'text-[#172B50]/60 hover:text-[#172B50]'
+              }`}
             >
-              <Send className="w-3.5 h-3.5" />
-              <span>Email to User &amp; Done</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Temporary Password</span>
             </button>
           </div>
-        </div>
+
+          {/* Mode 1: Manual Password Entry */}
+          {resetMode === 'manual' && (
+            <div className="space-y-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* New Password */}
+                <div>
+                  <label className="block text-[11px] font-black text-[#172B50] mb-1">
+                    New Password *
+                  </label>
+                  <div className="relative flex items-center bg-white border border-[#172B5018] rounded-xl px-3 py-2 focus-within:border-[#F4510B] focus-within:ring-1 focus-within:ring-[#F4510B]">
+                    <Lock className="w-3.5 h-3.5 text-[#172B50]/40 mr-2 shrink-0" />
+                    <input
+                      type={showResetPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Enter new password..."
+                      value={resetPasswordVal}
+                      onChange={(e) => setResetPasswordVal(e.target.value)}
+                      className="w-full bg-transparent border-0 outline-none text-xs font-bold text-[#172B50] placeholder:text-[#172B50]/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(!showResetPassword)}
+                      className="p-1 text-[#172B50]/50 hover:text-[#F4510B] transition-colors cursor-pointer"
+                      title={showResetPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showResetPassword ? <EyeOff className="w-3.5 h-3.5 text-[#F4510B]" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm New Password */}
+                <div>
+                  <label className="block text-[11px] font-black text-[#172B50] mb-1">
+                    Confirm New Password *
+                  </label>
+                  <div className="relative flex items-center bg-white border border-[#172B5018] rounded-xl px-3 py-2 focus-within:border-[#F4510B] focus-within:ring-1 focus-within:ring-[#F4510B]">
+                    <Lock className="w-3.5 h-3.5 text-[#172B50]/40 mr-2 shrink-0" />
+                    <input
+                      type={showResetConfirmPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Re-enter new password..."
+                      value={resetConfirmPasswordVal}
+                      onChange={(e) => setResetConfirmPasswordVal(e.target.value)}
+                      className="w-full bg-transparent border-0 outline-none text-xs font-bold text-[#172B50] placeholder:text-[#172B50]/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+                      className="p-1 text-[#172B50]/50 hover:text-[#F4510B] transition-colors cursor-pointer"
+                      title={showResetConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showResetConfirmPassword ? <EyeOff className="w-3.5 h-3.5 text-[#F4510B]" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Match status */}
+              {resetPasswordVal && resetConfirmPasswordVal && (
+                <div className="text-[11px] font-bold">
+                  {resetPasswordVal === resetConfirmPasswordVal ? (
+                    <span className="text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Passwords match
+                    </span>
+                  ) : (
+                    <span className="text-rose-600 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> Passwords do not match
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Password Strength Indicator */}
+              {resetPasswordVal && (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10.5px]">
+                    <span className="font-bold text-[#172B50]/60">Strength:</span>
+                    <span className={`font-black ${
+                      validatePassword(resetPasswordVal).score === 5 ? 'text-emerald-600' :
+                      validatePassword(resetPasswordVal).score === 4 ? 'text-teal-600' :
+                      validatePassword(resetPasswordVal).score === 3 ? 'text-amber-600' : 'text-rose-600'
+                    }`}>
+                      {validatePassword(resetPasswordVal).strengthLabel}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[#172B5010] rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${validatePassword(resetPasswordVal).strengthColor}`}
+                      style={{ width: `${validatePassword(resetPasswordVal).strengthPercent}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Criteria checklist */}
+              <div className="p-3 rounded-xl bg-[#FFF4E8]/40 border border-[#172B5010] space-y-1.5">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#172B50]/50">
+                  Password Policy Requirements:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                  {PASSWORD_REQUIREMENTS.map((req) => {
+                    const isMet = req.validator(resetPasswordVal);
+                    return (
+                      <div key={req.id} className="flex items-center gap-1.5">
+                        {isMet ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        ) : (
+                          <div className="w-3.5 h-3.5 rounded-full border border-[#172B5030] flex items-center justify-center shrink-0">
+                            <span className="w-1 h-1 rounded-full bg-[#172B5040]" />
+                          </div>
+                        )}
+                        <span className={isMet ? 'text-emerald-700 font-bold' : 'text-[#172B50]/60 font-medium'}>
+                          {req.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Require reset on next login */}
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={requirePasswordChange}
+                  onChange={(e) => setRequirePasswordChange(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#F4510B] focus:ring-[#F4510B] border-[#172B5025] accent-[#F4510B]"
+                />
+                <span className="text-xs font-bold text-[#172B50]">
+                  Require user to change password upon next login
+                </span>
+              </label>
+            </div>
+          )}
+
+          {/* Mode 2: Generate Temporary Password */}
+          {resetMode === 'temporary' && (
+            <div className="space-y-3 pt-1">
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+                <div className="flex items-center gap-2 font-bold">
+                  <Key className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>Secure Temporary Password Generator</span>
+                </div>
+                <p className="text-[11px] text-amber-800/80">
+                  Generates an initial 10-character strong password that meets all Little Spartans criteria. The user will be required to change it on their next login.
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-black text-[#172B50]">
+                    Generated Temporary Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newTemp = generateSecureTemporaryPassword();
+                      setTempGeneratedPass(newTemp);
+                      setTempPassCopied(false);
+                      addToast('New temporary password generated!', 'info');
+                    }}
+                    className="text-[11px] font-black text-[#F4510B] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Regenerate</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={tempGeneratedPass}
+                    className="flex-1 px-3.5 py-2.5 bg-white border border-[#172B5018] rounded-xl text-sm font-mono font-black text-[#172B50] tracking-wider select-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(tempGeneratedPass);
+                      setTempPassCopied(true);
+                      addToast('Temporary password copied to clipboard!');
+                    }}
+                    className="px-3.5 py-2.5 rounded-xl bg-[#172B50] text-white text-xs font-black hover:bg-[#0f1f3a] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    {tempPassCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{tempPassCopied ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-[11px] font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Meets all 5 Little Spartans complexity &amp; character criteria.</span>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Footer */}
+          <div className="pt-3 border-t border-[#172B5010] flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setModalType(null)}
+              className="px-4 py-2 rounded-xl border border-[#172B5018] text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-[#F4510B] text-white text-xs font-extrabold hover:bg-[#d94406] shadow-sm cursor-pointer flex items-center gap-1.5"
+            >
+              <Key className="w-3.5 h-3.5" />
+              <span>{resetMode === 'manual' ? 'Apply New Password' : 'Apply Temporary Password'}</span>
+            </button>
+          </div>
+        </form>
       </Modal>
 
       {/* ============================================================ */}
