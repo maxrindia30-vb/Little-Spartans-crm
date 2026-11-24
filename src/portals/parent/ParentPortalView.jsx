@@ -1424,7 +1424,14 @@ export default function ParentPortalView() {
 
             {/* 7.5. PROGRAMS & ACHIEVEMENTS */}
       {(currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs' || currentView === 'learning_journey') && (
-        <ProgramsAchievementsModule />
+        <ProgramsAchievementsModule
+          parentProfile={parentProfile}
+          myChildren={myChildren}
+          activeChild={activeChild}
+          selectedChildId={selectedChildId}
+          onSelectChild={setSelectedChildId}
+          initialTab={currentView === 'progress' ? 'achievements' : 'explore'}
+        />
       )}
 
       {/* 8. COMMUNICATION */}
