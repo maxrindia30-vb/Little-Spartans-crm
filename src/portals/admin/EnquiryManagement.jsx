@@ -58,7 +58,6 @@ import {
   ENQUIRY_SOURCES,
   ENQUIRY_SOURCE_CONFIG,
   DEMO_STATUSES,
-  filterCoachesForDemo,
 } from '../../services/demoService';
 import {
   LEAD_STATUS,
@@ -158,8 +157,6 @@ export default function EnquiryManagement() {
   const [demoModalForm, setDemoModalForm] = useState({
     demoDate: todayYmd,
     demoTime: '17:00',
-    coachId: '',
-    coachName: '',
     notes: '',
   });
 
@@ -459,15 +456,6 @@ export default function EnquiryManagement() {
     );
   }, [data.classes, enrollModalEnquiry, enrollOverrides]);
 
-  const eligibleCoachesForDemoModal = useMemo(() => {
-    if (!demoModalEnquiry) return data.coaches || [];
-    return filterCoachesForDemo({
-      coaches: data.coaches || [],
-      location: demoModalEnquiry.center,
-      program: demoModalEnquiry.interestedProgram,
-    });
-  }, [data.coaches, demoModalEnquiry]);
-
   // Sort handler
   const handleSort = (field) => {
     if (sortField === field) {
@@ -595,8 +583,6 @@ export default function EnquiryManagement() {
     setDemoModalForm({
       demoDate: todayYmd,
       demoTime: '17:00',
-      coachId: '',
-      coachName: '',
       notes: enq.notes ? `Enquiry note: ${enq.notes}` : '',
     });
     setActiveMenuId(null);
@@ -605,22 +591,29 @@ export default function EnquiryManagement() {
   const handleSaveDemoFromEnquiry = (e) => {
     e.preventDefault();
     if (!demoModalEnquiry) return;
-    const coachObj = (data.coaches || []).find((c) => c.id === demoModalForm.coachId);
+
+    // Resolve DOB if missing from older mock enquiry
+    const resolvedDob =
+      demoModalEnquiry.dob ||
+      (demoModalEnquiry.childAge
+        ? `${new Date().getFullYear() - (parseInt(demoModalEnquiry.childAge, 10) || 6)}-01-01`
+        : '2019-01-01');
+
     const payload = {
       enquiryId: demoModalEnquiry.id,
       childName: demoModalEnquiry.childName,
       childAge: demoModalEnquiry.childAge,
-      gender: demoModalEnquiry.gender,
-      dob: demoModalEnquiry.dob,
+      gender: demoModalEnquiry.gender || 'Male',
+      dob: resolvedDob,
       parentName: demoModalEnquiry.parentName,
       phone: demoModalEnquiry.phone,
-      email: demoModalEnquiry.email,
+      email: demoModalEnquiry.email || '',
       location: demoModalEnquiry.center,
       program: demoModalEnquiry.interestedProgram,
       demoDate: demoModalForm.demoDate,
       demoTime: demoModalForm.demoTime,
-      coachId: demoModalForm.coachId,
-      coachName: coachObj ? coachObj.name : 'Assigned Coach',
+      coachId: '',
+      coachName: '',
       notes: demoModalForm.notes,
     };
 
@@ -637,7 +630,10 @@ export default function EnquiryManagement() {
         description: `Trial demo session scheduled for ${demoModalForm.demoDate} at ${demoModalForm.demoTime} (${demoModalEnquiry.center}).`,
         author: 'Admissions Desk',
       });
+      addToast(`Demo scheduled successfully for ${demoModalEnquiry.childName}!`, 'success');
       setDemoModalEnquiry(null);
+    } else {
+      addToast(res.error || (res.errors && res.errors[0]) || 'Failed to schedule demo.', 'error');
     }
   };
 
@@ -2474,33 +2470,6 @@ export default function EnquiryManagement() {
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[#172B50] block mb-1">
-                Assigned Coach ({demoModalEnquiry.center}) *
-              </label>
-              <select
-                required
-                value={demoModalForm.coachId}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  const c = data.coaches.find((x) => x.id === id);
-                  setDemoModalForm({
-                    ...demoModalForm,
-                    coachId: id,
-                    coachName: c ? c.name : '',
-                  });
-                }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-              >
-                <option value="">Select coach...</option>
-                {eligibleCoachesForDemoModal.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} • {c.center} ({c.specialization})
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div>
