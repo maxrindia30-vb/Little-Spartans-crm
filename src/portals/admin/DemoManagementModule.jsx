@@ -16,6 +16,7 @@ import {
   History,
   FileText,
   Eye,
+  Edit2,
   CalendarDays,
   ShieldCheck,
   Sparkles,
@@ -60,11 +61,14 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
   const {
     data,
     addDemo,
+    updateDemo,
     updateDemoStatus,
     updateDemoConversionStatus,
     rescheduleDemo,
     convertDemoToStudent,
     navigateToPersonRecord,
+    setCurrentView,
+    addToast,
     focusedRecord,
     setFocusedRecord,
   } = useCrm();
@@ -95,6 +99,13 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
   }, []);
 
   const handleUpdateConversionStage = (demoId, stage) => {
+    if (stage === 'Converted to Student') {
+      const target = (data.demos || []).find((d) => d.id === demoId);
+      if (target && !target.convertedToStudent) {
+        handleOpenConvertModal(target);
+        return;
+      }
+    }
     if (updateDemoConversionStatus) {
       updateDemoConversionStatus(demoId, stage);
     }
@@ -131,6 +142,24 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     notes: '',
   });
 
+  // Edit Demo Modal State
+  const [editingDemo, setEditingDemo] = useState(null);
+  const [editDemoForm, setEditDemoForm] = useState({
+    childName: '',
+    dob: '',
+    childAge: '',
+    gender: 'Male',
+    parentName: '',
+    phone: '',
+    email: '',
+    location: '',
+    program: '',
+    demoDate: '',
+    demoTime: '',
+    notes: '',
+  });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
   // Reschedule Modal State
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
   const [rescheduleForm, setRescheduleForm] = useState({
@@ -157,6 +186,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     notes: '',
   });
   const [convertResult, setConvertResult] = useState(null);
+  const [conversionError, setConversionError] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
 
   // Eligible coaches for reschedule modal
@@ -178,8 +208,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       const matchLoc = filterLocation === 'All' || d.location === filterLocation;
       const matchStatus = filterStatus === 'All' || d.status === filterStatus;
       const matchProg = filterProgram === 'All' || d.program === filterProgram;
-      const matchCoach =
-        filterCoach === 'All' || d.coachId === filterCoach || d.coachName === filterCoach;
       const scheduledDate = (d.demoDate || d.date || '').split('T')[0];
       const matchDate = !filterDate || scheduledDate === filterDate;
       const matchQuery =
@@ -190,7 +218,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         d.parentName.toLowerCase().includes(query) ||
         d.phone.includes(query);
 
-      return matchLoc && matchStatus && matchProg && matchCoach && matchDate && matchQuery;
+      return matchLoc && matchStatus && matchProg && matchDate && matchQuery;
     });
   }, [
     data.demos,
@@ -198,7 +226,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     filterLocation,
     filterStatus,
     filterProgram,
-    filterCoach,
     filterDate,
   ]);
 
@@ -268,14 +295,68 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     }
   };
 
+  const handleOpenEditModal = (demo) => {
+    setEditingDemo(demo);
+    let autoAge = demo.childAge || '';
+    if (!autoAge && demo.dob) {
+      const calcAge = calculateAgeFromDob(demo.dob);
+      if (calcAge !== null) autoAge = String(calcAge);
+    }
+    setEditDemoForm({
+      childName: demo.childName || '',
+      dob: demo.dob || '',
+      childAge: autoAge,
+      gender: demo.gender || 'Male',
+      parentName: demo.parentName || '',
+      phone: demo.phone || '',
+      email: demo.email || '',
+      location: demo.location || activeLocations[0]?.name || 'KK NAGAR',
+      program: demo.program || (data.programs || [])[0]?.name || 'Spartan Gymnastics & Agility',
+      demoDate: demo.demoDate || todayYmd,
+      demoTime: demo.demoTime || '17:00',
+      notes: demo.notes || '',
+    });
+  };
+
+  const handleSaveEditDemo = (e) => {
+    e.preventDefault();
+    if (!editingDemo) return;
+    setIsSavingEdit(true);
+    try {
+      const updates = {
+        childName: (editDemoForm.childName || '').trim(),
+        dob: editDemoForm.dob,
+        childAge: editDemoForm.childAge,
+        gender: editDemoForm.gender,
+        parentName: (editDemoForm.parentName || '').trim(),
+        phone: (editDemoForm.phone || '').trim(),
+        email: (editDemoForm.email || '').trim(),
+        location: editDemoForm.location,
+        program: editDemoForm.program,
+        demoDate: editDemoForm.demoDate,
+        demoTime: editDemoForm.demoTime,
+        notes: (editDemoForm.notes || '').trim(),
+      };
+      if (updateDemo) {
+        updateDemo(editingDemo.id, updates);
+      }
+      setEditingDemo(null);
+    } catch (err) {
+      console.error('Error updating demo record:', err);
+      if (addToast) addToast('An error occurred while saving demo changes.', 'error');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const handleOpenRescheduleModal = (demo) => {
     setRescheduleTarget(demo);
     setRescheduleForm({
       demoDate: demo.demoDate,
       demoTime: demo.demoTime,
       location: demo.location,
-      coachId: demo.coachId,
-      coachName: demo.coachName,
+      coachId: '',
+      coachName: '',
       rescheduleReason: '',
     });
   };
@@ -284,20 +365,24 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
     e.preventDefault();
     if (!rescheduleTarget) return;
 
-    const coachObj = (data.coaches || []).find((c) => c.id === rescheduleForm.coachId);
-    const updates = {
-      demoDate: rescheduleForm.demoDate,
-      demoTime: rescheduleForm.demoTime,
-      location: rescheduleForm.location,
-      coachId: rescheduleForm.coachId,
-      coachName: coachObj ? coachObj.name : rescheduleForm.coachName || rescheduleTarget.coachName,
-      rescheduleReason: rescheduleForm.rescheduleReason,
-      status: DEMO_STATUSES.RESCHEDULED,
-    };
+    try {
+      const updates = {
+        demoDate: rescheduleForm.demoDate,
+        demoTime: rescheduleForm.demoTime,
+        location: rescheduleForm.location || rescheduleTarget.location,
+        coachId: '',
+        coachName: '',
+        rescheduleReason: rescheduleForm.rescheduleReason,
+        status: DEMO_STATUSES.RESCHEDULED,
+      };
 
-    const res = rescheduleDemo(rescheduleTarget.id, updates);
-    if (res.success) {
-      setRescheduleTarget(null);
+      const res = rescheduleDemo(rescheduleTarget.id, updates);
+      if (res && res.success !== false) {
+        setRescheduleTarget(null);
+      }
+    } catch (err) {
+      console.error('Error rescheduling demo:', err);
+      if (addToast) addToast('Failed to reschedule demo.', 'error');
     }
   };
 
@@ -310,8 +395,13 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
   const handleSaveStatusChange = (e) => {
     e.preventDefault();
     if (!statusChangeTarget) return;
-    updateDemoStatus(statusChangeTarget.id, newStatusValue, statusNote);
-    setStatusChangeTarget(null);
+    try {
+      updateDemoStatus(statusChangeTarget.id, newStatusValue, statusNote);
+      setStatusChangeTarget(null);
+    } catch (err) {
+      console.error('Error saving demo status change:', err);
+      if (addToast) addToast('Failed to update demo status.', 'error');
+    }
   };
 
   const handleOpenConvertModal = (demo) => {
@@ -321,16 +411,24 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
       notes: demo.notes ? `Converted from Demo ${demo.id}: ${demo.notes}` : `Converted from Demo ${demo.id}`,
     });
     setConvertResult(null);
+    setConversionError(null);
   };
 
   const handleExecuteConversion = () => {
     if (!convertTarget) return;
     setIsConverting(true);
+    setConversionError(null);
     try {
       const res = convertDemoToStudent(convertTarget.id, convertOverrides);
-      if (res.success) {
+      if (res && res.success) {
         setConvertResult(res);
+      } else {
+        const errorMsg = res?.error || (res?.errors && res.errors[0]) || 'Student enrollment failed. Please verify the demo details.';
+        setConversionError(errorMsg);
       }
+    } catch (err) {
+      console.error('Error converting demo to student:', err);
+      setConversionError(err.message || 'An unexpected error occurred during enrollment.');
     } finally {
       setIsConverting(false);
     }
@@ -543,27 +641,6 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               {(data.programs || []).map((p) => (
                 <option key={p.id} value={p.name}>
                   {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-extrabold text-[#172B50] uppercase opacity-60 mb-1">
-              Assigned Coach
-            </label>
-            <select
-              value={filterCoach}
-              onChange={(e) => {
-                setFilterCoach(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#172B5020] bg-white font-semibold text-[#172B50]"
-            >
-              <option value="All">All Coaches</option>
-              {(data.coaches || []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
                 </option>
               ))}
             </select>
@@ -862,6 +939,15 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
 
                         <button
                           type="button"
+                          onClick={() => handleOpenEditModal(demo)}
+                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                          title="Edit Demo Details"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => handleOpenRescheduleModal(demo)}
                           className="p-1.5 rounded-lg text-purple-700 hover:bg-purple-50 transition-colors cursor-pointer"
                           title="Reschedule Demo"
@@ -875,10 +961,14 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                             onClick={() => {
                               if (demo.studentId && navigateToPersonRecord) {
                                 navigateToPersonRecord('student', demo.studentId);
+                              } else if (setCurrentView) {
+                                setCurrentView('students');
                               }
                             }}
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-[#172B50] hover:bg-slate-200 cursor-pointer"
+                            title="View Student Record under People Management"
                           >
+                            <GraduationCap className="w-3 h-3 text-[#F4510B]" />
                             <span>View Athlete</span>
                           </button>
                         ) : (
@@ -890,7 +980,7 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                                 ? 'bg-[#F4510B] text-white hover:brightness-110 active:scale-95'
                                 : 'bg-[#172B50] text-white hover:bg-[#F4510B]'
                             }`}
-                            title="Convert into registered Student"
+                            title="Convert into registered Student under People Management -> Kids"
                           >
                             <UserPlus className="w-3 h-3" />
                             <span>Convert to Student</span>
@@ -1140,9 +1230,9 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 required
                 value={rescheduleForm.location}
                 onChange={(e) =>
-                  setRescheduleForm({ ...rescheduleForm, location: e.target.value, coachId: '' })
+                  setRescheduleForm({ ...rescheduleForm, location: e.target.value })
                 }
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
               >
                 {activeLocations.map((loc) => (
                   <option key={loc.id} value={loc.name}>
@@ -1153,51 +1243,26 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">Assigned Coach</label>
-              <select
-                value={rescheduleForm.coachId}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  const c = data.coaches.find((x) => x.id === id);
-                  setRescheduleForm({
-                    ...rescheduleForm,
-                    coachId: id,
-                    coachName: c ? c.name : '',
-                  });
-                }}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-              >
-                <option value="">Select Coach</option>
-                {eligibleCoachesForReschedule.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.center})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
               <label className="block text-xs font-bold text-[#172B50] mb-1">New Demo Date *</label>
               <input
                 type="date"
                 required
                 value={rescheduleForm.demoDate}
                 onChange={(e) => setRescheduleForm({ ...rescheduleForm, demoDate: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-[#172B50] mb-1">New Demo Time *</label>
-              <input
-                type="time"
-                required
-                value={rescheduleForm.demoTime}
-                onChange={(e) => setRescheduleForm({ ...rescheduleForm, demoTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
-              />
-            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#172B50] mb-1">New Demo Time *</label>
+            <input
+              type="time"
+              required
+              value={rescheduleForm.demoTime}
+              onChange={(e) => setRescheduleForm({ ...rescheduleForm, demoTime: e.target.value })}
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
+            />
           </div>
 
           <div>
@@ -1489,8 +1554,20 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
                 onClick={() => {
                   setConvertTarget(null);
                   setConvertResult(null);
+                  if (setCurrentView) setCurrentView('students');
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-extrabold bg-[#172B50] text-white hover:bg-[#F4510B] cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 cursor-pointer shadow-xs flex items-center gap-1.5"
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span>View in Kids Directory</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConvertTarget(null);
+                  setConvertResult(null);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] bg-slate-100 hover:bg-slate-200 cursor-pointer"
               >
                 Done
               </button>
@@ -1499,6 +1576,16 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
         ) : (
           convertTarget && (
             <div className="space-y-4">
+              {conversionError && (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">Enrollment Error</span>
+                    <span className="opacity-90">{conversionError}</span>
+                  </div>
+                </div>
+              )}
+
               <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs">
                 <span className="font-bold block mb-0.5">Automated Pre-population:</span>
                 Child and parent information, selected academy location (
@@ -1601,6 +1688,192 @@ export default function DemoManagementModule({ initialFilterLocation = 'All' }) 
               </div>
             </div>
           )
+        )}
+      </Modal>
+
+      {/* =================================================================== */}
+      {/* MODAL 6: EDIT DEMO DETAILS                                          */}
+      {/* =================================================================== */}
+      <Modal
+        isOpen={Boolean(editingDemo)}
+        onClose={() => setEditingDemo(null)}
+        title={editingDemo ? `Edit Demo: ${editingDemo.id}` : 'Edit Demo'}
+        subtitle="Modify athlete details, demo date, location and contact info"
+        maxWidth="max-w-xl"
+      >
+        {editingDemo && (
+          <form onSubmit={handleSaveEditDemo} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Academy Location *</label>
+                <select
+                  required
+                  value={editDemoForm.location}
+                  onChange={(e) => setEditDemoForm({ ...editDemoForm, location: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
+                >
+                  {activeLocations.map((loc) => (
+                    <option key={loc.id} value={loc.name}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Sports Program *</label>
+                <select
+                  required
+                  value={editDemoForm.program}
+                  onChange={(e) => setEditDemoForm({ ...editDemoForm, program: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
+                >
+                  {(data.programs || []).map((p) => (
+                    <option key={p.id} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Child / Athlete Name *</label>
+              <input
+                type="text"
+                required
+                value={editDemoForm.childName}
+                onChange={(e) => setEditDemoForm({ ...editDemoForm, childName: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Child Date of Birth (DOB)</label>
+                <input
+                  type="date"
+                  max={todayYmd}
+                  value={editDemoForm.dob}
+                  onChange={(e) => {
+                    const newDob = e.target.value;
+                    const autoAge = calculateAgeFromDob(newDob);
+                    setEditDemoForm({
+                      ...editDemoForm,
+                      dob: newDob,
+                      childAge: autoAge !== null ? String(autoAge) : editDemoForm.childAge,
+                    });
+                  }}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Age</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={editDemoForm.childAge ? `${editDemoForm.childAge} yrs` : ''}
+                  placeholder="Auto-calculated"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] bg-slate-50 text-[#172B50] font-bold cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Gender</label>
+                <select
+                  value={editDemoForm.gender}
+                  onChange={(e) => setEditDemoForm({ ...editDemoForm, gender: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50] font-semibold bg-white"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Parent / Guardian Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editDemoForm.parentName}
+                  onChange={(e) => setEditDemoForm({ ...editDemoForm, parentName: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Parent Mobile Number *</label>
+                <input
+                  type="tel"
+                  required
+                  value={editDemoForm.phone}
+                  onChange={(e) => setEditDemoForm({ ...editDemoForm, phone: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Parent Email (Optional)</label>
+              <input
+                type="email"
+                value={editDemoForm.email}
+                onChange={(e) => setEditDemoForm({ ...editDemoForm, email: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Demo Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={editDemoForm.demoDate}
+                  onChange={(e) => setEditDemoForm({ ...editDemoForm, demoDate: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#172B50] mb-1">Demo Time *</label>
+                <input
+                  type="time"
+                  required
+                  value={editDemoForm.demoTime}
+                  onChange={(e) => setEditDemoForm({ ...editDemoForm, demoTime: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#172B50] mb-1">Special Notes / Goals</label>
+              <textarea
+                rows={2}
+                value={editDemoForm.notes}
+                onChange={(e) => setEditDemoForm({ ...editDemoForm, notes: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#172B5022] text-[#172B50]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#172B5014]">
+              <button
+                type="button"
+                onClick={() => setEditingDemo(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#172B50] hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingEdit}
+                className="px-5 py-2 rounded-xl text-xs font-extrabold bg-[#F4510B] text-white hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
+              >
+                {isSavingEdit ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
         )}
       </Modal>
     </div>

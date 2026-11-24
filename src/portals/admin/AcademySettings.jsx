@@ -206,7 +206,7 @@ export default function AcademySettings() {
       errors.name = 'Center Name is required.';
     } else {
       const duplicateName = centersList.some(
-        (c) => c.name && c.name.trim().toUpperCase() === trimmedName.toUpperCase() && (!editingCenter || c.id !== editingCenter.id)
+        (c) => c.name && c.name.trim().toUpperCase() === trimmedName.toUpperCase() && (!editingCenter || String(c.id) !== String(editingCenter.id))
       );
       if (duplicateName) {
         errors.name = `Center "${trimmedName}" already exists. Please choose a unique name.`;
@@ -218,7 +218,7 @@ export default function AcademySettings() {
       errors.code = 'Center Code is required.';
     } else {
       const duplicateCode = centersList.some(
-        (c) => c.code && c.code.trim().toUpperCase() === trimmedCode && (!editingCenter || c.id !== editingCenter.id)
+        (c) => c.code && c.code.trim().toUpperCase() === trimmedCode && (!editingCenter || String(c.id) !== String(editingCenter.id))
       );
       if (duplicateCode) {
         errors.code = `Center Code "${trimmedCode}" is already in use. Please enter a unique code.`;
@@ -1427,7 +1427,6 @@ export default function AcademySettings() {
                 <button
                   type="submit"
                   disabled={isSavingCenter}
-                  onClick={handleSaveCenter}
                   className="px-5 py-2 rounded-xl bg-[#F4510B] text-white text-xs font-black hover:brightness-110 active:scale-95 shadow-md shadow-[#F4510B]/25 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
                   {isSavingCenter ? (

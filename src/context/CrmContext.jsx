@@ -24,6 +24,8 @@ import {
   generateLocationKidId,
   generateCommonMemberId,
   generateParentPassword,
+  findExistingParent,
+  normalizePhoneDigits,
 } from '../services/enrollmentService';
 import {
   validateDemoPayload,
@@ -674,7 +676,7 @@ export function CrmProvider({ children }) {
       badge: "Super Coach",
       assignedLocations: (data.superCoaches && data.superCoaches[0]?.assignedLocations && data.superCoaches[0].assignedLocations.length > 0)
         ? data.superCoaches[0].assignedLocations
-        : ["KK NAGAR", "ANNA NAGAR", "KILPAUK", "MAHALINGAPURAM"]
+        : (data.locations || []).filter(l => l.status !== 'Inactive').map(l => l.name)
     },
     support: {
       name: "Customer Support Lead",
@@ -685,6 +687,8 @@ export function CrmProvider({ children }) {
       badge: "Support Lead"
     }
   };
+
+  const currentUser = currentUserProfiles[currentPortal] || currentUserProfiles.admin;
 
   // CRUD Actions
   const addStudent = (studentData) => {
@@ -1511,75 +1515,273 @@ export function CrmProvider({ children }) {
   };
 
   const convertDemoToStudent = (demoId, overrides = {}) => {
-    const demo = (data.demos || []).find(d => d.id === demoId);
+    const demo = (data.demos || []).find((d) => d.id === demoId);
     if (!demo) {
       addToast('Demo record not found.', 'error');
       return { success: false, error: 'Demo record not found.' };
     }
 
     if (demo.convertedToStudent) {
-      addToast(`Demo ${demo.id} has already been converted to Student (${demo.studentId}). Duplicate conversion blocked.`, 'error');
+      addToast(
+        `Demo ${demo.id} has already been converted to Student (${demo.studentId}). Duplicate conversion blocked.`,
+        'error'
+      );
       return { success: false, duplicate: true, error: 'Demo already converted' };
     }
 
-    // Build or find synthetic or real enquiry
-    let targetEnquiryId = demo.enquiryId;
-    let existingEnquiry = (data.enquiries || []).find(e => e.id === targetEnquiryId);
+    const finalLocation = String(overrides.center || demo.location || 'KK NAGAR').trim();
+    const finalProgram = String(overrides.interestedProgram || overrides.program || demo.program || 'Foundational Movement').trim();
+    const childName = String(overrides.childName || demo.childName || '').trim();
+    const parentName = String(overrides.parentName || demo.parentName || '').trim();
+    const parentPhone = String(overrides.phone || demo.phone || '').trim();
+    const rawEmail = String(overrides.email || demo.email || '').trim().toLowerCase();
 
-    if (!existingEnquiry) {
-      const syntheticEnq = {
-        id: `ENQ-DEMO-${demo.id}`,
-        childName: demo.childName,
-        childAge: demo.childAge || '6',
-        gender: demo.gender || 'Male',
-        dob: demo.dob || '',
-        parentName: demo.parentName,
-        phone: demo.phone,
-        email: demo.email || '',
-        interestedProgram: demo.program,
-        center: demo.location,
-        preferredBatchId: overrides.preferredBatchId || '',
-        enquiryDate: demo.demoDate,
-        notes: demo.notes || `Converted from Demo ${demo.id}`,
-        stage: 'Demo Completed',
-        source: ENQUIRY_SOURCES.MANUAL,
-        demoId: demo.id,
-      };
-      targetEnquiryId = syntheticEnq.id;
-      existingEnquiry = syntheticEnq;
-
-      setData(prev => ({
-        ...prev,
-        enquiries: [syntheticEnq, ...(prev.enquiries || [])],
-      }));
+    if (!childName) {
+      addToast('Child Name is required for student enrollment.', 'error');
+      return { success: false, error: 'Child Name is required.' };
+    }
+    if (!parentName) {
+      addToast('Parent Name is required for student enrollment.', 'error');
+      return { success: false, error: 'Parent Name is required.' };
+    }
+    if (!parentPhone) {
+      addToast('Parent Phone Number is required for student enrollment.', 'error');
+      return { success: false, error: 'Parent Phone Number is required.' };
+    }
+    if (!finalLocation) {
+      addToast('Academy Location is required for student enrollment.', 'error');
+      return { success: false, error: 'Academy Location is required.' };
     }
 
-    const enrollmentOverrides = {
-      ...overrides,
+    // Safe fallback email if parent email was omitted during demo booking
+    const safeParentEmail = rawEmail || `${parentName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'parent'}${parentPhone.slice(-4) || '2026'}@spartans.family`;
+
+    // Calculate age from DOB or fallback
+    let computedAge = demo.childAge;
+    if (demo.dob) {
+      const calcAge = calculateAgeFromDob(demo.dob);
+      if (calcAge !== null) computedAge = String(calcAge);
+    }
+    if (!computedAge) computedAge = '6';
+
+    const phoneDigits = normalizePhoneDigits(parentPhone);
+
+    // Prevent duplicate student in same center with identical child name and parent phone
+    const existingStudent = (data.students || []).find(
+      (s) =>
+        s.center === finalLocation &&
+        s.name?.trim().toLowerCase() === childName.toLowerCase() &&
+        normalizePhoneDigits(s.parentPhone || '') === phoneDigits
+    );
+    if (existingStudent) {
+      addToast(
+        `Student "${childName}" already registered under this contact at ${finalLocation} (${existingStudent.id}).`,
+        'error'
+      );
+      return {
+        success: false,
+        duplicate: true,
+        error: `Student "${childName}" already exists at ${finalLocation} (${existingStudent.id}). Duplicate enrollment prevented.`,
+        student: existingStudent,
+      };
+    }
+
+    // Resolve or create Parent record
+    const existingParent = findExistingParent(data.parents || [], {
+      email: safeParentEmail,
+      phone: parentPhone,
+    });
+
+    const commonMemberId = (existingParent?.id && existingParent.id.startsWith('LS-'))
+      ? existingParent.id
+      : generateCommonMemberId(data.students || [], data.parents || [], finalLocation);
+
+    const studentId = (existingParent && existingParent.children && existingParent.children.length > 0)
+      ? generateCommonMemberId(data.students || [], data.parents || [], finalLocation)
+      : commonMemberId;
+
+    const parentId = existingParent ? existingParent.id : commonMemberId;
+    const parentPassword = generateParentPassword(parentPhone);
+    const today = new Date().toISOString().split('T')[0];
+    const nowIso = new Date().toISOString();
+
+    let resolvedParent;
+    let nextParents;
+    if (existingParent) {
+      const nextChildren = Array.from(new Set([...(existingParent.children || []), childName]));
+      const nextLinkedIds = Array.from(new Set([...(existingParent.linkedStudentIds || []), studentId]));
+      const nextCenters = Array.from(new Set([existingParent.center, ...(existingParent.centers || []), finalLocation].filter(Boolean)));
+      resolvedParent = {
+        ...existingParent,
+        name: existingParent.name || parentName,
+        phone: existingParent.phone || parentPhone,
+        email: existingParent.email || safeParentEmail,
+        center: existingParent.center || finalLocation,
+        centers: nextCenters,
+        children: nextChildren,
+        linkedStudentIds: nextLinkedIds,
+        portalAccess: true,
+        status: 'Active',
+      };
+      nextParents = (data.parents || []).map((p) => (p.id === existingParent.id ? resolvedParent : p));
+    } else {
+      resolvedParent = {
+        id: parentId,
+        name: parentName,
+        phone: parentPhone,
+        email: safeParentEmail,
+        center: finalLocation,
+        centers: [finalLocation],
+        children: [childName],
+        linkedStudentIds: [studentId],
+        enquiryIds: demo.enquiryId ? [demo.enquiryId] : [],
+        password: parentPassword,
+        tempPassword: parentPassword,
+        tempPasswordDisplay: parentPassword,
+        portalAccess: true,
+        status: 'Active',
+        notes: `Parent registered via Demo conversion (${demo.id})`,
+        createdAt: today,
+      };
+      nextParents = [resolvedParent, ...(data.parents || [])];
+    }
+
+    // Create new Student record
+    const newStudent = {
+      id: studentId,
+      name: childName,
+      dob: demo.dob || '',
+      age: computedAge,
+      gender: demo.gender || 'Male',
+      parentName: parentName,
+      parentPhone: parentPhone,
+      parentEmail: safeParentEmail,
+      program: finalProgram,
+      center: finalLocation,
+      joinDate: today,
+      source: 'Demo Conversion',
+      enrollmentStatus: 'Enrolled',
+      status: 'Active',
+      batchId: overrides.preferredBatchId || '',
       demoId: demo.id,
-      center: overrides.center || demo.location,
-      interestedProgram: overrides.interestedProgram || demo.program,
-      childName: overrides.childName || demo.childName,
-      parentName: overrides.parentName || demo.parentName,
-      phone: overrides.phone || demo.phone,
-      email: overrides.email || demo.email,
+      enquiryId: demo.enquiryId || null,
+      notes: overrides.notes || demo.notes || `Converted from Demo ${demo.id}`,
+      attendanceRate: '100%',
+      classesAttended: 0,
+      totalClasses: 12,
+      membershipTier: 'Active Athlete',
+      avatar: null,
+      createdAt: nowIso,
     };
 
-    const res = enrollFromEnquiry(targetEnquiryId, enrollmentOverrides);
-    if (res.success) {
-      setData(prev => ({
-        ...prev,
-        demos: (prev.demos || []).map(d => d.id === demo.id ? {
-          ...d,
-          convertedToStudent: true,
-          conversionStatus: 'Converted to Student',
-          studentId: res.student.id,
-          status: DEMO_STATUSES.COMPLETED,
-          updatedAt: new Date().toISOString(),
-        } : d),
-      }));
+    // Update Demo record
+    const nextDemos = (data.demos || []).map((d) =>
+      d.id === demo.id
+        ? {
+            ...d,
+            convertedToStudent: true,
+            conversionStatus: 'Converted to Student',
+            studentId: newStudent.id,
+            status: DEMO_STATUSES.COMPLETED,
+            updatedAt: nowIso,
+            history: [
+              {
+                id: `HIST-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                timestamp: nowIso,
+                action: 'Converted to Student',
+                fromStatus: d.status,
+                toStatus: DEMO_STATUSES.COMPLETED,
+                location: d.location,
+                note: `Converted to Student (${newStudent.id}) by Admin under People Management -> Kids.`,
+                updatedBy: currentUser?.name || 'Admin Desk',
+              },
+              ...(d.history || []),
+            ],
+          }
+        : d
+    );
+
+    // Update linked enquiry if present
+    const nextEnquiries = (data.enquiries || []).map((e) =>
+      e.id === demo.enquiryId || e.demoId === demo.id
+        ? {
+            ...e,
+            status: 'Converted (Enrolled)',
+            stage: 'Enrolled',
+            studentId: newStudent.id,
+            convertedStudentId: newStudent.id,
+            updatedAt: nowIso,
+          }
+        : e
+    );
+
+    // Assign to batch class roster if batch specified
+    let nextClasses = data.classes || [];
+    if (overrides.preferredBatchId) {
+      nextClasses = nextClasses.map((cls) => {
+        if (cls.id === overrides.preferredBatchId) {
+          const currentRoster = Array.isArray(cls.studentIds) ? cls.studentIds : [];
+          if (!currentRoster.includes(newStudent.id)) {
+            return {
+              ...cls,
+              studentIds: [...currentRoster, newStudent.id],
+              enrolled: (cls.enrolled || currentRoster.length) + 1,
+            };
+          }
+        }
+        return cls;
+      });
     }
-    return res;
+
+    // Sync to user accounts so parent can sign in
+    let nextUserAccounts = [...(data.userAccounts || [])];
+    const existingAccIndex = nextUserAccounts.findIndex(
+      (acc) => acc.role === 'parent' && (acc.email?.toLowerCase() === safeParentEmail.toLowerCase() || acc.phone === parentPhone)
+    );
+    if (existingAccIndex >= 0) {
+      const existingAcc = nextUserAccounts[existingAccIndex];
+      const accLocs = Array.isArray(existingAcc.locations) ? existingAcc.locations : [finalLocation];
+      nextUserAccounts[existingAccIndex] = {
+        ...existingAcc,
+        locations: Array.from(new Set([...accLocs, finalLocation])),
+        status: 'Active',
+      };
+    } else {
+      nextUserAccounts.unshift({
+        id: `USR-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+        name: parentName,
+        email: safeParentEmail,
+        phone: parentPhone,
+        role: 'parent',
+        locations: [finalLocation],
+        status: 'Active',
+        lastLogin: null,
+        twoFactor: false,
+        avatar: null,
+      });
+    }
+
+    // Atomic update
+    setData((prev) => ({
+      ...prev,
+      students: [newStudent, ...(prev.students || [])],
+      parents: nextParents,
+      demos: nextDemos,
+      enquiries: nextEnquiries,
+      classes: nextClasses,
+      userAccounts: nextUserAccounts,
+    }));
+
+    addToast(
+      `Enrolled ${newStudent.name} (${newStudent.id}) at ${newStudent.center}! Record added to People Management -> Kids.`,
+      'success'
+    );
+
+    return {
+      success: true,
+      student: newStudent,
+      parent: resolvedParent,
+    };
   };
 
   const addPayment = (paymentData) => {
@@ -3419,7 +3621,11 @@ export function CrmProvider({ children }) {
         ...prev,
         locations: updatedLocations,
         academy: { ...(prev.academy || {}), centers: activeCenters },
-        settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])]
+        settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])],
+        superCoaches: (prev.superCoaches || []).map((sc) => ({
+          ...sc,
+          assignedLocations: Array.from(new Set([...(sc.assignedLocations || []), rawName])),
+        })),
       };
     });
 
@@ -3429,7 +3635,9 @@ export function CrmProvider({ children }) {
 
   const updateLocation = (id, updates) => {
     const currentLocations = data.locations || [];
-    const existing = currentLocations.find((l) => l.id === id);
+    const existing = currentLocations.find(
+      (l) => String(l.id) === String(id) || (l.code && l.code.toUpperCase() === String(id).toUpperCase())
+    );
     if (!existing) {
       addToast('Center location not found.', 'error');
       return { success: false, error: 'Center location not found.' };
@@ -3447,7 +3655,7 @@ export function CrmProvider({ children }) {
 
     // Duplicate name check (excluding self)
     const duplicateName = currentLocations.some(
-      (loc) => loc.id !== id && loc.name && loc.name.trim().toUpperCase() === nextName.toUpperCase()
+      (loc) => String(loc.id) !== String(id) && loc.name && loc.name.trim().toUpperCase() === nextName.toUpperCase()
     );
     if (duplicateName) {
       addToast(`Center "${nextName}" already exists.`, 'error');
@@ -3456,7 +3664,7 @@ export function CrmProvider({ children }) {
 
     // Duplicate code check (excluding self)
     const duplicateCode = currentLocations.some(
-      (loc) => loc.id !== id && loc.code && loc.code.trim().toUpperCase() === nextCode
+      (loc) => String(loc.id) !== String(id) && loc.code && loc.code.trim().toUpperCase() === nextCode
     );
     if (duplicateCode) {
       addToast(`Center Code "${nextCode}" is already in use.`, 'error');
@@ -3495,7 +3703,7 @@ export function CrmProvider({ children }) {
 
     setData((prev) => {
       const updatedLocations = (prev.locations || []).map((loc) =>
-        loc.id === id
+        String(loc.id) === String(id)
           ? {
               ...loc,
               ...updates,
@@ -3518,6 +3726,10 @@ export function CrmProvider({ children }) {
         locations: updatedLocations,
         academy: { ...(prev.academy || {}), centers: activeCenters },
         settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])],
+        superCoaches: (prev.superCoaches || []).map((sc) => ({
+          ...sc,
+          assignedLocations: (sc.assignedLocations || []).map(renameMap),
+        })),
         programs: (prev.programs || []).map((p) => ({
           ...p,
           locations: Array.isArray(p.locations) ? p.locations.map(renameMap) : p.locations,
@@ -3537,8 +3749,11 @@ export function CrmProvider({ children }) {
   };
 
   const toggleLocationStatus = (id) => {
-    const existing = (data.locations || []).find((l) => l.id === id);
-    if (!existing) return { success: false };
+    const existing = (data.locations || []).find((l) => String(l.id) === String(id));
+    if (!existing) {
+      addToast('Center location not found.', 'error');
+      return { success: false, error: 'Center location not found.' };
+    }
     const nextStatus = existing.status === 'Inactive' ? 'Active' : 'Inactive';
     
     const newAudit = {
@@ -3557,7 +3772,7 @@ export function CrmProvider({ children }) {
 
     setData((prev) => {
       const updatedLocations = (prev.locations || []).map((loc) =>
-        loc.id === id ? { ...loc, status: nextStatus } : loc
+        String(loc.id) === String(id) ? { ...loc, status: nextStatus } : loc
       );
       const activeCenters = updatedLocations
         .filter((l) => l.status !== 'Inactive')
@@ -3565,8 +3780,14 @@ export function CrmProvider({ children }) {
       return {
         ...prev,
         locations: updatedLocations,
-        academy: { ...prev.academy, centers: activeCenters },
-        settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])]
+        academy: { ...(prev.academy || {}), centers: activeCenters },
+        settingsAuditLogs: [newAudit, ...(prev.settingsAuditLogs || [])],
+        superCoaches: (prev.superCoaches || []).map((sc) => ({
+          ...sc,
+          assignedLocations: (sc.assignedLocations || []).filter((locName) =>
+            nextStatus === 'Active' || locName !== existing.name
+          ),
+        })),
       };
     });
     addToast(
