@@ -56,6 +56,15 @@ import {
   checkDuplicateLeaveConflict,
   validateCoachLeavePayload,
 } from '../services/coachLeaveService';
+import {
+  COACH_ATTENDANCE_STATUS,
+  formatDisplayTime,
+  calculateWorkingDuration,
+  getCoachTodayAttendance as getCoachTodayAttendanceHelper,
+  checkLocationOverlap,
+  validateCheckInPayload,
+  validateCheckOutPayload,
+} from '../services/coachAttendanceService';
 
 const CrmContext = createContext();
 
@@ -372,6 +381,7 @@ export function CrmProvider({ children }) {
           payments: (Array.isArray(parsed.payments) ? parsed.payments : []).filter(p => !isDummyPayment(p)),
           classSchedules: (Array.isArray(parsed.classSchedules) ? parsed.classSchedules : []).filter(s => !isDummySchedule(s)),
           attendanceRecords: (Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : []).filter(a => !isDummyAttendance(a)),
+          coachAttendanceRecords: Array.isArray(parsed.coachAttendanceRecords) ? parsed.coachAttendanceRecords : [],
           compensationRequests: (Array.isArray(parsed.compensationRequests) ? parsed.compensationRequests : []).filter(r => !r.id?.startsWith('CR-')),
           compensationHistory: (Array.isArray(parsed.compensationHistory) ? parsed.compensationHistory : []).filter(h => !h.id?.startsWith('CH-')),
           notifications: (Array.isArray(parsed.notifications) ? parsed.notifications : []).filter(n => !n.id?.startsWith('NOTIF-')),
@@ -620,6 +630,7 @@ export function CrmProvider({ children }) {
       coachCompensationClasses: [],
       classSchedules: [],
       attendanceRecords: [],
+      coachAttendanceRecords: [],
       notifications: [],
       equipment: [],
       equipmentReports: [],
@@ -661,11 +672,15 @@ export function CrmProvider({ children }) {
       badge: "Verified Parent"
     },
     coach: {
-      name: data.coaches[0]?.name || "Coach Account",
-      role: data.coaches[0]?.specialization || "Sports Coach",
+      id: (data.coaches && data.coaches[0]?.id) || "COACH-ARUN",
+      name: (data.coaches && data.coaches[0]?.name) || "Arun Prakash",
+      role: (data.coaches && data.coaches[0]?.specialization) || "Senior Coach",
       portalTitle: "Coach Portal",
-      email: data.coaches[0]?.email || "coach@littlespartans.co.in",
-      avatar: null,
+      email: (data.coaches && data.coaches[0]?.email) || "arun.prakash@littlespartans.co.in",
+      avatar: (data.coaches && data.coaches[0]?.avatar) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      center: (data.coaches && data.coaches[0]?.center) || "KK NAGAR",
+      location: (data.coaches && data.coaches[0]?.center) || "KK NAGAR",
+      assignedLocations: (data.coaches && data.coaches[0]?.assignedLocations) || ["KK NAGAR"],
       badge: "Academy Coach"
     },
     super_coach: {
@@ -1986,6 +2001,21 @@ export function CrmProvider({ children }) {
     setData(prev => ({
       ...prev,
       attendanceRecords: result.records,
+      coachAttendanceRecords: (prev.coachAttendanceRecords || []).map((rec) => {
+        if (
+          rec.date === date &&
+          (!location || location === 'All' || rec.locationName === location) &&
+          (!coachProfile?.id || rec.coachId === coachProfile.id || rec.coachName === coachProfile.name)
+        ) {
+          const prevBatches = rec.studentAttendanceBatchIds || [];
+          return {
+            ...rec,
+            studentAttendanceSaved: true,
+            studentAttendanceBatchIds: prevBatches.includes(batchId) ? prevBatches : [...prevBatches, batchId],
+          };
+        }
+        return rec;
+      }),
       compensationRequests: updatedCompensationRequests,
       notifications: [...newNotifications, ...(prev.notifications || [])].slice(0, 80),
       compensationHistory: [...newHistoryLogs, ...(prev.compensationHistory || [])],
@@ -2035,9 +2065,16 @@ export function CrmProvider({ children }) {
   // Coach Leave Request Sequential Workflow (Coach -> Super Coach -> Admin)
   // ==========================================================================
   const applyCoachLeave = (leavePayload = {}) => {
-    const coachId = leavePayload.coachId || '';
-    const coachName = leavePayload.coachName || '';
-    const location = leavePayload.location || leavePayload.center || 'KK NAGAR';
+    let coachId = (leavePayload.coachId || '').trim();
+    let coachName = (leavePayload.coachName || '').trim();
+
+    if (!coachId) {
+      coachId = currentUserProfiles.coach?.id || (data.coaches && data.coaches[0]?.id) || 'COACH-ARUN';
+    }
+    if (!coachName) {
+      coachName = currentUserProfiles.coach?.name || (data.coaches && data.coaches[0]?.name) || 'Arun Prakash';
+    }
+    const location = leavePayload.location || leavePayload.center || currentUserProfiles.coach?.center || 'KK NAGAR';
     const leaveType = leavePayload.leaveType || LEAVE_TYPES.FULL_DAY;
     const halfDaySession =
       leavePayload.halfDaySession ||
@@ -2477,6 +2514,184 @@ export function CrmProvider({ children }) {
   const applyLeave = (leaveData) => applyCoachLeave(leaveData);
   const updateLeaveStatus = (id, newStatus, reviewer, reviewNotes) =>
     reviewCoachLeave(id, { status: newStatus, reviewedBy: reviewer, reviewNotes });
+
+  // ==========================================================================
+  // Coach Attendance & Live Camera Verification Workflow
+  // ==========================================================================
+  const hasSavedStudentAttendanceToday = (coachId, dateYmd = new Date().toISOString().split('T')[0]) => {
+    // 1. Check coachAttendanceRecords flag
+    const coachAttRec = (data.coachAttendanceRecords || []).find(
+      (r) => (r.coachId === coachId || r.coachName === coachId) && r.date === dateYmd
+    );
+    if (coachAttRec && coachAttRec.studentAttendanceSaved) {
+      return true;
+    }
+
+    // 2. Check data.attendanceRecords
+    const targetCoach = (data.coaches || []).find((c) => c.id === coachId || c.name === coachId) || data.coaches?.[0];
+    const coachName = targetCoach?.name || '';
+    const coachBatches = (data.classes || [])
+      .filter((c) => c.coachId === coachId || (coachName && (c.coach || c.coachName)?.toLowerCase().includes(coachName.toLowerCase())))
+      .map((c) => c.id);
+
+    return (data.attendanceRecords || []).some((r) => {
+      if (r.date !== dateYmd) return false;
+      if (r.coachId === coachId) return true;
+      if (coachName && r.markedBy && r.markedBy.toLowerCase().includes(coachName.toLowerCase())) return true;
+      if (coachBatches.includes(r.batchId)) return true;
+      return false;
+    });
+  };
+
+  const getCoachTodayAttendance = (coachId, dateYmd = new Date().toISOString().split('T')[0], location = null) => {
+    return getCoachTodayAttendanceHelper(data.coachAttendanceRecords || [], coachId, dateYmd, location);
+  };
+
+  const checkInCoach = ({ coachId, coachName, location, photo, timestamp }) => {
+    const todayYmd = new Date().toISOString().split('T')[0];
+    const nowIso = timestamp || new Date().toISOString();
+    const effectiveCoachId = coachId || currentUserProfiles.coach?.id || data.coaches?.[0]?.id || 'COACH-ARUN';
+    const effectiveCoachName = coachName || currentUserProfiles.coach?.name || data.coaches?.[0]?.name || 'Arun Prakash';
+    const effectiveLocation = location || currentUserProfiles.coach?.center || 'KK NAGAR';
+
+    const validation = validateCheckInPayload({
+      coachId: effectiveCoachId,
+      coachName: effectiveCoachName,
+      location: effectiveLocation,
+      photo,
+    });
+
+    if (!validation.isValid) {
+      addToast(validation.errors[0] || 'Check-in validation failed.', 'error');
+      return { success: false, errors: validation.errors };
+    }
+
+    // Check if already checked in today at this location
+    const existing = (data.coachAttendanceRecords || []).find(
+      (r) => (r.coachId === effectiveCoachId || r.coachName === effectiveCoachName) &&
+             r.date === todayYmd &&
+             r.locationName === effectiveLocation
+    );
+
+    if (existing) {
+      const msg = `Coach is already checked in at ${effectiveLocation} for today (${existing.checkInTime}).`;
+      addToast(msg, 'warning');
+      return { success: false, error: msg, record: existing };
+    }
+
+    // Check location overlap: checked in at another location without checkout
+    const overlap = checkLocationOverlap(
+      data.coachAttendanceRecords || [],
+      effectiveCoachId,
+      todayYmd,
+      effectiveLocation
+    );
+    if (overlap) {
+      const msg = `Multi-Location Conflict: Coach is currently checked in at ${overlap.locationName}. Please check out from ${overlap.locationName} first before checking in at ${effectiveLocation}.`;
+      addToast(msg, 'error');
+      return { success: false, error: msg };
+    }
+
+    const nextId = `CATT-${todayYmd.replace(/-/g, '')}-${String(Date.now()).slice(-4)}`;
+    const studentSaved = hasSavedStudentAttendanceToday(effectiveCoachId, todayYmd);
+    const targetCoach = (data.coaches || []).find((c) => c.id === effectiveCoachId);
+
+    const newRecord = {
+      id: nextId,
+      coachId: effectiveCoachId,
+      coachName: effectiveCoachName,
+      coachAvatar: targetCoach?.avatar || currentUserProfiles.coach?.avatar || null,
+      locationId: `LOC-${effectiveLocation.replace(/\s+/g, '').toUpperCase()}`,
+      locationName: effectiveLocation,
+      date: todayYmd,
+      checkInTime: formatDisplayTime(nowIso),
+      checkInIso: nowIso,
+      checkInPhoto: photo,
+      checkOutTime: null,
+      checkOutIso: null,
+      checkOutPhoto: null,
+      studentAttendanceSaved: studentSaved,
+      studentAttendanceBatchIds: [],
+      totalDurationMinutes: 0,
+      totalDurationFormatted: '0m',
+      status: COACH_ATTENDANCE_STATUS.CHECKED_IN,
+      createdAt: nowIso,
+    };
+
+    setData((prev) => ({
+      ...prev,
+      coachAttendanceRecords: [newRecord, ...(prev.coachAttendanceRecords || [])],
+    }));
+
+    logSettingsAudit({
+      category: 'Session & Attendance',
+      action: 'Coach Check-In Verified',
+      module: 'Coach Attendance',
+      target: `${effectiveCoachName} (${effectiveLocation})`,
+      details: `Checked in at ${newRecord.checkInTime} with live camera verification.`,
+    });
+
+    addToast(`Check-in successful! Welcome, Coach ${effectiveCoachName}.`, 'success');
+    return { success: true, record: newRecord };
+  };
+
+  const checkOutCoach = ({ coachId, location, photo, timestamp }) => {
+    const todayYmd = new Date().toISOString().split('T')[0];
+    const nowIso = timestamp || new Date().toISOString();
+    const effectiveCoachId = coachId || currentUserProfiles.coach?.id || data.coaches?.[0]?.id || 'COACH-ARUN';
+
+    // Find active check-in record
+    const existing = (data.coachAttendanceRecords || []).find(
+      (r) => (r.coachId === effectiveCoachId || r.coachName === effectiveCoachId) &&
+             r.date === todayYmd &&
+             (!location || r.locationName === location) &&
+             r.status === COACH_ATTENDANCE_STATUS.CHECKED_IN
+    );
+
+    const studentSaved = existing?.studentAttendanceSaved || hasSavedStudentAttendanceToday(effectiveCoachId, todayYmd);
+
+    const validation = validateCheckOutPayload({
+      coachId: effectiveCoachId,
+      photo,
+      record: existing,
+      hasSavedStudentAttendance: studentSaved,
+    });
+
+    if (!validation.isValid) {
+      addToast(validation.errors[0] || 'Check-out validation failed.', 'error');
+      return { success: false, errors: validation.errors };
+    }
+
+    const duration = calculateWorkingDuration(existing.checkInIso, nowIso);
+    const updatedRecord = {
+      ...existing,
+      checkOutTime: formatDisplayTime(nowIso),
+      checkOutIso: nowIso,
+      checkOutPhoto: photo,
+      totalDurationMinutes: duration.minutes,
+      totalDurationFormatted: duration.formatted,
+      status: COACH_ATTENDANCE_STATUS.COMPLETED,
+      updatedAt: nowIso,
+    };
+
+    setData((prev) => ({
+      ...prev,
+      coachAttendanceRecords: (prev.coachAttendanceRecords || []).map((r) =>
+        r.id === existing.id ? updatedRecord : r
+      ),
+    }));
+
+    logSettingsAudit({
+      category: 'Session & Attendance',
+      action: 'Coach Check-Out Completed',
+      module: 'Coach Attendance',
+      target: `${existing.coachName} (${existing.locationName})`,
+      details: `Checked out at ${updatedRecord.checkOutTime}. Shift duration: ${duration.formatted}.`,
+    });
+
+    addToast(`Shift completed! Check-out confirmed. Total duration: ${duration.formatted}.`, 'success');
+    return { success: true, record: updatedRecord };
+  };
 
   const createTicket = (ticketData) => {
     const newTicket = {
@@ -6205,6 +6420,11 @@ export function CrmProvider({ children }) {
         resubmitCoachLeave,
         deleteCoachLeave,
         getCoachApprovedLeaveForDate,
+        // Coach Camera Attendance Workflow
+        checkInCoach,
+        checkOutCoach,
+        hasSavedStudentAttendanceToday,
+        getCoachTodayAttendance,
         createTicket,
         updateTicketStatus,
         addTicketReply,

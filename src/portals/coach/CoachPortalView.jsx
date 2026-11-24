@@ -60,15 +60,21 @@ import SportsEventsModule from '../admin/SportsEventsModule';
 import LiveCalendarButton from '../../components/common/LiveCalendarButton';
 import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
 import ChildEvaluationModule from './ChildEvaluationModule';
+import CoachTimeTrackerCard from './CoachTimeTrackerCard';
 
 export default function CoachPortalView() {
   const { 
     currentView, 
     setCurrentView, 
+    currentUser,
     data, 
     saveBatchAttendance,
     applyLeave, 
     applyCoachLeave,
+    checkInCoach,
+    checkOutCoach,
+    hasSavedStudentAttendanceToday,
+    getCoachTodayAttendance,
     updateCompensationRequest,
     updateCoachCompensation,
     completeClassSchedule,
@@ -76,16 +82,30 @@ export default function CoachPortalView() {
     addToast 
   } = useCrm();
 
-  const coachProfile = data.coaches[0] || {
-    id: '',
-    name: 'Coach (Unassigned)',
-    specialization: 'Sports Training',
-    experience: '-',
-    certification: 'Academy Coach',
-    email: '',
-    center: data.academy.centers[0] || 'KK NAGAR',
-    rating: '-',
-  };
+  const coachProfile = useMemo(() => {
+    if (currentUser?.id && (data.coaches || []).some((c) => c.id === currentUser.id)) {
+      return data.coaches.find((c) => c.id === currentUser.id);
+    }
+    if (currentUser?.email) {
+      const byEmail = (data.coaches || []).find(
+        (c) => c.email && c.email.toLowerCase() === currentUser.email.toLowerCase()
+      );
+      if (byEmail) return byEmail;
+    }
+    return (
+      data.coaches?.[0] || {
+        id: 'COACH-ARUN',
+        name: 'Arun Prakash',
+        specialization: 'Movement & Athletics',
+        experience: '5+ years',
+        certification: 'Senior Spartan Coach',
+        email: 'arun.prakash@littlespartans.co.in',
+        center: data.academy?.centers?.[0] || 'KK NAGAR',
+        rating: '4.9',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      }
+    );
+  }, [currentUser, data.coaches, data.academy]);
   const coachFirstName = (coachProfile.name || '').split(' ')[0].toLowerCase();
   const isCoachAssignedToItem = (item) =>
     item.coachId === coachProfile.id ||
@@ -120,6 +140,16 @@ export default function CoachPortalView() {
       (s.replacement.replacementCoachId === coachProfile.id ||
         (coachFirstName && s.replacement.replacementCoachName?.toLowerCase().includes(coachFirstName)))
   );
+
+  // Coach Camera Attendance & Student Attendance Verification
+  const todayYmd = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayCoachAttendance = useMemo(() => {
+    return getCoachTodayAttendance ? getCoachTodayAttendance(coachProfile.id, todayYmd) : null;
+  }, [getCoachTodayAttendance, coachProfile.id, todayYmd, data.coachAttendanceRecords]);
+
+  const hasSavedStudentAttendance = useMemo(() => {
+    return hasSavedStudentAttendanceToday ? hasSavedStudentAttendanceToday(coachProfile.id, todayYmd) : false;
+  }, [hasSavedStudentAttendanceToday, coachProfile.id, todayYmd, data.attendanceRecords, data.coachAttendanceRecords]);
 
   // Sub-view toggle in "My Classes": 'schedules' | 'batches'
   const [classesSubView, setClassesSubView] = useState('schedules');
@@ -491,6 +521,16 @@ export default function CoachPortalView() {
               />
             </div>
           </div>
+
+          {/* Coach Time Tracker Card (Camera Check-in/Check-out & Student Attendance Gating) */}
+          <CoachTimeTrackerCard
+            coachProfile={coachProfile}
+            todayAttendance={todayCoachAttendance}
+            hasSavedStudentAttendance={hasSavedStudentAttendance}
+            onCheckIn={checkInCoach}
+            onCheckOut={checkOutCoach}
+            onOpenStudentAttendance={() => setCurrentView('batches')}
+          />
 
           {/* ============================================================ */}
           {/* 1. TOP ROW: Today's Training Schedule, Coaching Performance & Faculty Toolkit */}

@@ -53,6 +53,7 @@ import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
 import EvaluationReviewModule from './EvaluationReviewModule';
 import CoachManagementModule from './CoachManagementModule';
 import SuperCoachDashboardView from './SuperCoachDashboardView';
+import CoachAttendanceCalendar from './CoachAttendanceCalendar';
 
 export default function SuperCoachPortalView() {
   const {
@@ -102,7 +103,7 @@ export default function SuperCoachPortalView() {
   });
 
   // Attendance sub-view toggle: Coach Attendance Register vs Student Progression
-  const [attendanceSubView, setAttendanceSubView] = useState('coach_register');
+  const [attendanceSubView, setAttendanceSubView] = useState('coach_calendar');
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -948,6 +949,17 @@ export default function SuperCoachPortalView() {
           <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
             <button
               type="button"
+              onClick={() => setAttendanceSubView('coach_calendar')}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                attendanceSubView === 'coach_calendar'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+              }`}
+            >
+              Coach Attendance Calendar
+            </button>
+            <button
+              type="button"
               onClick={() => setAttendanceSubView('student_attendance')}
               className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
                 attendanceSubView === 'student_attendance'
@@ -1004,6 +1016,13 @@ export default function SuperCoachPortalView() {
             <CoachLeaveRequestsManager
               mode="super_coach"
               allowedLocations={assignedLocations}
+            />
+          )}
+
+          {attendanceSubView === 'coach_calendar' && (
+            <CoachAttendanceCalendar
+              allowedLocations={assignedLocations}
+              allowedCoaches={scopedCoaches}
             />
           )}
 

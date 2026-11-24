@@ -1424,6 +1424,7 @@ export const initialAcademyData = {
   termsAcceptances: [],
   classSchedules: [],
   attendanceRecords: [],
+  coachAttendanceRecords: [],
   notifications: [],
   superCoaches: [
     {
