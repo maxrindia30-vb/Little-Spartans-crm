@@ -4914,11 +4914,13 @@ export function CrmProvider({ children }) {
   };
 
   const createOrOpenConversation = (parentPayload) => {
-    const { parentName, childName, phone, location, initialText } = parentPayload;
+    const { parentName, childName, kidId, phone, location, initialText } = parentPayload;
     if (!parentName?.trim()) return { success: false, error: 'Parent name is required' };
 
     const existing = (data.conversations || []).find(
-      c => c.parentName.toLowerCase() === parentName.trim().toLowerCase() || (phone && c.phone === phone)
+      c => c.parentName.toLowerCase() === parentName.trim().toLowerCase() ||
+           (phone && c.phone === phone) ||
+           (kidId && c.kidId && c.kidId.toLowerCase() === kidId.trim().toLowerCase())
     );
 
     if (existing) {
@@ -4956,6 +4958,7 @@ export function CrmProvider({ children }) {
       parentId: `PAR-${Date.now().toString().slice(-4)}`,
       parentName: parentName.trim(),
       childName: childName?.trim() || 'Student',
+      kidId: kidId?.trim() || '',
       avatarColor,
       initial,
       lastMessage: initialText?.trim() || 'Conversation started',

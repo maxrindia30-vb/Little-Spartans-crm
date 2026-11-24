@@ -127,6 +127,7 @@ export default function CommunicationModule() {
   const [newMsgForm, setNewMsgForm] = useState({
     parentName: '',
     childName: '',
+    kidId: '',
     phone: '',
     location: 'KK Nagar',
     initialText: '',
@@ -184,13 +185,15 @@ export default function CommunicationModule() {
       // Location filter
       if (locationFilter !== 'All' && conv.location !== locationFilter) return false;
 
-      // Search query filter (matches parent, child, or latest message)
+      // Search query filter (matches parent, child, kid ID, phone, or latest message)
       const q = (inboxSearch || topSearchQuery).toLowerCase().trim();
       if (q) {
         const matchParent = (conv.parentName || '').toLowerCase().includes(q);
         const matchChild = (conv.childName || '').toLowerCase().includes(q);
         const matchMsg = (conv.lastMessage || '').toLowerCase().includes(q);
-        if (!matchParent && !matchChild && !matchMsg) return false;
+        const matchKidId = (conv.kidId || '').toLowerCase().includes(q);
+        const matchPhone = (conv.phone || '').toLowerCase().includes(q);
+        if (!matchParent && !matchChild && !matchMsg && !matchKidId && !matchPhone) return false;
       }
 
       return true;
@@ -240,6 +243,66 @@ export default function CommunicationModule() {
     addToast(`Attached "${file.name}"`, 'info');
   };
 
+  // Directory Lookup Helpers for New Conversation Form
+  const handleParentNameChange = (name) => {
+    const matched = (data.parents || []).find(
+      (p) => p.name?.toLowerCase() === name.trim().toLowerCase()
+    );
+    if (matched) {
+      const studentMatch = (data.students || []).find(
+        (s) =>
+          (s.parentName && s.parentName.toLowerCase() === matched.name.toLowerCase()) ||
+          (matched.linkedStudentIds && matched.linkedStudentIds.includes(s.id))
+      );
+      setNewMsgForm((prev) => ({
+        ...prev,
+        parentName: matched.name,
+        phone: matched.phone || prev.phone,
+        location: matched.center || prev.location,
+        childName: studentMatch?.name || (matched.children && matched.children[0]) || prev.childName,
+        kidId: studentMatch?.id || (matched.linkedStudentIds && matched.linkedStudentIds[0]) || prev.kidId,
+      }));
+    } else {
+      setNewMsgForm((prev) => ({ ...prev, parentName: name }));
+    }
+  };
+
+  const handleChildNameChange = (childName) => {
+    const matched = (data.students || []).find(
+      (s) => s.name?.toLowerCase() === childName.trim().toLowerCase()
+    );
+    if (matched) {
+      setNewMsgForm((prev) => ({
+        ...prev,
+        childName: matched.name,
+        kidId: matched.id || prev.kidId,
+        parentName: matched.parentName || prev.parentName,
+        phone: matched.parentPhone || prev.phone,
+        location: matched.center || matched.location || prev.location,
+      }));
+    } else {
+      setNewMsgForm((prev) => ({ ...prev, childName }));
+    }
+  };
+
+  const handleKidIdChange = (id) => {
+    const matched = (data.students || []).find(
+      (s) => s.id?.toLowerCase() === id.trim().toLowerCase()
+    );
+    if (matched) {
+      setNewMsgForm((prev) => ({
+        ...prev,
+        kidId: matched.id,
+        childName: matched.name || prev.childName,
+        parentName: matched.parentName || prev.parentName,
+        phone: matched.parentPhone || prev.phone,
+        location: matched.center || matched.location || prev.location,
+      }));
+    } else {
+      setNewMsgForm((prev) => ({ ...prev, kidId: id }));
+    }
+  };
+
   // Handle New Message Form Submission
   const handleCreateNewMessage = (e) => {
     e.preventDefault();
@@ -256,6 +319,7 @@ export default function CommunicationModule() {
       setNewMsgForm({
         parentName: '',
         childName: '',
+        kidId: '',
         phone: '',
         location: 'KK Nagar',
         initialText: '',
@@ -671,8 +735,11 @@ export default function CommunicationModule() {
                               {conv.lastTime}
                             </span>
                           </div>
-                          <p className="text-[10.5px] text-[#172B50]/60 font-medium truncate">
-                            Parent of {conv.childName}
+                          <p className="text-[10.5px] text-[#172B50]/60 font-medium truncate flex items-center gap-1">
+                            <span>Parent of {conv.childName}</span>
+                            {conv.kidId && (
+                              <span className="text-[#F4510B] font-mono text-[9.5px]">({conv.kidId})</span>
+                            )}
                           </p>
                           <p className="text-[11px] text-[#172B50]/75 truncate mt-0.5 font-normal">
                             {conv.lastMessage}
@@ -729,8 +796,16 @@ export default function CommunicationModule() {
                         <h3 className="text-sm font-extrabold text-[#172B50] truncate leading-tight">
                           {selectedConv.parentName}
                         </h3>
-                        <p className="text-[11px] text-[#172B50]/65 font-medium truncate">
-                          Parent of {selectedConv.childName}
+                        <p className="text-[11px] text-[#172B50]/65 font-medium truncate flex items-center gap-1.5 flex-wrap">
+                          <span>Parent of {selectedConv.childName}</span>
+                          {selectedConv.kidId && (
+                            <span className="font-mono bg-[#FFF4E8] text-[#F4510B] px-1.5 py-0.5 rounded text-[10px] font-bold">
+                              {selectedConv.kidId}
+                            </span>
+                          )}
+                          {selectedConv.phone && (
+                            <span className="text-[#172B50]/50">• {selectedConv.phone}</span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -1283,11 +1358,50 @@ export default function CommunicationModule() {
             <input
               type="text"
               required
+              list="parents-directory-list"
               value={newMsgForm.parentName}
-              onChange={(e) => setNewMsgForm({ ...newMsgForm, parentName: e.target.value })}
+              onChange={(e) => handleParentNameChange(e.target.value)}
               placeholder="e.g. Priya R"
-              className="w-full px-3 py-2 border border-[#172B5020] rounded-xl text-[#172B50]"
+              className="w-full px-3 py-2 border border-[#172B5020] rounded-xl text-[#172B50] bg-white font-medium"
             />
+            <datalist id="parents-directory-list">
+              {(data.parents || []).map((p) => (
+                <option key={p.id || p.name} value={p.name}>
+                  {p.name} {p.phone ? `(${p.phone})` : ''}
+                </option>
+              ))}
+            </datalist>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <div>
+              <label className="block font-bold text-[#172B50] mb-1">Kid ID</label>
+              <input
+                type="text"
+                list="kids-ids-directory-list"
+                value={newMsgForm.kidId}
+                onChange={(e) => handleKidIdChange(e.target.value)}
+                placeholder="e.g. STU-LS-001"
+                className="w-full px-3 py-2 border border-[#172B5020] rounded-xl text-[#172B50] bg-white font-medium font-mono text-[11px]"
+              />
+              <datalist id="kids-ids-directory-list">
+                {(data.students || []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} • {s.center || s.location}
+                  </option>
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label className="block font-bold text-[#172B50] mb-1">Phone Number</label>
+              <input
+                type="tel"
+                value={newMsgForm.phone}
+                onChange={(e) => setNewMsgForm({ ...newMsgForm, phone: e.target.value })}
+                placeholder="e.g. +91 98401 23456"
+                className="w-full px-3 py-2 border border-[#172B5020] rounded-xl text-[#172B50] bg-white font-medium"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
@@ -1295,11 +1409,19 @@ export default function CommunicationModule() {
               <label className="block font-bold text-[#172B50] mb-1">Student / Child Name</label>
               <input
                 type="text"
+                list="students-directory-list"
                 value={newMsgForm.childName}
-                onChange={(e) => setNewMsgForm({ ...newMsgForm, childName: e.target.value })}
+                onChange={(e) => handleChildNameChange(e.target.value)}
                 placeholder="e.g. Arjun"
-                className="w-full px-3 py-2 border border-[#172B5020] rounded-xl text-[#172B50]"
+                className="w-full px-3 py-2 border border-[#172B5020] rounded-xl text-[#172B50] bg-white font-medium"
               />
+              <datalist id="students-directory-list">
+                {(data.students || []).map((s) => (
+                  <option key={s.id || s.name} value={s.name}>
+                    {s.name} {s.id ? `(${s.id})` : ''}
+                  </option>
+                ))}
+              </datalist>
             </div>
             <div>
               <label className="block font-bold text-[#172B50] mb-1">Center Location</label>
@@ -1308,10 +1430,14 @@ export default function CommunicationModule() {
                 onChange={(e) => setNewMsgForm({ ...newMsgForm, location: e.target.value })}
                 className="w-full px-3 py-2 border border-[#172B5020] rounded-xl text-[#172B50] bg-white font-semibold"
               >
-                <option value="KK Nagar">KK Nagar</option>
-                <option value="Mahalingapuram">Mahalingapuram</option>
-                <option value="Arumbakkam">Arumbakkam</option>
-                <option value="Kilpauk">Kilpauk</option>
+                {(data.locations && data.locations.length > 0
+                  ? data.locations.map((l) => l.name || l)
+                  : ['KK Nagar', 'Mahalingapuram', 'Arumbakkam', 'Kilpauk', 'Anna Nagar', 'Kolathur']
+                ).map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
