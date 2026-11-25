@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Smartphone } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useCrm } from './context/CrmContext';
 import Sidebar from './components/common/Sidebar';
 import ToastContainer from './components/common/ToastContainer';
@@ -9,7 +9,6 @@ import MouseFloatingGlow from './components/common/MouseFloatingGlow';
 import DailyMotivationalModal from './components/common/DailyMotivationalModal';
 import FirstTimeTermsModal from './components/auth/FirstTimeTermsModal';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import IPhone18ProMaxSimulator from './components/mobile/IPhone18ProMaxSimulator';
 
 // Admin Portal Master Modules
 import AdminDashboard from './portals/admin/AdminDashboard';
@@ -44,8 +43,6 @@ export default function App() {
     setSidebarOpen,
     currentUser,
     checkUserTermsAcceptance,
-    isIphoneView,
-    toggleIphoneView,
   } = useCrm();
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -249,27 +246,6 @@ export default function App() {
 
       {/* Daily Sports Motivational Welcome Modal (Displays once per day immediately after terms acceptance) */}
       {!shouldShowTermsModal && <DailyMotivationalModal />}
-
-      {/* iPhone 18 Pro Max Simulator Viewport */}
-      {isIphoneView && <IPhone18ProMaxSimulator />}
-
-      {/* Floating iPhone 18 Pro Max Switcher Pill */}
-      {!isIphoneView && (
-        <button
-          type="button"
-          onClick={() => toggleIphoneView && toggleIphoneView(true)}
-          className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-slate-950 to-[#172B50] hover:from-[#F4510B] hover:to-[#d83f05] text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.35)] border border-white/20 flex items-center gap-2.5 text-xs font-black transition-all hover:scale-105 active:scale-95 group cursor-pointer"
-          title="Switch to iPhone 18 Pro Max Mobile Simulator"
-        >
-          <span className="p-1 rounded-full bg-white/10 group-hover:bg-white/25 text-white flex items-center justify-center">
-            <Smartphone className="w-3.5 h-3.5 text-[#F4510B] group-hover:text-white" />
-          </span>
-          <span>iPhone 18 Pro Max View</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-[#F4510B] text-white text-[9.5px] font-black uppercase tracking-wider group-hover:bg-white group-hover:text-[#F4510B]">
-            iOS 18
-          </span>
-        </button>
-      )}
 
     </div>
   );

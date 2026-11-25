@@ -579,25 +579,6 @@ export function CrmProvider({ children }) {
   // Mobile sidebar drawer state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // iPhone 18 Pro Max Mobile Simulator State
-  const [isIphoneView, setIsIphoneView] = useState(() => {
-    try {
-      return localStorage.getItem('little_spartans_iphone_view') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
-
-  const toggleIphoneView = (val) => {
-    setIsIphoneView(prev => {
-      const next = typeof val === 'boolean' ? val : !prev;
-      try {
-        localStorage.setItem('little_spartans_iphone_view', String(next));
-      } catch (e) {}
-      return next;
-    });
-  };
-
   // Focus navigation state (e.g. jump directly from Enquiry Enrollment -> Student / Parent record)
   const [focusedRecord, setFocusedRecord] = useState(null);
   const enrollingIdsRef = useRef(new Set());
@@ -7044,9 +7025,6 @@ export function CrmProvider({ children }) {
         setGlobalSearch,
         sidebarOpen,
         setSidebarOpen,
-        isIphoneView,
-        setIsIphoneView,
-        toggleIphoneView,
         focusedRecord,
         setFocusedRecord,
         navigateToPersonRecord,
