@@ -38,7 +38,8 @@ import {
   Bell,
   Inbox,
   BarChart2,
-  Building2
+  Building2,
+  Smartphone
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import { AnimatedCounter } from '../../components/common/KpiCard';
@@ -67,7 +68,8 @@ export default function SuperCoachPortalView() {
     createClassSchedule,
     updateClassSchedule,
     cancelClassSchedule,
-    addToast
+    addToast,
+    toggleIphoneView
   } = useCrm();
 
   // Super Coach assigned locations (Admin-granted access)
@@ -471,6 +473,17 @@ export default function SuperCoachPortalView() {
 
           {/* Right: Quick Action Round Buttons */}
           <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-center shrink-0">
+            {/* iPhone 18 Pro Max View Toggle */}
+            <button
+              type="button"
+              onClick={() => toggleIphoneView && toggleIphoneView(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-slate-900 to-[#172B50] hover:from-[#F4510B] hover:to-[#d83f05] text-white text-xs font-black transition-all cursor-pointer shadow-2xs border border-slate-700 hover:border-[#F4510B]"
+              title="Switch to iPhone 18 Pro Max Mobile View"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-[#F4510B]" />
+              <span>iPhone 18 Pro Max</span>
+            </button>
+
             {/* 1. Search */}
             <button
               type="button"

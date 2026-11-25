@@ -6,7 +6,8 @@ import {
   Menu, 
   X, 
   LogOut, 
-  Sparkles
+  Sparkles,
+  Smartphone
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 
@@ -23,7 +24,8 @@ export default function Navbar() {
     setSidebarOpen,
     data,
     markNotificationsRead,
-    logout
+    logout,
+    toggleIphoneView
   } = useCrm();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -88,6 +90,18 @@ export default function Navbar() {
 
         {/* Right Action Icons: Notifications, User Profile Menu */}
         <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* iPhone 18 Pro Max View Toggle */}
+          <button
+            type="button"
+            onClick={() => toggleIphoneView && toggleIphoneView(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-slate-900 to-[#172B50] hover:from-[#F4510B] hover:to-[#d83f05] text-white text-xs font-black transition-all cursor-pointer shadow-2xs border border-slate-700 hover:border-[#F4510B]"
+            title="Switch to iPhone 18 Pro Max Mobile View"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-[#F4510B] group-hover:text-white" />
+            <span className="hidden sm:inline">iPhone 18 Pro Max</span>
+            <span className="sm:hidden">iPhone</span>
+          </button>
 
           {/* Quick Portal Switcher */}
           <div className="relative">

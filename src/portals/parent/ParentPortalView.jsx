@@ -48,7 +48,8 @@ import {
   Package,
   Image,
   Megaphone,
-  ChevronDown
+  ChevronDown,
+  Smartphone
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -106,7 +107,8 @@ export default function ParentPortalView() {
     addPayment, 
     registerCompetition,
     submitCompensationRequest,
-    addToast 
+    addToast,
+    toggleIphoneView
   } = useCrm();
 
   // Current logged in parent profile
@@ -553,6 +555,17 @@ export default function ParentPortalView() {
               </div>
             )}
           </div>
+
+          {/* iPhone 18 Pro Max View Toggle */}
+          <button
+            type="button"
+            onClick={() => toggleIphoneView && toggleIphoneView(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-slate-900 to-[#172B50] hover:from-[#F4510B] hover:to-[#d83f05] text-white text-xs font-black transition-all cursor-pointer shadow-2xs border border-slate-700 hover:border-[#F4510B]"
+            title="Switch to iPhone 18 Pro Max Mobile View"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-[#F4510B]" />
+            <span>iPhone 18 Pro Max</span>
+          </button>
 
           {/* Search Button */}
           <button
