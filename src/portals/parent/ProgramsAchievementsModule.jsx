@@ -286,51 +286,16 @@ export default function ProgramsAchievementsModule({
   return (
     <div className="space-y-5 animate-in fade-in duration-300 pb-12">
       {/* ========================================================================= */}
-      {/* 1. TOP HEADER & GREETING BAR (MATCHES REFERENCE IMAGE)                    */}
+      {/* 1. PAGE TITLE & BREADCRUMB (Global header provides greeting & child select)*/}
       {/* ========================================================================= */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 text-left">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#172B50] flex items-center gap-2">
-            Good Morning, Parent! <span className="animate-wiggle">👋</span>
-          </h1>
+          <h2 className="text-xl sm:text-2xl font-black text-[#172B50] tracking-tight">
+            Programs &amp; Achievements
+          </h2>
           <p className="text-xs sm:text-sm font-semibold text-[#172B50]/65 mt-0.5">
             Parent Portal &gt; Programs &amp; Achievements
           </p>
-        </div>
-
-        {/* Top Right: Child Quick Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-2xs">
-            <span className="text-[11px] font-black text-[#172B50]/70 uppercase tracking-wider">Select Child</span>
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-2.5">
-              {(myChildren.length > 0 ? myChildren : [
-                { id: 'STU-LS-002', name: 'Aarav', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80' },
-                { id: 'STU-LS-004', name: 'Diya', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80' }
-              ]).map((c) => {
-                const isSelected = (c.id === activeChild.id) || (c.name?.split(' ')[0] === activeChild.name?.split(' ')[0]);
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => handleSelectChild(c)}
-                    className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#FFF4E8] text-[#F4510B] ring-2 ring-[#F4510B] shadow-2xs font-black'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <img
-                      src={c.avatar || 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80'}
-                      alt={c.name}
-                      className="w-5 h-5 rounded-full object-cover border border-white"
-                    />
-                    <span>{c.name?.split(' ')[0]}</span>
-                    {isSelected && <Check className="w-3 h-3 text-[#F4510B]" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
 

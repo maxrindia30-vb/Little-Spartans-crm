@@ -436,7 +436,7 @@ export default function ParentProgramsModule({
     <div className="space-y-6 animate-in fade-in duration-200">
       
       {/* =================================================================== */}
-      {/* 1. TOP HEADER (Matching Reference Screenshot: Programs + Subtitle)  */}
+      {/* 1. PAGE TITLE & SUBTITLE (Global header provides greeting & controls)*/}
       {/* =================================================================== */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div className="text-left space-y-1">
@@ -446,34 +446,6 @@ export default function ParentProgramsModule({
           <p className="text-xs sm:text-[13px] font-semibold text-[#172B50]/65 tracking-tight text-left">
             Explore training programs, schedules and progress for your child.
           </p>
-        </div>
-
-        {/* Right Action Icons: Notification Bell + Parent Profile Pill */}
-        <div className="flex items-center gap-3 self-start sm:self-center shrink-0">
-          {/* Academy Notification Bell */}
-          <button
-            type="button"
-            onClick={() => onNavigateView ? onNavigateView('communication') : addToast('Viewing academy announcements', 'info')}
-            className="w-9 h-9 rounded-full bg-white border border-[#172B50]/15 shadow-2xs flex items-center justify-center text-[#172B50] hover:bg-[#FFF4E8] hover:border-[#F4510B]/40 transition-all cursor-pointer relative"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4 text-[#172B50]" />
-            <span className="w-2 h-2 rounded-full bg-[#F4510B] absolute top-2 right-2 ring-1 ring-white" />
-          </button>
-
-          {/* Parent Profile Pill */}
-          <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white border border-[#172B50]/15 shadow-2xs">
-            <div className="w-7 h-7 rounded-full bg-[#172B50] flex items-center justify-center text-white text-xs font-bold shrink-0">
-              <User className="w-4 h-4" />
-            </div>
-            <div className="text-left leading-tight hidden xs:block">
-              <p className="text-xs font-black text-[#172B50]">
-                {parentProfile?.name || 'Mrs. Priya S'}
-              </p>
-              <p className="text-[10px] font-semibold text-[#172B50]/60">Parent</p>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-[#172B50]/60 ml-0.5" />
-          </div>
         </div>
       </div>
 
