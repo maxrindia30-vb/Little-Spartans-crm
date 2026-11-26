@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Award,
   Rocket,
@@ -24,6 +25,7 @@ import {
   Flame,
   ArrowRight,
   Shield,
+  ShieldCheck,
   X,
   Send,
   Phone,
@@ -58,6 +60,7 @@ import {
   INITIAL_CHILD_JOURNEYS,
   BADGE_STATUSES,
   RADAR_DIMENSIONS,
+  PROGRAM_BADGE_CATALOG,
   getRadarCoordinates,
 } from '../../services/childDevelopmentService';
 
@@ -119,23 +122,82 @@ export default function ProgramsAchievementsModule({
     return journeys['STU-LS-002'] || INITIAL_CHILD_JOURNEYS['STU-LS-002'];
   }, [data.childJourneys, activeChild]);
 
-  // Selected Badge for Right Side Details Panel
-  const [selectedBadge, setSelectedBadge] = useState(() => {
-    // Default to "Taking Turns" (second completed badge in screenshot) or first completed badge
-    const badges = childJourney?.pathwayBadges || [];
-    return badges.find((b) => b.badgeId === 'BADGE-FM-TURNS') || badges.find((b) => b.status === BADGE_STATUSES.COMPLETED) || badges[0];
-  });
+  // Badge Details Modal State (Centered Popup Modal)
+  const [selectedBadgeModal, setSelectedBadgeModal] = useState(null);
 
-  // When active child changes, update default selected badge
+  // Lock background scrolling and handle Escape key for the Badge Details Modal
   useEffect(() => {
-    if (childJourney?.pathwayBadges?.length > 0) {
-      const defaultB =
-        childJourney.pathwayBadges.find((b) => b.badgeId === 'BADGE-FM-TURNS') ||
-        childJourney.pathwayBadges.find((b) => b.status === BADGE_STATUSES.COMPLETED) ||
-        childJourney.pathwayBadges[0];
-      setSelectedBadge(defaultB);
+    if (!selectedBadgeModal) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedBadgeModal(null);
+      }
+    };
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedBadgeModal]);
+
+  // Handle Badge Click (Skill Trail, Earned Badges grid, and All Badges modal)
+  const handleBadgeClick = (badge) => {
+    if (!badge) return;
+    if (badge.status === BADGE_STATUSES.LOCKED || badge.locked) {
+      addToast('Keep exploring to unlock this badge! 🌟', 'info');
+      return;
     }
-  }, [childJourney]);
+
+    // Dynamic resolution from catalog or pathway if extra details are needed
+    let catalogMatch = null;
+    try {
+      const programBadges = (PROGRAM_BADGE_CATALOG && PROGRAM_BADGE_CATALOG[childJourney?.program]) || [];
+      catalogMatch = programBadges.find((b) => b.id === badge.badgeId || b.id === badge.id || b.name === badge.name);
+      if (!catalogMatch && PROGRAM_BADGE_CATALOG) {
+        Object.values(PROGRAM_BADGE_CATALOG).forEach((list) => {
+          if (!catalogMatch && Array.isArray(list)) {
+            const found = list.find((b) => b.id === badge.badgeId || b.id === badge.id || b.name === badge.name);
+            if (found) catalogMatch = found;
+          }
+        });
+      }
+    } catch (e) {}
+
+    const resolvedBadge = {
+      ...badge,
+      badgeId: badge.badgeId || badge.id,
+      name: badge.name,
+      category: badge.category || catalogMatch?.category || 'Skill Development',
+      status: badge.status || BADGE_STATUSES.COMPLETED,
+      completedDate: badge.completedDate || badge.date || 'Oct 31, 2026',
+      progress: badge.progress ?? (badge.status === BADGE_STATUSES.COMPLETED ? 100 : 60),
+      description: badge.description || catalogMatch?.description || `Demonstrated high proficiency in ${badge.name}.`,
+      whatChildDid: (badge.whatChildDid && badge.whatChildDid.length > 0)
+        ? badge.whatChildDid
+        : (catalogMatch?.whatChildDid || [
+            `Mastered key ${badge.name} technique with confidence`,
+            'Showed active listening and positive effort in all drills',
+            'Demonstrated teamwork and sportsmanship with peers',
+          ]),
+      iconType: badge.iconType || catalogMatch?.iconType || 'star',
+      program: selectedChild?.program || childJourney?.program || 'Foundational Movement',
+      batch: selectedChild?.batch || childJourney?.batch || 'LE - B1',
+      location: selectedChild?.location || childJourney?.center || 'KK Nagar',
+      coachName: badge.coachName || childJourney?.coachName || 'Coach Karthik',
+      coachTitle: badge.coachTitle || childJourney?.coachTitle || 'Primary Coach',
+      coachAvatar: badge.coachAvatar || childJourney?.coachAvatar || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
+      verified: badge.verified ?? true,
+      verifiedBy: badge.verifiedBy || 'Super Coach Alex',
+      verifiedDate: badge.verifiedDate || badge.completedDate || 'Oct 31, 2026',
+    };
+
+    setSelectedBadgeModal(resolvedBadge);
+  };
 
   // Modals State
   const [selectedCertModal, setSelectedCertModal] = useState(null);
@@ -394,411 +456,320 @@ export default function ProgramsAchievementsModule({
       {/* ========================================================================= */}
       {activeSubTab === 'journey' && (
         <div className="space-y-5">
-          {/* Two-Column Grid: Winding Skill Trail (Left) + Selected Badge Details (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* LEFT: THE INTERACTIVE WINDING SKILL TRAIL (8 or 8.5 Cols) */}
-            <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 flex flex-col justify-between overflow-hidden relative">
-              {/* Header inside Trail Card */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 relative z-10">
-                <div>
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/60">
-                    Our Quarterly Skill Trail
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-[#172B50] mt-0.5">
-                    {childJourney.trailTitle || 'The Autumn Adventure'}
-                  </h3>
-                  <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1 max-w-md">
-                    {childJourney.trailSubtitle || 'Four little discoveries. Three months of moving, connecting and growing.'}
-                  </p>
-                </div>
-
-                {/* Period Selector Dropdown */}
-                <div className="relative shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsPeriodDropdownOpen(!isPeriodDropdownOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-black text-[#172B50] shadow-2xs hover:border-slate-300 transition-all cursor-pointer"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
-                    <span>{selectedPeriod}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                  </button>
-                  {isPeriodDropdownOpen && (
-                    <div className="absolute right-0 mt-1.5 w-44 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-30">
-                      {['Oct – Dec 2026', 'Jul – Sep 2026', 'Apr – Jun 2026'].map((period) => (
-                        <button
-                          key={period}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPeriod(period);
-                            setIsPeriodDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                            selectedPeriod === period ? 'bg-[#FFF4E8] text-[#F4510B] font-black' : 'text-slate-700 hover:bg-slate-50'
-                          }`}
-                        >
-                          {period}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+          {/* THE INTERACTIVE WINDING SKILL TRAIL */}
+          <div className="w-full bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 flex flex-col justify-between overflow-hidden relative">
+            {/* Header inside Trail Card */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 relative z-10">
+              <div>
+                <span className="text-[11px] font-black uppercase tracking-wider text-[#172B50]/60">
+                  Our Quarterly Skill Trail
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-[#172B50] mt-0.5">
+                  {childJourney.trailTitle || 'The Autumn Adventure'}
+                </h3>
+                <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1 max-w-md">
+                  {childJourney.trailSubtitle || 'Four little discoveries. Three months of moving, connecting and growing.'}
+                </p>
               </div>
 
-              {/* THE WINDING TRAIL SVG CANVAS */}
-              <div className="relative my-4 py-4 min-h-[310px] flex items-center justify-center overflow-x-auto">
-                <div className="w-[740px] sm:w-[780px] h-[280px] relative shrink-0">
-                  {/* Background Soft Hills & Clouds Landscape */}
-                  <svg viewBox="0 0 780 280" className="w-full h-full absolute inset-0 pointer-events-none">
-                    <defs>
-                      <linearGradient id="hillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#F0FDF4" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#DCFCE7" stopOpacity="0.3" />
-                      </linearGradient>
-                      <linearGradient id="pathwayGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#86EFAC" />
-                        <stop offset="38%" stopColor="#34D399" />
-                        <stop offset="42%" stopColor="#E2D9C8" />
-                        <stop offset="100%" stopColor="#E2D9C8" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Whimsical Rolling Hills */}
-                    <path d="M 0 140 Q 180 80 400 130 T 780 110 L 780 280 L 0 280 Z" fill="url(#hillGrad)" />
-
-                    {/* Cute Background Trees */}
-                    <g opacity="0.75">
-                      {/* Tree 1 */}
-                      <rect x="70" y="80" width="6" height="24" fill="#92400E" rx="2" />
-                      <circle cx="73" cy="74" r="14" fill="#6EE7B7" />
-                      <circle cx="73" cy="70" r="10" fill="#34D399" />
-                      {/* Tree 2 */}
-                      <rect x="230" y="60" width="5" height="20" fill="#92400E" rx="2" />
-                      <circle cx="232" cy="54" r="12" fill="#A7F3D0" />
-                      {/* Tree 3 */}
-                      <rect x="620" y="70" width="6" height="22" fill="#92400E" rx="2" />
-                      <circle cx="623" cy="65" r="13" fill="#6EE7B7" />
-                      {/* Bushes */}
-                      <ellipse cx="380" cy="230" rx="16" ry="8" fill="#A7F3D0" opacity="0.6" />
-                      <ellipse cx="680" cy="220" rx="18" ry="9" fill="#A7F3D0" opacity="0.6" />
-                    </g>
-
-                    {/* Winding Sandy Pathway Base */}
-                    <path
-                      d="M 60 170 C 180 120, 240 215, 380 175 C 500 135, 610 205, 730 160"
-                      fill="none"
-                      stroke="#E5DECE"
-                      strokeWidth="28"
-                      strokeLinecap="round"
-                    />
-
-                    {/* Completed Portion of Trail in Vibrant Green */}
-                    <path
-                      d="M 60 170 C 180 120, 240 215, 330 188"
-                      fill="none"
-                      stroke="#86EFAC"
-                      strokeWidth="26"
-                      strokeLinecap="round"
-                    />
-
-                    {/* Dashed Center Guide Line */}
-                    <path
-                      d="M 60 170 C 180 120, 240 215, 380 175 C 500 135, 610 205, 730 160"
-                      fill="none"
-                      stroke="#D1C7B3"
-                      strokeWidth="2.5"
-                      strokeDasharray="6 6"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-
-                  {/* BADGE 1: JUMPING (Locomotor) - COMPLETED */}
-                  <div
-                    onClick={() => {
-                      const b = childJourney.pathwayBadges?.[0];
-                      if (b) setSelectedBadge(b);
-                    }}
-                    className="absolute left-[70px] top-[75px] flex flex-col items-center cursor-pointer group"
-                  >
-                    <div className="relative">
-                      <div className={`p-1 rounded-full transition-all duration-300 ${
-                        selectedBadge?.badgeId === 'BADGE-FM-JUMP'
-                          ? 'ring-4 ring-[#10B981] shadow-lg scale-105'
-                          : 'group-hover:scale-105 group-hover:shadow-md'
-                      }`}>
-                        <RabbitJumpingBadge size={72} status={BADGE_STATUSES.COMPLETED} />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white shadow-xs">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-[#172B50] mt-1.5 group-hover:text-emerald-600 transition-colors">
-                      Jumping
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-500">Locomotor</span>
-                    <div className="mt-1 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-200">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      <span>Completed</span>
-                    </div>
-                    <span className="text-[9.5px] font-bold text-slate-400 mt-0.5">Oct 10</span>
+              {/* Period Selector Dropdown */}
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsPeriodDropdownOpen(!isPeriodDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-black text-[#172B50] shadow-2xs hover:border-slate-300 transition-all cursor-pointer"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+                  <span>{selectedPeriod}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+                {isPeriodDropdownOpen && (
+                  <div className="absolute right-0 mt-1.5 w-44 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-30">
+                    {['Oct – Dec 2026', 'Jul – Sep 2026', 'Apr – Jun 2026'].map((period) => (
+                      <button
+                        key={period}
+                        type="button"
+                        onClick={() => {
+                          setSelectedPeriod(period);
+                          setIsPeriodDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                          selectedPeriod === period ? 'bg-[#FFF4E8] text-[#F4510B] font-black' : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {period}
+                      </button>
+                    ))}
                   </div>
-
-                  {/* BADGE 2: TAKING TURNS (Social & Emotional) - COMPLETED (SELECTED IN SCREENSHOT) */}
-                  <div
-                    onClick={() => {
-                      const b = childJourney.pathwayBadges?.[1];
-                      if (b) setSelectedBadge(b);
-                    }}
-                    className="absolute left-[225px] top-[60px] flex flex-col items-center cursor-pointer group z-20"
-                  >
-                    <div className="relative">
-                      <div className={`p-1 rounded-full transition-all duration-300 ${
-                        selectedBadge?.badgeId === 'BADGE-FM-TURNS'
-                          ? 'ring-4 ring-[#F4510B] ring-offset-2 shadow-xl scale-110'
-                          : 'group-hover:scale-105 group-hover:shadow-md'
-                      }`}>
-                        <FoxBearTurnsBadge size={80} status={BADGE_STATUSES.COMPLETED} />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white shadow-xs">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-[#172B50] mt-1.5 group-hover:text-[#F4510B] transition-colors">
-                      Taking Turns
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-500">Social &amp; Emotional</span>
-                    <div className="mt-1 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-200">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      <span>Completed</span>
-                    </div>
-                    <span className="text-[9.5px] font-bold text-slate-400 mt-0.5">Oct 31</span>
-                  </div>
-
-                  {/* CURRENT PROGRESS PIN: Week 6 of 12 • Nov 12 (Directly between Badge 2 & 3) */}
-                  <div className="absolute left-[340px] top-[182px] z-20 flex flex-col items-center">
-                    <div className="px-3 py-1 rounded-full bg-[#172B50] text-white text-[10px] font-black shadow-md border border-white/20 flex items-center gap-1.5 tracking-tight animate-bounce">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#F4510B] animate-pulse"></span>
-                      <span>Week 6 of 12 &bull; Nov 12</span>
-                    </div>
-                    <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-5 border-t-[#172B50] -mt-0.5"></div>
-                  </div>
-
-                  {/* BADGE 3: HOPPING (Locomotor) - IN PROGRESS 60% */}
-                  <div
-                    onClick={() => {
-                      const b = childJourney.pathwayBadges?.[2];
-                      if (b) setSelectedBadge(b);
-                    }}
-                    className="absolute left-[440px] top-[95px] flex flex-col items-center cursor-pointer group"
-                  >
-                    <div className="relative">
-                      <div className={`p-1 rounded-full transition-all duration-300 ${
-                        selectedBadge?.badgeId === 'BADGE-FM-HOP'
-                          ? 'ring-4 ring-[#0284C7] shadow-lg scale-105'
-                          : 'group-hover:scale-105 group-hover:shadow-md'
-                      }`}>
-                        <DuckHoppingBadge size={72} status={BADGE_STATUSES.IN_PROGRESS} />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center border-2 border-white shadow-xs" title="Currently Practising">
-                        <Sparkles className="w-3 h-3" />
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-[#172B50] mt-1.5 group-hover:text-[#0284C7] transition-colors">
-                      Hopping
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-500">Locomotor</span>
-                    <div className="mt-1 text-[10.5px] font-black text-[#F4510B]">
-                      In Progress
-                    </div>
-                    {/* Orange Progress Bar */}
-                    <div className="w-16 bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1">
-                      <div className="bg-[#F4510B] h-full rounded-full" style={{ width: '60%' }}></div>
-                    </div>
-                    <span className="text-[9.5px] font-black text-[#F4510B] mt-0.5">60%</span>
-                  </div>
-
-                  {/* BADGE 4: BALANCING (Stability) - LOCKED */}
-                  <div
-                    onClick={() => {
-                      const b = childJourney.pathwayBadges?.[3];
-                      if (b) setSelectedBadge(b);
-                    }}
-                    className="absolute left-[565px] top-[75px] flex flex-col items-center cursor-pointer group opacity-75 hover:opacity-100"
-                  >
-                    <div className="relative">
-                      <div className={`p-1 rounded-full transition-all duration-300 ${
-                        selectedBadge?.badgeId === 'BADGE-FM-BAL'
-                          ? 'ring-4 ring-slate-400 shadow-md scale-105'
-                          : 'group-hover:scale-105'
-                      }`}>
-                        <BeamBalancingBadge size={72} status={BADGE_STATUSES.LOCKED} />
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-slate-700 mt-1.5">Balancing</span>
-                    <span className="text-[10px] font-semibold text-slate-400">Stability</span>
-                    <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                      <Lock className="w-2.5 h-2.5" />
-                      <span>Locked</span>
-                    </div>
-                  </div>
-
-                  {/* BADGE 5: THROWING (Object Control) - LOCKED */}
-                  <div
-                    onClick={() => {
-                      const b = childJourney.pathwayBadges?.[4];
-                      if (b) setSelectedBadge(b);
-                    }}
-                    className="absolute left-[670px] top-[85px] flex flex-col items-center cursor-pointer group opacity-75 hover:opacity-100"
-                  >
-                    <div className="relative">
-                      <div className={`p-1 rounded-full transition-all duration-300 ${
-                        selectedBadge?.badgeId === 'BADGE-FM-THROW'
-                          ? 'ring-4 ring-slate-400 shadow-md scale-105'
-                          : 'group-hover:scale-105'
-                      }`}>
-                        <TargetThrowingBadge size={72} status={BADGE_STATUSES.LOCKED} />
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-slate-700 mt-1.5">Throwing</span>
-                    <span className="text-[10px] font-semibold text-slate-400">Object Control</span>
-                    <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                      <Lock className="w-2.5 h-2.5" />
-                      <span>Locked</span>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
+            </div>
 
-              {/* Bottom Footer inside Trail Card: Badge Counter & Legend */}
-              <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-bold text-slate-600">
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-[#172B50] font-black">
-                    <Trophy className="w-3.5 h-3.5 text-[#F59E0B]" />
-                    2 of 5 badges earned
-                  </span>
-                  <span className="text-slate-300">|</span>
-                  <span className="flex items-center gap-1 text-[#172B50] font-black">
-                    <Flag className="w-3.5 h-3.5 text-purple-600" />
-                    3 milestones achieved
-                  </span>
-                </div>
+            {/* THE WINDING TRAIL SVG CANVAS */}
+            <div className="relative my-4 py-4 min-h-[310px] flex items-center justify-center overflow-x-auto">
+              <div className="w-[740px] sm:w-[780px] h-[280px] relative shrink-0">
+                {/* Background Soft Hills & Clouds Landscape */}
+                <svg viewBox="0 0 780 280" className="w-full h-full absolute inset-0 pointer-events-none">
+                  <defs>
+                    <linearGradient id="hillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#F0FDF4" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#DCFCE7" stopOpacity="0.3" />
+                    </linearGradient>
+                    <linearGradient id="pathwayGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#86EFAC" />
+                      <stop offset="38%" stopColor="#34D399" />
+                      <stop offset="42%" stopColor="#E2D9C8" />
+                      <stop offset="100%" stopColor="#E2D9C8" />
+                    </linearGradient>
+                  </defs>
 
-                {/* Legend: Completed, In Progress, Locked */}
-                <div className="flex items-center gap-4 text-[11px] font-bold">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  {/* Whimsical Rolling Hills */}
+                  <path d="M 0 140 Q 180 80 400 130 T 780 110 L 780 280 L 0 280 Z" fill="url(#hillGrad)" />
+
+                  {/* Cute Background Trees */}
+                  <g opacity="0.75">
+                    {/* Tree 1 */}
+                    <rect x="70" y="80" width="6" height="24" fill="#92400E" rx="2" />
+                    <circle cx="73" cy="74" r="14" fill="#6EE7B7" />
+                    <circle cx="73" cy="70" r="10" fill="#34D399" />
+                    {/* Tree 2 */}
+                    <rect x="230" y="60" width="5" height="20" fill="#92400E" rx="2" />
+                    <circle cx="232" cy="54" r="12" fill="#A7F3D0" />
+                    {/* Tree 3 */}
+                    <rect x="620" y="70" width="6" height="22" fill="#92400E" rx="2" />
+                    <circle cx="623" cy="65" r="13" fill="#6EE7B7" />
+                    {/* Bushes */}
+                    <ellipse cx="380" cy="230" rx="16" ry="8" fill="#A7F3D0" opacity="0.6" />
+                    <ellipse cx="680" cy="220" rx="18" ry="9" fill="#A7F3D0" opacity="0.6" />
+                  </g>
+
+                  {/* Winding Sandy Pathway Base */}
+                  <path
+                    d="M 60 170 C 180 120, 240 215, 380 175 C 500 135, 610 205, 730 160"
+                    fill="none"
+                    stroke="#E5DECE"
+                    strokeWidth="28"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Completed Portion of Trail in Vibrant Green */}
+                  <path
+                    d="M 60 170 C 180 120, 240 215, 330 188"
+                    fill="none"
+                    stroke="#86EFAC"
+                    strokeWidth="26"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Dashed Center Guide Line */}
+                  <path
+                    d="M 60 170 C 180 120, 240 215, 380 175 C 500 135, 610 205, 730 160"
+                    fill="none"
+                    stroke="#D1C7B3"
+                    strokeWidth="2.5"
+                    strokeDasharray="6 6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                {/* BADGE 1: JUMPING (Locomotor) - COMPLETED */}
+                <div
+                  onClick={() => {
+                    const b = childJourney.pathwayBadges?.[0] || {
+                      badgeId: 'BADGE-FM-JUMP',
+                      name: 'Jumping',
+                      category: 'Locomotor',
+                      iconType: 'rabbit',
+                      status: BADGE_STATUSES.COMPLETED,
+                      completedDate: 'Oct 10, 2026',
+                    };
+                    handleBadgeClick(b);
+                  }}
+                  className="absolute left-[70px] top-[75px] flex flex-col items-center cursor-pointer group"
+                >
+                  <div className="relative">
+                    <div className="p-1 rounded-full transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
+                      <RabbitJumpingBadge size={72} status={BADGE_STATUSES.COMPLETED} />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white shadow-xs">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-[#172B50] mt-1.5 group-hover:text-emerald-600 transition-colors">
+                    Jumping
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-500">Locomotor</span>
+                  <div className="mt-1 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-200">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
                     <span>Completed</span>
+                  </div>
+                  <span className="text-[9.5px] font-bold text-slate-400 mt-0.5">Oct 10</span>
+                </div>
+
+                {/* BADGE 2: TAKING TURNS (Social & Emotional) - COMPLETED */}
+                <div
+                  onClick={() => {
+                    const b = childJourney.pathwayBadges?.[1] || {
+                      badgeId: 'BADGE-FM-TURNS',
+                      name: 'Taking Turns',
+                      category: 'Social & Emotional',
+                      iconType: 'fox_bear',
+                      status: BADGE_STATUSES.COMPLETED,
+                      completedDate: 'Oct 31, 2026',
+                    };
+                    handleBadgeClick(b);
+                  }}
+                  className="absolute left-[225px] top-[60px] flex flex-col items-center cursor-pointer group z-20"
+                >
+                  <div className="relative">
+                    <div className="p-1 rounded-full transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
+                      <FoxBearTurnsBadge size={80} status={BADGE_STATUSES.COMPLETED} />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white shadow-xs">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-[#172B50] mt-1.5 group-hover:text-[#F4510B] transition-colors">
+                    Taking Turns
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    <span>In Progress</span>
+                  <span className="text-[10px] font-semibold text-slate-500">Social &amp; Emotional</span>
+                  <div className="mt-1 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-200">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    <span>Completed</span>
+                  </div>
+                  <span className="text-[9.5px] font-bold text-slate-400 mt-0.5">Oct 31</span>
+                </div>
+
+                {/* CURRENT PROGRESS PIN: Week 6 of 12 • Nov 12 (Directly between Badge 2 & 3) */}
+                <div className="absolute left-[340px] top-[182px] z-20 flex flex-col items-center">
+                  <div className="px-3 py-1 rounded-full bg-[#172B50] text-white text-[10px] font-black shadow-md border border-white/20 flex items-center gap-1.5 tracking-tight animate-bounce">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F4510B] animate-pulse"></span>
+                    <span>Week 6 of 12 &bull; Nov 12</span>
+                  </div>
+                  <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-5 border-t-[#172B50] -mt-0.5"></div>
+                </div>
+
+                {/* BADGE 3: HOPPING (Locomotor) - IN PROGRESS 60% */}
+                <div
+                  onClick={() => {
+                    const b = childJourney.pathwayBadges?.[2] || {
+                      badgeId: 'BADGE-FM-HOP',
+                      name: 'Hopping',
+                      category: 'Locomotor',
+                      iconType: 'duck',
+                      status: BADGE_STATUSES.IN_PROGRESS,
+                      progress: 60,
+                    };
+                    handleBadgeClick(b);
+                  }}
+                  className="absolute left-[440px] top-[95px] flex flex-col items-center cursor-pointer group"
+                >
+                  <div className="relative">
+                    <div className="p-1 rounded-full transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
+                      <DuckHoppingBadge size={72} status={BADGE_STATUSES.IN_PROGRESS} />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center border-2 border-white shadow-xs" title="Currently Practising">
+                      <Sparkles className="w-3 h-3" />
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-[#172B50] mt-1.5 group-hover:text-[#0284C7] transition-colors">
+                    Hopping
                   </span>
-                  <span className="flex items-center gap-1.5 text-slate-400">
-                    <Lock className="w-3 h-3" />
+                  <span className="text-[10px] font-semibold text-slate-500">Locomotor</span>
+                  <div className="mt-1 text-[10.5px] font-black text-[#F4510B]">
+                    In Progress
+                  </div>
+                  {/* Orange Progress Bar */}
+                  <div className="w-16 bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div className="bg-[#F4510B] h-full rounded-full" style={{ width: '60%' }}></div>
+                  </div>
+                  <span className="text-[9.5px] font-black text-[#F4510B] mt-0.5">60%</span>
+                </div>
+
+                {/* BADGE 4: BALANCING (Stability) - LOCKED */}
+                <div
+                  onClick={() => {
+                    const b = childJourney.pathwayBadges?.[3] || {
+                      badgeId: 'BADGE-FM-BAL',
+                      name: 'Balancing',
+                      category: 'Stability',
+                      iconType: 'beam_girl',
+                      status: BADGE_STATUSES.LOCKED,
+                    };
+                    handleBadgeClick(b);
+                  }}
+                  className="absolute left-[565px] top-[75px] flex flex-col items-center cursor-pointer group opacity-75 hover:opacity-100"
+                >
+                  <div className="relative">
+                    <div className="p-1 rounded-full transition-all duration-300 group-hover:scale-105">
+                      <BeamBalancingBadge size={72} status={BADGE_STATUSES.LOCKED} />
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-slate-700 mt-1.5">Balancing</span>
+                  <span className="text-[10px] font-semibold text-slate-400">Stability</span>
+                  <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                    <Lock className="w-2.5 h-2.5" />
                     <span>Locked</span>
-                  </span>
+                  </div>
+                </div>
+
+                {/* BADGE 5: THROWING (Object Control) - LOCKED */}
+                <div
+                  onClick={() => {
+                    const b = childJourney.pathwayBadges?.[4] || {
+                      badgeId: 'BADGE-FM-THROW',
+                      name: 'Throwing',
+                      category: 'Object Control',
+                      iconType: 'target',
+                      status: BADGE_STATUSES.LOCKED,
+                    };
+                    handleBadgeClick(b);
+                  }}
+                  className="absolute left-[670px] top-[85px] flex flex-col items-center cursor-pointer group opacity-75 hover:opacity-100"
+                >
+                  <div className="relative">
+                    <div className="p-1 rounded-full transition-all duration-300 group-hover:scale-105">
+                      <TargetThrowingBadge size={72} status={BADGE_STATUSES.LOCKED} />
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-slate-700 mt-1.5">Throwing</span>
+                  <span className="text-[10px] font-semibold text-slate-400">Object Control</span>
+                  <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>Locked</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT: BADGE DETAILS PANEL (MATCHES RIGHT SIDEBAR IN SCREENSHOT) */}
-            <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 flex flex-col justify-between">
-              <div>
-                {/* Panel Header with Close Button */}
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <h4 className="text-sm font-black text-[#172B50]">Badge Details</h4>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Switch to another badge or close
-                      const other = childJourney.pathwayBadges?.find((b) => b.badgeId !== selectedBadge?.badgeId);
-                      if (other) setSelectedBadge(other);
-                    }}
-                    className="w-6 h-6 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Close"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Big Center Badge Illustration */}
-                <div className="flex flex-col items-center text-center my-4">
-                  <div className="p-2 rounded-3xl bg-[#FFFDF9] border border-amber-100 shadow-2xs mb-3">
-                    <DynamicBadgeIcon
-                      iconType={selectedBadge?.iconType || 'fox_bear'}
-                      size={96}
-                      status={selectedBadge?.status || BADGE_STATUSES.COMPLETED}
-                    />
-                  </div>
-
-                  <h3 className="text-lg font-black text-[#172B50]">{selectedBadge?.name || 'Taking Turns'}</h3>
-                  <span className="text-xs font-bold text-slate-500">{selectedBadge?.category || 'Social & Emotional'}</span>
-
-                  {/* Status Pill */}
-                  {selectedBadge?.status === BADGE_STATUSES.COMPLETED ? (
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      <span>Completed &bull; {selectedBadge.completedDate || 'Oct 31, 2026'}</span>
-                    </div>
-                  ) : selectedBadge?.status === BADGE_STATUSES.IN_PROGRESS ? (
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-black border border-amber-200">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>In Progress ({selectedBadge.progress || 60}%)</span>
-                    </div>
-                  ) : (
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
-                      <Lock className="w-3 h-3" />
-                      <span>Skill Locked in Curriculum</span>
-                    </div>
-                  )}
-
-                  {/* Badge Description */}
-                  <p className="text-xs font-medium text-slate-600 mt-3 text-center leading-relaxed">
-                    {selectedBadge?.description || 'Learnt to wait, share and give others a chance during games and activities.'}
-                  </p>
-                </div>
-
-                {/* What your child did */}
-                {selectedBadge?.status !== BADGE_STATUSES.LOCKED && (
-                  <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-slate-100 mt-2">
-                    <h5 className="text-xs font-black text-[#172B50] mb-2.5">What your child did</h5>
-                    <div className="space-y-2">
-                      {(selectedBadge?.whatChildDid || [
-                        'Waited for their turn during activities',
-                        'Shared equipment with friends',
-                        'Showed good teamwork and cooperation',
-                      ]).map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-xs font-semibold text-slate-700">
-                          <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5 stroke-[2.5]" />
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            {/* Bottom Footer inside Trail Card: Badge Counter & Legend */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-bold text-slate-600">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1 text-[#172B50] font-black">
+                  <Trophy className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  2 of 5 badges earned
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="flex items-center gap-1 text-[#172B50] font-black">
+                  <Flag className="w-3.5 h-3.5 text-purple-600" />
+                  3 milestones achieved
+                </span>
               </div>
 
-              {/* Primary Coach Verification Signature */}
-              <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={childJourney.coachAvatar || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80'}
-                    alt={childJourney.coachName}
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100"
-                  />
-                  <div>
-                    <h5 className="text-xs font-black text-[#172B50]">{childJourney.coachName || 'Coach Karthik'}</h5>
-                    <p className="text-[10px] font-bold text-slate-500">{childJourney.coachTitle || 'Primary Coach'}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => addToast(`Verified by ${childJourney.coachName} and approved by Super Coach Alex.`, 'info')}
-                  className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:text-[#172B50] hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Verification Information"
-                >
-                  <Info className="w-3.5 h-3.5" />
-                </button>
+              {/* Legend: Completed, In Progress, Locked */}
+              <div className="flex items-center gap-4 text-[11px] font-bold">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <span>Completed</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  <span>In Progress</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-400">
+                  <Lock className="w-3 h-3" />
+                  <span>Locked</span>
+                </span>
               </div>
             </div>
           </div>
@@ -827,28 +798,24 @@ export default function ProgramsAchievementsModule({
                 {/* 3x2 Grid of Badges */}
                 <div className="grid grid-cols-3 gap-3 my-4">
                   {(childJourney.earnedBadges || [
-                    { id: '1', name: 'Jumping', iconType: 'rabbit' },
-                    { id: '2', name: 'Taking Turns', iconType: 'fox_bear' },
-                    { id: '3', name: 'Running', iconType: 'sprinter' },
-                    { id: '4', name: 'Skipping', iconType: 'rope_kid' },
-                    { id: '5', name: 'Focus Star', iconType: 'star' },
-                    { id: '6', name: 'Team Player', iconType: 'friends' },
+                    { id: 'BADGE-FM-JUMP', name: 'Jumping', iconType: 'rabbit', category: 'Locomotor', date: 'Oct 10, 2026' },
+                    { id: 'BADGE-FM-TURNS', name: 'Taking Turns', iconType: 'fox_bear', category: 'Social & Emotional', date: 'Oct 31, 2026' },
+                    { id: 'BADGE-FM-RUN', name: 'Running', iconType: 'sprinter', category: 'Locomotor', date: 'Sep 15, 2026' },
+                    { id: 'BADGE-FM-SKIP', name: 'Skipping', iconType: 'rope_kid', category: 'Locomotor', date: 'Sep 28, 2026' },
+                    { id: 'BADGE-FM-STAR', name: 'Focus Star', iconType: 'star', category: 'Cognitive & Focus', date: 'Oct 15, 2026' },
+                    { id: 'BADGE-FM-TEAM', name: 'Team Player', iconType: 'friends', category: 'Social & Emotional', date: 'Nov 02, 2026' },
                   ]).slice(0, 6).map((eb) => (
                     <div
                       key={eb.id}
                       onClick={() => {
-                        const pathwayMatch = childJourney.pathwayBadges?.find((b) => b.badgeId === eb.id);
+                        const pathwayMatch = childJourney.pathwayBadges?.find((b) => b.badgeId === eb.id || b.name === eb.name);
                         if (pathwayMatch) {
-                          setSelectedBadge(pathwayMatch);
+                          handleBadgeClick(pathwayMatch);
                         } else {
-                          setSelectedBadge({
-                            name: eb.name,
-                            category: eb.category || 'Skill Development',
+                          handleBadgeClick({
+                            ...eb,
                             status: BADGE_STATUSES.COMPLETED,
                             completedDate: eb.date || 'Oct 2026',
-                            description: `Earned for demonstrating high proficiency in ${eb.name}.`,
-                            whatChildDid: [`Mastered core ${eb.name} mechanics`, 'Showed great enthusiasm and consistency in drills'],
-                            iconType: eb.iconType || 'star',
                           });
                         }
                       }}
@@ -1398,9 +1365,21 @@ export default function ProgramsAchievementsModule({
         >
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
             {(childJourney.earnedBadges || []).map((b) => (
-              <div key={b.id} className="p-3 rounded-2xl border border-slate-200 bg-white flex flex-col items-center text-center">
-                <DynamicBadgeIcon iconType={b.iconType || 'star'} size={64} status={BADGE_STATUSES.COMPLETED} />
-                <span className="text-xs font-black text-[#172B50] mt-2">{b.name}</span>
+              <div
+                key={b.id}
+                onClick={() => {
+                  setIsAllBadgesModalOpen(false);
+                  const pathwayMatch = childJourney.pathwayBadges?.find(
+                    (pb) => pb.badgeId === b.id || pb.name === b.name
+                  );
+                  handleBadgeClick(pathwayMatch || { ...b, status: BADGE_STATUSES.COMPLETED });
+                }}
+                className="p-3 rounded-2xl border border-slate-200 bg-white hover:border-[#F4510B]/50 hover:shadow-xs transition-all flex flex-col items-center text-center cursor-pointer group"
+              >
+                <div className="group-hover:scale-105 transition-transform">
+                  <DynamicBadgeIcon iconType={b.iconType || 'star'} size={64} status={BADGE_STATUSES.COMPLETED} />
+                </div>
+                <span className="text-xs font-black text-[#172B50] group-hover:text-[#F4510B] transition-colors mt-2">{b.name}</span>
                 <span className="text-[10px] font-semibold text-slate-500">{b.category || 'Skill'}</span>
                 <span className="text-[10px] font-bold text-emerald-600 mt-1">Earned {b.date}</span>
               </div>
@@ -1435,6 +1414,218 @@ export default function ProgramsAchievementsModule({
             ))}
           </div>
         </Modal>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 12. MODAL: ALL MILESTONES                                                 */}
+      {/* ========================================================================= */}
+      {isAllMilestonesModalOpen && (
+        <Modal
+          isOpen={isAllMilestonesModalOpen}
+          onClose={() => setIsAllMilestonesModalOpen(false)}
+          title={`All Unlocked Milestones (${kpiStats.milestones})`}
+        >
+          <div className="p-4 space-y-3">
+            {(childJourney.milestones || []).map((m) => (
+              <div key={m.id} className="p-3.5 rounded-2xl border border-slate-200 bg-[#FAFBFD] flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center shrink-0">
+                  <Trophy className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-[#172B50]">{m.title}</h4>
+                  <p className="text-xs font-medium text-slate-600 mt-0.5">{m.description}</p>
+                  <span className="text-[10px] font-bold text-slate-400 mt-1 block">
+                    Achieved {m.achievedDate} &bull; Verified by {m.coach || childJourney.coachName}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Modal>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 13. MODAL: BADGE DETAILS POPUP (CENTERED POPUP MODAL)                     */}
+      {/* ========================================================================= */}
+      {selectedBadgeModal && typeof document !== 'undefined' && createPortal(
+        <div
+          onClick={() => setSelectedBadgeModal(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#172B50]/65 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="badge-modal-title"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden my-auto max-h-[92vh] flex flex-col animate-in zoom-in-95 fade-in duration-200"
+          >
+            {/* Top Gradient & Badge Illustration Hero */}
+            <div className="bg-gradient-to-b from-[#FFF4E8] via-[#FFF9F3] to-white pt-7 pb-4 px-6 text-center relative border-b border-amber-100/60">
+              {/* Close (X) Icon Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedBadgeModal(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/95 hover:bg-slate-100 text-slate-400 hover:text-[#172B50] flex items-center justify-center transition-colors shadow-2xs border border-slate-200/60 cursor-pointer"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Large Badge Illustration */}
+              <div className="inline-block p-2.5 rounded-3xl bg-white border border-amber-100 shadow-sm mb-3">
+                <DynamicBadgeIcon
+                  iconType={selectedBadgeModal.iconType || 'star'}
+                  size={104}
+                  status={selectedBadgeModal.status || BADGE_STATUSES.COMPLETED}
+                />
+              </div>
+
+              {/* Badge Name & Category */}
+              <h3 id="badge-modal-title" className="text-2xl font-black text-[#172B50] tracking-tight">
+                {selectedBadgeModal.name}
+              </h3>
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-0.5">
+                {selectedBadgeModal.category}
+              </div>
+
+              {/* Status Pill */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-2.5">
+                {selectedBadgeModal.status === BADGE_STATUSES.COMPLETED ? (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>Completed &bull; {selectedBadgeModal.completedDate || selectedBadgeModal.date || 'Oct 31, 2026'}</span>
+                    </span>
+                    {selectedBadgeModal.verified && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-200">
+                        <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Verified &amp; Published</span>
+                      </span>
+                    )}
+                  </>
+                ) : selectedBadgeModal.status === BADGE_STATUSES.IN_PROGRESS ? (
+                  <div className="flex flex-col items-center">
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-black border border-amber-200 shadow-2xs">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <span>In Progress ({selectedBadgeModal.progress || 60}%)</span>
+                    </span>
+                    <div className="w-48 bg-slate-200 h-2 rounded-full overflow-hidden mt-2">
+                      <div
+                        className="bg-[#F4510B] h-full rounded-full transition-all duration-500"
+                        style={{ width: `${selectedBadgeModal.progress || 60}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
+                    <Lock className="w-3 h-3" />
+                    <span>Locked</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Body Content (Scrollable) */}
+            <div className="px-6 py-5 overflow-y-auto space-y-4 text-left">
+              {/* Badge Description */}
+              <div className="bg-[#FFFDF9] p-3.5 rounded-2xl border border-amber-100/70 text-slate-600 text-xs sm:text-sm font-medium leading-relaxed text-center">
+                {selectedBadgeModal.description}
+              </div>
+
+              {/* "What your child did" / "What your child is practicing" */}
+              {selectedBadgeModal.whatChildDid && selectedBadgeModal.whatChildDid.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-black text-[#172B50] uppercase tracking-wider flex items-center gap-1.5">
+                    {selectedBadgeModal.status === BADGE_STATUSES.COMPLETED ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 text-[#F4510B]" />
+                    )}
+                    <span>
+                      {selectedBadgeModal.status === BADGE_STATUSES.COMPLETED
+                        ? 'What your child did'
+                        : 'What your child is practicing'}
+                    </span>
+                  </h4>
+                  <div className="bg-[#F8FAFC] rounded-2xl p-3.5 border border-slate-100 space-y-2">
+                    {selectedBadgeModal.whatChildDid.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5 text-xs font-semibold text-slate-700">
+                        <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </span>
+                        <span className="leading-relaxed">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Related Program & Session Details */}
+              <div className="space-y-1.5">
+                <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                  Program &amp; Session Context
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Program</span>
+                    <span className="font-black text-[#172B50] truncate block mt-0.5">
+                      {selectedBadgeModal.program}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Batch &amp; Location</span>
+                    <span className="font-black text-[#172B50] truncate block mt-0.5">
+                      {selectedBadgeModal.batch} &bull; {selectedBadgeModal.location}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 col-span-2 sm:col-span-1">
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Child</span>
+                    <span className="font-black text-[#172B50] truncate block mt-0.5">
+                      {selectedBadgeModal.childName || selectedChild?.name} (Age {selectedBadgeModal.childAge || selectedChild?.age})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Coach & Verification Profile */}
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={selectedBadgeModal.coachAvatar || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80'}
+                    alt={selectedBadgeModal.coachName}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100"
+                  />
+                  <div>
+                    <h5 className="text-xs font-black text-[#172B50]">{selectedBadgeModal.coachName}</h5>
+                    <p className="text-[10px] font-bold text-slate-500">{selectedBadgeModal.coachTitle || 'Primary Coach'}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Verified by Super Coach</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#F4510B]" />
+                <span>Little Spartans Achievement</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedBadgeModal(null)}
+                className="px-5 py-2 text-xs font-black text-white bg-[#172B50] hover:bg-[#F4510B] rounded-xl transition-all cursor-pointer shadow-xs"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
