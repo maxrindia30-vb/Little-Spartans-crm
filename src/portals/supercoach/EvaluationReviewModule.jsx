@@ -31,10 +31,13 @@ import {
   AlertCircle,
   Sparkles,
   X,
-  MessageSquare
+  MessageSquare,
+  Flag,
+  FileCheck
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import { DynamicBadgeIcon } from '../../components/common/BadgeIllustrations';
 
 export default function EvaluationReviewModule() {
   const {
@@ -46,6 +49,9 @@ export default function EvaluationReviewModule() {
     approveEvaluation,
     returnEvaluation,
     bulkApproveEvaluations,
+    reviewChildDevelopmentSubmission,
+    childDevelopmentSubmissions,
+    childJourneys,
     addToast
   } = useCrm();
 
@@ -103,6 +109,16 @@ export default function EvaluationReviewModule() {
   const [returnReason, setReturnReason] = useState('');
   const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
   const [isNewEvalModalOpen, setIsNewEvalModalOpen] = useState(false);
+
+  // Child Development Review State
+  const [reviewMode, setReviewMode] = useState('child_dev'); // 'child_dev' | 'eval_scoring'
+  const [devFilterStatus, setDevFilterStatus] = useState('all'); // 'all' | 'pending' | 'approved' | 'returned' | 'badges' | 'milestones'
+  const [selectedDevSubmissionId, setSelectedDevSubmissionId] = useState(null);
+  const [devReviewNotes, setDevReviewNotes] = useState('');
+  const [isDevReturnModalOpen, setIsDevReturnModalOpen] = useState(false);
+  const [devReturnReason, setDevReturnReason] = useState('');
+  const [isDevRejectModalOpen, setIsDevRejectModalOpen] = useState(false);
+  const [devRejectReason, setDevRejectReason] = useState('');
 
   // New Evaluation Form (for simulation/creation)
   const [newEvalForm, setNewEvalForm] = useState({
@@ -266,6 +282,69 @@ export default function EvaluationReviewModule() {
     };
   }, [filteredEvaluations, pendingEvals, approvedEvals, returnedEvals]);
 
+  // Scoped Child Development Submissions
+  const scopedDevSubmissions = useMemo(() => {
+    const list = childDevelopmentSubmissions || data.childDevelopmentSubmissions || [];
+    return list.filter((sub) => {
+      if (!isLocationAuthorized(sub.location)) return false;
+      if (selectedLocation !== 'All') {
+        const normLoc = selectedLocation.toLowerCase().trim();
+        const subLoc = (sub.location || '').toLowerCase().trim();
+        if (subLoc !== normLoc && !subLoc.includes(normLoc) && !normLoc.includes(subLoc)) {
+          return false;
+        }
+      }
+      if (selectedProgram !== 'All') {
+        const normProg = selectedProgram.toLowerCase().trim();
+        const subProg = (sub.program || '').toLowerCase().trim();
+        if (subProg !== normProg && !subProg.includes(normProg) && !normProg.includes(subProg)) {
+          return false;
+        }
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const childMatch = (sub.childName || '').toLowerCase().includes(q);
+        const coachMatch = (sub.coachName || '').toLowerCase().includes(q);
+        const badgeMatch = (sub.badgeName || sub.milestoneTitle || '').toLowerCase().includes(q);
+        if (!childMatch && !coachMatch && !badgeMatch) return false;
+      }
+      return true;
+    });
+  }, [childDevelopmentSubmissions, data.childDevelopmentSubmissions, selectedLocation, selectedProgram, searchQuery, assignedLocationsNormalized]);
+
+  const filteredDevSubmissions = useMemo(() => {
+    switch (devFilterStatus) {
+      case 'pending':
+        return scopedDevSubmissions.filter((s) => s.status === 'Pending Super Coach Review' || s.status === 'Pending');
+      case 'approved':
+        return scopedDevSubmissions.filter((s) => s.status === 'Approved & Published' || s.status === 'Approved');
+      case 'returned':
+        return scopedDevSubmissions.filter((s) => s.status === 'Returned for Correction' || s.status === 'Returned');
+      case 'badges':
+        return scopedDevSubmissions.filter((s) => s.type === 'badge');
+      case 'milestones':
+        return scopedDevSubmissions.filter((s) => s.type === 'milestone');
+      case 'all':
+      default:
+        return scopedDevSubmissions;
+    }
+  }, [scopedDevSubmissions, devFilterStatus]);
+
+  const devKpis = useMemo(() => {
+    const total = scopedDevSubmissions.length;
+    const pending = scopedDevSubmissions.filter((s) => s.status === 'Pending Super Coach Review' || s.status === 'Pending').length;
+    const approved = scopedDevSubmissions.filter((s) => s.status === 'Approved & Published' || s.status === 'Approved').length;
+    const returned = scopedDevSubmissions.filter((s) => s.status === 'Returned for Correction' || s.status === 'Returned').length;
+    const badgesCount = scopedDevSubmissions.filter((s) => s.type === 'badge').length;
+    const milestonesCount = scopedDevSubmissions.filter((s) => s.type === 'milestone').length;
+    return { total, pending, approved, returned, badgesCount, milestonesCount };
+  }, [scopedDevSubmissions]);
+
+  const selectedDevSubmission = useMemo(() => {
+    if (filteredDevSubmissions.length === 0) return null;
+    return filteredDevSubmissions.find((s) => s.id === selectedDevSubmissionId) || filteredDevSubmissions[0];
+  }, [filteredDevSubmissions, selectedDevSubmissionId]);
+
   // 4. SELECTED EVALUATION
   const selectedEval = useMemo(() => {
     if (activeTabEvaluations.length === 0) return null;
@@ -412,6 +491,42 @@ export default function EvaluationReviewModule() {
     setIsNewEvalModalOpen(false);
   };
 
+  // Child Development Actions
+  const handleApproveDevSubmission = (sub) => {
+    if (!sub) return;
+    reviewChildDevelopmentSubmission(
+      sub.id,
+      'Approved',
+      devReviewNotes || 'Verified and approved by Super Coach. Published to Parent Portal.'
+    );
+    addToast(`Approved "${sub.badgeName || sub.milestoneTitle}" for ${sub.childName}! Published to Parent Portal.`, 'success');
+    setDevReviewNotes('');
+  };
+
+  const handleConfirmDevReturn = () => {
+    if (!selectedDevSubmission) return;
+    if (!devReturnReason.trim()) {
+      addToast('Please provide a reason for return.', 'error');
+      return;
+    }
+    reviewChildDevelopmentSubmission(selectedDevSubmission.id, 'Returned', devReturnReason);
+    addToast(`Returned submission to ${selectedDevSubmission.coachName} for correction.`, 'info');
+    setIsDevReturnModalOpen(false);
+    setDevReturnReason('');
+  };
+
+  const handleConfirmDevReject = () => {
+    if (!selectedDevSubmission) return;
+    if (!devRejectReason.trim()) {
+      addToast('Please provide a rejection reason.', 'error');
+      return;
+    }
+    reviewChildDevelopmentSubmission(selectedDevSubmission.id, 'Rejected', devRejectReason);
+    addToast(`Rejected submission for ${selectedDevSubmission.childName}.`, 'error');
+    setIsDevRejectModalOpen(false);
+    setDevRejectReason('');
+  };
+
   return (
     <div className="space-y-5 animate-slide-up pb-8">
       
@@ -520,6 +635,438 @@ export default function EvaluationReviewModule() {
         </div>
       </div>
 
+      {/* Mode Switcher: Child Development & Badges VS Evaluation Scoring */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-gray-100 shadow-2xs">
+        <div className="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setReviewMode('child_dev')}
+            className={`px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+              reviewMode === 'child_dev'
+                ? 'bg-[#172B50] text-white shadow-xs'
+                : 'text-[#172B50]/70 hover:text-[#172B50]'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-[#F4510B]" />
+            <span>Child Development & Badges</span>
+            {devKpis.pending > 0 && (
+              <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-[#F4510B] text-white font-black animate-pulse">
+                {devKpis.pending}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setReviewMode('eval_scoring')}
+            className={`px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+              reviewMode === 'eval_scoring'
+                ? 'bg-[#172B50] text-white shadow-xs'
+                : 'text-[#172B50]/70 hover:text-[#172B50]'
+            }`}
+          >
+            <BarChart2 className="w-4 h-4 text-emerald-500" />
+            <span>Evaluation Scoring Reviews</span>
+            {kpis.pending > 0 && (
+              <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-emerald-500 text-white font-black">
+                {kpis.pending}
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div className="text-right text-xs font-bold text-gray-500 px-3 hidden lg:block">
+          {reviewMode === 'child_dev' ? (
+            <span className="flex items-center gap-1.5 text-[#F4510B]">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Verifying Coach Submissions & Pathway Badges</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-emerald-600">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Reviewing Quarterly Assessment Scores</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {reviewMode === 'child_dev' ? (
+        <div className="space-y-5">
+          {/* KPI Cards for Child Dev */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3.5 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-[#FFF0E6] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5 text-[#F4510B]" />
+              </div>
+              <div>
+                <div className="text-2xl font-black text-[#172B50] leading-none">{devKpis.pending}</div>
+                <div className="text-xs font-bold text-[#172B50]/70 mt-1">Pending Verification</div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3.5 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Award className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-black text-[#172B50] leading-none">{devKpis.badgesCount}</div>
+                <div className="text-xs font-bold text-[#172B50]/70 mt-1">Skill Badges</div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3.5 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <Flag className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-black text-[#172B50] leading-none">{devKpis.milestonesCount}</div>
+                <div className="text-xs font-bold text-[#172B50]/70 mt-1">Milestones</div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3.5 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-black text-[#172B50] leading-none">{devKpis.approved}</div>
+                <div className="text-xs font-bold text-[#172B50]/70 mt-1">Approved & Published</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {[
+              { key: 'all', label: `All Submissions (${devKpis.total})`, icon: Layers },
+              { key: 'pending', label: `Pending Review (${devKpis.pending})`, icon: Clock },
+              { key: 'badges', label: `Skill Badges (${devKpis.badgesCount})`, icon: Award },
+              { key: 'milestones', label: `Milestones (${devKpis.milestonesCount})`, icon: Flag },
+              { key: 'approved', label: `Approved (${devKpis.approved})`, icon: CheckCircle2 },
+              { key: 'returned', label: `Returned (${devKpis.returned})`, icon: RotateCcw },
+            ].map(pill => {
+              const Icon = pill.icon;
+              const isActive = devFilterStatus === pill.key;
+              return (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => setDevFilterStatus(pill.key)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                    isActive
+                      ? 'bg-[#F4510B] text-white shadow-xs'
+                      : 'bg-white border border-gray-200 text-[#172B50] hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{pill.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 2-Column Workspace */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Left Column: Submissions Queue */}
+            <div className="lg:col-span-5 bg-white border border-gray-100 rounded-2xl p-4 shadow-2xs">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div>
+                  <h3 className="text-sm font-black text-[#172B50]">Submissions Queue</h3>
+                  <p className="text-[11px] text-gray-500 font-bold">Showing {filteredDevSubmissions.length} records</p>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#F4510B] bg-[#FFF0E6] px-2.5 py-1 rounded-full">
+                  Live Queue
+                </span>
+              </div>
+
+              <div className="mt-3 space-y-2.5 max-h-[620px] overflow-y-auto pr-1">
+                {filteredDevSubmissions.length === 0 ? (
+                  <div className="py-12 text-center text-gray-400">
+                    <Sparkles className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-xs font-bold">No submissions match the current filter.</p>
+                  </div>
+                ) : (
+                  filteredDevSubmissions.map(sub => {
+                    const isSelected = selectedDevSubmission?.id === sub.id;
+                    const isPending = sub.status === 'Pending Super Coach Review' || sub.status === 'Pending';
+                    const isApproved = sub.status === 'Approved & Published' || sub.status === 'Approved';
+                    const isReturned = sub.status === 'Returned for Correction' || sub.status === 'Returned';
+
+                    return (
+                      <div
+                        key={sub.id}
+                        onClick={() => setSelectedDevSubmissionId(sub.id)}
+                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer text-left ${
+                          isSelected
+                            ? 'border-[#F4510B] bg-[#FFF8F2]/70 shadow-xs ring-1 ring-[#F4510B]/30'
+                            : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            sub.type === 'badge' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'
+                          }`}>
+                            {sub.type === 'badge' ? 'Skill Badge' : 'Milestone'}
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isPending
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : isApproved
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : isReturned
+                              ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {sub.status}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 shadow-2xs overflow-hidden">
+                            {sub.type === 'badge' ? (
+                              <DynamicBadgeIcon iconKey={sub.iconKey || sub.badgeId} size="w-10 h-10" />
+                            ) : (
+                              <Flag className="w-6 h-6 text-purple-600" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-black text-[#172B50] truncate">
+                              {sub.badgeName || sub.milestoneTitle}
+                            </h4>
+                            <div className="text-[11px] font-bold text-gray-600 truncate mt-0.5">
+                              {sub.childName} • Age {sub.childAge} • {sub.program}
+                            </div>
+                            <div className="text-[10px] text-gray-400 font-semibold truncate mt-0.5">
+                              Coach {sub.coachName} • {sub.location} • {sub.submissionDate}
+                            </div>
+                          </div>
+                          <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? 'text-[#F4510B] translate-x-0.5' : 'text-gray-300'}`} />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Detailed Review Workspace */}
+            <div className="lg:col-span-7 bg-white border border-gray-100 rounded-2xl p-5 shadow-2xs text-left">
+              {!selectedDevSubmission ? (
+                <div className="py-20 text-center text-gray-400">
+                  <Sparkles className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm font-bold">Select a submission from the queue to verify details.</p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {/* Header Card */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-[#FFF4E8] to-white border border-[#F4510B]/20">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-16 h-16 rounded-2xl bg-white p-2 shadow-xs border border-gray-100 flex items-center justify-center shrink-0">
+                        {selectedDevSubmission.type === 'badge' ? (
+                          <DynamicBadgeIcon iconKey={selectedDevSubmission.iconKey || selectedDevSubmission.badgeId} size="w-13 h-13" />
+                        ) : (
+                          <Flag className="w-8 h-8 text-purple-600" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            selectedDevSubmission.type === 'badge' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {selectedDevSubmission.type === 'badge' ? 'Skill Badge Submission' : 'Major Milestone Submission'}
+                          </span>
+                          <span className="text-[11px] font-bold text-gray-500">
+                            {selectedDevSubmission.category}
+                          </span>
+                        </div>
+                        <h2 className="text-lg font-black text-[#172B50] mt-0.5">
+                          {selectedDevSubmission.badgeName || selectedDevSubmission.milestoneTitle}
+                        </h2>
+                        <div className="text-xs font-bold text-[#F4510B]">
+                          Child: {selectedDevSubmission.childName} (Age {selectedDevSubmission.childAge}) • {selectedDevSubmission.program} ({selectedDevSubmission.batch})
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="self-start sm:self-center">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black ${
+                        selectedDevSubmission.status === 'Pending Super Coach Review' || selectedDevSubmission.status === 'Pending'
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : selectedDevSubmission.status === 'Approved & Published' || selectedDevSubmission.status === 'Approved'
+                          ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          : selectedDevSubmission.status === 'Returned for Correction' || selectedDevSubmission.status === 'Returned'
+                          ? 'bg-rose-100 text-rose-900 border border-rose-300'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        <span className="w-2 h-2 rounded-full bg-current" />
+                        <span>{selectedDevSubmission.status}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Submission Context Banner */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-100 text-xs">
+                    <div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">Submitting Coach</div>
+                      <div className="font-black text-[#172B50] mt-0.5">Coach {selectedDevSubmission.coachName}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">Location</div>
+                      <div className="font-black text-[#172B50] mt-0.5">{selectedDevSubmission.location}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">Date Submitted</div>
+                      <div className="font-black text-[#172B50] mt-0.5">{selectedDevSubmission.submissionDate}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">Child ID</div>
+                      <div className="font-black text-[#172B50] mt-0.5">{selectedDevSubmission.childId}</div>
+                    </div>
+                  </div>
+
+                  {/* What the child demonstrated (Criteria checklist) */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-black text-[#172B50] uppercase tracking-wider flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Skill Criteria & Evidence Checklist</span>
+                    </h3>
+                    <div className="bg-[#FFFDF9] border border-orange-100 rounded-xl p-3.5 space-y-2">
+                      {(selectedDevSubmission.criteriaChecklist || [
+                        { label: 'Demonstrated complete skill repetition without coach assistance', passed: true },
+                        { label: 'Exhibited proper landing mechanics and stability', passed: true },
+                        { label: 'Showed encouragement and teamwork with peers', passed: true }
+                      ]).map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5 text-xs text-[#172B50]">
+                          <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </span>
+                          <span className="font-bold leading-relaxed">{item.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Coach's Observation Notes & Drill Context */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-black text-[#172B50] uppercase tracking-wider flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-[#F4510B]" />
+                      <span>Coach's Observation & Drill Context</span>
+                    </h3>
+                    <div className="bg-gray-50 border border-gray-200/80 rounded-xl p-3.5 text-xs text-[#172B50] space-y-1.5">
+                      <p className="font-medium leading-relaxed italic text-gray-700">
+                        "{selectedDevSubmission.coachNotes || 'Athlete showed outstanding progress during today\'s session.'}"
+                      </p>
+                      {selectedDevSubmission.evidence && (
+                        <div className="pt-2 border-t border-gray-200/60 text-[11px] text-gray-500 font-semibold">
+                          <strong className="text-gray-700">Evidence Record:</strong> {selectedDevSubmission.evidence}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Super Coach Action Center */}
+                  <div className="pt-2 border-t border-gray-100 space-y-3">
+                    <h3 className="text-xs font-black text-[#172B50] uppercase tracking-wider flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#F4510B]" />
+                      <span>Super Coach Verification Decision</span>
+                    </h3>
+
+                    {selectedDevSubmission.status === 'Approved & Published' || selectedDevSubmission.status === 'Approved' ? (
+                      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-xs text-emerald-900">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                        <div>
+                          <div className="font-black text-sm">Verified & Published to Parent Portal</div>
+                          <div className="font-semibold text-emerald-800 mt-0.5">
+                            This badge is live on {selectedDevSubmission.childName}'s development journey trail and reflected in parent KPI statistics.
+                          </div>
+                        </div>
+                      </div>
+                    ) : selectedDevSubmission.status === 'Returned for Correction' || selectedDevSubmission.status === 'Returned' ? (
+                      <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 text-xs text-rose-900">
+                        <RotateCcw className="w-6 h-6 text-rose-600 shrink-0" />
+                        <div>
+                          <div className="font-black text-sm">Returned for Coach Correction</div>
+                          <div className="font-semibold text-rose-800 mt-0.5">
+                            Feedback sent to Coach {selectedDevSubmission.coachName}. Awaiting updated session drill record.
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[11px] font-bold text-gray-600 block mb-1">
+                            Super Coach Verification Notes / Parent Message (Optional)
+                          </label>
+                          <textarea
+                            value={devReviewNotes}
+                            onChange={(e) => setDevReviewNotes(e.target.value)}
+                            rows={2}
+                            placeholder="Add encouraging feedback or official verification notes (will be published to Parent Portal)..."
+                            className="w-full p-2.5 text-xs bg-white border border-gray-200 rounded-xl outline-none focus:border-[#F4510B] resize-none"
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setIsDevReturnModalOpen(true)}
+                              className="px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Return for Correction</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsDevRejectModalOpen(true)}
+                              className="px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              <span>Reject</span>
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleApproveDevSubmission(selectedDevSubmission)}
+                            className="px-5 py-2.5 text-xs font-black text-white bg-[#F4510B] hover:bg-[#e04505] rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Approve & Publish to Parent Portal</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Audit Trail History */}
+                  <div className="pt-2 border-t border-gray-100">
+                    <h4 className="text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                      Submission Audit History
+                    </h4>
+                    <div className="space-y-1.5">
+                      {(selectedDevSubmission.auditTrail || [
+                        { action: 'Submitted for Review', performer: `Coach ${selectedDevSubmission.coachName}`, timestamp: selectedDevSubmission.submissionDate }
+                      ]).map((audit, i) => (
+                        <div key={i} className="flex items-center justify-between text-[11px] py-1 px-2.5 rounded-lg bg-gray-50 text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#F4510B]" />
+                            <span className="font-bold text-[#172B50]">{audit.action}</span>
+                            <span className="text-gray-400 font-semibold">• by {audit.performer}</span>
+                          </div>
+                          <span className="text-gray-400 font-semibold">{audit.timestamp}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
+      ) : (
+        <>
       {/* ============================================================ */}
       {/* 2. FIVE COMPACT KPI CARDS                                    */}
       {/* ============================================================ */}
@@ -1461,6 +2008,8 @@ export default function EvaluationReviewModule() {
         </div>
 
       </div>
+      </>
+      )}
 
       {/* ============================================================ */}
       {/* 6. MODALS                                                    */}
@@ -1661,6 +2210,91 @@ export default function EvaluationReviewModule() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal: Return Child Development Submission */}
+      <Modal
+        isOpen={isDevReturnModalOpen}
+        onClose={() => setIsDevReturnModalOpen(false)}
+        title="Return to Coach for Correction"
+        subtitle={`Request corrections from Coach ${selectedDevSubmission?.coachName} for ${selectedDevSubmission?.childName}'s submission`}
+      >
+        <div className="space-y-4 text-left">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#172B50]">
+              Reason for Return (Required) *
+            </label>
+            <textarea
+              value={devReturnReason}
+              onChange={(e) => setDevReturnReason(e.target.value)}
+              rows={4}
+              placeholder="e.g. Please provide additional drill observations or verify that both attempts were completed without assistance."
+              className="w-full p-3 text-xs bg-white border border-gray-200 rounded-xl outline-none focus:border-[#F4510B] resize-none"
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsDevReturnModalOpen(false)}
+              className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDevReturn}
+              className="px-4 py-2 text-xs font-bold bg-[#F4510B] text-white rounded-xl hover:bg-[#e04505] cursor-pointer shadow-xs"
+            >
+              Confirm Return to Coach
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal: Reject Child Development Submission */}
+      <Modal
+        isOpen={isDevRejectModalOpen}
+        onClose={() => setIsDevRejectModalOpen(false)}
+        title="Reject Badge / Milestone Submission"
+        subtitle={`Reject ${selectedDevSubmission?.childName}'s submission from Coach ${selectedDevSubmission?.coachName}`}
+      >
+        <div className="space-y-4 text-left">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800">
+            <strong>Caution:</strong> Rejecting will mark this submission as rejected and notify the coach. The badge will remain locked for the child until newly resubmitted.
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#172B50]">
+              Rejection Reason (Required) *
+            </label>
+            <textarea
+              value={devRejectReason}
+              onChange={(e) => setDevRejectReason(e.target.value)}
+              rows={4}
+              placeholder="e.g. Skill criteria not yet met for this age level. Recommend further practice in regular sessions."
+              className="w-full p-3 text-xs bg-white border border-gray-200 rounded-xl outline-none focus:border-red-500 resize-none"
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsDevRejectModalOpen(false)}
+              className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDevReject}
+              className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 cursor-pointer shadow-xs"
+            >
+              Confirm Rejection
+            </button>
+          </div>
+        </div>
       </Modal>
 
     </div>

@@ -71,6 +71,13 @@ import {
   hashPassword,
   verifyPassword,
 } from '../services/passwordService';
+import {
+  INITIAL_CHILD_JOURNEYS,
+  INITIAL_DEVELOPMENT_SUBMISSIONS,
+  SUBMISSION_STATUSES,
+  BADGE_STATUSES,
+  calculateOverallProgress,
+} from '../services/childDevelopmentService';
 
 const CrmContext = createContext();
 
@@ -447,6 +454,12 @@ export function CrmProvider({ children }) {
           brandPalette: (Array.isArray(parsed.brandPalette) && parsed.brandPalette.length === 4)
             ? parsed.brandPalette
             : getStoredBrandPalette(),
+          childJourneys: (parsed.childJourneys && typeof parsed.childJourneys === 'object' && Object.keys(parsed.childJourneys).length > 0)
+            ? parsed.childJourneys
+            : INITIAL_CHILD_JOURNEYS,
+          childDevelopmentSubmissions: (Array.isArray(parsed.childDevelopmentSubmissions) && parsed.childDevelopmentSubmissions.length > 0)
+            ? parsed.childDevelopmentSubmissions
+            : INITIAL_DEVELOPMENT_SUBMISSIONS,
         };
       }
     } catch (e) {
@@ -457,6 +470,8 @@ export function CrmProvider({ children }) {
       equipment: initialEquipmentInventory,
       equipmentReports: initialEquipmentReports,
       brandPalette: getStoredBrandPalette(),
+      childJourneys: INITIAL_CHILD_JOURNEYS,
+      childDevelopmentSubmissions: INITIAL_DEVELOPMENT_SUBMISSIONS,
     };
   });
 
@@ -684,6 +699,8 @@ export function CrmProvider({ children }) {
       userAccounts: [initialAcademyData.userAccounts[0]],
       locations: initialAcademyData.locations,
       programs: initialAcademyData.programs,
+      childJourneys: INITIAL_CHILD_JOURNEYS,
+      childDevelopmentSubmissions: INITIAL_DEVELOPMENT_SUBMISSIONS,
     });
     addToast('All dummy records cleared across all portals');
   };
@@ -7008,6 +7025,366 @@ export function CrmProvider({ children }) {
     addToast(`${ids.length} evaluation(s) approved and published to Parent Portal!`, 'success');
   };
 
+  // =========================================================================
+  // CHILD DEVELOPMENT JOURNEY, BADGES, MILESTONES & VERIFICATION ACTIONS
+  // =========================================================================
+
+  const submitChildBadgeAchievement = (payload) => {
+    const {
+      childId,
+      badgeId,
+      sessionDate,
+      evidenceNotes,
+      whatChildDemonstrated,
+      coachId,
+      coachName,
+    } = payload;
+
+    const child = (data.students || []).find((s) => s.id === childId) || { name: 'Student' };
+    const subId = `SUB-DEV-${Date.now()}`;
+    const performer = coachName || currentUser?.name || 'Coach';
+
+    const newSubmission = {
+      id: subId,
+      type: 'badge',
+      badgeId,
+      badgeName: payload.badgeName || 'Skill Badge',
+      category: payload.category || 'Skill Development',
+      childId,
+      childName: child.name,
+      childAge: child.age || 5,
+      childAvatar: child.avatar,
+      program: payload.program || child.program || 'Foundational Movement',
+      batch: payload.batch || child.batch || 'LE - B1',
+      location: payload.location || child.center || 'KK NAGAR',
+      coachId: coachId || currentUser?.id || 'COACH',
+      coachName: performer,
+      sessionDate: sessionDate || new Date().toISOString().slice(0, 10),
+      status: SUBMISSION_STATUSES.PENDING,
+      submittedAt: new Date().toISOString(),
+      evidenceNotes: evidenceNotes || '',
+      whatChildDemonstrated: whatChildDemonstrated || [],
+      auditTrail: [
+        {
+          action: 'Submission Created',
+          performer: `${performer} (Coach)`,
+          timestamp: new Date().toLocaleString(),
+          note: 'Submitted badge achievement for Super Coach verification.',
+        },
+      ],
+    };
+
+    setData((prev) => {
+      const existingJourneys = prev.childJourneys || INITIAL_CHILD_JOURNEYS;
+      const targetJourney = existingJourneys[childId];
+      let updatedJourneys = { ...existingJourneys };
+
+      if (targetJourney && targetJourney.pathwayBadges) {
+        const updatedPathway = targetJourney.pathwayBadges.map((b) => {
+          if (b.badgeId === badgeId) {
+            return {
+              ...b,
+              status: BADGE_STATUSES.READY_FOR_ASSESSMENT,
+              progress: 100,
+              whatChildDid: whatChildDemonstrated || b.whatChildDid,
+            };
+          }
+          return b;
+        });
+        updatedJourneys[childId] = {
+          ...targetJourney,
+          pathwayBadges: updatedPathway,
+        };
+      }
+
+      return {
+        ...prev,
+        childJourneys: updatedJourneys,
+        childDevelopmentSubmissions: [newSubmission, ...(prev.childDevelopmentSubmissions || [])],
+      };
+    });
+
+    addToast(`Submitted badge achievement for ${child.name} to Super Coach review!`, 'success');
+    return subId;
+  };
+
+  const submitChildMilestone = (payload) => {
+    const {
+      childId,
+      milestoneId,
+      milestoneTitle,
+      category,
+      sessionDate,
+      evidenceNotes,
+      coachId,
+      coachName,
+    } = payload;
+
+    const child = (data.students || []).find((s) => s.id === childId) || { name: 'Student' };
+    const subId = `SUB-DEV-MS-${Date.now()}`;
+    const performer = coachName || currentUser?.name || 'Coach';
+
+    const newSubmission = {
+      id: subId,
+      type: 'milestone',
+      milestoneId,
+      milestoneTitle,
+      category: category || 'Academy Milestone',
+      childId,
+      childName: child.name,
+      childAge: child.age || 5,
+      childAvatar: child.avatar,
+      program: payload.program || child.program || 'Foundational Movement',
+      batch: payload.batch || child.batch || 'LE - B1',
+      location: payload.location || child.center || 'KK NAGAR',
+      coachId: coachId || currentUser?.id || 'COACH',
+      coachName: performer,
+      sessionDate: sessionDate || new Date().toISOString().slice(0, 10),
+      status: SUBMISSION_STATUSES.PENDING,
+      submittedAt: new Date().toISOString(),
+      evidenceNotes: evidenceNotes || '',
+      whatChildDemonstrated: payload.whatChildDemonstrated || [],
+      auditTrail: [
+        {
+          action: 'Milestone Submitted',
+          performer: `${performer} (Coach)`,
+          timestamp: new Date().toLocaleString(),
+          note: 'Submitted milestone for Super Coach verification.',
+        },
+      ],
+    };
+
+    setData((prev) => ({
+      ...prev,
+      childDevelopmentSubmissions: [newSubmission, ...(prev.childDevelopmentSubmissions || [])],
+    }));
+
+    addToast(`Submitted milestone "${milestoneTitle}" for ${child.name} to Super Coach review!`, 'success');
+    return subId;
+  };
+
+  const saveChildObservation = (payload) => {
+    const {
+      childId,
+      dimensions,
+      keyObservations,
+      coachNotes,
+      coachName,
+    } = payload;
+
+    const child = (data.students || []).find((s) => s.id === childId) || { name: 'Student' };
+    const performer = coachName || currentUser?.name || 'Coach';
+
+    setData((prev) => {
+      const existingJourneys = prev.childJourneys || INITIAL_CHILD_JOURNEYS;
+      const targetJourney = existingJourneys[childId];
+      if (!targetJourney) return prev;
+
+      const previousDims = targetJourney.developmentProfile?.dimensions || {};
+      const updatedProfile = {
+        ...targetJourney.developmentProfile,
+        assessmentDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        coachName: performer,
+        dimensions: { ...(targetJourney.developmentProfile?.dimensions || {}), ...dimensions },
+        previousDimensions: previousDims,
+        keyObservations: keyObservations || targetJourney.developmentProfile?.keyObservations || [],
+        coachNotes: coachNotes || targetJourney.developmentProfile?.coachNotes || '',
+      };
+
+      return {
+        ...prev,
+        childJourneys: {
+          ...existingJourneys,
+          [childId]: {
+            ...targetJourney,
+            developmentProfile: updatedProfile,
+          },
+        },
+      };
+    });
+
+    addToast(`Recorded development observations for ${child.name}.`, 'success');
+  };
+
+  const reviewChildDevelopmentSubmission = (submissionId, decision, reviewNotes = '') => {
+    const reviewer = currentUser?.name ? `${currentUser.name} (${currentUser.badge || currentUser.role || 'Super Coach'})` : 'Super Coach Alex';
+    const nowIso = new Date().toISOString();
+    const nowStr = new Date().toLocaleString();
+
+    setData((prev) => {
+      const submissions = prev.childDevelopmentSubmissions || [];
+      const sub = submissions.find((s) => s.id === submissionId);
+      if (!sub) return prev;
+
+      const newAudit = {
+        action: decision === 'Approved' ? 'Approved & Verified' : decision === 'Returned' ? 'Returned for Correction' : 'Rejected',
+        performer: reviewer,
+        timestamp: nowStr,
+        note: reviewNotes || (decision === 'Approved' ? 'Verified by Super Coach. Published to Parent Portal.' : 'Reviewed by Super Coach.'),
+      };
+
+      const nextStatus =
+        decision === 'Approved'
+          ? SUBMISSION_STATUSES.APPROVED
+          : decision === 'Returned'
+          ? SUBMISSION_STATUSES.RETURNED
+          : SUBMISSION_STATUSES.REJECTED;
+
+      const updatedSubmissions = submissions.map((s) => {
+        if (s.id === submissionId) {
+          return {
+            ...s,
+            status: nextStatus,
+            reviewedAt: nowIso,
+            reviewedBy: reviewer,
+            reviewNotes,
+            auditTrail: [newAudit, ...(s.auditTrail || [])],
+          };
+        }
+        return s;
+      });
+
+      let updatedJourneys = prev.childJourneys || INITIAL_CHILD_JOURNEYS;
+      let updatedStudents = prev.students || [];
+
+      if (decision === 'Approved') {
+        const childId = sub.childId;
+        const currentJourney = updatedJourneys[childId];
+
+        if (currentJourney) {
+          if (sub.type === 'badge') {
+            const updatedPathway = (currentJourney.pathwayBadges || []).map((b) => {
+              if (b.badgeId === sub.badgeId) {
+                return {
+                  ...b,
+                  status: BADGE_STATUSES.COMPLETED,
+                  progress: 100,
+                  completedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                  completedDateShort: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                  verified: true,
+                  verifiedBy: reviewer,
+                  verifiedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                  whatChildDid: sub.whatChildDemonstrated?.length > 0 ? sub.whatChildDemonstrated : b.whatChildDid,
+                };
+              }
+              return b;
+            });
+
+            const alreadyEarned = (currentJourney.earnedBadges || []).some((eb) => eb.id === sub.badgeId);
+            const newEarnedBadges = alreadyEarned
+              ? currentJourney.earnedBadges
+              : [
+                  {
+                    id: sub.badgeId,
+                    name: sub.badgeName,
+                    category: sub.category,
+                    iconType: sub.badgeId.includes('HOP') ? 'duck' : 'star',
+                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    color: '#0284C7',
+                  },
+                  ...(currentJourney.earnedBadges || []),
+                ];
+
+            const newOverallProgress = calculateOverallProgress(updatedPathway);
+
+            updatedJourneys = {
+              ...updatedJourneys,
+              [childId]: {
+                ...currentJourney,
+                pathwayBadges: updatedPathway,
+                earnedBadges: newEarnedBadges,
+                overallProgress: newOverallProgress,
+              },
+            };
+
+            updatedStudents = updatedStudents.map((st) => {
+              if (st.id === childId) {
+                return {
+                  ...st,
+                  badgesCount: (st.badgesCount || currentJourney.earnedBadges?.length || 0) + (alreadyEarned ? 0 : 1),
+                  overallProgress: newOverallProgress,
+                };
+              }
+              return st;
+            });
+          } else if (sub.type === 'milestone') {
+            const newMilestone = {
+              id: sub.milestoneId || `MS-${Date.now()}`,
+              title: sub.milestoneTitle,
+              description: sub.evidenceNotes || 'Completed milestone requirement.',
+              achievedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              verified: true,
+              iconType: 'trophy',
+              coach: sub.coachName,
+            };
+
+            updatedJourneys = {
+              ...updatedJourneys,
+              [childId]: {
+                ...currentJourney,
+                milestones: [newMilestone, ...(currentJourney.milestones || [])],
+              },
+            };
+
+            updatedStudents = updatedStudents.map((st) => {
+              if (st.id === childId) {
+                return {
+                  ...st,
+                  milestonesCount: (st.milestonesCount || currentJourney.milestones?.length || 0) + 1,
+                };
+              }
+              return st;
+            });
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        childJourneys: updatedJourneys,
+        students: updatedStudents,
+        childDevelopmentSubmissions: updatedSubmissions,
+      };
+    });
+
+    if (decision === 'Approved') {
+      addToast(`Submission approved and published to Parent Portal!`, 'success');
+    } else if (decision === 'Returned') {
+      addToast(`Submission returned to coach for correction.`, 'info');
+    } else {
+      addToast(`Submission rejected.`, 'warning');
+    }
+  };
+
+  const updateChildBadgeProgress = (childId, badgeId, updates) => {
+    setData((prev) => {
+      const existingJourneys = prev.childJourneys || INITIAL_CHILD_JOURNEYS;
+      const targetJourney = existingJourneys[childId];
+      if (!targetJourney) return prev;
+
+      const updatedPathway = (targetJourney.pathwayBadges || []).map((b) => {
+        if (b.badgeId === badgeId) {
+          return { ...b, ...updates };
+        }
+        return b;
+      });
+
+      const newProgress = calculateOverallProgress(updatedPathway);
+
+      return {
+        ...prev,
+        childJourneys: {
+          ...existingJourneys,
+          [childId]: {
+            ...targetJourney,
+            pathwayBadges: updatedPathway,
+            overallProgress: newProgress,
+          },
+        },
+      };
+    });
+  };
+
   return (
     <CrmContext.Provider
       value={{
@@ -7158,6 +7535,14 @@ export function CrmProvider({ children }) {
         approveEvaluation,
         returnEvaluation,
         bulkApproveEvaluations,
+        // Child Development Journey, Badges & Verification Actions
+        childJourneys: data.childJourneys || INITIAL_CHILD_JOURNEYS,
+        childDevelopmentSubmissions: data.childDevelopmentSubmissions || INITIAL_DEVELOPMENT_SUBMISSIONS,
+        submitChildBadgeAchievement,
+        submitChildMilestone,
+        saveChildObservation,
+        reviewChildDevelopmentSubmission,
+        updateChildBadgeProgress,
         // Emergency Coach Replacement Actions
         assignEmergencyCoachReplacement,
         revokeEmergencyCoachReplacement,

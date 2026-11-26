@@ -36,6 +36,13 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import { DynamicBadgeIcon } from '../../components/common/BadgeIllustrations';
+import {
+  PROGRAM_BADGE_CATALOG,
+  MILESTONE_CATALOG,
+  BADGE_STATUSES,
+  RADAR_DIMENSIONS,
+} from '../../services/childDevelopmentService';
 
 export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
   const {
@@ -44,6 +51,12 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
     saveDraftEvaluation,
     submitEvaluation,
     updateEvaluation,
+    submitChildBadgeAchievement,
+    submitChildMilestone,
+    saveChildObservation,
+    updateChildBadgeProgress,
+    childJourneys,
+    childDevelopmentSubmissions,
     addToast
   } = useCrm();
 
@@ -100,6 +113,36 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
 
   // Confirmation Modal
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+
+  // Badge & Milestone Submission State
+  const [isBadgeSubmitModalOpen, setIsBadgeSubmitModalOpen] = useState(false);
+  const [selectedBadgeToSubmit, setSelectedBadgeToSubmit] = useState(null);
+  const [badgeSessionDate, setBadgeSessionDate] = useState('2026-11-26');
+  const [badgeEvidenceNotes, setBadgeEvidenceNotes] = useState('');
+  const [badgeDemonstratedChecklist, setBadgeDemonstratedChecklist] = useState([]);
+
+  const [isMilestoneSubmitModalOpen, setIsMilestoneSubmitModalOpen] = useState(false);
+  const [selectedMilestoneToSubmit, setSelectedMilestoneToSubmit] = useState(null);
+  const [milestoneSessionDate, setMilestoneSessionDate] = useState('2026-11-26');
+  const [milestoneEvidenceNotes, setMilestoneEvidenceNotes] = useState('');
+
+  // Radar Dimension State for Session Observation
+  const [radarDimensions, setRadarDimensions] = useState({
+    balance: 82,
+    coordination: 78,
+    agility: 80,
+    strength: 70,
+    flexibility: 75,
+    stamina: 65,
+    focus: 85,
+    confidence: 82,
+    instructions: 88,
+  });
+  const [selectedKeyObservations, setSelectedKeyObservations] = useState([
+    'Good balance and body control',
+    'Improved coordination and agility',
+    'Shows great teamwork',
+  ]);
 
   // Available Programs for Selected Location
   const programOptions = useMemo(() => {
@@ -222,6 +265,20 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
   const currentStudent = useMemo(() => {
     return batchStudents.find(s => s.id === selectedStudentId) || batchStudents[0] || null;
   }, [batchStudents, selectedStudentId]);
+
+  // Current Student Journey & Submissions
+  const currentStudentJourney = useMemo(() => {
+    if (!currentStudent) return null;
+    const journeys = childJourneys || data.childJourneys || {};
+    return journeys[currentStudent.id] || journeys['STU-LS-002'] || null;
+  }, [childJourneys, data.childJourneys, currentStudent]);
+
+  // Submissions for this student
+  const studentSubmissions = useMemo(() => {
+    if (!currentStudent) return [];
+    const list = childDevelopmentSubmissions || data.childDevelopmentSubmissions || [];
+    return list.filter((s) => s.childId === currentStudent.id || s.childName === currentStudent.name);
+  }, [childDevelopmentSubmissions, data.childDevelopmentSubmissions, currentStudent]);
 
   // Existing Evaluation Record for Current Student in this Cycle
   const currentEvaluation = useMemo(() => {
@@ -941,6 +998,19 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
           <div className="flex items-center gap-2 border-b border-[#172B50]/10 pb-2 overflow-x-auto">
             <button
               type="button"
+              onClick={() => setActiveSubTab('badges')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeSubTab === 'badges'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'bg-[#FFF4E8] text-[#172B50] hover:bg-[#F4510B]/15'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5" />
+              <span>Skill Badges &amp; Milestones</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveSubTab('skills')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                 activeSubTab === 'skills'
@@ -961,8 +1031,21 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
                   : 'bg-[#FFF4E8] text-[#172B50] hover:bg-[#F4510B]/15'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Observations</span>
+              <BarChart2 className="w-3.5 h-3.5" />
+              <span>Radar &amp; Habit Observations</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('submissions')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeSubTab === 'submissions'
+                  ? 'bg-[#F4510B] text-white shadow-xs'
+                  : 'bg-[#FFF4E8] text-[#172B50] hover:bg-[#F4510B]/15'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Submissions Queue ({studentSubmissions.length})</span>
             </button>
 
             <button
@@ -991,6 +1074,196 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
               <span>Previous Evaluations</span>
             </button>
           </div>
+
+          {/* SUB-TAB 0: SKILL BADGES & MILESTONES */}
+          {activeSubTab === 'badges' && (
+            <div className="space-y-6 text-left">
+              <div className="p-4 rounded-2xl bg-[#FFF9F3] border border-[#F4510B]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-black uppercase text-[#F4510B] tracking-wider">Session-Based Skill Progression</div>
+                  <h3 className="text-base font-black text-[#172B50]">
+                    {currentStudent?.name}&apos;s Skill Trail &amp; Badge Achievements
+                  </h3>
+                  <p className="text-xs font-medium text-slate-600 mt-0.5">
+                    Record in-class skill mastery and submit eligible badges &amp; milestones for Super Coach verification.
+                  </p>
+                </div>
+                <div className="px-3 py-1.5 rounded-full bg-white border border-[#F4510B]/30 text-xs font-black text-[#F4510B] shrink-0 shadow-2xs">
+                  {currentStudentJourney?.overallProgress || 80}% Overall Progress
+                </div>
+              </div>
+
+              {/* Badges List on Pathway */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                  <h4 className="text-xs font-black text-[#172B50] uppercase tracking-wider">
+                    Applicable Program Badges ({currentStudentJourney?.pathwayBadges?.length || 5})
+                  </h4>
+                  <span className="text-[11px] font-bold text-slate-500">Program: {selectedProgram}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  {(currentStudentJourney?.pathwayBadges || [
+                    { badgeId: 'BADGE-FM-JUMP', name: 'Jumping', category: 'Locomotor', status: 'completed', iconType: 'rabbit' },
+                    { badgeId: 'BADGE-FM-TURNS', name: 'Taking Turns', category: 'Social & Emotional', status: 'completed', iconType: 'fox_bear' },
+                    { badgeId: 'BADGE-FM-HOP', name: 'Hopping', category: 'Locomotor', status: 'in_progress', progress: 60, iconType: 'duck' },
+                    { badgeId: 'BADGE-FM-BAL', name: 'Balancing', category: 'Stability', status: 'locked', iconType: 'beam_girl' },
+                    { badgeId: 'BADGE-FM-THROW', name: 'Throwing', category: 'Object Control', status: 'locked', iconType: 'target' },
+                  ]).map((badge) => {
+                    const isCompleted = badge.status === 'completed';
+                    const isInProgress = badge.status === 'in_progress' || badge.status === 'ready_for_assessment';
+
+                    return (
+                      <div
+                        key={badge.badgeId}
+                        className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
+                          isCompleted
+                            ? 'bg-[#F0FDF4] border-emerald-200'
+                            : isInProgress
+                            ? 'bg-[#FFF9F3] border-[#F4510B]/30'
+                            : 'bg-slate-50 border-slate-200 opacity-80'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <DynamicBadgeIcon iconType={badge.iconType || 'star'} size={56} status={badge.status} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <h5 className="text-xs font-black text-[#172B50] truncate">{badge.name}</h5>
+                              <span
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                                  isCompleted
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                    : isInProgress
+                                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                    : 'bg-slate-200 text-slate-700 border-slate-300'
+                                }`}
+                              >
+                                {isCompleted ? '✓ Completed' : isInProgress ? `In Progress (${badge.progress || 60}%)` : '🔒 Locked'}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-500 block mt-0.5">{badge.category}</span>
+                            <p className="text-[11px] font-medium text-slate-600 mt-1 line-clamp-2 leading-tight">
+                              {badge.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar & Actions */}
+                        <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-500">Progress:</span>
+                            <select
+                              value={badge.status === 'completed' ? '100' : String(badge.progress || (badge.status === 'locked' ? 0 : 60))}
+                              disabled={isCompleted}
+                              onChange={(e) => {
+                                const newProg = Number(e.target.value);
+                                const newStatus = newProg === 100 ? BADGE_STATUSES.READY_FOR_ASSESSMENT : newProg > 0 ? BADGE_STATUSES.IN_PROGRESS : BADGE_STATUSES.LOCKED;
+                                updateChildBadgeProgress(currentStudent.id, badge.badgeId, {
+                                  progress: newProg,
+                                  status: newStatus,
+                                });
+                                addToast(`Updated ${badge.name} progress to ${newProg}%.`, 'info');
+                              }}
+                              className="text-xs font-bold bg-white border border-slate-200 rounded-lg px-2 py-1 cursor-pointer"
+                            >
+                              <option value="0">0% (Locked)</option>
+                              <option value="30">30% (Practising)</option>
+                              <option value="60">60% (Advancing)</option>
+                              <option value="90">90% (Near Mastery)</option>
+                              <option value="100">100% (Ready for Review)</option>
+                            </select>
+                          </div>
+
+                          {!isCompleted && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedBadgeToSubmit(badge);
+                                setBadgeEvidenceNotes(`Demonstrated full criteria for ${badge.name} during scheduled session.`);
+                                setBadgeDemonstratedChecklist(badge.whatChildDid || [
+                                  `Demonstrated ${badge.name} with consistent control`,
+                                  'Followed coach directions and safety guidelines',
+                                ]);
+                                setIsBadgeSubmitModalOpen(true);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-[#F4510B] hover:bg-[#d44307] text-white text-xs font-black flex items-center gap-1 shadow-2xs transition-all cursor-pointer"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span>Submit to Super Coach</span>
+                            </button>
+                          )}
+                          {isCompleted && (
+                            <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Verified {badge.completedDateShort || badge.completedDate}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Milestone Submission Section */}
+              <div className="pt-4 border-t border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black text-[#172B50] uppercase tracking-wider">
+                    Academy Milestones Submission
+                  </h4>
+                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                    Curriculum Checkpoints
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {MILESTONE_CATALOG.map((ms) => {
+                    const alreadyAchieved = (currentStudentJourney?.milestones || []).some((m) => m.id === ms.id || m.title === ms.title);
+                    return (
+                      <div
+                        key={ms.id}
+                        className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                          alreadyAchieved ? 'bg-purple-50/50 border-purple-200' : 'bg-white border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center shrink-0">
+                            <Trophy className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <h5 className="text-xs font-black text-[#172B50] truncate">{ms.title}</h5>
+                            <p className="text-[11px] font-medium text-slate-500 mt-0.5 leading-snug line-clamp-2">
+                              {ms.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0">
+                          {alreadyAchieved ? (
+                            <span className="text-[10px] font-black text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                              Achieved ✓
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedMilestoneToSubmit(ms);
+                                setMilestoneEvidenceNotes(`Demonstrated exceptional dedication and completed criteria for ${ms.title}.`);
+                                setIsMilestoneSubmitModalOpen(true);
+                              }}
+                              className="px-2.5 py-1 rounded-xl bg-[#172B50] hover:bg-[#F4510B] text-white text-[11px] font-black transition-colors cursor-pointer shadow-2xs"
+                            >
+                              Submit
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 3. SUB-TAB 1: SKILL EVALUATION TABLE */}
           {activeSubTab === 'skills' && (
@@ -1275,30 +1548,220 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
             </div>
           )}
 
-          {/* SUB-TAB 2: OBSERVATIONS */}
+          {/* SUB-TAB 2: OBSERVATIONS & RADAR DIMENSIONS */}
           {activeSubTab === 'observations' && (
-            <div className="space-y-4 text-left">
-              <div className="p-4 rounded-xl bg-[#FFF4E8]/50 border border-[#F4510B]/20 space-y-3">
-                <h3 className="text-xs font-black uppercase text-[#172B50]/70 tracking-wider">Detailed Behavioral &amp; Athletic Notes</h3>
+            <div className="space-y-5 text-left">
+              <div className="p-4 rounded-2xl bg-[#FFF9F3] border border-[#F4510B]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <label className="text-xs font-bold text-[#172B50] block mb-1">Overall Coach Assessment</label>
-                  <textarea
-                    rows={4}
-                    value={formData.coachObservation}
-                    onChange={(e) => setFormData({ ...formData, coachObservation: e.target.value })}
-                    className="w-full p-3 text-xs bg-white text-[#172B50] rounded-xl border border-[#172B50]/15"
-                  />
+                  <h3 className="text-xs font-black uppercase text-[#F4510B] tracking-wider">
+                    Child Development Profile &amp; Radar Dimensions
+                  </h3>
+                  <p className="text-xs font-medium text-slate-600 mt-0.5">
+                    Record coach-observed habit ratings across 9 developmental dimensions for {currentStudent?.name}.
+                  </p>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-[#172B50] block mb-1">Class Social Dynamics &amp; Team Engagement</label>
-                  <input
-                    type="text"
-                    value="Highly cooperative in team drills, listens attentively and encourages peers."
-                    disabled
-                    className="w-full px-3 py-2 text-xs bg-white text-[#172B50] rounded-xl border border-[#172B50]/15"
-                  />
+                <button
+                  type="button"
+                  onClick={() => {
+                    saveChildObservation({
+                      childId: currentStudent.id,
+                      dimensions: radarDimensions,
+                      keyObservations: selectedKeyObservations,
+                      coachNotes: formData.coachObservation,
+                      coachId: coachProfile.id,
+                      coachName: coachProfile.name,
+                    });
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#F4510B] hover:bg-[#d44307] text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-[#F4510B]/20 transition-all cursor-pointer shrink-0"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save to Development Profile</span>
+                </button>
+              </div>
+
+              {/* 9 Dimensions Sliders Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                {RADAR_DIMENSIONS.map((dim) => {
+                  const val = radarDimensions[dim.key] ?? 75;
+                  return (
+                    <div key={dim.key} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between text-xs font-black text-[#172B50]">
+                        <span>{dim.label}</span>
+                        <span className="px-2 py-0.5 rounded-md bg-[#FFF4E8] text-[#F4510B] font-black border border-[#F4510B]/20">
+                          {val}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="20"
+                        max="100"
+                        step="5"
+                        value={val}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setRadarDimensions((prev) => ({ ...prev, [dim.key]: v }));
+                        }}
+                        className="w-full accent-[#F4510B] cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                        <span>Emerging (20%)</span>
+                        <span>Proficient (80%)</span>
+                        <span>Mastery (100%)</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Key Observations Checklist */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                <span className="text-xs font-black uppercase text-[#172B50] tracking-wider block">
+                  Observed Habit Badges &amp; Checklist
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    'Good balance and body control',
+                    'Improved coordination and agility',
+                    'Shows great teamwork',
+                    'Needs a little more endurance',
+                    'Quick reaction to audio cues',
+                    'Maintains focus during coach demonstrations',
+                  ].map((obsText) => {
+                    const isChecked = selectedKeyObservations.includes(obsText);
+                    return (
+                      <label
+                        key={obsText}
+                        className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                          isChecked ? 'bg-[#FFF4E8] border-[#F4510B] text-[#172B50]' : 'bg-slate-50 border-slate-200 text-slate-600'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setSelectedKeyObservations(selectedKeyObservations.filter((o) => o !== obsText));
+                            } else {
+                              setSelectedKeyObservations([...selectedKeyObservations, obsText]);
+                            }
+                          }}
+                          className="accent-[#F4510B] w-4 h-4 rounded"
+                        />
+                        <span>{obsText}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
+
+              {/* Coach Summary Comments */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+                <label className="text-xs font-black uppercase text-[#172B50] tracking-wider block">
+                  Detailed Coach Observations (Visible to Parent after approval)
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.coachObservation}
+                  onChange={(e) => setFormData({ ...formData, coachObservation: e.target.value })}
+                  placeholder="Record qualitative feedback, movement mechanics, and social cooperation notes..."
+                  className="w-full p-3 text-xs bg-slate-50 text-[#172B50] font-medium rounded-xl border border-slate-200 focus:outline-none focus:border-[#F4510B] focus:bg-white resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* SUB-TAB: SUBMISSIONS QUEUE */}
+          {activeSubTab === 'submissions' && (
+            <div className="space-y-4 text-left">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-black uppercase text-[#172B50]/70 tracking-wider">
+                    Verification Pipeline for {currentStudent?.name}
+                  </h3>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">
+                    Track the live review status of badges and milestones submitted to Super Coach.
+                  </p>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-[#172B50] text-white text-xs font-black">
+                  {studentSubmissions.length} Submissions
+                </span>
+              </div>
+
+              {studentSubmissions.length === 0 ? (
+                <div className="p-8 text-center text-xs font-bold text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                  No submissions yet for {currentStudent?.name}. Use the &quot;Skill Badges &amp; Milestones&quot; tab to submit achievements!
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {studentSubmissions.map((sub) => {
+                    const isPending = sub.status === 'Pending Super Coach Review' || sub.status === 'Pending';
+                    const isApproved = sub.status === 'Approved & Published' || sub.status === 'Approved';
+                    const isReturned = sub.status === 'Returned for Correction' || sub.status === 'Returned';
+
+                    return (
+                      <div
+                        key={sub.id}
+                        className={`p-4 rounded-2xl border transition-all ${
+                          isPending
+                            ? 'bg-amber-50/60 border-amber-200'
+                            : isApproved
+                            ? 'bg-emerald-50/60 border-emerald-200'
+                            : isReturned
+                            ? 'bg-red-50/60 border-red-200'
+                            : 'bg-white border-slate-200'
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-black/5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#172B50] text-white">
+                              {sub.type === 'badge' ? 'Badge Achievement' : 'Milestone'}
+                            </span>
+                            <h5 className="text-xs font-black text-[#172B50]">
+                              {sub.type === 'badge' ? sub.badgeName : sub.milestoneTitle}
+                            </h5>
+                          </div>
+
+                          <span
+                            className={`text-[10.5px] font-black px-2.5 py-0.5 rounded-full border ${
+                              isPending
+                                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                : isApproved
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : isReturned
+                                ? 'bg-red-100 text-red-800 border-red-300'
+                                : 'bg-slate-100 text-slate-700 border-slate-300'
+                            }`}
+                          >
+                            {sub.status}
+                          </span>
+                        </div>
+
+                        <p className="text-xs font-medium text-slate-700 mt-2">
+                          <span className="font-bold">Coach Evidence:</span> {sub.evidenceNotes}
+                        </p>
+
+                        {/* Audit / Reviewer Remarks */}
+                        {sub.reviewNotes && (
+                          <div className="mt-2 p-2.5 rounded-xl bg-white border border-slate-200 text-xs">
+                            <span className="font-black text-[#172B50]">Super Coach Remarks:</span>{' '}
+                            <span className="text-slate-600 italic">&quot;{sub.reviewNotes}&quot;</span>
+                            {sub.reviewedBy && (
+                              <span className="text-[10px] font-bold text-slate-400 block mt-1">
+                                Reviewed by {sub.reviewedBy}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-[10.5px] font-bold text-slate-400 mt-3 pt-2 border-t border-black/5">
+                          <span>Session Date: {sub.sessionDate}</span>
+                          <span>Coach: {sub.coachName}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -1461,6 +1924,185 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
           </div>
         </div>
       </Modal>
+
+      {/* ============================================================ */}
+      {/* MODAL: SUBMIT BADGE ACHIEVEMENT FOR SUPER COACH VERIFICATION */}
+      {/* ============================================================ */}
+      {isBadgeSubmitModalOpen && selectedBadgeToSubmit && (
+        <Modal
+          isOpen={isBadgeSubmitModalOpen}
+          onClose={() => setIsBadgeSubmitModalOpen(false)}
+          title={`Submit Badge Achievement – ${selectedBadgeToSubmit.name}`}
+          subtitle={`Submit ${currentStudent?.name}'s skill achievement to Super Coach review pipeline`}
+          maxWidth="max-w-lg"
+        >
+          <div className="space-y-4 text-left p-1">
+            <div className="p-4 rounded-2xl bg-[#FFF9F3] border border-[#F4510B]/20 flex items-center gap-3">
+              <DynamicBadgeIcon iconType={selectedBadgeToSubmit.iconType || 'star'} size={60} status="completed" />
+              <div>
+                <h4 className="text-sm font-black text-[#172B50]">{selectedBadgeToSubmit.name}</h4>
+                <p className="text-xs font-bold text-slate-500">{selectedBadgeToSubmit.category} &bull; {selectedProgram}</p>
+                <span className="text-[10px] font-black text-[#F4510B] uppercase">Athlete: {currentStudent?.name} ({currentStudent?.rollNo})</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-[#172B50] block mb-1">Scheduled Session Date *</label>
+              <input
+                type="date"
+                value={badgeSessionDate}
+                onChange={(e) => setBadgeSessionDate(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs bg-slate-50 text-[#172B50] font-bold rounded-xl border border-slate-200 focus:outline-none focus:border-[#F4510B]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-[#172B50] block mb-1.5">What the Athlete Demonstrated *</label>
+              <div className="space-y-1.5">
+                {(selectedBadgeToSubmit.whatChildDid || [
+                  `Demonstrated ${selectedBadgeToSubmit.name} mechanics smoothly`,
+                  'Completed 3 consecutive drill reps without fault',
+                  'Exceeded minimum balance/coordination criteria',
+                ]).map((item, idx) => (
+                  <label key={idx} className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="accent-[#F4510B] w-4 h-4 rounded" />
+                    <span>{item}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-[#172B50] block mb-1">Supporting Coach Observations &amp; Evidence *</label>
+              <textarea
+                rows={3}
+                value={badgeEvidenceNotes}
+                onChange={(e) => setBadgeEvidenceNotes(e.target.value)}
+                placeholder="Describe how the child met all rubric requirements during today's training session..."
+                className="w-full p-3 text-xs bg-slate-50 text-[#172B50] font-medium rounded-xl border border-slate-200 focus:outline-none focus:border-[#F4510B] resize-none"
+              />
+            </div>
+
+            <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800 leading-snug">
+              <strong>Super Coach Verification Rule:</strong> Once submitted, this badge achievement will be reviewed by Super Coach before becoming visible to parents.
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsBadgeSubmitModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  submitChildBadgeAchievement({
+                    childId: currentStudent.id,
+                    badgeId: selectedBadgeToSubmit.badgeId,
+                    badgeName: selectedBadgeToSubmit.name,
+                    category: selectedBadgeToSubmit.category,
+                    sessionDate: badgeSessionDate,
+                    evidenceNotes: badgeEvidenceNotes,
+                    whatChildDemonstrated: selectedBadgeToSubmit.whatChildDid || [],
+                    coachId: coachProfile.id,
+                    coachName: coachProfile.name,
+                    location: selectedLocation,
+                    program: selectedProgram,
+                    batch: selectedBatch,
+                  });
+                  setIsBadgeSubmitModalOpen(false);
+                }}
+                className="px-5 py-2 text-xs font-black bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 flex items-center gap-1.5 cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Submit Badge for Verification</span>
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL: SUBMIT MILESTONE FOR SUPER COACH VERIFICATION         */}
+      {/* ============================================================ */}
+      {isMilestoneSubmitModalOpen && selectedMilestoneToSubmit && (
+        <Modal
+          isOpen={isMilestoneSubmitModalOpen}
+          onClose={() => setIsMilestoneSubmitModalOpen(false)}
+          title={`Submit Milestone – ${selectedMilestoneToSubmit.title}`}
+          subtitle={`Submit ${currentStudent?.name}'s milestone checkpoint to Super Coach review pipeline`}
+          maxWidth="max-w-lg"
+        >
+          <div className="space-y-4 text-left p-1">
+            <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#FFF4E8] text-[#F4510B] flex items-center justify-center shrink-0">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-[#172B50]">{selectedMilestoneToSubmit.title}</h4>
+                <p className="text-xs font-bold text-slate-500">{selectedMilestoneToSubmit.category} &bull; {selectedProgram}</p>
+                <span className="text-[10px] font-black text-purple-700 uppercase">Athlete: {currentStudent?.name} ({currentStudent?.rollNo})</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-[#172B50] block mb-1">Session / Achievement Date *</label>
+              <input
+                type="date"
+                value={milestoneSessionDate}
+                onChange={(e) => setMilestoneSessionDate(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs bg-slate-50 text-[#172B50] font-bold rounded-xl border border-slate-200 focus:outline-none focus:border-[#F4510B]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-[#172B50] block mb-1">Milestone Description &amp; Evidence *</label>
+              <textarea
+                rows={3}
+                value={milestoneEvidenceNotes}
+                onChange={(e) => setMilestoneEvidenceNotes(e.target.value)}
+                placeholder="Detail the training session dedication, drill mastery, or attendance milestone met..."
+                className="w-full p-3 text-xs bg-slate-50 text-[#172B50] font-medium rounded-xl border border-slate-200 focus:outline-none focus:border-[#F4510B] resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsMilestoneSubmitModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  submitChildMilestone({
+                    childId: currentStudent.id,
+                    milestoneId: selectedMilestoneToSubmit.id,
+                    milestoneTitle: selectedMilestoneToSubmit.title,
+                    category: selectedMilestoneToSubmit.category,
+                    sessionDate: milestoneSessionDate,
+                    evidenceNotes: milestoneEvidenceNotes,
+                    coachId: coachProfile.id,
+                    coachName: coachProfile.name,
+                    location: selectedLocation,
+                    program: selectedProgram,
+                    batch: selectedBatch,
+                  });
+                  setIsMilestoneSubmitModalOpen(false);
+                }}
+                className="px-5 py-2 text-xs font-black bg-[#F4510B] text-white rounded-xl shadow-md hover:brightness-110 flex items-center gap-1.5 cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Submit Milestone for Verification</span>
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* ============================================================ */}
       {/* 6. EVALUATION HISTORY TABLE (WHEN HISTORY TAB IS SELECTED)   */}
