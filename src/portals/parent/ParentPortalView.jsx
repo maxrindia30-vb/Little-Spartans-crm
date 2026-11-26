@@ -76,6 +76,7 @@ import FeesPaymentsModule from '../admin/FeesPaymentsModule';
 import SportsEventsModule from '../admin/SportsEventsModule';
 import ProgramsAchievementsModule from './ProgramsAchievementsModule';
 import ParentAttendanceModule from './ParentAttendanceModule';
+import ParentProgramsModule from './ParentProgramsModule';
 
 const COMP_STATUS_STYLES = {
   Pending: 'bg-amber-100 text-amber-900',
@@ -481,7 +482,8 @@ export default function ParentPortalView() {
   return (
     <div className="space-y-6">
       
-      {/* 1. MASTER TOP HEADER (Parent Portal Empty-State & Dynamic Reference) */}
+      {/* 1. MASTER TOP HEADER (Rendered for dashboard & generic views; dedicated modules render their own authentic headers) */}
+      {!['programs', 'attendance', 'attendance_compensation', 'leave_requests', 'compensation_class', 'leaves', 'compensation', 'programs_achievements', 'achievements', 'learning_journey', 'progress', 'children'].includes(currentView) && (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
         {/* Left: Heading & Subtitle */}
         <div className="text-left space-y-1">
@@ -625,6 +627,7 @@ export default function ParentPortalView() {
           </div>
         </div>
       </div>
+      )}
 
       {/* 2. PARENT DASHBOARD MAIN VIEW */}
       {currentView === 'dashboard' && (
@@ -1423,8 +1426,20 @@ export default function ParentPortalView() {
         <SportsEventsModule />
       )}
 
+      {/* 7.4. DEDICATED PROGRAMS MODULE */}
+      {currentView === 'programs' && (
+        <ParentProgramsModule
+          parentProfile={parentProfile}
+          myChildren={myChildren}
+          activeChild={activeChild}
+          selectedChildId={selectedChildId}
+          onSelectChild={setSelectedChildId}
+          onNavigateView={setCurrentView}
+        />
+      )}
+
       {/* 7.5. PROGRAMS & ACHIEVEMENTS */}
-      {(currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs' || currentView === 'achievements' || currentView === 'children' || currentView === 'learning_journey') && (
+      {(currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'achievements' || currentView === 'children' || currentView === 'learning_journey') && (
         <ProgramsAchievementsModule
           parentProfile={parentProfile}
           myChildren={myChildren}
@@ -1432,9 +1447,7 @@ export default function ParentPortalView() {
           selectedChildId={selectedChildId}
           onSelectChild={setSelectedChildId}
           initialTab={
-            currentView === 'programs'
-              ? 'explore'
-              : currentView === 'children'
+            currentView === 'children'
               ? 'profile'
               : 'journey'
           }

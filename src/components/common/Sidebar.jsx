@@ -422,7 +422,7 @@ export default function Sidebar() {
   const parentNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'programs', label: 'Programs', icon: Rocket },
+    { id: 'programs', label: 'Programs', icon: Layers },
     { id: 'achievements', label: 'Achievements', icon: Trophy },
     { id: 'communication', label: 'Announcements', icon: Megaphone },
     { id: 'feedback', label: 'Feedback & Suggestions', icon: MessageSquare },
