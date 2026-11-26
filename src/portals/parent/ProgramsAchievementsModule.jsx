@@ -44,6 +44,9 @@ import {
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import Modal from '../../components/common/Modal';
+import SportsCertificate from '../../components/common/SportsCertificate';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   DynamicBadgeIcon,
   RabbitJumpingBadge,
@@ -201,6 +204,39 @@ export default function ProgramsAchievementsModule({
 
   // Modals State
   const [selectedCertModal, setSelectedCertModal] = useState(null);
+  const certDownloadRef = React.useRef(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleDownloadCertificatePdf = async (cert) => {
+    if (!certDownloadRef.current) return;
+    setIsGeneratingPdf(true);
+    try {
+      const canvas = await html2canvas(certDownloadRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#FFFDF8',
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+      // Landscape A4 is 297mm x 210mm.
+      // Aspect ratio is 16:10 -> 277mm x 173.1mm, centered vertically.
+      pdf.addImage(imgData, 'PNG', 10, 18.5, 277, 173.1);
+      const studentClean = (activeChild?.name || 'Athlete').replace(/\s+/g, '_');
+      const certNumClean = cert?.certNumber || cert?.id || '2026';
+      pdf.save(`Little_Spartans_Certificate_${certNumClean}_${studentClean}.pdf`);
+      addToast(`Certificate #${certNumClean} downloaded successfully as PDF!`, 'success');
+    } catch (err) {
+      console.error('Failed to generate PDF certificate:', err);
+      addToast('Could not generate PDF certificate. Please try again.', 'error');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
   const [isAllBadgesModalOpen, setIsAllBadgesModalOpen] = useState(false);
   const [isAllMilestonesModalOpen, setIsAllMilestonesModalOpen] = useState(false);
   const [isPeriodDropdownOpen, setIsPeriodDropdownOpen] = useState(false);
@@ -356,7 +392,11 @@ export default function ProgramsAchievementsModule({
           </div>
 
           {/* 3. Certificates */}
-          <div className="bg-[#F0FDF4] border border-emerald-200/60 rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center min-w-[95px] text-center shadow-2xs hover:border-emerald-300 transition-all">
+          <div
+            onClick={() => setActiveSubTab('certificates')}
+            className="bg-[#F0FDF4] border border-emerald-200/60 rounded-2xl p-3 sm:p-3.5 flex flex-col items-center justify-center min-w-[95px] text-center shadow-2xs hover:border-emerald-300 transition-all cursor-pointer"
+            title="Click to view all certificates"
+          >
             <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-1">
               <FileCheck className="w-4 h-4" />
             </div>
@@ -1178,6 +1218,71 @@ export default function ProgramsAchievementsModule({
               </div>
             </div>
           </div>
+
+          {/* Athlete Profile & Enrollment Information */}
+          <div className="pt-6 border-t border-slate-100">
+            <h4 className="text-base font-black text-[#172B50] mb-4 flex items-center gap-2">
+              <User className="w-4 h-4 text-[#F4510B]" />
+              <span>Athlete Information &amp; Official Academy Standing</span>
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">Student Identity</span>
+                <p className="text-sm font-black text-[#172B50]">{activeChild.name}</p>
+                <p className="text-xs font-semibold text-slate-500">Kid ID: <span className="font-mono text-[#F4510B] font-bold">{activeChild.id || activeChild.childId || 'LS-CH-2026-1045'}</span></p>
+                <p className="text-xs font-medium text-slate-500">Age: {activeChild.age || 5} Years &bull; Batch: {activeChild.batch || 'LE - B1'}</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">Training &amp; Center</span>
+                <p className="text-sm font-black text-[#172B50]">{activeChild.program || childJourney.program || 'Foundational Movement'}</p>
+                <p className="text-xs font-semibold text-slate-500">Location: {activeChild.center || 'KK Nagar'}</p>
+                <p className="text-xs font-medium text-slate-500">Primary Coach: {childJourney.coachName || 'Coach Karthik'}</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">Academy Standing</span>
+                <p className="text-sm font-black text-[#172B50]">{activeChild.rank || 'Spartan Junior Athlete'}</p>
+                <p className="text-xs font-semibold text-emerald-600">Attendance Turnout: {activeChild.attendanceRate || 90}%</p>
+                <p className="text-xs font-medium text-slate-500">Status: <span className="text-emerald-600 font-bold">Active &bull; Enrolled</span></p>
+              </div>
+            </div>
+
+            {/* Coach Assessments & Skill Drills */}
+            <div className="mt-4 p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
+              <span className="text-xs font-black text-[#172B50] uppercase tracking-wider block">Skill Drill Evaluations</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <div className="flex justify-between font-bold mb-1">
+                    <span className="text-slate-600">Agility &amp; Obstacles</span>
+                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.agility ? `${activeChild.evaluations.agility} / 10` : '8.5 / 10'}</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#F4510B] rounded-full" style={{ width: '85%' }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between font-bold mb-1">
+                    <span className="text-slate-600">Balance Beam</span>
+                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.balance ? `${activeChild.evaluations.balance} / 10` : '8.2 / 10'}</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: '82%' }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between font-bold mb-1">
+                    <span className="text-slate-600">Discipline &amp; Team Spirit</span>
+                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.discipline ? `${activeChild.evaluations.discipline} / 10` : '9.0 / 10'}</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#172B50] rounded-full" style={{ width: '90%' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1295,60 +1400,56 @@ export default function ProgramsAchievementsModule({
         <Modal
           isOpen={Boolean(selectedCertModal)}
           onClose={() => setSelectedCertModal(null)}
-          title="Little Spartans Academy Certificate of Excellence"
+          title="Official Sports Certificate Preview"
+          subtitle="Authenticated landscape sports academy certificate &bull; Ready for high-resolution download"
+          maxWidth="max-w-5xl"
         >
-          <div className="p-6 text-center space-y-5 bg-gradient-to-b from-[#FFFDF9] to-white rounded-2xl border-4 border-[#172B50]">
-            <div className="flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-[#172B50] text-white flex items-center justify-center shadow-md">
-                <Award className="w-8 h-8 text-[#F4510B]" />
+          <div className="space-y-4">
+            {/* Scrollable container on mobile / tablet to guarantee 16:10 landscape presentation */}
+            <div className="overflow-x-auto p-1.5 sm:p-2 bg-slate-50/70 rounded-2xl border border-slate-200/80 shadow-inner">
+              <div className="min-w-[700px] lg:min-w-0">
+                <SportsCertificate
+                  innerRef={certDownloadRef}
+                  cert={selectedCertModal}
+                  child={activeChild}
+                  coach={{
+                    name: selectedCertModal.issuedBy?.includes('Coach')
+                      ? selectedCertModal.issuedBy
+                      : childJourney?.coachName || 'Coach Karthik',
+                    title: 'Primary Coach',
+                  }}
+                  academyName="Little Spartans Sports Academy"
+                />
               </div>
             </div>
 
-            <div>
-              <span className="text-xs font-black text-[#F4510B] uppercase tracking-widest">Little Spartans Sports Academy</span>
-              <h2 className="text-2xl font-black text-[#172B50] mt-1">{selectedCertModal.title}</h2>
-              <p className="text-xs font-bold text-slate-400 mt-1">Certificate #{selectedCertModal.certNumber}</p>
-            </div>
-
-            <div className="py-4 border-y border-slate-200/80">
-              <p className="text-xs text-slate-500">This is to proudly certify that</p>
-              <h3 className="text-2xl font-black text-[#172B50] my-1 underline decoration-[#F4510B] decoration-2 underline-offset-4">
-                {activeChild.name}
-              </h3>
-              <p className="text-xs text-slate-600 max-w-md mx-auto mt-2 leading-relaxed">
-                has successfully demonstrated exceptional dedication, sportsmanship, and mastery in the{' '}
-                <span className="font-bold text-[#172B50]">{selectedCertModal.program}</span> curriculum.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between text-xs font-bold text-slate-600 px-6 pt-2">
-              <div className="text-left">
-                <p className="text-slate-400 text-[10px]">ISSUE DATE</p>
-                <p className="text-[#172B50] font-black">{selectedCertModal.issueDate}</p>
+            {/* Modal Actions & Trust Metadata */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200/80">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>
+                  Official verifiable credential #{selectedCertModal.certNumber} &bull; Verified by Super Coach Alex
+                </span>
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full border-2 border-emerald-500 text-emerald-600 flex items-center justify-center mx-auto text-[8px] font-black uppercase">
-                  Verified Seal
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-slate-400 text-[10px]">ISSUING AUTHORITY</p>
-                <p className="text-[#172B50] font-black">{selectedCertModal.issuedBy}</p>
-              </div>
-            </div>
 
-            <div className="pt-4 flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  addToast(`Certificate #${selectedCertModal.certNumber} downloaded successfully.`, 'success');
-                  setSelectedCertModal(null);
-                }}
-                className="px-5 py-2.5 rounded-full bg-[#F4510B] hover:bg-[#d44307] text-white text-xs font-black flex items-center gap-2 shadow-md transition-all cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download PDF Certificate</span>
-              </button>
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCertModal(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  disabled={isGeneratingPdf}
+                  onClick={() => handleDownloadCertificatePdf(selectedCertModal)}
+                  className="px-5 py-2 rounded-xl bg-[#F4510B] hover:bg-[#d44307] active:scale-95 text-white text-xs font-black flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download PDF Certificate'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </Modal>

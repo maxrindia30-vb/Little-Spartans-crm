@@ -1423,26 +1423,39 @@ export default function ParentPortalView() {
         <SportsEventsModule />
       )}
 
-            {/* 7.5. PROGRAMS & ACHIEVEMENTS */}
-      {(currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs' || currentView === 'achievements' || currentView === 'learning_journey') && (
+      {/* 7.5. PROGRAMS & ACHIEVEMENTS */}
+      {(currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs' || currentView === 'achievements' || currentView === 'children' || currentView === 'learning_journey') && (
         <ProgramsAchievementsModule
           parentProfile={parentProfile}
           myChildren={myChildren}
           activeChild={activeChild}
           selectedChildId={selectedChildId}
           onSelectChild={setSelectedChildId}
-          initialTab={currentView === 'achievements' || currentView === 'progress' ? 'achievements' : 'explore'}
+          initialTab={
+            currentView === 'programs'
+              ? 'explore'
+              : currentView === 'children'
+              ? 'profile'
+              : 'journey'
+          }
         />
       )}
 
       {/* 7.6. ATTENDANCE & COMPENSATION MODULE */}
-      {(currentView === 'attendance' || currentView === 'attendance_compensation' || currentView === 'leave_requests' || currentView === 'compensation_class') && (
+      {(currentView === 'attendance' || currentView === 'attendance_compensation' || currentView === 'leave_requests' || currentView === 'compensation_class' || currentView === 'leaves' || currentView === 'compensation') && (
         <ParentAttendanceModule
           parentProfile={parentProfile}
           myChildren={myChildren}
           activeChild={activeChild}
           setActiveChild={(child) => setSelectedChildId(child.id)}
           initialSelectedDate="2026-11-19"
+          initialSection={
+            currentView === 'leave_requests' || currentView === 'leaves'
+              ? 'leave_requests'
+              : currentView === 'compensation_class' || currentView === 'compensation'
+              ? 'compensation'
+              : 'overview'
+          }
         />
       )}
 
@@ -1481,6 +1494,138 @@ export default function ParentPortalView() {
             ))}
           </div>
           )}
+        </div>
+      )}
+
+      {/* 8.5 FEEDBACK & SUGGESTIONS */}
+      {currentView === 'feedback' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight flex items-center gap-2">
+                <MessageSquare className="w-7 h-7 text-[#F4510B]" />
+                <span>Feedback &amp; Suggestions</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50]/70 mt-0.5">
+                Share your experience, suggest academy improvements, or send feedback to our coaching team.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsFeedbackModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-[#F4510B] hover:bg-[#d44307] text-white text-xs font-black flex items-center gap-2 shadow-md transition-all cursor-pointer self-start sm:self-auto"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Submit New Feedback</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left: Direct Feedback Form */}
+            <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-slate-200/90 shadow-card space-y-4">
+              <div className="pb-3 border-b border-slate-100">
+                <h3 className="text-base font-black text-[#172B50]">Send Direct Feedback</h3>
+                <p className="text-xs text-slate-500">Your message is delivered to the Head Coach &amp; Management</p>
+              </div>
+
+              <form onSubmit={handleSendFeedback} className="space-y-3.5">
+                <div>
+                  <label className="text-xs font-bold text-[#172B50] block mb-1">Athlete</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={`${activeChild?.name || 'Aarav K'} (${activeChild?.program || 'Foundational Movement'})`}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#172B50] block mb-1">Rating</label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setFbRating(String(star))}
+                        className="p-1 cursor-pointer transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            star <= parseInt(fbRating)
+                              ? 'fill-[#F4510B] text-[#F4510B]'
+                              : 'text-slate-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="text-xs font-black text-[#172B50] ml-2">
+                      {fbRating} / 5 Stars
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#172B50] block mb-1">Your Comments &amp; Suggestions *</label>
+                  <textarea
+                    required
+                    rows="4"
+                    value={fbComment}
+                    onChange={(e) => setFbComment(e.target.value)}
+                    placeholder="Tell us what you loved or how we can improve your child's training experience..."
+                    className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 outline-none focus:border-[#F4510B] resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-[#F4510B] hover:bg-[#d44307] text-white text-xs font-black shadow-md transition-all cursor-pointer"
+                >
+                  Submit Feedback
+                </button>
+              </form>
+            </div>
+
+            {/* Right: Feedback History & Responses */}
+            <div className="lg:col-span-7 bg-white rounded-3xl p-6 border border-slate-200/90 shadow-card space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 className="text-base font-black text-[#172B50]">Feedback History &amp; Responses</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Direct Line
+                </span>
+              </div>
+
+              {(data.feedbacks || []).length === 0 ? (
+                <div className="p-8 text-center text-slate-400 space-y-2">
+                  <MessageSquare className="w-8 h-8 mx-auto text-slate-300" />
+                  <p className="text-xs font-bold text-slate-600">No feedback submitted yet</p>
+                  <p className="text-[11px]">We appreciate your input! Submit feedback anytime using the form on the left.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {(data.feedbacks || []).map((fb, idx) => (
+                    <div key={fb.id || idx} className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#172B50]">{fb.category || 'Parent Review'}</span>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: fb.rating || 5 }).map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-[#F4510B] text-[#F4510B]" />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed">&quot;{fb.comment || fb.text}&quot;</p>
+                      <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] font-bold">
+                        <span className="text-emerald-600 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Acknowledged &amp; Reviewed</span>
+                        </span>
+                        <span className="text-slate-400">Coach Karthik</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

@@ -417,7 +417,7 @@ export default function Sidebar() {
   ];
 
   // =========================================================================
-  // 4. PARENT NAVIGATION (Matching Reference Screenshot)
+  // 4. PARENT NAVIGATION (Matching Reference Screenshot & Consolidated Order)
   // =========================================================================
   const parentNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -426,9 +426,6 @@ export default function Sidebar() {
     { id: 'achievements', label: 'Achievements', icon: Trophy },
     { id: 'communication', label: 'Announcements', icon: Megaphone },
     { id: 'feedback', label: 'Feedback & Suggestions', icon: MessageSquare },
-    { id: 'leave_requests', label: 'Leave Requests', icon: CalendarPlus },
-    { id: 'compensation_class', label: 'Compensation Class', icon: ArrowLeftRight },
-    { id: 'children', label: "My Child's Profile", icon: User },
     { id: 'fees_payments', label: 'Fees & Payments', icon: CreditCard },
   ];
 
@@ -481,6 +478,39 @@ export default function Sidebar() {
 
   // Direct navigation handler on click
   const handleNavItemClick = (itemId) => {
+    if (currentPortal === 'parent') {
+      if (itemId === 'programs') {
+        setCurrentView('programs');
+        setSidebarOpen(false);
+        return;
+      }
+      if (itemId === 'achievements') {
+        setCurrentView('achievements');
+        setSidebarOpen(false);
+        return;
+      }
+      if (itemId === 'attendance') {
+        setCurrentView('attendance');
+        setSidebarOpen(false);
+        return;
+      }
+      if (itemId === 'communication') {
+        setCurrentView('communication');
+        setSidebarOpen(false);
+        return;
+      }
+      if (itemId === 'feedback') {
+        setCurrentView('feedback');
+        setSidebarOpen(false);
+        return;
+      }
+      if (itemId === 'fees_payments') {
+        setCurrentView('fees_payments');
+        setSidebarOpen(false);
+        return;
+      }
+    }
+
     if (itemId === 'people' && setActiveSubTab) {
       setActiveSubTab('students');
       setCurrentView('people', 'students');
@@ -825,11 +855,13 @@ export default function Sidebar() {
               const Icon = item.icon;
               const isActive =
                 currentView === item.id ||
-                (item.id === 'attendance' && (currentView === 'attendance' || currentView === 'attendance_compensation')) ||
+                (item.id === 'attendance' && (currentView === 'attendance' || currentView === 'attendance_compensation' || currentView === 'leave_requests' || currentView === 'compensation_class' || currentView === 'leaves' || currentView === 'compensation')) ||
                 (item.id === 'child_evaluations' && currentView === 'evaluations') ||
-                (item.id === 'programs_achievements' && (currentView === 'programs_achievements' || currentView === 'progress' || currentView === 'programs' || currentView === 'achievements')) ||
-                (item.id === 'programs' && (currentView === 'programs' || currentView === 'programs_achievements')) ||
-                (item.id === 'achievements' && (currentView === 'achievements' || currentView === 'progress')) ||
+                (item.id === 'programs' && (currentView === 'programs' || (currentView === 'programs_achievements' && activeSubTab === 'explore'))) ||
+                (item.id === 'achievements' && (currentView === 'achievements' || currentView === 'progress' || currentView === 'children' || (currentView === 'programs_achievements' && activeSubTab !== 'explore') || currentView === 'learning_journey')) ||
+                (item.id === 'communication' && (currentView === 'communication' || currentView === 'announcements')) ||
+                (item.id === 'feedback' && currentView === 'feedback') ||
+                (item.id === 'fees_payments' && (currentView === 'fees_payments' || currentView === 'payments')) ||
                 (item.id === 'classes' && currentView === 'schedule') ||
                 (item.id === 'leave_requests' && (currentView === 'leaves' || currentView === 'workspace' || currentView === 'leave_requests')) ||
                 (item.id === 'compensation_class' && (currentView === 'compensation_class' || currentView === 'compensation'));
