@@ -215,8 +215,11 @@ export function getChildMatchedSchedules(child, classSchedules = [], classes = [
   const childProg = String(child.program || '').trim().toLowerCase();
   const childBatches = new Set(
     [
+      child.batch,
       child.batchName,
+      child.batchId,
       ...(Array.isArray(child.enrolledClasses) ? child.enrolledClasses : []),
+      ...(Array.isArray(child.batches) ? child.batches : []),
     ]
       .filter(Boolean)
       .map((b) => String(b).trim().toLowerCase())
@@ -281,12 +284,17 @@ export function mergeScheduleAttendance(schedule, child, attendanceRecords = [])
 
   const schLoc = String(schedule.location || '').trim().toUpperCase();
   const match = (attendanceRecords || []).find((rec) => {
-    if (rec.studentId !== child.id) return false;
-    if (rec.date !== schedule.date) return false;
+    const isChildMatch =
+      rec.studentId === child.id ||
+      rec.childId === child.id ||
+      (rec.childName && child.name && String(rec.childName).trim().toLowerCase() === String(child.name).trim().toLowerCase()) ||
+      (rec.studentName && child.name && String(rec.studentName).trim().toLowerCase() === String(child.name).trim().toLowerCase());
+    if (!isChildMatch) return false;
+    if (rec.date !== schedule.date && rec.sessionDate !== schedule.date) return false;
     if (rec.location && schLoc && String(rec.location).trim().toUpperCase() !== schLoc) {
       return false;
     }
-    if (schedule.batchId && rec.batchId && rec.batchId !== schedule.batchId) {
+    if (schedule.batchId && rec.batchId && rec.batchId !== schedule.batchId && rec.batchName !== schedule.batch) {
       return false;
     }
     return true;

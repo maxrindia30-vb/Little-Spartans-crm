@@ -78,6 +78,17 @@ import ProgramsAchievementsModule from './ProgramsAchievementsModule';
 import ParentAttendanceModule from './ParentAttendanceModule';
 import ParentProgramsModule from './ParentProgramsModule';
 
+const formatSessionDate = (dateStr) => {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(`${dateStr}T00:00:00`);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+};
+
 const COMP_STATUS_STYLES = {
   Pending: 'bg-amber-100 text-amber-900',
   'Under Review': 'bg-indigo-100 text-indigo-800',
@@ -244,6 +255,7 @@ export default function ParentPortalView() {
   const [scheduleTab, setScheduleTab] = useState('weekly'); // 'weekly' | 'calendar' | 'upcoming' | 'completed' | 'cancelled'
   const [scheduleFocusDate, setScheduleFocusDate] = useState(todayYmd);
   const [parentAttSubTab, setParentAttSubTab] = useState('attendance');
+  const [selectedViewSession, setSelectedViewSession] = useState(null);
 
   const openParentCompModal = () => {
     const firstChild = myChildren[0];
@@ -454,18 +466,55 @@ export default function ParentPortalView() {
 
   const upcomingSession = useMemo(() => {
     if (!activeChild) return null;
-    return activeChildSessions.find(s => s.status !== 'Cancelled' && s.status !== 'Completed' && (!s.date || s.date >= todayYmd)) || null;
+    const now = new Date();
+    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    // Filter sessions: not cancelled, not completed, and must be in the future or later today
+    const validUpcoming = activeChildSessions.filter(s => {
+      if (s.status === 'Cancelled' || s.status === 'Completed') return false;
+      if (!s.date) return true;
+      if (s.date > todayYmd) return true;
+      if (s.date === todayYmd) {
+        if (!s.endTime) return true;
+        return s.endTime >= currentTimeStr;
+      }
+      return false;
+    });
+
+    // Strictly sort chronological ascending (closest upcoming session first)
+    validUpcoming.sort((a, b) => `${a.date || ''}T${a.startTime || '00:00'}`.localeCompare(`${b.date || ''}T${b.startTime || '00:00'}`));
+
+    return validUpcoming[0] || null;
   }, [activeChild, activeChildSessions, todayYmd]);
 
   const lastCompletedSession = useMemo(() => {
     if (!activeChild) return null;
-    const completedOrPast = activeChildSessions.filter(s => (s.status === 'Completed' || (s.date && s.date < todayYmd)) && s.status !== 'Cancelled');
-    return completedOrPast[completedOrPast.length - 1] || null;
+
+    // STRICT REQUIREMENT:
+    // Only show sessions that are actually completed (status === 'Completed'),
+    // never future, ongoing, or cancelled sessions.
+    // Do not treat attendance alone as proof that a session is completed.
+    const completedSessions = activeChildSessions.filter(s => {
+      if (s.status !== 'Completed') return false;
+      if (s.date && s.date > todayYmd) return false;
+      return true;
+    });
+
+    // Sort descending by completion timestamp or session date/time (most recently completed session first)
+    completedSessions.sort((a, b) => {
+      const timeA = a.completedAt || `${a.date || ''}T${a.endTime || '23:59'}`;
+      const timeB = b.completedAt || `${b.date || ''}T${b.endTime || '23:59'}`;
+      return timeB.localeCompare(timeA);
+    });
+
+    return completedSessions[0] || null;
   }, [activeChild, activeChildSessions, todayYmd]);
 
   const activeChildAttendance = useMemo(() => {
     if (!activeChild) return [];
-    return (data.attendanceRecords || []).filter(r => r.studentId === activeChild.id);
+    return (data.attendanceRecords || []).filter(
+      r => r.studentId === activeChild.id || r.childId === activeChild.id || (r.childName && activeChild.name && r.childName.toLowerCase() === activeChild.name.toLowerCase())
+    );
   }, [activeChild, data.attendanceRecords]);
 
   const attendancePercentage = useMemo(() => {
@@ -904,15 +953,22 @@ export default function ParentPortalView() {
 
             {/* 3. Last Session Highlights */}
             <div className="bg-white rounded-2xl p-5 border border-[#172B50]/10 shadow-2xs space-y-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-[#FFF0E6] text-[#F4510B] flex items-center justify-center shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-md bg-[#FFF0E6] text-[#F4510B] flex items-center justify-center shrink-0">
+                    <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+                  </div>
+                  <h3 className="text-sm sm:text-base font-black text-[#172B50]">Last Session Highlights</h3>
                 </div>
-                <h3 className="text-sm sm:text-base font-black text-[#172B50]">Last Session Highlights</h3>
+                {lastCompletedSession && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Completed
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-start gap-3.5">
                   {/* Clipboard Illustration */}
                   <div className="w-12 h-12 shrink-0 flex items-center justify-center">
                     <svg viewBox="0 0 48 48" className="w-11 h-11" fill="none">
@@ -927,27 +983,60 @@ export default function ParentPortalView() {
                   </div>
 
                   <div className="text-left">
-                    <p className="text-xs sm:text-sm font-bold text-[#172B50]">
-                      {lastCompletedSession 
-                        ? `${lastCompletedSession.program || 'Session'} • ${lastCompletedSession.date}` 
-                        : "No session highlights yet."}
-                    </p>
-                    <p className="text-[11px] sm:text-xs text-[#172B50]/60 mt-0.5">
-                      {lastCompletedSession 
-                        ? (lastCompletedSession.notes || "Great effort and agility shown during drills!") 
-                        : "Once your child attends a class, you'll see the key takeaways here."}
-                    </p>
+                    {lastCompletedSession ? (
+                      <>
+                        <p className="text-xs sm:text-sm font-bold text-[#172B50]">
+                          {lastCompletedSession.program || 'Session'} • Batch: {lastCompletedSession.batch || lastCompletedSession.batchName || 'General'}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-[#172B50]/70 font-semibold">
+                          <span>{formatSessionDate(lastCompletedSession.date)}</span>
+                          {lastCompletedSession.coachName && (
+                            <>
+                              <span>•</span>
+                              <span className="text-[#F4510B]">
+                                {lastCompletedSession.coachName.toLowerCase().startsWith('coach')
+                                  ? lastCompletedSession.coachName
+                                  : `Coach ${lastCompletedSession.coachName}`}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-[#172B50]/80 mt-1 line-clamp-2">
+                          {lastCompletedSession.highlights || lastCompletedSession.keyTakeaways || lastCompletedSession.notes || "No session highlights yet."}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs sm:text-sm font-bold text-[#172B50]">
+                          No session highlights yet.
+                        </p>
+                        <p className="text-[11px] sm:text-xs text-[#172B50]/60 mt-0.5">
+                          Once your child attends a completed class, you&apos;ll see the key takeaways here.
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('classes')}
-                  className="px-4 py-1.5 rounded-full border border-gray-200 text-xs font-bold text-[#172B50] hover:bg-gray-50 transition-all flex items-center gap-1 self-start sm:self-center shrink-0 cursor-pointer"
-                >
-                  <span>View Session</span>
-                  <span>→</span>
-                </button>
+                {lastCompletedSession ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedViewSession(lastCompletedSession)}
+                    className="px-4 py-1.5 rounded-full border border-gray-200 text-xs font-bold text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B] hover:border-[#F4510B]/40 transition-all flex items-center gap-1 self-start sm:self-center shrink-0 cursor-pointer shadow-2xs"
+                  >
+                    <span>View Session</span>
+                    <span>→</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('classes')}
+                    className="px-4 py-1.5 rounded-full border border-gray-200 text-xs font-bold text-[#172B50] hover:bg-gray-50 transition-all flex items-center gap-1 self-start sm:self-center shrink-0 cursor-pointer opacity-70"
+                  >
+                    <span>View Schedule</span>
+                    <span>→</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1145,30 +1234,74 @@ export default function ParentPortalView() {
           {/* ======================================================== */}
           <div className="lg:col-span-4 space-y-5">
             
-            {/* 1. Ready, Set, Play! Card */}
-            <div className="bg-white rounded-2xl p-5 border border-[#172B50]/10 shadow-2xs text-center flex flex-col justify-between space-y-4">
-              <div className="text-left font-black text-sm sm:text-base text-[#172B50]">
-                Ready, Set, Play!
+            {/* 1. Upcoming Session Card */}
+            <div className="bg-white rounded-2xl p-5 border border-[#172B50]/10 shadow-2xs text-left flex flex-col justify-between space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="font-black text-sm sm:text-base text-[#172B50]">
+                  Upcoming Session
+                </div>
+                {upcomingSession && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {upcomingSession.status || 'Scheduled'}
+                  </span>
+                )}
               </div>
 
-              <div className="py-2 flex flex-col items-center">
-                <div className="w-12 h-12 rounded-2xl bg-[#FFF0E6] flex items-center justify-center text-[#F4510B] mb-2.5 shadow-2xs">
-                  <Calendar className="w-6 h-6 text-[#F4510B]" />
+              {upcomingSession ? (
+                <div className="space-y-3 py-1">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#FFF0E6] flex items-center justify-center text-[#F4510B] shrink-0 mt-0.5">
+                      <Calendar className="w-5 h-5 text-[#F4510B]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm sm:text-base font-bold text-[#172B50] truncate">
+                        {upcomingSession.program || upcomingSession.className || 'Spartan Training Session'}
+                      </h4>
+                      <p className="text-xs font-semibold text-[#F4510B] mt-0.5">
+                        Batch: {upcomingSession.batch || upcomingSession.batchName || 'General Batch'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#FFFBF7] border border-orange-100/70 rounded-xl p-3 space-y-2 text-xs text-[#172B50]">
+                    <div className="flex items-center gap-2 text-xs">
+                      <Clock className="w-3.5 h-3.5 text-[#172B50]/60 shrink-0" />
+                      <span className="font-bold">
+                        {formatSessionDate(upcomingSession.date)} • {upcomingSession.timingDisplay || `${upcomingSession.startTime || ''} – ${upcomingSession.endTime || ''}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <MapPin className="w-3.5 h-3.5 text-[#172B50]/60 shrink-0" />
+                      <span className="text-[#172B50]/80 truncate">
+                        {upcomingSession.location} {upcomingSession.venue ? `(${upcomingSession.venue})` : ''}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <User className="w-3.5 h-3.5 text-[#172B50]/60 shrink-0" />
+                      <span className="text-[#172B50]/80 truncate">
+                        Coach: <strong className="text-[#172B50]">{upcomingSession.coachName || 'Assigned Coach'}</strong>
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <h4 className="text-sm sm:text-base font-bold text-[#172B50]">
-                  {upcomingSession ? upcomingSession.title || 'Next Spartan Class' : "No Upcoming Class"}
-                </h4>
-                <p className="text-xs text-[#172B50]/60 mt-1 max-w-[220px]">
-                  {upcomingSession 
-                    ? `${upcomingSession.day || upcomingSession.date} • ${upcomingSession.startTime || ''}` 
-                    : "Your child doesn't have any scheduled class yet."}
-                </p>
-              </div>
+              ) : (
+                <div className="py-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FFF0E6] flex items-center justify-center text-[#F4510B] mb-2.5 shadow-2xs">
+                    <Calendar className="w-6 h-6 text-[#F4510B]" />
+                  </div>
+                  <h4 className="text-sm sm:text-base font-bold text-[#172B50]">
+                    No Upcoming Session
+                  </h4>
+                  <p className="text-xs text-[#172B50]/60 mt-1 max-w-[220px]">
+                    Your child doesn&apos;t have any scheduled class yet.
+                  </p>
+                </div>
+              )}
 
               <div className="flex items-center gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => setCurrentView('classes')}
+                  onClick={() => setCurrentView('programs')}
                   className="flex-1 py-2 px-3 rounded-full bg-[#F4510B] text-white text-xs font-bold hover:bg-[#e04505] transition-all text-center cursor-pointer shadow-xs"
                 >
                   Explore Programs →
@@ -2229,6 +2362,157 @@ export default function ParentPortalView() {
                   className="px-5 py-2 text-xs font-bold bg-[#172B50] text-white rounded-xl hover:bg-[#F4510B] transition-colors cursor-pointer"
                 >
                   Close Audit Log
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
+
+      {/* MODAL: COMPLETED SESSION DETAILS */}
+      <Modal
+        isOpen={Boolean(selectedViewSession)}
+        onClose={() => setSelectedViewSession(null)}
+        title="Completed Session Details"
+        subtitle="Full session review, coach takeaways, and attendance verification"
+        maxWidth="max-w-xl"
+      >
+        {selectedViewSession && (() => {
+          const childAttStatus = mergeScheduleAttendance(selectedViewSession, activeChild, data.attendanceRecords || []);
+          return (
+            <div className="space-y-4">
+              {/* Header Card */}
+              <div className="bg-gradient-to-br from-[#172B50] to-[#1F3A6B] rounded-2xl p-5 text-white shadow-sm relative overflow-hidden">
+                <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/5 rounded-full pointer-events-none" />
+                <div className="relative z-10 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                        {selectedViewSession.status || 'Completed'}
+                      </span>
+                      <span className="text-white/60 text-xs font-semibold">
+                        {formatSessionDate(selectedViewSession.date)}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-black text-white mt-2">
+                      {selectedViewSession.program || selectedViewSession.className || 'Spartan Session'}
+                    </h3>
+                    <p className="text-xs text-orange-200 font-semibold mt-0.5">
+                      Batch: {selectedViewSession.batch || selectedViewSession.batchName || 'General Batch'}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/20">
+                    <Trophy className="w-6 h-6 text-amber-300" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Session Meta Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="bg-[#FFFBF7] border border-orange-100 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-[#172B50]/60 font-semibold">
+                    <Calendar className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span>Session Date</span>
+                  </div>
+                  <div className="text-xs sm:text-sm font-bold text-[#172B50] mt-1">
+                    {formatSessionDate(selectedViewSession.date)}
+                  </div>
+                </div>
+
+                <div className="bg-[#FFFBF7] border border-orange-100 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-[#172B50]/60 font-semibold">
+                    <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span>Timings</span>
+                  </div>
+                  <div className="text-xs sm:text-sm font-bold text-[#172B50] mt-1">
+                    {selectedViewSession.timingDisplay || `${selectedViewSession.startTime || ''} – ${selectedViewSession.endTime || ''}`}
+                  </div>
+                </div>
+
+                <div className="bg-[#FFFBF7] border border-orange-100 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-[#172B50]/60 font-semibold">
+                    <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span>Location</span>
+                  </div>
+                  <div className="text-xs sm:text-sm font-bold text-[#172B50] mt-1 truncate">
+                    {selectedViewSession.location}
+                  </div>
+                  {selectedViewSession.venue && (
+                    <p className="text-[10px] text-[#172B50]/60 truncate">{selectedViewSession.venue}</p>
+                  )}
+                </div>
+
+                <div className="bg-[#FFFBF7] border border-orange-100 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-[#172B50]/60 font-semibold">
+                    <User className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span>Assigned Coach</span>
+                  </div>
+                  <div className="text-xs sm:text-sm font-bold text-[#172B50] mt-1 truncate">
+                    {selectedViewSession.coachName || 'Academy Coach'}
+                  </div>
+                </div>
+
+                <div className="bg-[#FFFBF7] border border-orange-100 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-[#172B50]/60 font-semibold">
+                    <ClipboardCheck className="w-3.5 h-3.5 text-[#F4510B]" />
+                    <span>Child Attendance</span>
+                  </div>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                      childAttStatus === 'Present'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : childAttStatus === 'Absent'
+                        ? 'bg-rose-100 text-rose-800'
+                        : childAttStatus === 'Leave'
+                        ? 'bg-amber-100 text-amber-800'
+                        : childAttStatus === 'Compensation'
+                        ? 'bg-purple-100 text-purple-800'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {childAttStatus}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-[#FFFBF7] border border-orange-100 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-[#172B50]/60 font-semibold">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Status</span>
+                  </div>
+                  <div className="text-xs sm:text-sm font-bold text-emerald-700 mt-1">
+                    Verified Completed
+                  </div>
+                </div>
+              </div>
+
+              {/* Coach Takeaways & Highlights */}
+              <div className="bg-white border border-[#172B50]/15 rounded-2xl p-4 space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-[#FFF0E6] flex items-center justify-center text-[#F4510B]">
+                    <Sparkles className="w-3.5 h-3.5 text-[#F4510B]" />
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-bold text-[#172B50]">
+                    Coach Highlights & Key Takeaways
+                  </h4>
+                </div>
+                <div className="bg-[#FFF9F5] border border-orange-100/70 rounded-xl p-3 text-xs sm:text-sm text-[#172B50] leading-relaxed">
+                  {selectedViewSession.highlights || selectedViewSession.keyTakeaways || selectedViewSession.notes || "No session highlights recorded yet."}
+                </div>
+                {selectedViewSession.notes && selectedViewSession.notes !== selectedViewSession.highlights && (
+                  <div className="text-[11px] text-[#172B50]/70 pt-1">
+                    <strong>Session Notes:</strong> {selectedViewSession.notes}
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedViewSession(null)}
+                  className="px-5 py-2 text-xs font-bold bg-[#172B50] text-white rounded-xl hover:bg-[#F4510B] transition-colors cursor-pointer"
+                >
+                  Close Details
                 </button>
               </div>
             </div>

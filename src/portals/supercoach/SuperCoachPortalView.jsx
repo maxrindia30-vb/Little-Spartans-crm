@@ -397,7 +397,8 @@ export default function SuperCoachPortalView() {
       venue: schedule.venue || 'Training Court A',
       capacity: schedule.capacity || 15,
       status: schedule.status || 'Scheduled',
-      notes: schedule.notes || ''
+      notes: schedule.notes || '',
+      highlights: schedule.highlights || schedule.keyTakeaways || schedule.notes || ''
     });
     setIsEditScheduleModalOpen(true);
   };
@@ -422,7 +423,10 @@ export default function SuperCoachPortalView() {
       venue: editScheduleForm.venue,
       capacity: parseInt(editScheduleForm.capacity, 10) || 15,
       status: editScheduleForm.status,
-      notes: editScheduleForm.notes
+      notes: editScheduleForm.notes,
+      highlights: editScheduleForm.highlights,
+      keyTakeaways: editScheduleForm.highlights,
+      completedAt: editScheduleForm.status === 'Completed' ? (editingSchedule.completedAt || new Date().toISOString()) : null
     };
 
     const res = updateClassSchedule(editingSchedule.id, payload);
@@ -907,6 +911,18 @@ export default function SuperCoachPortalView() {
                               <UserCheck className="w-3 h-3" />
                               <span>Reassign</span>
                             </button>
+
+                            {schedule.status !== 'Completed' && schedule.status !== 'Cancelled' && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditSchedule({ ...schedule, status: 'Completed' })}
+                                className="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer flex items-center gap-1"
+                                title="Complete Session & Record Highlights"
+                              >
+                                <Check className="w-3 h-3" />
+                                <span>Complete</span>
+                              </button>
+                            )}
 
                             {schedule.status !== 'Cancelled' && (
                               <button
@@ -1810,6 +1826,19 @@ export default function SuperCoachPortalView() {
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#172B50] block mb-1">
+              Coach Highlights / Key Takeaways {editScheduleForm.status === 'Completed' ? <span className="text-emerald-600 font-bold">(Displayed in Parent Portal)</span> : ''}
+            </label>
+            <textarea
+              rows={2}
+              value={editScheduleForm.highlights}
+              onChange={(e) => setEditScheduleForm({ ...editScheduleForm, highlights: e.target.value })}
+              placeholder="e.g. Mastered single-leg balance and showed outstanding sportsmanship!"
+              className="w-full px-3 py-2 text-xs bg-[#FFF4E8] text-[#172B50] rounded-xl border border-[#172B5020]"
+            />
           </div>
 
           <div>

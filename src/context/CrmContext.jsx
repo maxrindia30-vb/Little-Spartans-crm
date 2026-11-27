@@ -392,7 +392,14 @@ export function CrmProvider({ children }) {
             ? parsed.demos
             : (initialAcademyData.demos || [])).filter(d => !isDummyDemo(d)),
           payments: (Array.isArray(parsed.payments) ? parsed.payments : []).filter(p => !isDummyPayment(p)),
-          classSchedules: (Array.isArray(parsed.classSchedules) ? parsed.classSchedules : []).filter(s => !isDummySchedule(s)),
+          classSchedules: (() => {
+            const loaded = (Array.isArray(parsed.classSchedules) ? parsed.classSchedules : []).filter(s => !isDummySchedule(s));
+            const initial = initialAcademyData.classSchedules || [];
+            const map = new Map();
+            initial.forEach(s => map.set(s.id, s));
+            loaded.forEach(s => map.set(s.id, s));
+            return Array.from(map.values());
+          })(),
           attendanceRecords: (() => {
             const loaded = (Array.isArray(parsed.attendanceRecords) ? parsed.attendanceRecords : []).filter(a => !isDummyAttendance(a));
             const initial = initialAcademyData.attendanceRecords || [];
@@ -4473,17 +4480,21 @@ export function CrmProvider({ children }) {
 
     setData(prev => ({
       ...prev,
-      classSchedules: (prev.classSchedules || []).map(s => 
-        s.id === id 
-          ? { 
-              ...s, 
-              ...updates, 
-              className: updates.className || updates.batch || s.className || s.batch,
-              status: updates.status || (s.status === 'Completed' ? 'Completed' : 'Updated'),
-              updatedAt: new Date().toISOString() 
-            } 
-          : s
-      ),
+      classSchedules: (prev.classSchedules || []).map(s => {
+        if (s.id !== id) return s;
+        const isNowCompleted = updates.status === 'Completed' || (updates.status === undefined && s.status === 'Completed');
+        return {
+          ...s,
+          ...updates,
+          className: updates.className || updates.batch || s.className || s.batch,
+          status: updates.status || (s.status === 'Completed' ? 'Completed' : 'Updated'),
+          completedAt: isNowCompleted ? (updates.completedAt || s.completedAt || new Date().toISOString()) : (updates.status ? null : s.completedAt),
+          highlights: updates.highlights !== undefined ? updates.highlights : s.highlights,
+          keyTakeaways: updates.keyTakeaways !== undefined ? updates.keyTakeaways : (updates.highlights !== undefined ? updates.highlights : s.keyTakeaways),
+          notes: updates.notes !== undefined ? updates.notes : s.notes,
+          updatedAt: new Date().toISOString()
+        };
+      }),
       notifications: [parentNotif, ...(prev.notifications || [])].slice(0, 80),
     }));
 
@@ -4528,7 +4539,7 @@ export function CrmProvider({ children }) {
     return { success: true };
   };
 
-  const completeClassSchedule = (id) => {
+  const completeClassSchedule = (id, options = {}) => {
     const existing = (data.classSchedules || []).find(s => s.id === id);
     setData(prev => ({
       ...prev,
@@ -4537,7 +4548,10 @@ export function CrmProvider({ children }) {
           ? { 
               ...s, 
               status: 'Completed', 
-              completedAt: new Date().toISOString(),
+              completedAt: options.completedAt || new Date().toISOString(),
+              highlights: options.highlights !== undefined ? options.highlights : (s.highlights || options.notes || s.notes || ''),
+              keyTakeaways: options.keyTakeaways || options.highlights || s.keyTakeaways || s.highlights || '',
+              notes: options.notes !== undefined ? options.notes : (s.notes || options.highlights || ''),
               replacement: s.replacement ? { ...s.replacement, status: 'Completed' } : s.replacement,
             } 
           : s
