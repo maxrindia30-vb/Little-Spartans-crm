@@ -24,6 +24,7 @@ import {
   FileText,
   UserCheck,
   ShieldCheck,
+  ShieldAlert,
   ZoomIn,
   ZoomOut,
   RotateCcw,
@@ -343,6 +344,13 @@ export default function CoachAttendanceCalendar({
         status: eventStatus,
         statusLabel,
         statusColor,
+        isCheckInException: rec.isCheckInException || false,
+        checkInExceptionReason: rec.checkInExceptionReason || null,
+        checkInApprovedBy: rec.checkInApprovedBy || null,
+        isCheckOutException: rec.isCheckOutException || false,
+        checkOutExceptionReason: rec.checkOutExceptionReason || null,
+        checkOutApprovedBy: rec.checkOutApprovedBy || null,
+        exceptionNotes: rec.exceptionNotes || null,
         remarks: rec.remarks || '',
         studentAttendanceSaved: rec.studentAttendanceSaved
       });
@@ -1272,10 +1280,17 @@ export default function CoachAttendanceCalendar({
                   <span className="text-[10px] font-bold text-[#172B50]/60 uppercase tracking-wider block">
                     VERIFICATION
                   </span>
-                  <span className="text-xs font-black text-emerald-700 flex items-center gap-1 mt-0.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Live Camera</span>
-                  </span>
+                  {inspectModalEntry.isCheckInException || inspectModalEntry.isCheckOutException ? (
+                    <span className="text-xs font-black text-amber-700 flex items-center gap-1 mt-0.5">
+                      <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Exception Authorized</span>
+                    </span>
+                  ) : (
+                    <span className="text-xs font-black text-emerald-700 flex items-center gap-1 mt-0.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Live Camera</span>
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1338,6 +1353,17 @@ export default function CoachAttendanceCalendar({
                             <span>Click to Zoom</span>
                           </button>
                         </>
+                      ) : inspectModalEntry.isCheckInException ? (
+                        <div className="flex flex-col items-center justify-center text-center p-4">
+                          <ShieldAlert className="w-8 h-8 text-amber-500 mb-1.5" />
+                          <span className="text-xs font-bold text-amber-900">Admin-Authorized Exception</span>
+                          <span className="text-[10px] text-amber-800 font-semibold mt-0.5">
+                            {inspectModalEntry.checkInExceptionReason || 'Hardware / Permission Issue'}
+                          </span>
+                          <span className="text-[9.5px] text-[#172B50]/60 mt-1">
+                            Approved by: <strong>{inspectModalEntry.checkInApprovedBy || 'Admin'}</strong>
+                          </span>
+                        </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center text-center p-4">
                           <CameraOff className="w-8 h-8 text-[#172B50]/30 mb-1.5" />
@@ -1386,6 +1412,17 @@ export default function CoachAttendanceCalendar({
                             <span>Click to Zoom</span>
                           </button>
                         </>
+                      ) : inspectModalEntry.isCheckOutException ? (
+                        <div className="flex flex-col items-center justify-center text-center p-4">
+                          <ShieldAlert className="w-8 h-8 text-amber-500 mb-1.5" />
+                          <span className="text-xs font-bold text-amber-900">Admin-Authorized Exception</span>
+                          <span className="text-[10px] text-amber-800 font-semibold mt-0.5">
+                            {inspectModalEntry.checkOutExceptionReason || 'Hardware / Permission Issue'}
+                          </span>
+                          <span className="text-[9.5px] text-[#172B50]/60 mt-1">
+                            Approved by: <strong>{inspectModalEntry.checkOutApprovedBy || 'Admin'}</strong>
+                          </span>
+                        </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center text-center p-4">
                           <CameraOff className="w-8 h-8 text-[#172B50]/30 mb-1.5" />
@@ -1405,6 +1442,33 @@ export default function CoachAttendanceCalendar({
 
                 </div>
               </div>
+
+              {/* Authorized Camera Exception Audit Trail */}
+              {(inspectModalEntry.isCheckInException || inspectModalEntry.isCheckOutException) && (
+                <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-2xl text-xs text-amber-950 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-900 font-black text-xs">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Admin Exception &amp; Audit Trail</span>
+                  </div>
+                  <div className="text-[11.5px] text-amber-900 space-y-1 pl-5">
+                    {inspectModalEntry.isCheckInException && (
+                      <p>
+                        <strong className="font-bold text-amber-950">Check-In Exception:</strong> {inspectModalEntry.checkInExceptionReason} &bull; <span className="text-amber-800">Approved by {inspectModalEntry.checkInApprovedBy}</span>
+                      </p>
+                    )}
+                    {inspectModalEntry.isCheckOutException && (
+                      <p>
+                        <strong className="font-bold text-amber-950">Check-Out Exception:</strong> {inspectModalEntry.checkOutExceptionReason} &bull; <span className="text-amber-800">Approved by {inspectModalEntry.checkOutApprovedBy}</span>
+                      </p>
+                    )}
+                    {inspectModalEntry.exceptionNotes && (
+                      <p className="italic text-amber-800 text-[11px] pt-0.5">
+                        &ldquo;{inspectModalEntry.exceptionNotes}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Remarks / Details */}
               {inspectModalEntry.remarks && (

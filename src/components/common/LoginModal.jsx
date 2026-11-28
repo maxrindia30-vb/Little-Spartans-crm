@@ -4,17 +4,17 @@ import { useCrm } from '../../context/CrmContext';
 import Modal from './Modal';
 
 export default function LoginModal({ isOpen, onClose }) {
-  const { currentPortal, setCurrentPortal, addToast } = useCrm();
+  const { data, currentPortal, setCurrentPortal, login, addToast } = useCrm();
 
   const [selectedRole, setSelectedRole] = useState(currentPortal);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('••••••••');
 
   const roleCredentials = {
-    admin: { email: 'director@littlespartans.co.in', title: 'Admin Command Login', roleDesc: 'Director / Operations Head' },
-    super_coach: { email: 'supercoach@littlespartans.co.in', title: 'Super Coach Portal Login', roleDesc: 'Multi-Location Lead' },
-    parent: { email: 'rohan.sharma@gmail.com', title: 'Parent Portal Login', roleDesc: 'Parent / Guardian' },
-    coach: { email: 'vikram@littlespartans.co.in', title: 'Coach Portal Login', roleDesc: 'Certified Academy Coach' },
+    admin: { email: 'admin@littlespartans.co.in', title: 'Admin Command Login', roleDesc: 'Director / Operations Head' },
+    super_coach: { email: 'anita.r@littlespartans.co.in', title: 'Super Coach Portal Login', roleDesc: 'Multi-Location Lead' },
+    coach: { email: 'arun.prakash@littlespartans.co.in', title: 'Coach Portal Login', roleDesc: 'Certified Academy Coach' },
+    parent: { email: 'parent.aarav@littlespartans.co.in', title: 'Parent Portal Login', roleDesc: 'Parent / Guardian' },
     support: { email: 'support@littlespartans.co.in', title: 'Customer Support Login', roleDesc: 'Relations & Admissions Desk' },
   };
 
@@ -25,7 +25,29 @@ export default function LoginModal({ isOpen, onClose }) {
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
+    const cred = roleCredentials[selectedRole];
+    const targetEmail = (email || cred.email).toLowerCase().trim();
+
+    let matchedAccount = (data?.userAccounts || []).find(
+      (a) => a.email && a.email.toLowerCase().trim() === targetEmail
+    );
+
+    if (!matchedAccount) {
+      if (selectedRole === 'coach') {
+        matchedAccount = (data?.coaches || []).find(c => c.email && c.email.toLowerCase().trim() === targetEmail) || data?.coaches?.[0];
+      } else if (selectedRole === 'super_coach') {
+        matchedAccount = (data?.superCoaches || []).find(sc => sc.email && sc.email.toLowerCase().trim() === targetEmail) || data?.superCoaches?.[0];
+      } else if (selectedRole === 'parent') {
+        matchedAccount = (data?.parents || []).find(p => p.email && p.email.toLowerCase().trim() === targetEmail) || data?.parents?.[0];
+      }
+    }
+
+    if (matchedAccount) {
+      matchedAccount = { ...matchedAccount, role: selectedRole };
+    }
+
     setCurrentPortal(selectedRole);
+    login(selectedRole, matchedAccount);
     addToast(`Authenticated successfully into ${roleCredentials[selectedRole].title}!`);
     onClose();
   };

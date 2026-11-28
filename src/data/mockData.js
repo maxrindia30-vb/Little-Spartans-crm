@@ -2312,7 +2312,7 @@ export const initialAcademyData = {
     }
   ],
 
-  // Master Root Super Admin Account
+  // Master Root Super Admin & Primary Role Accounts
   userAccounts: [
     {
       id: "ACC-001",
@@ -2324,7 +2324,54 @@ export const initialAcademyData = {
       isTemporaryPassword: false,
       lastLogin: "Today",
       createdAt: "2024-01-01",
+      passwordHash: "sha256_c9fc2a0877d22837be2e023f41ce523f", // admin123
       permissions: ["SUPER_ADMIN", "FULL_ACCESS"]
+    },
+    {
+      id: "SC-001",
+      role: "super_coach",
+      name: "Anita R.",
+      email: "anita.r@littlespartans.co.in",
+      phone: "+91 98401 22345",
+      center: "KK NAGAR",
+      locations: ["KK NAGAR", "ANNA NAGAR", "KILPAUK", "MAHALINGAPURAM"],
+      status: "Active",
+      isTemporaryPassword: false,
+      lastLogin: "Today",
+      createdAt: "2024-01-01",
+      passwordHash: "sha256_83654a202232f6e1a157bcc1a5984101", // supercoach123
+      permissions: ["OPERATIONS_OVERSIGHT", "EVALUATION_REVIEW", "BATCH_MANAGEMENT", "FACULTY_SCHEDULES"]
+    },
+    {
+      id: "COACH-ARUN",
+      role: "coach",
+      name: "Arun Prakash",
+      email: "arun.prakash@littlespartans.co.in",
+      phone: "+91 98401 11223",
+      center: "KK NAGAR",
+      locations: ["KK NAGAR", "KILPAUK"],
+      status: "Active",
+      isTemporaryPassword: false,
+      lastLogin: "Today",
+      createdAt: "2024-01-01",
+      passwordHash: "sha256_05cab6384fb0d7964a7a61ae557b8dce", // coach123
+      permissions: ["MARK_CLASS_ATTENDANCE", "UPDATE_STUDENT_PERFORMANCE", "VIEW_ASSIGNED_CLASSES"]
+    },
+    {
+      id: "PAR-002",
+      role: "parent",
+      name: "Karthik K",
+      email: "parent.aarav@littlespartans.co.in",
+      phone: "+91 98765 00002",
+      center: "KK NAGAR",
+      locations: ["KK NAGAR"],
+      linkedStudents: ["Aarav K", "Diya K"],
+      status: "Active",
+      isTemporaryPassword: false,
+      lastLogin: "Today",
+      createdAt: "2024-01-01",
+      passwordHash: "sha256_7962bf5c1c713bb6651384ea95d3fb12", // parent123
+      permissions: ["VIEW_OWN_CHILDREN", "MAKE_PAYMENTS", "REQUEST_COMPENSATION"]
     }
   ],
 

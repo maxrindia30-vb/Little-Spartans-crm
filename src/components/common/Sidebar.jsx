@@ -431,7 +431,7 @@ export default function Sidebar() {
   let profilePhoto = currentUser?.avatar || null;
   let profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'AD';
   let profileName = currentUser?.name || 'Administrator';
-  let profileRole = currentUser?.badge || 'Super Admin';
+  let profileRole = currentUser?.designation || currentUser?.badge || 'Super Admin';
 
   if (currentPortal === 'super_coach') {
     sectionTitle = 'SUPER COACH PORTAL';
@@ -439,21 +439,21 @@ export default function Sidebar() {
     profilePhoto = currentUser?.avatar || null;
     profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'SC';
     profileName = currentUser?.name || 'Super Coach';
-    profileRole = currentUser?.role || 'Area Coaching Lead';
+    profileRole = currentUser?.designation || currentUser?.badge || 'Super Coach';
   } else if (currentPortal === 'parent') {
     sectionTitle = 'PARENT PORTAL';
     navItems = parentNavItems;
     profilePhoto = currentUser?.avatar || null;
     profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'PA';
     profileName = currentUser?.name || 'Parent User';
-    profileRole = currentUser?.role || 'Parent / Guardian';
+    profileRole = currentUser?.designation || currentUser?.badge || 'Parent / Guardian';
   } else if (currentPortal === 'coach') {
     sectionTitle = 'COACH PORTAL';
     navItems = coachNavItems;
     profilePhoto = currentUser?.avatar || null;
     profileInitials = currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'CO';
     profileName = currentUser?.name || 'Coach User';
-    profileRole = currentUser?.role || 'Certified Coach';
+    profileRole = currentUser?.designation || currentUser?.badge || 'Certified Coach';
   }
 
   // Navbar mouse enter: opens full view

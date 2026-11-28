@@ -46,7 +46,8 @@ import {
   ArrowUpRight,
   Square,
   Pause,
-  Play
+  Play,
+  Camera
 } from 'lucide-react';
 import { useCrm } from '../../context/CrmContext';
 import {
@@ -55,6 +56,8 @@ import {
   filterStudentsForAttendance,
   getSavedAttendanceRecord,
 } from '../../services/attendanceService';
+import { COACH_ATTENDANCE_STATUS } from '../../services/coachAttendanceService';
+import CameraCaptureModal from '../../components/common/CameraCaptureModal';
 import KpiCard, { AnimatedCounter } from '../../components/common/KpiCard';
 import FloatingCard from '../../components/common/FloatingCard';
 import CoachAttendanceRegister from '../admin/CoachAttendanceRegister';
@@ -163,6 +166,8 @@ export default function CoachPortalView() {
   const [pausedAccumulatedSeconds, setPausedAccumulatedSeconds] = useState(0);
   const [pauseStartTime, setPauseStartTime] = useState(null);
   const [isShiftCompletedState, setIsShiftCompletedState] = useState(false);
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+  const [cameraActionType, setCameraActionType] = useState('checkin'); // 'checkin' | 'checkout'
 
   // Live ticking interval every second
   useEffect(() => {
@@ -173,18 +178,32 @@ export default function CoachPortalView() {
     return () => clearInterval(interval);
   }, [isTimerPaused, isShiftCompletedState]);
 
-  // Is shift officially marked Completed in attendance system
-  const isCoachActuallyCompleted = Boolean(
-    todayCoachAttendance && todayCoachAttendance.status === 'Completed'
+  // Is coach checked in or completed
+  const isCoachActuallyCheckedIn = Boolean(
+    todayCoachAttendance &&
+      (todayCoachAttendance.status === 'checked_in' ||
+        todayCoachAttendance.status === 'Checked In' ||
+        todayCoachAttendance.status === COACH_ATTENDANCE_STATUS.CHECKED_IN)
   );
 
-  // Check-in time display (defaults cleanly to 10:39 AM as in visual design reference)
+  const isCoachActuallyCompleted = Boolean(
+    isShiftCompletedState ||
+      (todayCoachAttendance &&
+        (todayCoachAttendance.status === 'completed' ||
+          todayCoachAttendance.status === 'Completed' ||
+          todayCoachAttendance.status === COACH_ATTENDANCE_STATUS.COMPLETED))
+  );
+
+  // Check-in time display
   const displayCheckInTime = useMemo(() => {
     if (todayCoachAttendance?.checkInTime) {
       return todayCoachAttendance.checkInTime;
     }
-    return '10:39 AM';
-  }, [todayCoachAttendance]);
+    if (isCoachActuallyCheckedIn) {
+      return '10:39 AM';
+    }
+    return '--:--';
+  }, [todayCoachAttendance, isCoachActuallyCheckedIn]);
 
   // Accumulated work duration formatted as HH:MM and :SS
   const { durationHHMM, durationSS } = useMemo(() => {
@@ -195,6 +214,10 @@ export default function CoachPortalView() {
         return { durationHHMM: `${parts[0]}:${parts[1]}`, durationSS: `:${parts[2]}` };
       }
       return { durationHHMM: formatted, durationSS: ':00' };
+    }
+
+    if (!isCoachActuallyCheckedIn) {
+      return { durationHHMM: '00:00', durationSS: ':00' };
     }
 
     let baseTime;
@@ -228,11 +251,16 @@ export default function CoachPortalView() {
     timerNow,
     pausedAccumulatedSeconds,
     isShiftCompletedState,
-    isCoachActuallyCompleted
+    isCoachActuallyCompleted,
+    isCoachActuallyCheckedIn
   ]);
 
   // Pause / Resume handler
   const handleToggleTimerPause = () => {
+    if (!isCoachActuallyCheckedIn) {
+      addToast('Please complete camera check-in first to start tracking work duration.', 'warning');
+      return;
+    }
     if (isShiftCompletedState || isCoachActuallyCompleted) {
       addToast('Shift is already completed.', 'info');
       return;
@@ -250,48 +278,42 @@ export default function CoachPortalView() {
     }
   };
 
-  // Check-Out handler with attendance system synchronization
-  const handleCoachCheckOut = () => {
-    if (isShiftCompletedState || isCoachActuallyCompleted) {
-      addToast('Attendance already checked out for today.', 'info');
-      return;
-    }
-
-    // Ensure check-in record exists if coach hadn't checked in earlier today
-    if (!todayCoachAttendance) {
-      checkInCoach({
+  // Camera capture confirmed handler (handles Check-In, Check-Out, and Admin Exceptions)
+  const handleCameraCaptureConfirm = ({ photo, isException, exceptionReason, exceptionApprovedBy, exceptionNotes }) => {
+    if (cameraActionType === 'checkin') {
+      const res = checkInCoach({
         coachId: coachProfile.id,
         coachName: coachProfile.name,
         location: coachProfile.center || 'KK NAGAR',
-        photo: coachProfile.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-        timestamp: new Date(new Date().setHours(10, 39, 0, 0)).toISOString(),
+        photo,
+        isException,
+        exceptionReason,
+        exceptionApprovedBy,
+        exceptionNotes,
+        timestamp: new Date().toISOString(),
       });
-    }
-
-    // Ensure student attendance verification flag is satisfied
-    if (coachAssignedBatches && coachAssignedBatches[0] && !hasSavedStudentAttendance) {
-      saveBatchAttendance({
-        location: coachProfile.center || 'KK NAGAR',
-        program: 'Foundational Movement',
-        batchId: coachAssignedBatches[0].id || 'BATCH-1',
-        date: todayYmd,
-        markedBy: coachProfile.name,
-        entries: (myStudents.slice(0, 3)).map(s => ({
-          studentId: s.id,
-          status: ATTENDANCE_STATUSES.PRESENT,
-        })),
+      if (res && res.success) {
+        setCameraModalOpen(false);
+        setIsTimerPaused(false);
+        setPausedAccumulatedSeconds(0);
+      }
+    } else {
+      const res = checkOutCoach({
+        coachId: coachProfile.id,
+        location: todayCoachAttendance?.locationName || coachProfile.center || 'KK NAGAR',
+        photo,
+        isException,
+        exceptionReason,
+        exceptionApprovedBy,
+        exceptionNotes,
+        timestamp: new Date().toISOString(),
       });
+      if (res && res.success) {
+        setCameraModalOpen(false);
+        setIsShiftCompletedState(true);
+        setIsTimerPaused(true);
+      }
     }
-
-    checkOutCoach({
-      coachId: coachProfile.id,
-      location: todayCoachAttendance?.locationName || coachProfile.center || 'KK NAGAR',
-      photo: coachProfile.avatar || 'verified-coach-checkout-snapshot',
-    });
-
-    setIsShiftCompletedState(true);
-    setIsTimerPaused(true);
-    addToast('Checked out successfully. Shift completed!', 'success');
   };
 
   // Sub-view toggle in "My Classes": 'schedules' | 'batches'
@@ -741,9 +763,25 @@ export default function CoachPortalView() {
                     {displayCheckInTime}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#00D09C]" />
-                    <span className="text-sm sm:text-base font-bold text-[#00D09C]">
-                      {isShiftCompletedState || isCoachActuallyCompleted ? 'Shift Completed' : 'Checked In'}
+                    <span className={`w-2.5 h-2.5 rounded-full ${
+                      isShiftCompletedState || isCoachActuallyCompleted
+                        ? 'bg-[#00D09C]'
+                        : isCoachActuallyCheckedIn
+                        ? 'bg-[#00D09C]'
+                        : 'bg-slate-400'
+                    }`} />
+                    <span className={`text-sm sm:text-base font-bold ${
+                      isShiftCompletedState || isCoachActuallyCompleted
+                        ? 'text-[#00D09C]'
+                        : isCoachActuallyCheckedIn
+                        ? 'text-[#00D09C]'
+                        : 'text-slate-400'
+                    }`}>
+                      {isShiftCompletedState || isCoachActuallyCompleted
+                        ? 'Shift Completed'
+                        : isCoachActuallyCheckedIn
+                        ? 'Checked In'
+                        : 'Not Checked In'}
                     </span>
                   </div>
                 </div>
@@ -788,21 +826,49 @@ export default function CoachPortalView() {
                 </div>
               </div>
 
-              {/* Bottom Controls: Check Out button and Pause/Play button */}
+              {/* Bottom Controls: Check In / Check Out button and Pause/Play button */}
               <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCoachCheckOut}
-                  className="flex-1 h-13 sm:h-14 rounded-full bg-[#0F172A] hover:bg-black text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-md active:scale-98 transition-all cursor-pointer"
-                >
-                  <Square className="w-3.5 h-3.5 fill-white text-white" />
-                  <span>Check Out</span>
-                </button>
+                {!isCoachActuallyCheckedIn ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCameraActionType('checkin');
+                      setCameraModalOpen(true);
+                    }}
+                    className="flex-1 h-13 sm:h-14 rounded-full bg-[#F4510B] hover:bg-[#d94406] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-md active:scale-98 transition-all cursor-pointer"
+                  >
+                    <Camera className="w-4.5 h-4.5 text-white" />
+                    <span>Check In</span>
+                  </button>
+                ) : isShiftCompletedState || isCoachActuallyCompleted ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex-1 h-13 sm:h-14 rounded-full bg-slate-200 text-slate-500 font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-not-allowed select-none"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Shift Completed</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCameraActionType('checkout');
+                      setCameraModalOpen(true);
+                    }}
+                    className="flex-1 h-13 sm:h-14 rounded-full bg-[#0F172A] hover:bg-black text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-md active:scale-98 transition-all cursor-pointer"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-white text-white" />
+                    <span>Check Out</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
                   onClick={handleToggleTimerPause}
-                  className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#F8FAFC] border border-[#172B5014] hover:border-[#172B5030] hover:bg-[#F1F5F9] text-[#172B50] flex items-center justify-center shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
+                  className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#F8FAFC] border border-[#172B5014] hover:border-[#172B5030] hover:bg-[#F1F5F9] text-[#172B50] flex items-center justify-center shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0 ${
+                    !isCoachActuallyCheckedIn ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                   title={isTimerPaused ? "Resume Work Time" : "Pause Work Time"}
                 >
                   {isTimerPaused ? (
@@ -2613,6 +2679,22 @@ export default function CoachPortalView() {
           </form>
         </Modal>
       )}
+
+      {/* Live Coach Camera Check-In / Check-Out Verification Modal */}
+      <CameraCaptureModal
+        isOpen={cameraModalOpen}
+        onClose={() => setCameraModalOpen(false)}
+        actionType={cameraActionType}
+        title={cameraActionType === 'checkin' ? 'Coach Live Check-In Camera' : 'Coach Live Check-Out Camera'}
+        subtitle={
+          cameraActionType === 'checkin'
+            ? 'Verify attendance and capture check-in snapshot tagged with location & time.'
+            : 'Capture shift completion photo to confirm check-out and calculate total duration.'
+        }
+        location={coachProfile.center || 'KK NAGAR'}
+        coachName={coachProfile.name || 'Coach'}
+        onCaptureConfirm={handleCameraCaptureConfirm}
+      />
 
     </div>
   );

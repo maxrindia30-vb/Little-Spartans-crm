@@ -54,6 +54,28 @@ export default function App() {
     return () => window.removeEventListener('little-spartans:open-terms-modal', handler);
   }, []);
 
+  // Role Guard: strictly enforce that currentPortal aligns with the authenticated user's role
+  useEffect(() => {
+    if (!isLoggedIn || !currentUser) return;
+    const userRole = (currentUser.role || '').toLowerCase();
+    let expectedPortal = 'admin';
+    if (userRole === 'coach' || (userRole.includes('coach') && !userRole.includes('super'))) {
+      expectedPortal = 'coach';
+    } else if (userRole === 'super_coach' || userRole.includes('super')) {
+      expectedPortal = 'super_coach';
+    } else if (userRole === 'parent') {
+      expectedPortal = 'parent';
+    } else if (userRole === 'support') {
+      expectedPortal = 'support';
+    } else if (userRole === 'admin' || userRole === 'super_admin' || userRole.includes('admin') || userRole.includes('director')) {
+      expectedPortal = 'admin';
+    }
+
+    if (expectedPortal !== 'admin' && currentPortal !== expectedPortal) {
+      setCurrentPortal(expectedPortal);
+    }
+  }, [isLoggedIn, currentUser, currentPortal, setCurrentPortal]);
+
   // If logged out, display exact Little Spartans Spartzen login screen matching reference
   if (!isLoggedIn) {
     return (

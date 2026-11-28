@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { initialAcademyData } from '../data/mockData';
 import {
   DEFAULT_BRAND_PALETTE,
@@ -65,6 +65,12 @@ import {
   validateCheckInPayload,
   validateCheckOutPayload,
 } from '../services/coachAttendanceService';
+import {
+  saveAttendancePhoto,
+  getAttendancePhoto,
+  saveAttendanceException,
+  getSessionExceptions,
+} from '../services/attendanceStorageService';
 import {
   validatePassword,
   generateSecureTemporaryPassword,
@@ -330,10 +336,63 @@ export function CrmProvider({ children }) {
           ? parsed.userAccounts
           : initialAcademyData.userAccounts || [];
 
-        // Retain super_admin, admin, coach, and valid parent accounts (filter dummy parents)
+        // Retain super_admin, admin, coach, super_coach, and valid parent accounts (filter dummy parents)
         const retainedAccounts = existingAccounts.filter(
-          (a) => (a.role === 'admin' || a.role === 'super_admin' || a.id === 'ACC-001') && !DUMMY_PARENT_NAMES.has((a.name || '').toLowerCase().trim())
+          (a) => (a.role === 'admin' || a.role === 'super_admin' || a.role === 'coach' || a.role === 'super_coach' || a.role === 'parent' || a.id === 'ACC-001') && !DUMMY_PARENT_NAMES.has((a.name || '').toLowerCase().trim())
         );
+
+        const mergedAccounts = [...retainedAccounts];
+
+        // Seed default initial accounts (Admin, Super Coach, Coach, Parent) if missing
+        (initialAcademyData.userAccounts || []).forEach((initAcc) => {
+          if (!mergedAccounts.some((a) => (a.email && initAcc.email && a.email.toLowerCase() === initAcc.email.toLowerCase()) || a.id === initAcc.id)) {
+            mergedAccounts.push(initAcc);
+          }
+        });
+
+        // Auto-sync coaches from storedCoaches into userAccounts if missing
+        storedCoaches.forEach((c) => {
+          const normEmail = (c.email || '').toLowerCase().trim();
+          if (normEmail && !mergedAccounts.some((a) => a.email && a.email.toLowerCase().trim() === normEmail)) {
+            mergedAccounts.push({
+              id: c.id,
+              role: 'coach',
+              name: c.name,
+              email: c.email,
+              phone: c.phone || '+91 98401 11223',
+              center: c.center || 'KK NAGAR',
+              locations: c.assignedLocations || [c.center || 'KK NAGAR'],
+              status: c.status || 'Active',
+              isTemporaryPassword: false,
+              passwordHash: 'sha256_05cab6384fb0d7964a7a61ae557b8dce', // coach123
+              createdAt: '2024-01-01',
+              lastLogin: 'Never',
+              permissions: ['MARK_CLASS_ATTENDANCE', 'UPDATE_STUDENT_PERFORMANCE', 'VIEW_ASSIGNED_CLASSES'],
+            });
+          }
+        });
+
+        // Auto-sync super coaches from superCoaches into userAccounts if missing
+        (parsed.superCoaches || initialAcademyData.superCoaches || []).forEach((sc) => {
+          const normEmail = (sc.email || '').toLowerCase().trim();
+          if (normEmail && !mergedAccounts.some((a) => a.email && a.email.toLowerCase().trim() === normEmail)) {
+            mergedAccounts.push({
+              id: sc.id,
+              role: 'super_coach',
+              name: sc.name,
+              email: sc.email,
+              phone: sc.phone || '+91 98401 22345',
+              center: sc.center || 'KK NAGAR',
+              locations: sc.assignedLocations || ['KK NAGAR', 'ANNA NAGAR', 'KILPAUK', 'MAHALINGAPURAM'],
+              status: 'Active',
+              isTemporaryPassword: false,
+              passwordHash: 'sha256_83654a202232f6e1a157bcc1a5984101', // supercoach123
+              createdAt: '2024-01-01',
+              lastLogin: 'Never',
+              permissions: ['OPERATIONS_OVERSIGHT', 'EVALUATION_REVIEW', 'BATCH_MANAGEMENT', 'FACULTY_SCHEDULES'],
+            });
+          }
+        });
 
         // Auto-sync parent accounts for all enrolled parents matching locations
         const parentAccounts = migratedParents.map((p) => {
@@ -351,8 +410,9 @@ export function CrmProvider({ children }) {
             locations: [targetLoc],
             linkedStudents: p.children || [],
             status: 'Active',
-            isTemporaryPassword: true,
+            isTemporaryPassword: false,
             password: p.password,
+            passwordHash: 'sha256_7962bf5c1c713bb6651384ea95d3fb12', // parent123
             tempPasswordDisplay: p.password,
             createdAt: p.createdAt || 'Today',
             lastLogin: existingAcc?.lastLogin || 'Never',
@@ -360,7 +420,6 @@ export function CrmProvider({ children }) {
           };
         });
 
-        const mergedAccounts = [...retainedAccounts];
         parentAccounts.forEach((pa) => {
           if (!mergedAccounts.some((a) => a.email && pa.email && a.email.toLowerCase() === pa.email.toLowerCase())) {
             mergedAccounts.push(pa);
@@ -482,8 +541,19 @@ export function CrmProvider({ children }) {
     };
   });
 
+  // Authenticated user session account
+  const [authenticatedUser, setAuthenticatedUser] = useState(() => {
+    try {
+      const savedUserStr = localStorage.getItem('little_spartans_auth_user');
+      if (savedUserStr) {
+        return JSON.parse(savedUserStr);
+      }
+    } catch (e) {}
+    return null;
+  });
+
   // Current active portal: 'admin' | 'parent' | 'coach' | 'super_coach' | 'support'
-  const [currentPortal, setCurrentPortal] = useState(() => {
+  const [currentPortal, setCurrentPortalRaw] = useState(() => {
     if (typeof window !== 'undefined' && window.location) {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -494,6 +564,19 @@ export function CrmProvider({ children }) {
       } catch (e) {}
     }
     try {
+      const savedUserStr = localStorage.getItem('little_spartans_auth_user');
+      if (savedUserStr) {
+        const parsedUser = JSON.parse(savedUserStr);
+        if (parsedUser && parsedUser.role) {
+          let roleKey = String(parsedUser.role).toLowerCase();
+          if (roleKey === 'super_coach' || roleKey === 'supercoach') roleKey = 'super_coach';
+          else if (roleKey === 'coach') roleKey = 'coach';
+          else if (roleKey === 'parent') roleKey = 'parent';
+          else if (roleKey === 'support') roleKey = 'support';
+          else if (roleKey === 'admin' || roleKey === 'super_admin') roleKey = 'admin';
+          return roleKey;
+        }
+      }
       const savedPortal = localStorage.getItem(CURRENT_ROLE_KEY);
       if (savedPortal && ['admin', 'parent', 'coach', 'super_coach', 'support'].includes(savedPortal)) {
         return savedPortal;
@@ -501,6 +584,22 @@ export function CrmProvider({ children }) {
     } catch (e) {}
     return 'admin';
   });
+
+  const setCurrentPortal = (portal) => {
+    if (!portal) return;
+    // Authorization guard: non-admin users cannot navigate outside their role's portal
+    if (authenticatedUser && authenticatedUser.role) {
+      const userRole = String(authenticatedUser.role).toLowerCase();
+      if (userRole !== 'admin' && userRole !== 'super_admin' && portal !== userRole) {
+        console.warn(`Access denied: User with role "${userRole}" cannot switch to "${portal}" portal.`);
+        return;
+      }
+    }
+    setCurrentPortalRaw(portal);
+    try {
+      localStorage.setItem(CURRENT_ROLE_KEY, portal);
+    } catch (e) {}
+  };
 
   // Active module view within portal
   const [currentView, setCurrentViewRaw] = useState(() => {
@@ -716,25 +815,30 @@ export function CrmProvider({ children }) {
   // Current logged in user credentials per portal
   const currentUserProfiles = {
     admin: {
-      name: (data.userAccounts && data.userAccounts[0]?.name) || "Administrator",
-      role: "Academy Director",
+      id: "ACC-001",
+      name: (data.userAccounts && data.userAccounts.find(a => a.role === 'admin')?.name) || "Administrator",
+      role: "admin",
+      designation: "Academy Director",
       portalTitle: "Admin Portal",
-      email: (data.userAccounts && data.userAccounts[0]?.email) || "director@littlespartans.co.in",
+      email: (data.userAccounts && data.userAccounts.find(a => a.role === 'admin')?.email) || "admin@littlespartans.co.in",
       avatar: null,
       badge: "Super Admin"
     },
     parent: {
+      id: data.parents[0]?.id || "PAR-002",
       name: data.parents[0]?.name || "Parent Account",
-      role: data.parents[0]?.center ? `Parent (${data.parents[0].center})` : "Parent Portal",
+      role: "parent",
+      designation: data.parents[0]?.center ? `Parent (${data.parents[0].center})` : "Parent Portal",
       portalTitle: "Parent Portal",
-      email: data.parents[0]?.email || "parent@littlespartans.co.in",
+      email: data.parents[0]?.email || "parent.aarav@littlespartans.co.in",
       avatar: null,
       badge: "Verified Parent"
     },
     coach: {
       id: (data.coaches && data.coaches[0]?.id) || "COACH-ARUN",
       name: (data.coaches && data.coaches[0]?.name) || "Arun Prakash",
-      role: (data.coaches && data.coaches[0]?.specialization) || "Senior Coach",
+      role: "coach",
+      designation: (data.coaches && data.coaches[0]?.specialization) || "Senior Coach",
       portalTitle: "Coach Portal",
       email: (data.coaches && data.coaches[0]?.email) || "arun.prakash@littlespartans.co.in",
       avatar: (data.coaches && data.coaches[0]?.avatar) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
@@ -744,8 +848,10 @@ export function CrmProvider({ children }) {
       badge: "Academy Coach"
     },
     super_coach: {
+      id: (data.superCoaches && data.superCoaches[0]?.id) || "SC-001",
       name: (data.superCoaches && data.superCoaches[0]?.name) || "Anita R.",
-      role: (data.superCoaches && data.superCoaches[0]?.title) || "Super Coach",
+      role: "super_coach",
+      designation: (data.superCoaches && data.superCoaches[0]?.title) || "Super Coach",
       portalTitle: "Super Coach Portal",
       email: (data.superCoaches && data.superCoaches[0]?.email) || "anita.r@littlespartans.co.in",
       avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
@@ -755,8 +861,10 @@ export function CrmProvider({ children }) {
         : (data.locations || []).filter(l => l.status !== 'Inactive').map(l => l.name)
     },
     support: {
+      id: "SUP-001",
       name: "Customer Support Lead",
-      role: "Lead Relations Officer",
+      role: "support",
+      designation: "Lead Relations Officer",
       portalTitle: "Customer Support Portal",
       email: "support@littlespartans.co.in",
       avatar: null,
@@ -764,7 +872,32 @@ export function CrmProvider({ children }) {
     }
   };
 
-  const currentUser = currentUserProfiles[currentPortal] || currentUserProfiles.admin;
+  const currentUser = useMemo(() => {
+    const base = currentUserProfiles[currentPortal] || currentUserProfiles.admin;
+    if (authenticatedUser) {
+      let resolvedRole = (authenticatedUser.role || currentPortal || 'admin').toLowerCase();
+      if (resolvedRole === 'super_admin' || resolvedRole === 'admin') resolvedRole = 'admin';
+      else if (resolvedRole === 'super_coach' || resolvedRole === 'supercoach') resolvedRole = 'super_coach';
+      else if (resolvedRole === 'coach') resolvedRole = 'coach';
+      else if (resolvedRole === 'parent') resolvedRole = 'parent';
+
+      return {
+        ...base,
+        ...authenticatedUser,
+        id: authenticatedUser.id || base.id,
+        name: authenticatedUser.name || base.name,
+        email: authenticatedUser.email || base.email,
+        phone: authenticatedUser.phone || base.phone,
+        role: resolvedRole,
+        designation: authenticatedUser.designation || authenticatedUser.specialization || authenticatedUser.title || base.designation || base.role,
+        center: authenticatedUser.center || authenticatedUser.locations?.[0] || base.center,
+        locations: authenticatedUser.locations || (authenticatedUser.center ? [authenticatedUser.center] : base.assignedLocations),
+        assignedLocations: authenticatedUser.assignedLocations || authenticatedUser.locations || base.assignedLocations,
+        avatar: authenticatedUser.avatar || base.avatar,
+      };
+    }
+    return base;
+  }, [authenticatedUser, currentPortal, data]);
 
   // CRUD Actions
   const addStudent = (studentData) => {
@@ -3078,7 +3211,17 @@ export function CrmProvider({ children }) {
     return getCoachTodayAttendanceHelper(data.coachAttendanceRecords || [], coachId, dateYmd, location);
   };
 
-  const checkInCoach = ({ coachId, coachName, location, photo, timestamp }) => {
+  const checkInCoach = ({
+    coachId,
+    coachName,
+    location,
+    photo,
+    timestamp,
+    isException = false,
+    exceptionReason = null,
+    exceptionApprovedBy = null,
+    exceptionNotes = ''
+  }) => {
     const todayYmd = new Date().toISOString().split('T')[0];
     const nowIso = timestamp || new Date().toISOString();
     const effectiveCoachId = coachId || currentUserProfiles.coach?.id || data.coaches?.[0]?.id || 'COACH-ARUN';
@@ -3090,6 +3233,7 @@ export function CrmProvider({ children }) {
       coachName: effectiveCoachName,
       location: effectiveLocation,
       photo,
+      isException,
     });
 
     if (!validation.isValid) {
@@ -3137,10 +3281,15 @@ export function CrmProvider({ children }) {
       date: todayYmd,
       checkInTime: formatDisplayTime(nowIso),
       checkInIso: nowIso,
-      checkInPhoto: photo,
+      checkInPhoto: photo || null,
+      isCheckInException: !!isException,
+      checkInExceptionReason: isException ? exceptionReason : null,
+      checkInExceptionApprovedBy: isException ? exceptionApprovedBy : null,
+      checkInExceptionNotes: isException ? exceptionNotes : null,
       checkOutTime: null,
       checkOutIso: null,
       checkOutPhoto: null,
+      isCheckOutException: false,
       studentAttendanceSaved: studentSaved,
       studentAttendanceBatchIds: [],
       totalDurationMinutes: 0,
@@ -3149,6 +3298,32 @@ export function CrmProvider({ children }) {
       createdAt: nowIso,
     };
 
+    // Persist to indexed storage
+    if (photo) {
+      saveAttendancePhoto({
+        sessionId: nextId,
+        type: 'checkin',
+        coachId: effectiveCoachId,
+        coachName: effectiveCoachName,
+        location: effectiveLocation,
+        photoDataUrl: photo,
+        isException,
+        exceptionReason,
+        exceptionApprovedBy,
+      });
+    } else if (isException) {
+      saveAttendanceException({
+        sessionId: nextId,
+        actionType: 'checkin',
+        coachId: effectiveCoachId,
+        coachName: effectiveCoachName,
+        location: effectiveLocation,
+        reason: exceptionReason,
+        approvedBy: exceptionApprovedBy,
+        notes: exceptionNotes,
+      });
+    }
+
     setData((prev) => ({
       ...prev,
       coachAttendanceRecords: [newRecord, ...(prev.coachAttendanceRecords || [])],
@@ -3156,17 +3331,28 @@ export function CrmProvider({ children }) {
 
     logSettingsAudit({
       category: 'Session & Attendance',
-      action: 'Coach Check-In Verified',
+      action: isException ? 'Coach Check-In Exception Authorized' : 'Coach Check-In Verified',
       module: 'Coach Attendance',
       target: `${effectiveCoachName} (${effectiveLocation})`,
-      details: `Checked in at ${newRecord.checkInTime} with live camera verification.`,
+      details: isException
+        ? `Checked in via Admin Exception (${exceptionReason}, approved by ${exceptionApprovedBy}) at ${newRecord.checkInTime}.`
+        : `Checked in at ${newRecord.checkInTime} with live camera verification.`,
     });
 
     addToast(`Check-in successful! Welcome, Coach ${effectiveCoachName}.`, 'success');
     return { success: true, record: newRecord };
   };
 
-  const checkOutCoach = ({ coachId, location, photo, timestamp }) => {
+  const checkOutCoach = ({
+    coachId,
+    location,
+    photo,
+    timestamp,
+    isException = false,
+    exceptionReason = null,
+    exceptionApprovedBy = null,
+    exceptionNotes = ''
+  }) => {
     const todayYmd = new Date().toISOString().split('T')[0];
     const nowIso = timestamp || new Date().toISOString();
     const effectiveCoachId = coachId || currentUserProfiles.coach?.id || data.coaches?.[0]?.id || 'COACH-ARUN';
@@ -3179,13 +3365,11 @@ export function CrmProvider({ children }) {
              r.status === COACH_ATTENDANCE_STATUS.CHECKED_IN
     );
 
-    const studentSaved = existing?.studentAttendanceSaved || hasSavedStudentAttendanceToday(effectiveCoachId, todayYmd);
-
     const validation = validateCheckOutPayload({
       coachId: effectiveCoachId,
       photo,
       record: existing,
-      hasSavedStudentAttendance: studentSaved,
+      isException,
     });
 
     if (!validation.isValid) {
@@ -3198,12 +3382,42 @@ export function CrmProvider({ children }) {
       ...existing,
       checkOutTime: formatDisplayTime(nowIso),
       checkOutIso: nowIso,
-      checkOutPhoto: photo,
+      checkOutPhoto: photo || null,
+      isCheckOutException: !!isException,
+      checkOutExceptionReason: isException ? exceptionReason : null,
+      checkOutExceptionApprovedBy: isException ? exceptionApprovedBy : null,
+      checkOutExceptionNotes: isException ? exceptionNotes : null,
       totalDurationMinutes: duration.minutes,
       totalDurationFormatted: duration.formatted,
       status: COACH_ATTENDANCE_STATUS.COMPLETED,
       updatedAt: nowIso,
     };
+
+    // Persist to indexed storage
+    if (photo) {
+      saveAttendancePhoto({
+        sessionId: existing.id,
+        type: 'checkout',
+        coachId: effectiveCoachId,
+        coachName: existing.coachName,
+        location: existing.locationName,
+        photoDataUrl: photo,
+        isException,
+        exceptionReason,
+        exceptionApprovedBy,
+      });
+    } else if (isException) {
+      saveAttendanceException({
+        sessionId: existing.id,
+        actionType: 'checkout',
+        coachId: effectiveCoachId,
+        coachName: existing.coachName,
+        location: existing.locationName,
+        reason: exceptionReason,
+        approvedBy: exceptionApprovedBy,
+        notes: exceptionNotes,
+      });
+    }
 
     setData((prev) => ({
       ...prev,
@@ -3214,10 +3428,12 @@ export function CrmProvider({ children }) {
 
     logSettingsAudit({
       category: 'Session & Attendance',
-      action: 'Coach Check-Out Completed',
+      action: isException ? 'Coach Check-Out Exception Authorized' : 'Coach Check-Out Completed',
       module: 'Coach Attendance',
       target: `${existing.coachName} (${existing.locationName})`,
-      details: `Checked out at ${updatedRecord.checkOutTime}. Shift duration: ${duration.formatted}.`,
+      details: isException
+        ? `Checked out via Admin Exception (${exceptionReason}, approved by ${exceptionApprovedBy}) at ${updatedRecord.checkOutTime}. Shift duration: ${duration.formatted}.`
+        : `Checked out at ${updatedRecord.checkOutTime}. Shift duration: ${duration.formatted}.`,
     });
 
     addToast(`Shift completed! Check-out confirmed. Total duration: ${duration.formatted}.`, 'success');
@@ -7411,7 +7627,9 @@ export function CrmProvider({ children }) {
         activeSubTab,
         setActiveSubTab,
         navigateTo,
-        currentUser: currentUserProfiles[currentPortal],
+        currentUser,
+        authenticatedUser,
+        setAuthenticatedUser,
         globalSearch,
         setGlobalSearch,
         sidebarOpen,
@@ -7420,18 +7638,46 @@ export function CrmProvider({ children }) {
         setFocusedRecord,
         navigateToPersonRecord,
         isLoggedIn,
-        login: (portalRole) => {
-          if (portalRole) setCurrentPortal(portalRole);
+        login: (portalRole, userAccount = null) => {
+          let resolvedRole = portalRole;
+          if (userAccount && userAccount.role) {
+            resolvedRole = userAccount.role;
+          }
+          if (resolvedRole === 'super_admin' || resolvedRole === 'ADMIN') resolvedRole = 'admin';
+          else if (resolvedRole === 'SUPER_COACH') resolvedRole = 'super_coach';
+          else if (resolvedRole === 'COACH') resolvedRole = 'coach';
+          else if (resolvedRole === 'PARENT') resolvedRole = 'parent';
+          else if (resolvedRole === 'SUPPORT') resolvedRole = 'support';
+
+          setCurrentPortalRaw(resolvedRole);
+          setCurrentViewRaw('dashboard');
           setIsLoggedIn(true);
+
+          let userToStore = userAccount;
+          if (!userToStore) {
+            userToStore = (data?.userAccounts || []).find(a => a.role === resolvedRole) || currentUserProfiles[resolvedRole] || { role: resolvedRole };
+          }
+          setAuthenticatedUser(userToStore);
+
           try {
             localStorage.setItem('little_spartans_is_logged_in', 'true');
+            localStorage.setItem(CURRENT_ROLE_KEY, resolvedRole);
+            localStorage.setItem('little_spartans_current_view', 'dashboard');
+            localStorage.setItem('little_spartans_auth_user', JSON.stringify(userToStore));
           } catch (e) {}
           setShowMotivationalModal(true);
         },
         logout: () => {
           setIsLoggedIn(false);
+          setAuthenticatedUser(null);
+          setCurrentPortalRaw('admin');
+          setCurrentViewRaw('dashboard');
           try {
             localStorage.setItem('little_spartans_is_logged_in', 'false');
+            localStorage.removeItem(CURRENT_ROLE_KEY);
+            localStorage.removeItem('little_spartans_auth_user');
+            localStorage.removeItem('little_spartans_current_view');
+            localStorage.removeItem('little_spartans_active_subtab');
           } catch (e) {}
           setShowMotivationalModal(false);
         },
@@ -7597,6 +7843,11 @@ export function CrmProvider({ children }) {
         updateParentAcknowledgementText,
         publishNewTermsVersion,
         resetTermsDataToDefault,
+        // Coach Attendance Storage & Authorization
+        getAttendancePhoto,
+        saveAttendancePhoto,
+        saveAttendanceException,
+        getSessionExceptions,
       }}
     >
       {children}

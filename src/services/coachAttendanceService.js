@@ -120,12 +120,12 @@ export function checkLocationOverlap(records = [], coachId, dateYmd, targetLocat
 /**
  * Validate Check-In Payload
  */
-export function validateCheckInPayload({ coachId, coachName, location, photo }) {
+export function validateCheckInPayload({ coachId, coachName, location, photo, isException = false }) {
   const errors = [];
   if (!coachId) errors.push('Coach ID is required for check-in.');
   if (!coachName) errors.push('Coach name is required for check-in.');
   if (!location) errors.push('Assigned location is required for check-in.');
-  if (!photo || typeof photo !== 'string' || photo.trim().length === 0) {
+  if (!isException && (!photo || typeof photo !== 'string' || photo.trim().length === 0)) {
     errors.push('A live photo is strictly required to complete check-in.');
   }
   return {
@@ -137,17 +137,14 @@ export function validateCheckInPayload({ coachId, coachName, location, photo }) 
 /**
  * Validate Check-Out Payload
  */
-export function validateCheckOutPayload({ coachId, photo, record, hasSavedStudentAttendance }) {
+export function validateCheckOutPayload({ coachId, photo, record, isException = false }) {
   const errors = [];
   if (!coachId) errors.push('Coach ID is required for check-out.');
   if (!record) errors.push('No active check-in record found for today.');
   if (record && record.status === COACH_ATTENDANCE_STATUS.COMPLETED) {
     errors.push('Attendance has already been completed for today.');
   }
-  if (!hasSavedStudentAttendance) {
-    errors.push("Save today's student attendance to enable Check Out.");
-  }
-  if (!photo || typeof photo !== 'string' || photo.trim().length === 0) {
+  if (!isException && (!photo || typeof photo !== 'string' || photo.trim().length === 0)) {
     errors.push('A live photo is strictly required to complete check-out.');
   }
   return {
