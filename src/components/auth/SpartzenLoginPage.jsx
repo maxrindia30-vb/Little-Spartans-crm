@@ -37,13 +37,21 @@ export default function SpartzenLoginPage() {
       return;
     }
 
-    const input = emailOrPhone.toLowerCase().trim();
+    const rawInput = emailOrPhone.toLowerCase().trim();
     const phoneDigits = emailOrPhone.replace(/\D/g, '');
+
+    // Normalize domain shorthands (e.g. admin@littlespartans -> admin@littlespartans.co.in)
+    let input = rawInput;
+    if (rawInput.endsWith('@littlespartans')) {
+      input = `${rawInput}.co.in`;
+    } else if (rawInput.endsWith('@littlespartans.com')) {
+      input = rawInput.replace('@littlespartans.com', '@littlespartans.co.in');
+    }
 
     // 1. Check against registered user accounts in CRM Context
     let matchedAccount = (data?.userAccounts || []).find(
       (a) =>
-        (a.email && a.email.toLowerCase().trim() === input) ||
+        (a.email && (a.email.toLowerCase().trim() === input || a.email.toLowerCase().trim() === rawInput)) ||
         (phoneDigits.length >= 10 && a.phone && a.phone.replace(/\D/g, '') === phoneDigits)
     );
 
@@ -51,7 +59,7 @@ export default function SpartzenLoginPage() {
     if (!matchedAccount) {
       const matchedCoach = (data?.coaches || []).find(
         (c) =>
-          (c.email && c.email.toLowerCase().trim() === input) ||
+          (c.email && (c.email.toLowerCase().trim() === input || c.email.toLowerCase().trim() === rawInput)) ||
           (phoneDigits.length >= 10 && c.phone && c.phone.replace(/\D/g, '') === phoneDigits)
       );
       if (matchedCoach) {
@@ -67,7 +75,7 @@ export default function SpartzenLoginPage() {
     if (!matchedAccount) {
       const matchedSC = (data?.superCoaches || []).find(
         (sc) =>
-          (sc.email && sc.email.toLowerCase().trim() === input) ||
+          (sc.email && (sc.email.toLowerCase().trim() === input || sc.email.toLowerCase().trim() === rawInput)) ||
           (phoneDigits.length >= 10 && sc.phone && sc.phone.replace(/\D/g, '') === phoneDigits)
       );
       if (matchedSC) {
@@ -83,7 +91,7 @@ export default function SpartzenLoginPage() {
     if (!matchedAccount) {
       const matchedParent = (data?.parents || []).find(
         (p) =>
-          (p.email && p.email.toLowerCase().trim() === input) ||
+          (p.email && (p.email.toLowerCase().trim() === input || p.email.toLowerCase().trim() === rawInput)) ||
           (phoneDigits.length >= 10 && p.phone && p.phone.replace(/\D/g, '') === phoneDigits)
       );
       if (matchedParent) {
@@ -95,9 +103,18 @@ export default function SpartzenLoginPage() {
       }
     }
 
-    // 5. Standard role aliases
+    // 5. Standard role aliases & smart matching (handles admin@littlespartans, admin, director, etc.)
     if (!matchedAccount) {
-      if (input === 'admin@littlespartans.co.in' || input === 'director@littlespartans.co.in') {
+      if (
+        input === 'admin@littlespartans.co.in' ||
+        rawInput === 'admin@littlespartans' ||
+        rawInput === 'admin@littlespartans.com' ||
+        rawInput === 'admin' ||
+        rawInput === 'director' ||
+        rawInput === 'director@littlespartans.co.in' ||
+        rawInput.startsWith('admin@') ||
+        rawInput.includes('balavivek')
+      ) {
         matchedAccount = (data?.userAccounts || []).find(a => a.role === 'admin') || {
           id: 'ACC-001',
           name: 'Balavivek S',
@@ -105,7 +122,14 @@ export default function SpartzenLoginPage() {
           role: 'admin',
           status: 'Active'
         };
-      } else if (input === 'supercoach@littlespartans.co.in' || input.includes('supercoach')) {
+      } else if (
+        input === 'supercoach@littlespartans.co.in' ||
+        rawInput === 'supercoach@littlespartans' ||
+        rawInput === 'supercoach@littlespartans.com' ||
+        rawInput === 'supercoach' ||
+        rawInput.includes('supercoach') ||
+        rawInput.includes('anita')
+      ) {
         matchedAccount = (data?.superCoaches || [])[0] ? { ...data.superCoaches[0], role: 'super_coach' } : {
           id: 'SC-001',
           name: 'Anita R.',
@@ -113,7 +137,15 @@ export default function SpartzenLoginPage() {
           role: 'super_coach',
           status: 'Active'
         };
-      } else if (input === 'coach@littlespartans.co.in' || input.includes('coach') || input.includes('vikram')) {
+      } else if (
+        input === 'coach@littlespartans.co.in' ||
+        rawInput === 'coach@littlespartans' ||
+        rawInput === 'coach@littlespartans.com' ||
+        rawInput === 'coach' ||
+        rawInput.includes('coach') ||
+        rawInput.includes('arun') ||
+        rawInput.includes('vikram')
+      ) {
         matchedAccount = (data?.coaches || [])[0] ? { ...data.coaches[0], role: 'coach' } : {
           id: 'COACH-ARUN',
           name: 'Arun Prakash',
@@ -121,7 +153,12 @@ export default function SpartzenLoginPage() {
           role: 'coach',
           status: 'Active'
         };
-      } else if (input.includes('parent') || input.includes('rohan')) {
+      } else if (
+        input.includes('parent') ||
+        rawInput.includes('karthik') ||
+        rawInput.includes('aarav') ||
+        rawInput.includes('rohan')
+      ) {
         matchedAccount = (data?.parents || [])[0] ? { ...data.parents[0], role: 'parent' } : {
           id: 'PAR-002',
           name: 'Karthik K',
@@ -144,11 +181,23 @@ export default function SpartzenLoginPage() {
     }
 
     let isValidPass = false;
-    if (matchedAccount.passwordHash) {
+    const acceptedDemoPasswords = [
+      'Spartan2026',
+      'Spartan@2026',
+      'Spartan@123',
+      'Spartan123',
+      'admin123',
+      'supercoach123',
+      'coach123',
+      'parent123',
+      'password',
+      `${matchedAccount.role}123`
+    ];
+
+    if (acceptedDemoPasswords.includes(password)) {
+      isValidPass = true;
+    } else if (matchedAccount.passwordHash) {
       isValidPass = verifyPassword(password, matchedAccount.passwordHash);
-      if (!isValidPass && (password === 'password' || password === 'Spartan@123' || password === `${matchedAccount.role}123` || password === 'admin123')) {
-        isValidPass = true;
-      }
     } else if (matchedAccount.password) {
       isValidPass = matchedAccount.password === password;
     } else {
@@ -370,7 +419,40 @@ export default function SpartzenLoginPage() {
               </form>
 
               {/* Divider Line */}
-              <div className="w-full h-px bg-[#E2E8F0] mt-3.5 mb-3" />
+              <div className="w-full h-px bg-[#E2E8F0] mt-3.5 mb-2.5" />
+
+              {/* Quick Role Fill Pills */}
+              <div className="flex items-center justify-center gap-1.5 flex-wrap pb-1.5">
+                <span className="text-[10.5px] font-bold text-[#172B50]/60 mr-1">Demo Fill:</span>
+                <button
+                  type="button"
+                  onClick={() => { setEmailOrPhone('admin@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
+                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmailOrPhone('anita.r@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
+                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
+                >
+                  Super Coach
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmailOrPhone('arun.prakash@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
+                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
+                >
+                  Coach
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmailOrPhone('parent.aarav@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
+                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
+                >
+                  Parent
+                </button>
+              </div>
 
               {/* Bottom Footer Text (Pure Vector Text) */}
               <p className="text-[11.5px] text-[#485C82] text-center font-sans">
