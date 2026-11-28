@@ -29,7 +29,7 @@ export default function ParentAttendanceModule({
   myChildren = [],
   activeChild: propActiveChild,
   setActiveChild: propSetActiveChild,
-  initialSelectedDate = '2026-11-19',
+  initialSelectedDate = '',
   initialSection = 'overview', // 'overview' | 'leave_requests' | 'compensation'
 }) {
   const {
@@ -49,16 +49,16 @@ export default function ParentAttendanceModule({
 
   // Child selection
   const [internalActiveChildId, setInternalActiveChildId] = useState(
-    propActiveChild?.id || myChildren[0]?.id || 'STU-LS-002'
+    propActiveChild?.id || myChildren[0]?.id || ''
   );
   const [isChildDropdownOpen, setIsChildDropdownOpen] = useState(false);
 
   const activeChild = useMemo(() => {
     return (
       myChildren.find(c => c.id === internalActiveChildId || c.childId === internalActiveChildId) ||
-      (data.students || []).find(s => s.id === internalActiveChildId || s.childId === internalActiveChildId) ||
       myChildren[0] ||
-      (data.students || [])[0]
+      (data.students || []).find(s => s.id === internalActiveChildId || s.childId === internalActiveChildId) ||
+      null
     );
   }, [internalActiveChildId, myChildren, data.students]);
 
@@ -70,20 +70,22 @@ export default function ParentAttendanceModule({
     setIsChildDropdownOpen(false);
   };
 
-  // Calendar Year and Month (Defaults to November 2026 as in screenshot)
-  const [calendarYear, setCalendarYear] = useState(2026);
-  const [calendarMonth, setCalendarMonth] = useState(10); // 0-indexed: 10 = November
+  // Calendar Year and Month
+  const now = new Date();
+  const [calendarYear, setCalendarYear] = useState(now.getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState(now.getMonth());
   const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
 
   // Tab switch in Right Card: 'leave_request' | 'compensation_class'
   const [activeFormTab, setActiveFormTab] = useState('leave_request');
 
   // Leave / Compensation Form State
-  const [leaveDate, setLeaveDate] = useState('2026-11-24');
-  const [leaveReason, setLeaveReason] = useState('Family Function');
-  const [requestCompensationToggle, setRequestCompensationToggle] = useState(true);
-  const [preferredCompDate, setPreferredCompDate] = useState('2026-11-29');
-  const [preferredCompTime, setPreferredCompTime] = useState('08:00 AM – 09:00 AM');
+  const todayYmd = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const [leaveDate, setLeaveDate] = useState(todayYmd);
+  const [leaveReason, setLeaveReason] = useState('');
+  const [requestCompensationToggle, setRequestCompensationToggle] = useState(false);
+  const [preferredCompDate, setPreferredCompDate] = useState('');
+  const [preferredCompTime, setPreferredCompTime] = useState('');
   const [additionalNote, setAdditionalNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -111,24 +113,9 @@ export default function ParentAttendanceModule({
     if (!activeChild) return [];
     const childId = activeChild.id;
     const altChildId = activeChild.childId;
-    const list = (data.studentLeaveRequests || []).filter(
+    return (data.studentLeaveRequests || []).filter(
       l => l.childId === childId || l.studentId === childId || (altChildId && (l.childId === altChildId || l.studentId === altChildId))
     );
-    if (list.length > 0) return list;
-    return [
-      {
-        id: 'LV-LS-2026-001',
-        childId: childId,
-        startDate: '2026-11-19',
-        endDate: '2026-11-19',
-        reason: 'Family Function',
-        notes: 'Out of station for family event',
-        status: 'Approved',
-        requestCompensation: true,
-        approvedBy: 'Coach Karthik',
-        approvedDate: '2026-11-18'
-      }
-    ];
   }, [activeChild, data.studentLeaveRequests]);
 
   // Filter compensation requests for active child
@@ -136,23 +123,9 @@ export default function ParentAttendanceModule({
     if (!activeChild) return [];
     const childId = activeChild.id;
     const altChildId = activeChild.childId;
-    const list = (data.compensationRequests || []).filter(
+    return (data.compensationRequests || []).filter(
       c => c.studentId === childId || c.childId === childId || (altChildId && (c.studentId === altChildId || c.childId === altChildId))
     );
-    if (list.length > 0) return list;
-    return [
-      {
-        id: 'CMP-2026-101',
-        studentId: childId,
-        missedDate: '2026-11-19',
-        confirmedDate: '2026-11-22',
-        confirmedTime: '08:00 AM – 09:00 AM',
-        reason: 'For 19 Nov Leave',
-        status: 'Scheduled',
-        coachName: 'Coach Karthik',
-        location: activeChild.center || 'KK Nagar'
-      }
-    ];
   }, [activeChild, data.compensationRequests]);
 
   // Filter compensation slots for active child
@@ -174,17 +147,16 @@ export default function ParentAttendanceModule({
     const leave = monthlyRecords.filter(r => r.status === 'Leave').length;
     const compensation = monthlyRecords.filter(r => r.status === 'Compensation').length;
 
-    // Attendance percentage: Present / (Present + Absent) * 100
-    // (If 18 Present, 2 Absent => 18/20 = 90%)
     const denominator = present + absent;
-    const percentage = denominator > 0 ? Math.round((present / denominator) * 100) : 100;
+    const percentage = denominator > 0 ? Math.round((present / denominator) * 100) : (monthlyRecords.length > 0 ? 100 : 0);
 
     return {
-      present: present || 18,
-      absent: absent || 2,
-      leave: leave || 1,
-      compensation: compensation || 1,
-      percentage: percentage || 90
+      present,
+      absent,
+      leave,
+      compensation,
+      percentage,
+      totalLogs: monthlyRecords.length
     };
   }, [calendarYear, calendarMonth, childAttendanceRecords]);
 
@@ -304,45 +276,8 @@ export default function ParentAttendanceModule({
   // Recent attendance logs table rows
   const recentLogs = useMemo(() => {
     // Show child's records sorted descending by date
-    const sorted = [...childAttendanceRecords].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    if (sorted.length > 0) {
-      return sorted.slice(0, 6);
-    }
-    // Fallback rows matching screenshot
-    return [
-      {
-        id: '1',
-        date: '2026-11-27',
-        status: 'Present',
-        sessionStartTime: '08:00 AM',
-        sessionEndTime: '09:00 AM',
-        coachRemarks: '–'
-      },
-      {
-        id: '2',
-        date: '2026-11-25',
-        status: 'Present',
-        sessionStartTime: '08:00 AM',
-        sessionEndTime: '09:00 AM',
-        coachRemarks: '–'
-      },
-      {
-        id: '3',
-        date: '2026-11-24',
-        status: 'Leave',
-        sessionStartTime: '–',
-        sessionEndTime: '–',
-        coachRemarks: 'Approved – Family Function'
-      },
-      {
-        id: '4',
-        date: '2026-11-22',
-        status: 'Compensation',
-        sessionStartTime: '08:00 AM',
-        sessionEndTime: '09:00 AM',
-        coachRemarks: 'For 19 Nov Leave'
-      }
-    ];
+    const sorted = [...childAttendanceRecords].sort((a, b) => (b.date || b.sessionDate || '').localeCompare(a.date || a.sessionDate || ''));
+    return sorted.slice(0, 8);
   }, [childAttendanceRecords]);
 
   // Helpers for formatted day names
@@ -441,33 +376,33 @@ export default function ParentAttendanceModule({
           <div className="lg:col-span-5 flex items-center gap-4">
             <img
               src={activeChild?.avatar || 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80'}
-              alt={activeChild?.name || 'Aarav K'}
+              alt={activeChild?.name || 'Athlete'}
               className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl object-cover ring-2 ring-[#F4510B]/20 shadow-sm shrink-0"
             />
             <div className="space-y-1">
               <h3 className="text-xl font-black text-[#172B50] tracking-tight leading-tight">
-                {activeChild?.name || 'Aarav K'}
+                {activeChild?.name || 'Athlete'}
               </h3>
               <p className="text-xs font-semibold text-[#172B50]/70">
-                {activeChild?.childId || 'LS-CH-2026-1045'}
+                {activeChild?.childId || activeChild?.id || '—'}
               </p>
               <p className="text-xs text-[#172B50]/70 font-medium">
-                Age: {activeChild?.age || 8} Years
+                Age: {activeChild?.age ? `${activeChild.age} Years` : '—'}
               </p>
 
               {/* Meta tags with orange icons */}
               <div className="pt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-[#172B50]/80">
                 <span className="inline-flex items-center gap-1.5">
                   <Activity className="w-3.5 h-3.5 text-[#F4510B]" />
-                  <span>{activeChild?.program || 'Athletics'}</span>
+                  <span>{activeChild?.program || 'Active Program'}</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarIcon className="w-3.5 h-3.5 text-[#F4510B]" />
-                  <span>Batch: {activeChild?.batch || 'LE - B1'}</span>
+                  <span>Batch: {activeChild?.batch || activeChild?.batchName || 'General'}</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                  <span>{activeChild?.center || 'KK Nagar'} ({activeChild?.locationId || 'LOC-002'})</span>
+                  <span>{activeChild?.center || activeChild?.locationName || 'Academy'}{activeChild?.locationId ? ` (${activeChild.locationId})` : ''}</span>
                 </span>
               </div>
             </div>
@@ -999,7 +934,14 @@ export default function ParentAttendanceModule({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#172B500A]">
-              {recentLogs.map((log, index) => {
+              {recentLogs.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-10 text-xs text-[#172B50]/50 font-medium">
+                    No attendance records found for this student.
+                  </td>
+                </tr>
+              ) : (
+                recentLogs.map((log, index) => {
                 const dayName = getDayOfWeek(log.date);
                 const dateDisplay = formatDateDisplay(log.date);
 
@@ -1054,7 +996,7 @@ export default function ParentAttendanceModule({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>
@@ -1077,7 +1019,7 @@ export default function ParentAttendanceModule({
             <div className="bg-[#F0FDF4] border border-emerald-200 rounded-2xl p-4 shadow-2xs">
               <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">Approved Leaves</span>
               <span className="text-2xl font-black text-emerald-700 mt-1 block">
-                {childLeaves.filter(l => l.status === 'Approved').length || 1}
+                {childLeaves.filter(l => l.status === 'Approved').length}
               </span>
               <span className="text-[10px] font-semibold text-emerald-600">Sanctioned by Coach</span>
             </div>
@@ -1091,7 +1033,7 @@ export default function ParentAttendanceModule({
             <div className="bg-[#FAF5FF] border border-purple-200 rounded-2xl p-4 shadow-2xs">
               <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider block">Compensation Eligible</span>
               <span className="text-2xl font-black text-purple-700 mt-1 block">
-                {childLeaves.filter(l => l.requestCompensation || l.status === 'Approved').length || 1}
+                {childLeaves.filter(l => l.requestCompensation || l.status === 'Approved').length}
               </span>
               <span className="text-[10px] font-semibold text-purple-600">Makeup Credits Available</span>
             </div>
@@ -1236,7 +1178,12 @@ export default function ParentAttendanceModule({
               </div>
 
               <div className="space-y-3">
-                {childLeaves.map((l) => (
+                {childLeaves.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-slate-400 font-medium">
+                    No leave requests found for {activeChild?.name || 'this student'}.
+                  </div>
+                ) : (
+                  childLeaves.map((l) => (
                   <div
                     key={l.id}
                     className="p-4 rounded-2xl border border-slate-200/90 bg-gradient-to-r from-white to-[#FFFDF9] hover:border-[#F4510B]/30 transition-all shadow-2xs space-y-2"
@@ -1276,7 +1223,7 @@ export default function ParentAttendanceModule({
                     )}
 
                     <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] font-bold text-slate-400 gap-2">
-                      <span>Approved by: {l.approvedBy || 'Coach Karthik'}</span>
+                      <span>Approved by: {l.approvedBy || 'Academy Team'}</span>
                       {l.requestCompensation && (
                         <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[10px]">
                           Compensation Requested
@@ -1284,7 +1231,7 @@ export default function ParentAttendanceModule({
                       )}
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
           </div>
@@ -1306,7 +1253,7 @@ export default function ParentAttendanceModule({
             <div className="bg-[#F0FDF4] border border-emerald-200 rounded-2xl p-4 shadow-2xs">
               <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">Scheduled Sessions</span>
               <span className="text-2xl font-black text-emerald-700 mt-1 block">
-                {childCompRequests.filter(c => c.status === 'Scheduled').length || 1}
+                {childCompRequests.filter(c => c.status === 'Scheduled').length}
               </span>
               <span className="text-[10px] font-semibold text-emerald-600">Upcoming Makeup Classes</span>
             </div>
@@ -1319,7 +1266,9 @@ export default function ParentAttendanceModule({
             </div>
             <div className="bg-[#FFF4E8] border border-[#F4510B]/20 rounded-2xl p-4 shadow-2xs">
               <span className="text-[11px] font-bold text-[#F4510B] uppercase tracking-wider block">Remaining Credit</span>
-              <span className="text-2xl font-black text-[#172B50] mt-1 block">1 Class</span>
+              <span className="text-2xl font-black text-[#172B50] mt-1 block">
+                {childCompRequests.filter(c => c.status === 'Approved' || c.status === 'Eligible').length} Classes
+              </span>
               <span className="text-[10px] font-semibold text-slate-500">Valid within 30 days</span>
             </div>
           </div>
@@ -1337,7 +1286,12 @@ export default function ParentAttendanceModule({
                 </div>
               </div>
 
-              {childCompRequests.map((c) => (
+              {childCompRequests.length === 0 ? (
+                <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                  No makeup sessions scheduled.
+                </div>
+              ) : (
+                childCompRequests.map((c) => (
                 <div key={c.id} className="p-4 rounded-2xl border border-purple-200/80 bg-[#FAF8FF] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-purple-900 uppercase tracking-wide">
@@ -1352,26 +1306,26 @@ export default function ParentAttendanceModule({
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="w-4 h-4 text-purple-600 shrink-0" />
                       <span className="font-bold text-[#172B50]">Date:</span>
-                      <span>{formatDateDisplay(c.confirmedDate || '2026-11-22')} (Sunday)</span>
+                      <span>{c.confirmedDate ? `${formatDateDisplay(c.confirmedDate)} (${getDayOfWeek(c.confirmedDate)})` : 'Pending Confirmation'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-purple-600 shrink-0" />
                       <span className="font-bold text-[#172B50]">Time:</span>
-                      <span>{c.confirmedTime || '08:00 AM – 09:00 AM'}</span>
+                      <span>{c.confirmedTime || 'Time TBD'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-purple-600 shrink-0" />
                       <span className="font-bold text-[#172B50]">Location:</span>
-                      <span>{c.location || activeChild?.center || 'KK Nagar'}</span>
+                      <span>{c.location || activeChild?.center || 'Academy'}</span>
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-purple-200/60 text-[11px] font-semibold text-slate-500 flex items-center justify-between">
-                    <span>Missed Session: {formatDateDisplay(c.missedDate || '2026-11-19')}</span>
-                    <span className="text-purple-700 font-bold">Coach: {c.coachName || 'Coach Karthik'}</span>
+                    <span>Missed Session: {c.missedDate ? formatDateDisplay(c.missedDate) : '—'}</span>
+                    <span className="text-purple-700 font-bold">Coach: {c.coachName || 'Assigned Coach'}</span>
                   </div>
                 </div>
-              ))}
+              )))}
 
               <div className="p-3.5 bg-[#FFF4E8]/60 border border-[#F4510B]/20 rounded-2xl text-xs text-[#172B50]/80">
                 <span className="font-bold text-[#172B50] block mb-1">Makeup Class Guidelines:</span>
@@ -1396,7 +1350,12 @@ export default function ParentAttendanceModule({
               </div>
 
               <div className="space-y-3">
-                {childCompRequests.map((comp) => (
+                {childCompRequests.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                    No compensation records found.
+                  </div>
+                ) : (
+                  childCompRequests.map((comp) => (
                   <div key={comp.id} className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-purple-300 transition-all shadow-2xs space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black text-[#172B50]">
@@ -1410,11 +1369,11 @@ export default function ParentAttendanceModule({
                       Reason: <span className="font-bold text-[#172B50]">{comp.reason}</span>
                     </p>
                     <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 pt-2 border-t border-slate-100">
-                      <span>Original Session: {formatDateDisplay(comp.missedDate)}</span>
-                      <span className="text-[#172B50]">Replacement: {formatDateDisplay(comp.confirmedDate)}</span>
+                      <span>Original Session: {comp.missedDate ? formatDateDisplay(comp.missedDate) : '—'}</span>
+                      <span className="text-[#172B50]">Replacement: {comp.confirmedDate ? formatDateDisplay(comp.confirmedDate) : 'Pending'}</span>
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
           </div>

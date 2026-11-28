@@ -202,17 +202,35 @@ export function buildRecurringSchedules(template, existingSchedules = []) {
   };
 }
 
+export function normalizeLocationName(loc) {
+  if (!loc) return '';
+  return String(loc).replace(/\s*\([^)]*\)/g, '').trim().toUpperCase();
+}
+
 /**
  * Strictly matches central class schedules to a parent's child based on:
  * - Same Academy Location (child.center)
  * - Enrolled Batch / Program (or child-specific compensation replacement session)
+ * - Multiple batches and enrolled programs
  * Never leaks other locations or unrelated students' replacement slots.
  */
 export function getChildMatchedSchedules(child, classSchedules = [], classes = []) {
   if (!child || !child.center) return [];
 
-  const childLoc = String(child.center).trim().toUpperCase();
-  const childProg = String(child.program || '').trim().toLowerCase();
+  const rawChildLoc = String(child.center).trim().toUpperCase();
+  const normChildLoc = normalizeLocationName(child.center);
+
+  const childPrograms = new Set(
+    [
+      child.program,
+      child.programId,
+      ...(Array.isArray(child.programs) ? child.programs : []),
+      ...(Array.isArray(child.enrolledPrograms) ? child.enrolledPrograms : []),
+    ]
+      .filter(Boolean)
+      .map((p) => String(p).trim().toLowerCase())
+  );
+
   const childBatches = new Set(
     [
       child.batch,
@@ -220,6 +238,7 @@ export function getChildMatchedSchedules(child, classSchedules = [], classes = [
       child.batchId,
       ...(Array.isArray(child.enrolledClasses) ? child.enrolledClasses : []),
       ...(Array.isArray(child.batches) ? child.batches : []),
+      ...(Array.isArray(child.enrolledBatches) ? child.enrolledBatches : []),
     ]
       .filter(Boolean)
       .map((b) => String(b).trim().toLowerCase())
@@ -228,28 +247,42 @@ export function getChildMatchedSchedules(child, classSchedules = [], classes = [
   // Also check classes roster where student ID is enrolled
   const enrolledClassIds = new Set();
   (classes || []).forEach((cls) => {
+    const clsLoc = normalizeLocationName(cls.center || cls.location);
     if (
-      String(cls.center || '').trim().toUpperCase() === childLoc &&
+      (!clsLoc || clsLoc === normChildLoc || String(cls.center || '').trim().toUpperCase() === rawChildLoc) &&
       ((cls.enrolledStudentIds || []).includes(child.id) ||
         (cls.enrolledStudents || []).includes(child.name))
     ) {
       enrolledClassIds.add(cls.id);
       if (cls.name) childBatches.add(String(cls.name).trim().toLowerCase());
+      if (cls.batchId) childBatches.add(String(cls.batchId).trim().toLowerCase());
+      if (cls.program) childPrograms.add(String(cls.program).trim().toLowerCase());
     }
   });
+
+  const seenIds = new Set();
 
   return (classSchedules || [])
     .filter((s) => {
       if (!s || s.deleted) return false;
-      const schLoc = String(s.location || '').trim().toUpperCase();
-      if (schLoc !== childLoc) return false;
+      if (seenIds.has(s.id)) return false;
+
+      const schLocRaw = String(s.location || '').trim().toUpperCase();
+      const schLocNorm = normalizeLocationName(s.location);
+      const isLocMatch = schLocNorm === normChildLoc || schLocRaw === rawChildLoc;
+      if (!isLocMatch) return false;
 
       // Replacement classes created from Student Compensation are visible ONLY to that student
       if (s.isCompensationReplacement || s.compensationRequestId) {
-        return (
+        if (
           s.targetStudentId === child.id ||
-          (s.enrolledStudentIds || []).includes(child.id)
-        );
+          (s.enrolledStudentIds || []).includes(child.id) ||
+          (s.enrolledStudents || []).includes(child.name)
+        ) {
+          seenIds.add(s.id);
+          return true;
+        }
+        return false;
       }
 
       // Direct roster membership on the schedule
@@ -257,18 +290,28 @@ export function getChildMatchedSchedules(child, classSchedules = [], classes = [
         (s.enrolledStudentIds || []).includes(child.id) ||
         (s.enrolledStudents || []).includes(child.name)
       ) {
+        seenIds.add(s.id);
         return true;
       }
 
       // Batch ID / Batch name match
-      if (s.batchId && enrolledClassIds.has(s.batchId)) return true;
-      const schBatch = String(s.batch || '').trim().toLowerCase();
-      if (schBatch && childBatches.has(schBatch)) return true;
-
-      // If student hasn't been assigned a specific batch yet, match program at their exact location
-      const schProg = String(s.program || '').trim().toLowerCase();
-      if (childBatches.size === 0 && childProg && schProg === childProg) {
+      if (s.batchId && enrolledClassIds.has(s.batchId)) {
+        seenIds.add(s.id);
         return true;
+      }
+      const schBatch = String(s.batch || s.batchName || '').trim().toLowerCase();
+      if (schBatch && childBatches.has(schBatch)) {
+        seenIds.add(s.id);
+        return true;
+      }
+
+      // If student enrolled in program
+      const schProg = String(s.program || '').trim().toLowerCase();
+      if (schProg && childPrograms.has(schProg)) {
+        if (!s.batch || childBatches.size === 0 || childBatches.has(schBatch)) {
+          seenIds.add(s.id);
+          return true;
+        }
       }
 
       return false;

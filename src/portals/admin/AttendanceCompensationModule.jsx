@@ -27,6 +27,7 @@ import {
 } from '../../services/compensationService';
 import AttendanceManagement from './AttendanceManagement';
 import CoachAttendanceRegister from './CoachAttendanceRegister';
+import CoachAttendanceCalendar from '../common/CoachAttendanceCalendar';
 import StudentCompensationManager from './StudentCompensationManager';
 import CoachLeaveRequestsManager from '../common/CoachLeaveRequestsManager';
 import SuperCoachAttendanceOverview from '../supercoach/SuperCoachAttendanceOverview';
@@ -453,9 +454,9 @@ export default function AttendanceCompensationModule() {
         <AttendanceManagement />
       )}
 
-      {/* SUBTAB 4: Coach Attendance */}
+      {/* SUBTAB 4: Coach Attendance Calendar */}
       {currentTab === 'coach_attendance' && (
-        <CoachAttendanceRegister />
+        <CoachAttendanceCalendar portalRole="admin" />
       )}
 
       {/* SUBTAB 5: Leave Requests (Centralized Student Leaves & Coach Leaves) */}

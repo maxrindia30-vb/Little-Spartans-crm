@@ -96,33 +96,31 @@ export default function ProgramsAchievementsModule({
       }
       return myChildren[0];
     }
-    const student =
-      (data.students || []).find((s) => s.id === 'STU-LS-002' || s.name?.includes('Aarav')) ||
-      (data.students || [])[0] || {
-        id: 'STU-LS-002',
-        rollNo: 'LS002',
-        name: 'Aarav K',
-        age: 5,
-        gender: 'Male',
-        center: 'KK NAGAR',
-        program: 'Foundational Movement',
-        batch: 'LE - B1',
-        avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80',
-      };
-    return student;
+    return (data.students || [])[0] || {
+      id: '',
+      rollNo: '',
+      name: 'Athlete',
+      age: 0,
+      gender: '',
+      center: 'Academy',
+      program: 'General Program',
+      batch: 'General',
+      avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80',
+    };
   }, [propActiveChild, myChildren, selectedChildId, data.students]);
 
   // Resolve child's development journey from centralized CRM context
   const childJourney = useMemo(() => {
+    if (!activeChild?.id) return null;
     const journeys = data.childJourneys || INITIAL_CHILD_JOURNEYS;
     const matched = journeys[activeChild.id];
     if (matched) return matched;
 
-    // Fallback based on child name or default
+    // Fallback based on child name or default if present in journeys
     if (activeChild.name?.toLowerCase().includes('diya') || activeChild.id === 'STU-LS-004') {
-      return journeys['STU-LS-004'] || INITIAL_CHILD_JOURNEYS['STU-LS-004'];
+      return journeys['STU-LS-004'] || INITIAL_CHILD_JOURNEYS['STU-LS-004'] || null;
     }
-    return journeys['STU-LS-002'] || INITIAL_CHILD_JOURNEYS['STU-LS-002'];
+    return journeys[activeChild.id] || journeys['STU-LS-002'] || null;
   }, [data.childJourneys, activeChild]);
 
   // Badge Details Modal State (Centered Popup Modal)
@@ -188,10 +186,10 @@ export default function ProgramsAchievementsModule({
             'Demonstrated teamwork and sportsmanship with peers',
           ]),
       iconType: badge.iconType || catalogMatch?.iconType || 'star',
-      program: selectedChild?.program || childJourney?.program || 'Foundational Movement',
-      batch: selectedChild?.batch || childJourney?.batch || 'LE - B1',
-      location: selectedChild?.location || childJourney?.center || 'KK Nagar',
-      coachName: badge.coachName || childJourney?.coachName || 'Coach Karthik',
+      program: selectedChild?.program || childJourney?.program || activeChild?.program || 'Active Program',
+      batch: selectedChild?.batch || childJourney?.batch || activeChild?.batch || 'General',
+      location: selectedChild?.location || childJourney?.center || activeChild?.center || 'Academy',
+      coachName: badge.coachName || childJourney?.coachName || activeChild?.coachName || 'Assigned Coach',
       coachTitle: badge.coachTitle || childJourney?.coachTitle || 'Primary Coach',
       coachAvatar: badge.coachAvatar || childJourney?.coachAvatar || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
       verified: badge.verified ?? true,
@@ -244,10 +242,10 @@ export default function ProgramsAchievementsModule({
 
   // KPI calculations derived from real child journey records
   const kpiStats = useMemo(() => {
-    const badgesCount = childJourney?.earnedBadges?.length || activeChild.badgesCount || 6;
-    const milestonesCount = childJourney?.milestones?.length || activeChild.milestonesCount || 3;
-    const certificatesCount = childJourney?.certificates?.length || activeChild.certificatesCount || 2;
-    const progress = childJourney?.overallProgress ?? activeChild.overallProgress ?? 80;
+    const badgesCount = childJourney?.earnedBadges?.length ?? activeChild?.badgesCount ?? 0;
+    const milestonesCount = childJourney?.milestones?.length ?? activeChild?.milestonesCount ?? 0;
+    const certificatesCount = childJourney?.certificates?.length ?? activeChild?.certificatesCount ?? 0;
+    const progress = childJourney?.overallProgress ?? activeChild?.overallProgress ?? 0;
     return {
       badges: badgesCount,
       milestones: milestonesCount,
@@ -322,15 +320,15 @@ export default function ProgramsAchievementsModule({
               <h2 className="text-xl sm:text-2xl font-black text-[#172B50] tracking-tight">{activeChild.name}</h2>
             </div>
             <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
-              Age: {activeChild.age || 5} Years &nbsp;|&nbsp; Batch: {activeChild.batch || 'LE - B1'}
+              Age: {activeChild.age ? `${activeChild.age} Years` : '—'} &nbsp;|&nbsp; Batch: {activeChild.batch || activeChild.batchName || 'General'}
             </p>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#EBF5FF] text-[#0284C7] border border-[#0284C7]/20">
-                {activeChild.program || childJourney.program || 'Foundational Movement'}
+                {activeChild.program || childJourney?.program || 'Active Program'}
               </span>
               <span className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
                 <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                {activeChild.center || 'KK Nagar'}
+                {activeChild.center || activeChild.locationName || 'Academy Centre'}
               </span>
             </div>
           </div>
@@ -1017,7 +1015,7 @@ export default function ProgramsAchievementsModule({
               </div>
 
               <div className="pt-2 text-[10.5px] font-bold text-slate-400 border-t border-slate-100 flex items-center justify-between">
-                <span>Assessed by {childJourney.coachName || 'Coach Karthik'}</span>
+                <span>Assessed by {childJourney?.coachName || activeChild?.coachName || 'Academy Coach'}</span>
                 <span className="text-emerald-600 font-black">Official Rubric</span>
               </div>
             </div>
@@ -1174,11 +1172,12 @@ export default function ProgramsAchievementsModule({
               <div className="p-4 rounded-2xl bg-[#FFF9F3] border border-[#F4510B]/20 mt-4">
                 <span className="text-[11px] font-black text-[#F4510B] uppercase tracking-wider">Coach Observation Notes</span>
                 <p className="text-xs font-semibold text-slate-700 mt-1 leading-relaxed">
-                  {childJourney.developmentProfile?.coachNotes ||
-                    'Aarav is showing exceptional body awareness and obstacle traversal skills. Consistently demonstrates respectful sharing and eager participation.'}
+                  {childJourney?.developmentProfile?.coachNotes ||
+                    activeChild?.evaluations?.remark ||
+                    `${activeChild?.name || 'Athlete'} demonstrates excellent dedication and motor skill progression during training.`}
                 </p>
                 <span className="text-[10px] font-bold text-slate-400 mt-2 block">
-                  Recorded by {childJourney.coachName || 'Coach Karthik'} &bull; Verified by Super Coach Alex
+                  Recorded by {childJourney?.coachName || activeChild?.coachName || 'Academy Coach'} &bull; Verified by Academy Super Coach
                 </span>
               </div>
             </div>
@@ -1195,21 +1194,21 @@ export default function ProgramsAchievementsModule({
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">Student Identity</span>
                 <p className="text-sm font-black text-[#172B50]">{activeChild.name}</p>
-                <p className="text-xs font-semibold text-slate-500">Kid ID: <span className="font-mono text-[#F4510B] font-bold">{activeChild.id || activeChild.childId || 'LS-CH-2026-1045'}</span></p>
-                <p className="text-xs font-medium text-slate-500">Age: {activeChild.age || 5} Years &bull; Batch: {activeChild.batch || 'LE - B1'}</p>
+                <p className="text-xs font-semibold text-slate-500">Kid ID: <span className="font-mono text-[#F4510B] font-bold">{activeChild.id || activeChild.childId || '—'}</span></p>
+                <p className="text-xs font-medium text-slate-500">Age: {activeChild.age ? `${activeChild.age} Years` : '—'} &bull; Batch: {activeChild.batch || activeChild.batchName || 'General'}</p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">Training &amp; Center</span>
-                <p className="text-sm font-black text-[#172B50]">{activeChild.program || childJourney.program || 'Foundational Movement'}</p>
-                <p className="text-xs font-semibold text-slate-500">Location: {activeChild.center || 'KK Nagar'}</p>
-                <p className="text-xs font-medium text-slate-500">Primary Coach: {childJourney.coachName || 'Coach Karthik'}</p>
+                <p className="text-sm font-black text-[#172B50]">{activeChild.program || childJourney?.program || 'Active Program'}</p>
+                <p className="text-xs font-semibold text-slate-500">Location: {activeChild.center || activeChild.locationName || 'Academy'}</p>
+                <p className="text-xs font-medium text-slate-500">Primary Coach: {childJourney?.coachName || activeChild?.coachName || 'Assigned Coach'}</p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider block">Academy Standing</span>
                 <p className="text-sm font-black text-[#172B50]">{activeChild.rank || 'Spartan Junior Athlete'}</p>
-                <p className="text-xs font-semibold text-emerald-600">Attendance Turnout: {activeChild.attendanceRate || 90}%</p>
+                <p className="text-xs font-semibold text-emerald-600">Attendance Turnout: {activeChild.attendanceRate ? `${activeChild.attendanceRate}%` : '—'}</p>
                 <p className="text-xs font-medium text-slate-500">Status: <span className="text-emerald-600 font-bold">Active &bull; Enrolled</span></p>
               </div>
             </div>
@@ -1221,28 +1220,28 @@ export default function ProgramsAchievementsModule({
                 <div>
                   <div className="flex justify-between font-bold mb-1">
                     <span className="text-slate-600">Agility &amp; Obstacles</span>
-                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.agility ? `${activeChild.evaluations.agility} / 10` : '8.5 / 10'}</span>
+                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.agility ? `${activeChild.evaluations.agility} / 10` : '—'}</span>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#F4510B] rounded-full" style={{ width: '85%' }} />
+                    <div className="h-full bg-[#F4510B] rounded-full" style={{ width: activeChild.evaluations?.agility ? `${activeChild.evaluations.agility * 10}%` : '0%' }} />
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between font-bold mb-1">
                     <span className="text-slate-600">Balance Beam</span>
-                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.balance ? `${activeChild.evaluations.balance} / 10` : '8.2 / 10'}</span>
+                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.balance ? `${activeChild.evaluations.balance} / 10` : '—'}</span>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: '82%' }} />
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: activeChild.evaluations?.balance ? `${activeChild.evaluations.balance * 10}%` : '0%' }} />
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between font-bold mb-1">
                     <span className="text-slate-600">Discipline &amp; Team Spirit</span>
-                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.discipline ? `${activeChild.evaluations.discipline} / 10` : '9.0 / 10'}</span>
+                    <span className="text-[#F4510B] font-black">{activeChild.evaluations?.discipline ? `${activeChild.evaluations.discipline} / 10` : '—'}</span>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#172B50] rounded-full" style={{ width: '90%' }} />
+                    <div className="h-full bg-[#172B50] rounded-full" style={{ width: activeChild.evaluations?.discipline ? `${activeChild.evaluations.discipline * 10}%` : '0%' }} />
                   </div>
                 </div>
               </div>
@@ -1347,10 +1346,10 @@ export default function ProgramsAchievementsModule({
               </span>
             </div>
             <p className="text-xs font-medium text-slate-600 leading-relaxed">
-              &quot;Aarav demonstrates superior gross motor stability and listens with great concentration during station setups. Recommending advancement to agility phase 2.&quot;
+              &quot;{activeChild?.evaluations?.remark || `${activeChild?.name || 'Athlete'} demonstrates superior gross motor stability and listens with great concentration during training drills.`}&quot;
             </p>
             <div className="flex items-center gap-4 text-xs font-bold text-slate-400 pt-2 border-t border-slate-200/60">
-              <span>Evaluated by: {childJourney.coachName || 'Coach Karthik'}</span>
+              <span>Evaluated by: {childJourney?.coachName || activeChild?.coachName || 'Academy Coach'}</span>
               <span>&bull;</span>
               <span>Super Coach Reviewer: Super Coach Alex</span>
             </div>
@@ -1380,7 +1379,7 @@ export default function ProgramsAchievementsModule({
                   coach={{
                     name: selectedCertModal.issuedBy?.includes('Coach')
                       ? selectedCertModal.issuedBy
-                      : childJourney?.coachName || 'Coach Karthik',
+                      : childJourney?.coachName || activeChild?.coachName || 'Academy Coach',
                     title: 'Primary Coach',
                   }}
                   academyName="Little Spartans Sports Academy"

@@ -102,15 +102,17 @@ export default function ParentProgramsModule({
     );
   }, [selectedChildId, propActiveChild, myChildren, data.students]);
 
-  const childName = activeChild?.name || 'Aarav S';
-  const childCenter = activeChild?.center || activeChild?.locationName || 'Adyar Centre';
-  const childBatch = activeChild?.batch || activeChild?.batchName || 'B1';
+  const childName = activeChild?.name || 'Athlete';
+  const childCenter = activeChild?.center || activeChild?.locationName || 'Academy';
+  const childBatch = activeChild?.batch || activeChild?.batchName || 'General';
 
   // Filter Tabs: 'all' | 'enrolled' | 'available' | 'after_school'
   const [activeFilterTab, setActiveFilterTab] = useState('all');
 
-  // Selected Program for Details Panel (defaults to 'football')
-  const [selectedProgramId, setSelectedProgramId] = useState('football');
+  // Selected Program for Details Panel
+  const childProgLower = (activeChild?.program || '').toLowerCase();
+  const initialProg = childProgLower.includes('athlet') ? 'athletics' : childProgLower.includes('foot') ? 'football' : childProgLower.includes('multi') || childProgLower.includes('movement') ? 'multi_sport' : 'football';
+  const [selectedProgramId, setSelectedProgramId] = useState(initialProg);
 
   // Details Panel Tabs: 'overview' | 'schedule' | 'progress'
   const [activeDetailTab, setActiveDetailTab] = useState('overview');
@@ -119,279 +121,254 @@ export default function ParentProgramsModule({
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
 
-  // 6 Complete Program Definitions matching reference screenshot exactly
-  const programsList = useMemo(() => [
-    {
-      id: 'football',
-      title: 'Football',
-      iconType: 'football',
-      image: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&auto=format&fit=crop&q=80',
-      heroBg: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1000&auto=format&fit=crop&q=80',
-      description: 'Skill building, teamwork and match play.',
-      ageGroup: 'Age 5 – 14 Years',
-      level: 'Beginner to Advanced',
-      duration: 'Jan 2026 – Mar 2026',
-      location: childCenter.includes('Adyar') ? 'Adyar Centre' : childCenter,
-      enrolled: true,
-      batch: childBatch,
-      isAfterSchool: false,
-      popular: false,
-      highlights: [
-        'Skill development sessions',
-        'Fitness & agility training',
-        'Team play and match practice',
-        'Age-appropriate coaching'
-      ],
-      schedule: {
-        days: 'Tuesday, Thursday & Saturday',
-        timings: '05:00 PM – 06:15 PM',
-        batchName: `Junior Spartans – Batch ${childBatch}`,
-        centerName: `${childCenter} – Ground 2`,
-        coachName: 'Coach Karthik R (Senior Football Coach)',
-        upcomingSessions: [
-          { date: '28 Nov 2026', day: 'Thu', time: '05:00 PM – 06:15 PM', topic: 'Ball Control & Dribbling Drill', coach: 'Coach Karthik R' },
-          { date: '30 Nov 2026', day: 'Sat', time: '05:00 PM – 06:15 PM', topic: 'Small-Sided Match Practice', coach: 'Coach Karthik R' },
-          { date: '02 Dec 2026', day: 'Tue', time: '05:00 PM – 06:15 PM', topic: 'Agility Circuit & Shooting', coach: 'Coach Karthik R' }
-        ]
-      },
-      progress: {
-        overall: 82,
-        attendanceRate: '92%',
-        classesAttended: '23 / 25',
-        skills: [
-          { name: 'Ball Control & Dribbling', score: 85 },
-          { name: 'Passing & Receiving', score: 78 },
-          { name: 'Agility & Speed', score: 88 },
-          { name: 'Team Play & Tactical Awareness', score: 76 }
-        ],
-        coachFeedback: `${childName.split(' ')[0]} has shown remarkable progress in ball control and spatial awareness. Always eager to learn and demonstrates great sportsmanship.`,
-        milestone: 'Playmaker Bronze Badge Achieved'
+  // Helper to extract real upcoming sessions from CRM schedules
+  const getDynamicSessions = (progKey) => {
+    return (data.classSchedules || []).filter(s => {
+      const pStr = (s.program || s.className || '').toLowerCase();
+      const isProgMatch = (progKey === 'football' && pStr.includes('foot')) ||
+        (progKey === 'basketball' && pStr.includes('basket')) ||
+        (progKey === 'cricket' && pStr.includes('cricket')) ||
+        (progKey === 'athletics' && pStr.includes('athlet')) ||
+        (progKey === 'multi_sport' && (pStr.includes('multi') || pStr.includes('movement'))) ||
+        (progKey === 'after_school' && pStr.includes('after'));
+      return isProgMatch && s.status !== 'Completed';
+    }).slice(0, 3).map(s => ({
+      date: s.date,
+      day: s.day || (s.date ? new Date(`${s.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short' }) : 'Day'),
+      time: s.timingDisplay || `${s.startTime || ''} – ${s.endTime || ''}`,
+      topic: s.topic || s.name || s.title || `${s.program || 'Training'} Session`,
+      coach: s.coachName || 'Academy Coach'
+    }));
+  };
+
+  // 6 Complete Program Definitions matching reference screenshot
+  const programsList = useMemo(() => {
+    const isEnrolled = (progKey) => {
+      if (!activeChild?.program) return false;
+      const cp = activeChild.program.toLowerCase();
+      if (progKey === 'football') return cp.includes('foot');
+      if (progKey === 'basketball') return cp.includes('basket');
+      if (progKey === 'cricket') return cp.includes('cricket');
+      if (progKey === 'athletics') return cp.includes('athlet');
+      if (progKey === 'multi_sport') return cp.includes('multi') || cp.includes('movement') || cp.includes('foundat');
+      if (progKey === 'after_school') return cp.includes('after');
+      return false;
+    };
+
+    const makeProgress = (enrolled, progTitle) => {
+      if (!enrolled) {
+        return {
+          overall: 0,
+          attendanceRate: 'N/A',
+          classesAttended: '0 / 24',
+          skills: [],
+          coachFeedback: 'Program available for enrollment. Free trial session available on request.',
+          milestone: 'Ready to Enroll'
+        };
       }
-    },
-    {
-      id: 'basketball',
-      title: 'Basketball',
-      iconType: 'basketball',
-      image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&auto=format&fit=crop&q=80',
-      heroBg: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1000&auto=format&fit=crop&q=80',
-      description: 'Agility, coordination and game awareness.',
-      ageGroup: 'Age 6 – 14 Years',
-      level: 'Beginner to Advanced',
-      duration: 'Jan 2026 – Mar 2026',
-      location: childCenter.includes('Adyar') ? 'Adyar Centre' : childCenter,
-      enrolled: false,
-      batch: 'BB-1',
-      isAfterSchool: false,
-      popular: false,
-      highlights: [
-        'Dribbling, shooting & footwork',
-        'Hand-eye coordination drills',
-        'Offensive & defensive strategies',
-        'Fun mini-games & court tournaments'
-      ],
-      schedule: {
-        days: 'Monday, Wednesday & Friday',
-        timings: '04:30 PM – 05:45 PM',
-        batchName: 'Hoops Academy – Batch K1',
-        centerName: `${childCenter} Indoor Court 1`,
-        coachName: 'Coach Deepa M (Basketball Specialist)',
-        upcomingSessions: [
-          { date: '29 Nov 2026', day: 'Fri', time: '04:30 PM – 05:45 PM', topic: 'Crossover Dribble & Layup Drill', coach: 'Coach Deepa M' },
-          { date: '01 Dec 2026', day: 'Mon', time: '04:30 PM – 05:45 PM', topic: 'Defensive Stance & Rebounding', coach: 'Coach Deepa M' }
-        ]
-      },
-      progress: {
-        overall: 0,
-        attendanceRate: 'N/A',
-        classesAttended: '0 / 24',
+      return {
+        overall: activeChild.overallProgress ?? (activeChild.evaluations?.overall || (activeChild.attendanceRate ? Math.min(100, Math.round(activeChild.attendanceRate * 0.9)) : 80)),
+        attendanceRate: activeChild.attendanceRate ? `${activeChild.attendanceRate}%` : '—',
+        classesAttended: activeChild.attendedClasses ? `${activeChild.attendedClasses} / 24` : '—',
         skills: [
-          { name: 'Ball Handling', score: 0 },
-          { name: 'Shooting Technique', score: 0 },
-          { name: 'Footwork & Speed', score: 0 }
+          { name: 'Core Movement & Agility', score: activeChild.evaluations?.agility ? activeChild.evaluations.agility * 10 : 80 },
+          { name: 'Coordination & Balance', score: activeChild.evaluations?.balance ? activeChild.evaluations.balance * 10 : 78 },
+          { name: 'Discipline & Sportsmanship', score: activeChild.evaluations?.discipline ? activeChild.evaluations.discipline * 10 : 85 }
         ],
-        coachFeedback: 'Program available for enrollment. Free trial session available on request.',
-        milestone: 'Ready to Enroll'
-      }
-    },
-    {
-      id: 'cricket',
-      title: 'Cricket',
-      iconType: 'cricket',
-      image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80',
-      heroBg: 'https://images.unsplash.com/photo-1531415074868-036b1c57e329?w=1000&auto=format&fit=crop&q=80',
-      description: 'Batting, bowling, fielding and match practice.',
-      ageGroup: 'Age 7 – 15 Years',
-      level: 'Beginner to Advanced',
-      duration: 'Jan 2026 – Mar 2026',
-      location: childCenter.includes('Adyar') ? 'Adyar Centre' : childCenter,
-      enrolled: false,
-      batch: 'CR-1',
-      isAfterSchool: false,
-      popular: false,
-      highlights: [
-        'Batting technique & stance drills',
-        'Fast & spin bowling fundamentals',
-        'High-intensity catching & fielding',
-        'Turf net practice & weekend matches'
-      ],
-      schedule: {
-        days: 'Tuesday, Thursday & Saturday',
-        timings: '06:30 AM – 08:00 AM',
-        batchName: 'Spartan Willow Masters',
-        centerName: `${childCenter} Cricket Nets & Turf`,
-        coachName: 'Coach Suresh K (BCCI Certified)',
-        upcomingSessions: [
-          { date: '28 Nov 2026', day: 'Thu', time: '06:30 AM – 08:00 AM', topic: 'Forward Defensive & Cover Drive', coach: 'Coach Suresh K' },
-          { date: '30 Nov 2026', day: 'Sat', time: '06:30 AM – 08:00 AM', topic: 'Net Practice & Match Simulation', coach: 'Coach Suresh K' }
-        ]
+        coachFeedback: activeChild.evaluations?.remark || `${childName} is showing consistent dedication and enthusiastic participation in ${progTitle}.`,
+        milestone: activeChild.rank || `${progTitle} Certified Athlete`
+      };
+    };
+
+    return [
+      {
+        id: 'football',
+        title: 'Football',
+        iconType: 'football',
+        image: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&auto=format&fit=crop&q=80',
+        heroBg: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1000&auto=format&fit=crop&q=80',
+        description: 'Skill building, teamwork and match play.',
+        ageGroup: 'Age 5 – 14 Years',
+        level: 'Beginner to Advanced',
+        duration: 'Jan 2026 – Mar 2026',
+        location: childCenter,
+        enrolled: isEnrolled('football'),
+        batch: isEnrolled('football') ? childBatch : 'FB-1',
+        isAfterSchool: false,
+        popular: false,
+        highlights: [
+          'Skill development sessions',
+          'Fitness & agility training',
+          'Team play and match practice',
+          'Age-appropriate coaching'
+        ],
+        schedule: {
+          days: 'Tuesday, Thursday & Saturday',
+          timings: '05:00 PM – 06:15 PM',
+          batchName: isEnrolled('football') ? `Junior Spartans – Batch ${childBatch}` : 'Junior Spartans Football',
+          centerName: `${childCenter} – Ground 2`,
+          coachName: activeChild.coachName || 'Senior Football Coach',
+          upcomingSessions: isEnrolled('football') ? getDynamicSessions('football') : []
+        },
+        progress: makeProgress(isEnrolled('football'), 'Football')
       },
-      progress: {
-        overall: 0,
-        attendanceRate: 'N/A',
-        classesAttended: '0 / 24',
-        skills: [
-          { name: 'Batting Stance & Timing', score: 0 },
-          { name: 'Bowling Accuracy', score: 0 },
-          { name: 'Fielding Reflexes', score: 0 }
+      {
+        id: 'basketball',
+        title: 'Basketball',
+        iconType: 'basketball',
+        image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&auto=format&fit=crop&q=80',
+        heroBg: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1000&auto=format&fit=crop&q=80',
+        description: 'Agility, coordination and game awareness.',
+        ageGroup: 'Age 6 – 14 Years',
+        level: 'Beginner to Advanced',
+        duration: 'Jan 2026 – Mar 2026',
+        location: childCenter,
+        enrolled: isEnrolled('basketball'),
+        batch: isEnrolled('basketball') ? childBatch : 'BB-1',
+        isAfterSchool: false,
+        popular: false,
+        highlights: [
+          'Dribbling, shooting & footwork',
+          'Hand-eye coordination drills',
+          'Offensive & defensive strategies',
+          'Fun mini-games & court tournaments'
         ],
-        coachFeedback: 'Program open for new admissions. Register your interest for the upcoming batch.',
-        milestone: 'Registration Open'
-      }
-    },
-    {
-      id: 'athletics',
-      title: 'Athletics',
-      iconType: 'athletics',
-      image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&auto=format&fit=crop&q=80',
-      heroBg: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1000&auto=format&fit=crop&q=80',
-      description: 'Speed, strength and overall fitness.',
-      ageGroup: 'Age 6 – 14 Years',
-      level: 'All Levels',
-      duration: 'Jan 2026 – Mar 2026',
-      location: childCenter.includes('Adyar') ? 'Adyar Centre' : childCenter,
-      enrolled: false,
-      batch: 'ATH-1',
-      isAfterSchool: false,
-      popular: false,
-      highlights: [
-        'Sprint mechanics & running posture',
-        'Agility ladders & hurdle jumps',
-        'Cardiovascular endurance training',
-        'Core stability & functional strength'
-      ],
-      schedule: {
-        days: 'Wednesday & Friday',
-        timings: '05:30 PM – 06:45 PM',
-        batchName: 'Sprint Stars – Track Batch A',
-        centerName: `${childCenter} Synthetic Track`,
-        coachName: 'Coach Rajesh V (Athletics Specialist)',
-        upcomingSessions: [
-          { date: '29 Nov 2026', day: 'Fri', time: '05:30 PM – 06:45 PM', topic: 'Sprint Starts & Acceleration Drill', coach: 'Coach Rajesh V' }
-        ]
+        schedule: {
+          days: 'Monday, Wednesday & Friday',
+          timings: '04:30 PM – 05:45 PM',
+          batchName: isEnrolled('basketball') ? `Hoops Academy – Batch ${childBatch}` : 'Hoops Academy',
+          centerName: `${childCenter} Indoor Court 1`,
+          coachName: 'Basketball Specialist',
+          upcomingSessions: isEnrolled('basketball') ? getDynamicSessions('basketball') : []
+        },
+        progress: makeProgress(isEnrolled('basketball'), 'Basketball')
       },
-      progress: {
-        overall: 0,
-        attendanceRate: 'N/A',
-        classesAttended: '0 / 18',
-        skills: [
-          { name: 'Running Form', score: 0 },
-          { name: 'Reaction Time', score: 0 },
-          { name: 'Endurance', score: 0 }
+      {
+        id: 'cricket',
+        title: 'Cricket',
+        iconType: 'cricket',
+        image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80',
+        heroBg: 'https://images.unsplash.com/photo-1531415074868-036b1c57e329?w=1000&auto=format&fit=crop&q=80',
+        description: 'Batting, bowling, fielding and match practice.',
+        ageGroup: 'Age 7 – 15 Years',
+        level: 'Beginner to Advanced',
+        duration: 'Jan 2026 – Mar 2026',
+        location: childCenter,
+        enrolled: isEnrolled('cricket'),
+        batch: isEnrolled('cricket') ? childBatch : 'CR-1',
+        isAfterSchool: false,
+        popular: false,
+        highlights: [
+          'Batting technique & stance drills',
+          'Fast & spin bowling fundamentals',
+          'High-intensity catching & fielding',
+          'Turf net practice & weekend matches'
         ],
-        coachFeedback: 'Specialized track training designed to build explosive athletic foundation.',
-        milestone: 'Open for Enrollment'
-      }
-    },
-    {
-      id: 'multi_sport',
-      title: 'Multi-Sport',
-      iconType: 'multi_sport',
-      image: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=800&auto=format&fit=crop&q=80',
-      heroBg: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=1000&auto=format&fit=crop&q=80',
-      description: 'A mix of sports for overall development.',
-      ageGroup: 'Age 5 – 12 Years',
-      level: 'Foundation Level',
-      duration: 'Jan 2026 – Mar 2026',
-      location: childCenter.includes('Adyar') ? 'Adyar Centre' : childCenter,
-      enrolled: true,
-      batch: 'MS-2',
-      isAfterSchool: false,
-      popular: false,
-      highlights: [
-        'Multi-sport exposure (Football, Basketball, Athletics)',
-        'Motor skills & vestibular development',
-        'Teamwork & communication games',
-        'Injury prevention & active lifestyle habit'
-      ],
-      schedule: {
-        days: 'Sunday',
-        timings: '09:00 AM – 10:30 AM',
-        batchName: 'Multi-Sport Explorers – Batch MS2',
-        centerName: `${childCenter} Main Multi-Arena`,
-        coachName: 'Coach Karthik R & Coach Priya N',
-        upcomingSessions: [
-          { date: '01 Dec 2026', day: 'Sun', time: '09:00 AM – 10:30 AM', topic: 'Hand-Eye Coordination & Relay Games', coach: 'Coach Karthik R' }
-        ]
+        schedule: {
+          days: 'Tuesday, Thursday & Saturday',
+          timings: '06:30 AM – 08:00 AM',
+          batchName: isEnrolled('cricket') ? `Spartan Willow Masters – Batch ${childBatch}` : 'Spartan Willow Masters',
+          centerName: `${childCenter} Cricket Nets & Turf`,
+          coachName: 'BCCI Certified Coach',
+          upcomingSessions: isEnrolled('cricket') ? getDynamicSessions('cricket') : []
+        },
+        progress: makeProgress(isEnrolled('cricket'), 'Cricket')
       },
-      progress: {
-        overall: 88,
-        attendanceRate: '95%',
-        classesAttended: '19 / 20',
-        skills: [
-          { name: 'Locomotor Agility', score: 92 },
-          { name: 'Stability & Balance', score: 86 },
-          { name: 'Object Control', score: 85 }
+      {
+        id: 'athletics',
+        title: 'Athletics',
+        iconType: 'athletics',
+        image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&auto=format&fit=crop&q=80',
+        heroBg: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1000&auto=format&fit=crop&q=80',
+        description: 'Speed, strength and overall fitness.',
+        ageGroup: 'Age 6 – 14 Years',
+        level: 'All Levels',
+        duration: 'Jan 2026 – Mar 2026',
+        location: childCenter,
+        enrolled: isEnrolled('athletics'),
+        batch: isEnrolled('athletics') ? childBatch : 'ATH-1',
+        isAfterSchool: false,
+        popular: false,
+        highlights: [
+          'Sprint mechanics & running posture',
+          'Agility ladders & hurdle jumps',
+          'Cardiovascular endurance training',
+          'Core stability & functional strength'
         ],
-        coachFeedback: `${childName.split(' ')[0]} loves exploring diverse sports disciplines. His versatility and energy are commendable.`,
-        milestone: 'Foundational Movement Certified'
-      }
-    },
-    {
-      id: 'after_school',
-      title: 'After School Program',
-      iconType: 'after_school',
-      image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80',
-      heroBg: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1000&auto=format&fit=crop&q=80',
-      description: 'Structured sports training after school hours.',
-      ageGroup: 'Age 5 – 14 Years',
-      level: 'Location Based',
-      duration: 'Academic Year 2026 – 2027',
-      location: 'All Centres',
-      enrolled: false,
-      batch: 'ASP-1',
-      isAfterSchool: true,
-      popular: true,
-      highlights: [
-        'Structured daily sports & fitness sessions',
-        'Supervised warm-up & cool-down routines',
-        'Healthy nutritional snack guidance',
-        'Safe transit & dedicated guardian pickup zone'
-      ],
-      schedule: {
-        days: 'Monday to Friday',
-        timings: '03:30 PM – 05:30 PM',
-        batchName: 'After-School Champions Club',
-        centerName: `${childCenter} Academy Center`,
-        coachName: 'Head Coach Ananya & Academy Team',
-        upcomingSessions: [
-          { date: '28 Nov 2026', day: 'Thu', time: '03:30 PM – 05:30 PM', topic: 'Movement Circuit & Active Play', coach: 'Coach Ananya' },
-          { date: '29 Nov 2026', day: 'Fri', time: '03:30 PM – 05:30 PM', topic: 'Weekend Sports Showcase', coach: 'Coach Ananya' }
-        ]
+        schedule: {
+          days: 'Wednesday & Friday',
+          timings: '05:30 PM – 06:45 PM',
+          batchName: isEnrolled('athletics') ? `Sprint Stars – Batch ${childBatch}` : 'Sprint Stars',
+          centerName: `${childCenter} Synthetic Track`,
+          coachName: activeChild.coachName || 'Athletics Specialist',
+          upcomingSessions: isEnrolled('athletics') ? getDynamicSessions('athletics') : []
+        },
+        progress: makeProgress(isEnrolled('athletics'), 'Athletics')
       },
-      progress: {
-        overall: 0,
-        attendanceRate: 'N/A',
-        classesAttended: '0 / 60',
-        skills: [
-          { name: 'Daily Physical Activity', score: 0 },
-          { name: 'Social Interaction', score: 0 },
-          { name: 'Discipline & Routine', score: 0 }
+      {
+        id: 'multi_sport',
+        title: 'Multi-Sport',
+        iconType: 'multi_sport',
+        image: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=800&auto=format&fit=crop&q=80',
+        heroBg: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=1000&auto=format&fit=crop&q=80',
+        description: 'A mix of sports for overall development.',
+        ageGroup: 'Age 5 – 12 Years',
+        level: 'Foundation Level',
+        duration: 'Jan 2026 – Mar 2026',
+        location: childCenter,
+        enrolled: isEnrolled('multi_sport'),
+        batch: isEnrolled('multi_sport') ? childBatch : 'MS-1',
+        isAfterSchool: false,
+        popular: false,
+        highlights: [
+          'Multi-sport exposure (Football, Basketball, Athletics)',
+          'Motor skills & vestibular development',
+          'Teamwork & communication games',
+          'Injury prevention & active lifestyle habit'
         ],
-        coachFeedback: 'Ideal for busy working parents. Includes snack break, supervised coaching and character development.',
-        milestone: 'Admissions Open'
+        schedule: {
+          days: 'Sunday',
+          timings: '09:00 AM – 10:30 AM',
+          batchName: isEnrolled('multi_sport') ? `Multi-Sport Explorers – Batch ${childBatch}` : 'Multi-Sport Explorers',
+          centerName: `${childCenter} Main Multi-Arena`,
+          coachName: activeChild.coachName || 'Academy Coaching Team',
+          upcomingSessions: isEnrolled('multi_sport') ? getDynamicSessions('multi_sport') : []
+        },
+        progress: makeProgress(isEnrolled('multi_sport'), 'Multi-Sport')
+      },
+      {
+        id: 'after_school',
+        title: 'After School Program',
+        iconType: 'after_school',
+        image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80',
+        heroBg: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1000&auto=format&fit=crop&q=80',
+        description: 'Structured sports training after school hours.',
+        ageGroup: 'Age 5 – 14 Years',
+        level: 'Location Based',
+        duration: 'Academic Year 2026 – 2027',
+        location: 'All Centres',
+        enrolled: isEnrolled('after_school'),
+        batch: isEnrolled('after_school') ? childBatch : 'ASP-1',
+        isAfterSchool: true,
+        popular: true,
+        highlights: [
+          'Structured daily sports & fitness sessions',
+          'Supervised warm-up & cool-down routines',
+          'Healthy nutritional snack guidance',
+          'Safe transit & dedicated guardian pickup zone'
+        ],
+        schedule: {
+          days: 'Monday to Friday',
+          timings: '03:30 PM – 05:30 PM',
+          batchName: isEnrolled('after_school') ? `After-School Champions – Batch ${childBatch}` : 'After-School Champions Club',
+          centerName: `${childCenter} Academy Center`,
+          coachName: 'Academy Team',
+          upcomingSessions: isEnrolled('after_school') ? getDynamicSessions('after_school') : []
+        },
+        progress: makeProgress(isEnrolled('after_school'), 'After School Program')
       }
-    }
-  ], [childName, childCenter, childBatch]);
+    ];
+  }, [activeChild, childName, childCenter, childBatch, data.classSchedules]);
 
   // Filter programs based on selected filter tab
   const filteredPrograms = useMemo(() => {
@@ -770,7 +747,9 @@ export default function ParentProgramsModule({
                   </h2>
                 </div>
                 <p className="text-white/85 text-xs font-medium truncate mt-0.5">
-                  {childName} | Batch: {selectedProgram.batch} | {selectedProgram.location}
+                  {selectedProgram.enrolled
+                    ? `${childName} | Batch: ${selectedProgram.batch} | ${selectedProgram.location}`
+                    : `${selectedProgram.ageGroup} | ${selectedProgram.location}`}
                 </p>
               </div>
             </div>
@@ -945,12 +924,17 @@ export default function ParentProgramsModule({
                     Upcoming Sessions
                   </h4>
                   <div className="space-y-2">
-                    {selectedProgram.schedule.upcomingSessions.map((session, sIdx) => (
+                    {selectedProgram.schedule.upcomingSessions.length === 0 ? (
+                      <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                        No upcoming sessions scheduled for this program.
+                      </div>
+                    ) : (
+                      selectedProgram.schedule.upcomingSessions.map((session, sIdx) => (
                       <div key={sIdx} className="bg-slate-50 border border-slate-200/70 rounded-xl p-2.5 flex items-start justify-between gap-2">
                         <div className="flex items-start gap-2.5">
                           <div className="w-9 h-9 rounded-lg bg-[#FFEADB] text-[#F4510B] flex flex-col items-center justify-center font-bold text-[11px] shrink-0">
                             <span>{session.day}</span>
-                            <span className="text-[9px] -mt-0.5">{session.date.split(' ')[0]}</span>
+                            <span className="text-[9px] -mt-0.5">{session.date ? session.date.split(' ')[0] : '—'}</span>
                           </div>
                           <div>
                             <p className="text-xs font-black text-[#172B50]">{session.topic}</p>
@@ -964,7 +948,7 @@ export default function ParentProgramsModule({
                           Scheduled
                         </span>
                       </div>
-                    ))}
+                    )))}
                   </div>
                 </div>
 

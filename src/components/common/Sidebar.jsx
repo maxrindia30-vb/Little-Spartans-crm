@@ -400,18 +400,14 @@ export default function Sidebar() {
   ];
 
   // =========================================================================
-  // 3. COACH NAVIGATION: LOCATION INSPECTION & CLASSES
+  // 3. COACH NAVIGATION: CLEANED & CONSOLIDATED NAVIGATION
   // =========================================================================
   const coachNavItems = [
-    { id: 'equipment', label: 'Equipment Check', icon: Package },
     { id: 'batches', label: 'My Batches', icon: Layers },
-    { id: 'classes', label: 'My Schedule', icon: Calendar },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'child_evaluations', label: 'Child Evaluations', icon: ClipboardCheck },
-    { id: 'evaluation_history', label: 'Evaluation History', icon: History },
-    { id: 'returned_evaluations', label: 'Returned Evaluations', icon: RotateCcw },
+    { id: 'attendance', label: 'Attendance & Leave', icon: CalendarCheck },
+    { id: 'evaluations', label: 'Evaluations', icon: ClipboardCheck },
+    { id: 'equipment', label: 'Equipment Check', icon: Package },
     { id: 'performance', label: 'My Performance', icon: Trophy },
-    { id: 'leave_requests', label: 'Leave Requests', icon: CalendarPlus },
     { id: 'announcements', label: 'Announcements', icon: Megaphone },
     { id: 'profile', label: 'My Profile', icon: User },
   ];
@@ -506,6 +502,24 @@ export default function Sidebar() {
       }
       if (itemId === 'fees_payments') {
         setCurrentView('fees_payments');
+        setSidebarOpen(false);
+        return;
+      }
+    }
+
+    if (currentPortal === 'coach') {
+      if (itemId === 'batches') {
+        setCurrentView('batches');
+        setSidebarOpen(false);
+        return;
+      }
+      if (itemId === 'attendance') {
+        setCurrentView('attendance');
+        setSidebarOpen(false);
+        return;
+      }
+      if (itemId === 'evaluations') {
+        setCurrentView('evaluations');
         setSidebarOpen(false);
         return;
       }
@@ -855,7 +869,9 @@ export default function Sidebar() {
               const Icon = item.icon;
               const isActive =
                 currentView === item.id ||
-                (item.id === 'attendance' && (currentView === 'attendance' || currentView === 'attendance_compensation' || currentView === 'leave_requests' || currentView === 'compensation_class' || currentView === 'leaves' || currentView === 'compensation')) ||
+                (item.id === 'batches' && (currentView === 'batches' || currentView === 'classes' || currentView === 'schedule' || currentView === 'schedules')) ||
+                (item.id === 'attendance' && (currentView === 'attendance' || currentView === 'attendance_leave' || currentView === 'leave_requests' || currentView === 'compensation_class' || currentView === 'leaves' || currentView === 'compensation' || currentView === 'attendance_compensation')) ||
+                (item.id === 'evaluations' && (currentView === 'evaluations' || currentView === 'child_evaluations' || currentView === 'evaluation_history' || currentView === 'returned_evaluations')) ||
                 (item.id === 'child_evaluations' && currentView === 'evaluations') ||
                 (item.id === 'programs' && (currentView === 'programs' || (currentView === 'programs_achievements' && activeSubTab === 'explore'))) ||
                 (item.id === 'achievements' && (currentView === 'achievements' || currentView === 'progress' || currentView === 'children' || (currentView === 'programs_achievements' && activeSubTab !== 'explore') || currentView === 'learning_journey')) ||
@@ -864,7 +880,8 @@ export default function Sidebar() {
                 (item.id === 'fees_payments' && (currentView === 'fees_payments' || currentView === 'payments')) ||
                 (item.id === 'classes' && currentView === 'schedule') ||
                 (item.id === 'leave_requests' && (currentView === 'leaves' || currentView === 'workspace' || currentView === 'leave_requests')) ||
-                (item.id === 'compensation_class' && (currentView === 'compensation_class' || currentView === 'compensation'));
+                (item.id === 'compensation_class' && (currentView === 'compensation_class' || currentView === 'compensation')) ||
+                (item.id === 'profile' && (currentView === 'profile' || currentView === 'workspace'));
 
               return (
                 <button

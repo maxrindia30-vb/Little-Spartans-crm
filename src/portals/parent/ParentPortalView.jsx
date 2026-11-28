@@ -228,12 +228,12 @@ export default function ParentPortalView() {
   // States for modals
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [leaveChild, setLeaveChild] = useState(myChildren[0]?.name || '');
-  const [leaveStart, setLeaveStart] = useState('2026-11-20');
-  const [leaveEnd, setLeaveEnd] = useState('2026-11-22');
+  const [leaveStart, setLeaveStart] = useState(todayYmd);
+  const [leaveEnd, setLeaveEnd] = useState(todayYmd);
   const [leaveReason, setLeaveReason] = useState('');
 
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-  const [payAmount, setPayAmount] = useState('4500');
+  const [payAmount, setPayAmount] = useState('');
   const [selectedChildForPay, setSelectedChildForPay] = useState(myChildren[0]?.name || '');
 
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
@@ -305,18 +305,19 @@ export default function ParentPortalView() {
 
   const handlePayTuition = (e) => {
     e.preventDefault();
-    const child = myChildren.find(c => c.name === selectedChildForPay) || myChildren[0] || data.students[0];
+    const child = myChildren.find(c => c.name === selectedChildForPay) || myChildren[0];
     if (!child) {
-      addToast('No student profile is linked yet.', 'error');
+      addToast('No registered child linked to make payment.', 'error');
       return;
     }
+    const billingPeriod = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     addPayment({
       studentId: child.id,
       studentName: child.name,
       parentName: parentProfile.name,
       amount: parseInt(payAmount) || 4500,
       program: child.program,
-      billingMonth: 'December 2026',
+      billingMonth: billingPeriod,
       paymentMethod: 'UPI Instant Portal'
     });
     setIsPayModalOpen(false);
@@ -1002,7 +1003,7 @@ export default function ParentPortalView() {
                           )}
                         </div>
                         <p className="text-[11px] sm:text-xs text-[#172B50]/80 mt-1 line-clamp-2">
-                          {lastCompletedSession.highlights || lastCompletedSession.keyTakeaways || lastCompletedSession.notes || "No session highlights yet."}
+                          {lastCompletedSession.highlights || lastCompletedSession.keyTakeaways || "No session highlights yet."}
                         </p>
                       </>
                     ) : (
@@ -1475,7 +1476,7 @@ export default function ParentPortalView() {
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-[#172B50]/70">Centre:</span>
               <span className="text-xs font-black px-3 py-1 bg-[#FFF4E8] text-[#F4510B] rounded-full border border-[#FEE6D6]">
-                {activeChild?.center || 'KK Nagar (LOC-002)'}
+                {activeChild?.center || activeChild?.locationName || 'Academy Centre'}
               </span>
             </div>
           </div>
@@ -1500,7 +1501,7 @@ export default function ParentPortalView() {
                         {session.date || 'Regular Batch'}
                       </span>
                     </div>
-                    <h3 className="text-base font-black text-[#172B50]">{session.program || activeChild?.program || 'Spartan Athletics'}</h3>
+                    <h3 className="text-base font-black text-[#172B50]">{session.program || activeChild?.program || 'Training Class'}</h3>
                     <div className="text-xs text-[#172B50]/70 space-y-1">
                       <p className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-[#F4510B]" />
@@ -1508,11 +1509,11 @@ export default function ParentPortalView() {
                       </p>
                       <p className="flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-[#F4510B]" />
-                        <span>{session.center || activeChild?.center || 'Main Arena'}</span>
+                        <span>{session.center || activeChild?.center || activeChild?.locationName || 'Main Arena'}</span>
                       </p>
                       <p className="flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-[#F4510B]" />
-                        <span>{session.coachName || 'Coach Karthik'}</span>
+                        <span>{session.coachName || 'Assigned Coach'}</span>
                       </p>
                     </div>
                   </div>
@@ -1721,7 +1722,7 @@ export default function ParentPortalView() {
           myChildren={myChildren}
           activeChild={activeChild}
           setActiveChild={(child) => setSelectedChildId(child.id)}
-          initialSelectedDate="2026-11-19"
+          initialSelectedDate=""
           initialSection={
             currentView === 'leave_requests' || currentView === 'leaves'
               ? 'leave_requests'
@@ -1807,7 +1808,7 @@ export default function ParentPortalView() {
                   <input
                     type="text"
                     disabled
-                    value={`${activeChild?.name || 'Aarav K'} (${activeChild?.program || 'Foundational Movement'})`}
+                    value={`${activeChild?.name || 'Selected Child'} (${activeChild?.program || 'Active Program'})`}
                     className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 outline-none"
                   />
                 </div>
@@ -1891,7 +1892,7 @@ export default function ParentPortalView() {
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Acknowledged &amp; Reviewed</span>
                         </span>
-                        <span className="text-slate-400">Coach Karthik</span>
+                        <span className="text-slate-400">{fb.coachName || 'Academy Team'}</span>
                       </div>
                     </div>
                   ))}
@@ -1899,6 +1900,101 @@ export default function ParentPortalView() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 8.6 FEES & PAYMENTS */}
+      {(currentView === 'fees_payments' || currentView === 'payments') && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B50] tracking-tight flex items-center gap-2">
+                <CreditCard className="w-7 h-7 text-[#F4510B]" />
+                <span>Fees &amp; Payments</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-[#172B50]/70 mt-0.5">
+                Official tuition status, invoices, and digital receipts for your registered children.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPayModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-[#F4510B] hover:bg-[#d44307] text-white text-xs font-black flex items-center gap-2 shadow-md transition-all cursor-pointer self-start sm:self-auto"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Make Tuition Payment</span>
+            </button>
+          </div>
+
+          {myPayments.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-2xs space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-[#FFF0E6] text-[#F4510B] flex items-center justify-center mx-auto shadow-2xs">
+                <CreditCard className="w-7 h-7 text-[#F4510B]" />
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-[#172B50]">No Payments Available</h3>
+              <p className="text-xs text-[#172B50]/60 max-w-md mx-auto">
+                No payment receipts or pending tuition invoices found for your registered children.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsPayModalOpen(true)}
+                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#F4510B] text-white text-xs font-bold hover:bg-[#e04505] transition-all cursor-pointer"
+              >
+                <span>Make Tuition Payment</span>
+                <span>→</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-[#172B50]/70 font-bold uppercase text-[10px]">
+                        <th className="py-3 px-4">Invoice #</th>
+                        <th className="py-3 px-4">Student</th>
+                        <th className="py-3 px-4">Program</th>
+                        <th className="py-3 px-4">Billing Month</th>
+                        <th className="py-3 px-4">Date</th>
+                        <th className="py-3 px-4">Amount</th>
+                        <th className="py-3 px-4">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {myPayments.map((p, idx) => (
+                        <tr key={p.id || idx} className="hover:bg-[#FFF4E8]/20 transition-colors">
+                          <td className="py-3.5 px-4 font-mono font-bold text-[#F4510B]">
+                            {p.invoiceNumber || p.id}
+                          </td>
+                          <td className="py-3.5 px-4 font-black text-[#172B50]">
+                            {p.studentName}
+                          </td>
+                          <td className="py-3.5 px-4 font-medium text-slate-600">
+                            {p.program || 'Academy Tuition'}
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-slate-700">
+                            {p.billingMonth || 'Current Term'}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-500">
+                            {p.paymentDate || p.date || '—'}
+                          </td>
+                          <td className="py-3.5 px-4 font-black text-[#172B50]">
+                            ₹{(p.amount || 0).toLocaleString()}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>{p.status || 'Paid'}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -2496,7 +2592,7 @@ export default function ParentPortalView() {
                   </h4>
                 </div>
                 <div className="bg-[#FFF9F5] border border-orange-100/70 rounded-xl p-3 text-xs sm:text-sm text-[#172B50] leading-relaxed">
-                  {selectedViewSession.highlights || selectedViewSession.keyTakeaways || selectedViewSession.notes || "No session highlights recorded yet."}
+                  {selectedViewSession.highlights || selectedViewSession.keyTakeaways || "No session highlights recorded yet."}
                 </div>
                 {selectedViewSession.notes && selectedViewSession.notes !== selectedViewSession.highlights && (
                   <div className="text-[11px] text-[#172B50]/70 pt-1">

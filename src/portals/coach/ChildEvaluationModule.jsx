@@ -523,13 +523,13 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
             COACH PORTAL
           </div>
           <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#172B50] tracking-tight flex items-center gap-2">
-            <span>Child Evaluation</span>
+            <span>Evaluations</span>
             <span className="w-7 h-7 rounded-lg bg-[#FFF0E6] flex items-center justify-center text-[#F4510B] border border-[#F4510B]/30">
               <ClipboardCheck className="w-4 h-4 text-[#F4510B]" />
             </span>
           </h1>
           <p className="text-xs sm:text-[13px] font-bold text-[#172B50]/65 tracking-tight text-left">
-            Evaluate your assigned children and submit to Super Coach for review.
+            Evaluate assigned children, review past evaluation records, and update returned submissions.
           </p>
         </div>
 
@@ -599,6 +599,65 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
           </div>
         </div>
       </div>
+
+      {/* ============================================================ */}
+      {/* 2. EVALUATION TABS: PENDING | HISTORY | RETURNED             */}
+      {/* ============================================================ */}
+      <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-[#172B5018] shadow-2xs self-start w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveModuleTab('evaluating')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeModuleTab === 'evaluating'
+              ? 'bg-[#F4510B] text-white shadow-xs'
+              : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+          }`}
+        >
+          <ClipboardCheck className="w-4 h-4" />
+          <span>Pending Evaluations</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveModuleTab('history')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeModuleTab === 'history'
+              ? 'bg-[#F4510B] text-white shadow-xs'
+              : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          <span>Evaluation History</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+            activeModuleTab === 'history' ? 'bg-white text-[#F4510B]' : 'bg-[#172B50]/10 text-[#172B50]'
+          }`}>
+            {coachEvaluationsList.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveModuleTab('returned')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeModuleTab === 'returned'
+              ? 'bg-[#F4510B] text-white shadow-xs'
+              : 'text-[#172B50] hover:bg-[#FFF4E8] hover:text-[#F4510B]'
+          }`}
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span>Returned Evaluations</span>
+          {returnedEvaluationsList.length > 0 && (
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+              activeModuleTab === 'returned' ? 'bg-white text-[#F4510B]' : 'bg-red-500 text-white'
+            }`}>
+              {returnedEvaluationsList.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeModuleTab === 'evaluating' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
 
       {/* ============================================================ */}
       {/* 2. EVALUATION WORKFLOW BANNER (Step-by-Step Indicator)        */}
@@ -2102,6 +2161,8 @@ export default function ChildEvaluationModule({ initialTab = 'evaluating' }) {
             </div>
           </div>
         </Modal>
+      )}
+        </div>
       )}
 
       {/* ============================================================ */}
