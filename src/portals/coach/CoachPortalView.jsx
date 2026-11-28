@@ -814,26 +814,26 @@ export default function CoachPortalView() {
           {/* ============================================================ */}
           {/* A. TOP KPI CARDS: 4 IN A SINGLE HORIZONTAL ROW              */}
           {/* ============================================================ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
             
             {/* 1. Schedules */}
             <div 
               onClick={() => setCurrentView('classes')}
-              className="relative overflow-hidden bg-[#F0F7FF] border border-[#DCEBFE] rounded-[22px] p-3.5 sm:p-4 shadow-[0_4px_20px_rgba(2,132,199,0.04)] hover:shadow-[0_8px_25px_rgba(2,132,199,0.08)] transition-all cursor-pointer group flex items-center gap-3.5"
+              className="relative overflow-hidden bg-[#F0F7FF] border border-[#DCEBFE] rounded-2xl py-2.5 px-3.5 sm:py-3 sm:px-4 shadow-[0_4px_16px_rgba(2,132,199,0.04)] hover:shadow-[0_6px_20px_rgba(2,132,199,0.08)] transition-all cursor-pointer group flex items-center gap-3"
             >
-              <div className="absolute -bottom-6 -right-6 w-20 h-20 rounded-full bg-[#BAE6FD]/40 blur-xl pointer-events-none" />
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 text-[#0284C7] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <CalendarDays className="w-5 h-5 text-[#0284C7]" />
+              <div className="absolute -bottom-6 -right-6 w-16 h-16 rounded-full bg-[#BAE6FD]/40 blur-lg pointer-events-none" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 text-[#0284C7] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <CalendarDays className="w-4.5 h-4.5 text-[#0284C7]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] leading-tight">
+                <p className="text-[12px] sm:text-[12.5px] font-extrabold text-[#172B50] leading-tight">
                   Schedules
                 </p>
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-2xl sm:text-[28px] font-black text-[#172B50] leading-none tracking-tight">
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
                     {mySchedules.length || 6}
                   </span>
-                  <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-0.5">
+                  <span className="text-[10.5px] font-bold text-emerald-600 flex items-center gap-0.5">
                     <span>&uarr;</span> Today
                   </span>
                 </div>
@@ -843,21 +843,21 @@ export default function CoachPortalView() {
             {/* 2. Athletes */}
             <div 
               onClick={() => setCurrentView('students')}
-              className="relative overflow-hidden bg-[#FAF5FF] border border-[#F3E8FF] rounded-[22px] p-3.5 sm:p-4 shadow-[0_4px_20px_rgba(147,51,234,0.04)] hover:shadow-[0_8px_25px_rgba(147,51,234,0.08)] transition-all cursor-pointer group flex items-center gap-3.5"
+              className="relative overflow-hidden bg-[#FAF5FF] border border-[#F3E8FF] rounded-2xl py-2.5 px-3.5 sm:py-3 sm:px-4 shadow-[0_4px_16px_rgba(147,51,234,0.04)] hover:shadow-[0_6px_20px_rgba(147,51,234,0.08)] transition-all cursor-pointer group flex items-center gap-3"
             >
-              <div className="absolute -bottom-6 -right-6 w-20 h-20 rounded-full bg-[#E9D5FF]/40 blur-xl pointer-events-none" />
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 text-[#9333EA] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Users className="w-5 h-5 text-[#9333EA]" />
+              <div className="absolute -bottom-6 -right-6 w-16 h-16 rounded-full bg-[#E9D5FF]/40 blur-lg pointer-events-none" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 text-[#9333EA] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Users className="w-4.5 h-4.5 text-[#9333EA]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] leading-tight">
+                <p className="text-[12px] sm:text-[12.5px] font-extrabold text-[#172B50] leading-tight">
                   Athletes
                 </p>
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-2xl sm:text-[28px] font-black text-[#172B50] leading-none tracking-tight">
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
                     {myStudents.length || 28}
                   </span>
-                  <span className="text-[11.5px] font-bold text-[#172B50]/60">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/60">
                     Assigned
                   </span>
                 </div>
@@ -867,21 +867,21 @@ export default function CoachPortalView() {
             {/* 3. Makeups */}
             <div 
               onClick={() => setCurrentView('compensation')}
-              className="relative overflow-hidden bg-[#F0FDF4] border border-[#DCFCE7] rounded-[22px] p-3.5 sm:p-4 shadow-[0_4px_20px_rgba(22,163,74,0.04)] hover:shadow-[0_8px_25px_rgba(22,163,74,0.08)] transition-all cursor-pointer group flex items-center gap-3.5"
+              className="relative overflow-hidden bg-[#F0FDF4] border border-[#DCFCE7] rounded-2xl py-2.5 px-3.5 sm:py-3 sm:px-4 shadow-[0_4px_16px_rgba(22,163,74,0.04)] hover:shadow-[0_6px_20px_rgba(22,163,74,0.08)] transition-all cursor-pointer group flex items-center gap-3"
             >
-              <div className="absolute -bottom-6 -right-6 w-20 h-20 rounded-full bg-[#BBF7D0]/40 blur-xl pointer-events-none" />
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 text-[#16A34A] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Shuffle className="w-5 h-5 text-[#16A34A]" />
+              <div className="absolute -bottom-6 -right-6 w-16 h-16 rounded-full bg-[#BBF7D0]/40 blur-lg pointer-events-none" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 text-[#16A34A] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Shuffle className="w-4.5 h-4.5 text-[#16A34A]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] leading-tight">
+                <p className="text-[12px] sm:text-[12.5px] font-extrabold text-[#172B50] leading-tight">
                   Makeups
                 </p>
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-2xl sm:text-[28px] font-black text-[#172B50] leading-none tracking-tight">
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
                     {totalCompSlotCount || 2}
                   </span>
-                  <span className="text-[11.5px] font-bold text-[#172B50]/60">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/60">
                     Pending
                   </span>
                 </div>
@@ -891,22 +891,22 @@ export default function CoachPortalView() {
             {/* 4. Rating */}
             <div 
               onClick={() => setCurrentView('evaluations')}
-              className="relative overflow-hidden bg-[#FFF9F5] border border-[#FFE8D9] rounded-[22px] p-3.5 sm:p-4 shadow-[0_4px_20px_rgba(244,81,11,0.04)] hover:shadow-[0_8px_25px_rgba(244,81,11,0.08)] transition-all cursor-pointer group flex items-center gap-3.5"
+              className="relative overflow-hidden bg-[#FFF9F5] border border-[#FFE8D9] rounded-2xl py-2.5 px-3.5 sm:py-3 sm:px-4 shadow-[0_4px_16px_rgba(244,81,11,0.04)] hover:shadow-[0_6px_20px_rgba(244,81,11,0.08)] transition-all cursor-pointer group flex items-center gap-3"
             >
-              <div className="absolute -bottom-6 -right-6 w-20 h-20 rounded-full bg-[#FED7AA]/40 blur-xl pointer-events-none" />
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 text-[#F4510B] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Star className="w-5 h-5 text-[#F4510B] fill-[#F4510B]" />
+              <div className="absolute -bottom-6 -right-6 w-16 h-16 rounded-full bg-[#FED7AA]/40 blur-lg pointer-events-none" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 text-[#F4510B] shadow-2xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Star className="w-4.5 h-4.5 text-[#F4510B] fill-[#F4510B]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] leading-tight">
+                <p className="text-[12px] sm:text-[12.5px] font-extrabold text-[#172B50] leading-tight">
                   Rating
                 </p>
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-2xl sm:text-[28px] font-black text-[#172B50] leading-none tracking-tight">
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
                     {coachProfile.rating || '5.0'}
                   </span>
                   <Star className="w-3.5 h-3.5 text-[#F4510B] fill-[#F4510B] shrink-0" />
-                  <span className="text-[11.5px] font-bold text-[#172B50]/60 ml-0.5">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/60 ml-0.5">
                     Coach Score
                   </span>
                 </div>
@@ -919,21 +919,21 @@ export default function CoachPortalView() {
           {/* B, C, D. MAIN SECTION: 3-COLUMN LAYOUT                       */}
           {/* Time Tracker | Today's Training Schedule | Coaching Performance */}
           {/* ============================================================ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5 items-stretch">
             
             {/* ------------------------------------------------------------ */}
             {/* 1. TIME TRACKER CARD                                         */}
             {/* ------------------------------------------------------------ */}
-            <div className="w-full bg-white rounded-[24px] sm:rounded-[28px] p-5 sm:p-6 border border-[#172B5014] shadow-[0_4px_24px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full">
+            <div className="w-full bg-white rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-4 border border-[#172B5014] shadow-[0_4px_20px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full">
               
               {/* Header */}
               <div>
                 <div className="flex items-center justify-between pb-1">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-full bg-[#FFF5ED] flex items-center justify-center shrink-0">
-                      <Timer className="w-4.5 h-4.5 text-[#F4510B]" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#FFF5ED] flex items-center justify-center shrink-0">
+                      <Timer className="w-4 h-4 text-[#F4510B]" />
                     </div>
-                    <h2 className="text-base sm:text-[17px] font-black text-[#172B50] tracking-tight">
+                    <h2 className="text-sm sm:text-[15px] font-black text-[#172B50] tracking-tight">
                       Time Tracker
                     </h2>
                   </div>
@@ -942,13 +942,13 @@ export default function CoachPortalView() {
                     <button
                       type="button"
                       onClick={() => setTimeTrackerInfoOpen(!timeTrackerInfoOpen)}
-                      className="w-7.5 h-7.5 rounded-full bg-[#F8FAFC] border border-[#172B5012] hover:bg-[#FFF5ED] flex items-center justify-center text-[#172B50]/60 hover:text-[#F4510B] transition-all cursor-pointer"
+                      className="w-6.5 h-6.5 rounded-full bg-[#F8FAFC] border border-[#172B5012] hover:bg-[#FFF5ED] flex items-center justify-center text-[#172B50]/60 hover:text-[#F4510B] transition-all cursor-pointer"
                       title="Attendance Information"
                     >
-                      <Info className="w-4 h-4" />
+                      <Info className="w-3.5 h-3.5" />
                     </button>
                     {timeTrackerInfoOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-56 p-3 bg-white border border-[#172B5015] shadow-lg rounded-2xl text-[11px] text-[#172B50] z-30 font-medium">
+                      <div className="absolute right-0 top-full mt-2 w-56 p-2.5 bg-white border border-[#172B5015] shadow-lg rounded-2xl text-[10.5px] text-[#172B50] z-30 font-medium">
                         <p className="font-bold text-[#F4510B] mb-1">Time Tracker Guide</p>
                         <p>Camera verification is required on Check In and Check Out. Status: <strong className="font-bold">{isCoachActuallyCheckedIn ? `Checked in at ${displayCheckInTime}` : 'Not checked in'}</strong>.</p>
                       </div>
@@ -958,46 +958,46 @@ export default function CoachPortalView() {
               </div>
 
               {/* Large Circular Progress / Timer Ring */}
-              <div className="flex-1 flex items-center justify-center py-5 sm:py-6 my-auto">
-                <div className="relative w-48 h-48 sm:w-52 sm:h-52 flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center py-2 sm:py-2.5 my-auto">
+                <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
                     <circle
                       cx="100"
                       cy="100"
-                      r="76"
+                      r="74"
                       fill="none"
                       stroke="#F1F5F9"
-                      strokeWidth="12"
+                      strokeWidth="11"
                     />
                     <circle
                       cx="100"
                       cy="100"
-                      r="76"
+                      r="74"
                       fill="none"
                       stroke="#00D09C"
-                      strokeWidth="12"
+                      strokeWidth="11"
                       strokeLinecap="round"
-                      strokeDasharray="477"
-                      strokeDashoffset={isCoachActuallyCheckedIn ? "120" : "360"}
+                      strokeDasharray="465"
+                      strokeDashoffset={isCoachActuallyCheckedIn ? "115" : "350"}
                       className="transition-all duration-700 ease-out"
                     />
                   </svg>
 
                   {/* Digital Timer & Status in Center */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none select-none">
-                    <div className="flex items-baseline font-black tracking-tight text-2xl sm:text-[30px] font-mono">
+                    <div className="flex items-baseline font-black tracking-tight text-xl sm:text-2xl font-mono">
                       <span className="text-[#172B50]">{durationHHMM}</span>
                       <span className="text-[#00D09C]">{durationSS}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      <span className={`w-2.5 h-2.5 rounded-full ${
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className={`w-2 h-2 rounded-full ${
                         isShiftCompletedState || isCoachActuallyCompleted
-                          ? 'bg-[#00D09C]'
-                          : isCoachActuallyCheckedIn
-                          ? 'bg-[#00D09C] animate-pulse'
-                          : 'bg-slate-300'
+                           ? 'bg-[#00D09C]'
+                           : isCoachActuallyCheckedIn
+                           ? 'bg-[#00D09C] animate-pulse'
+                           : 'bg-slate-300'
                       }`} />
-                      <span className="text-xs sm:text-[13px] font-bold text-[#172B50]/70">
+                      <span className="text-[11px] sm:text-xs font-bold text-[#172B50]/70">
                         {isShiftCompletedState || isCoachActuallyCompleted
                           ? 'Shift Completed'
                           : isCoachActuallyCheckedIn
@@ -1010,7 +1010,7 @@ export default function CoachPortalView() {
               </div>
 
               {/* Check In & Check Out Action Buttons */}
-              <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <div className="grid grid-cols-2 gap-2 pt-1.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -1018,13 +1018,13 @@ export default function CoachPortalView() {
                     setCameraModalOpen(true);
                   }}
                   disabled={isCoachActuallyCheckedIn || isShiftCompletedState || isCoachActuallyCompleted}
-                  className={`h-11 sm:h-12 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer ${
+                  className={`h-9 sm:h-9.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer ${
                     !isCoachActuallyCheckedIn
                       ? 'bg-[#F4510B] hover:bg-[#d94406] text-white active:scale-98'
                       : 'bg-[#F4510B]/40 text-white cursor-not-allowed opacity-70'
                   }`}
                 >
-                  <Camera className="w-4 h-4 text-white" />
+                  <Camera className="w-3.5 h-3.5 text-white" />
                   <span>Check In</span>
                 </button>
 
@@ -1039,7 +1039,7 @@ export default function CoachPortalView() {
                     setCameraModalOpen(true);
                   }}
                   disabled={!isCoachActuallyCheckedIn || isShiftCompletedState || isCoachActuallyCompleted}
-                  className={`h-11 sm:h-12 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  className={`h-9 sm:h-9.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                     isCoachActuallyCheckedIn && !isShiftCompletedState && !isCoachActuallyCompleted
                       ? 'bg-white hover:bg-[#F8FAFC] text-[#172B50] border border-[#172B5020] shadow-2xs active:scale-98'
                       : isShiftCompletedState || isCoachActuallyCompleted
@@ -1047,7 +1047,7 @@ export default function CoachPortalView() {
                       : 'bg-white text-[#172B50]/40 border border-[#172B5014] cursor-not-allowed'
                   }`}
                 >
-                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <Square className="w-3 h-3 fill-current" />
                   <span>Check Out</span>
                 </button>
               </div>
@@ -1057,15 +1057,15 @@ export default function CoachPortalView() {
             {/* ------------------------------------------------------------ */}
             {/* 2. TODAY'S TRAINING SCHEDULE CARD                            */}
             {/* ------------------------------------------------------------ */}
-            <div className="w-full bg-white rounded-[24px] sm:rounded-[28px] p-5 sm:p-6 border border-[#172B5014] shadow-[0_4px_24px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full">
+            <div className="w-full bg-white rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-4 border border-[#172B5014] shadow-[0_4px_20px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full">
               
               {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#172B500C]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#FFF5ED] flex items-center justify-center shrink-0">
-                    <Calendar className="w-4.5 h-4.5 text-[#F4510B]" />
+              <div className="flex items-center justify-between pb-2 border-b border-[#172B500C]">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFF5ED] flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4 text-[#F4510B]" />
                   </div>
-                  <h2 className="text-base sm:text-[17px] font-black text-[#172B50] tracking-tight">
+                  <h2 className="text-sm sm:text-[15px] font-black text-[#172B50] tracking-tight">
                     Today's Training Schedule
                   </h2>
                 </div>
@@ -1081,35 +1081,35 @@ export default function CoachPortalView() {
               </div>
 
               {/* Timeline List of Sessions */}
-              <div className="flex-1 py-3.5 flex flex-col justify-around min-h-[240px]">
+              <div className="flex-1 py-2 flex flex-col justify-around min-h-[175px] sm:min-h-[190px]">
                 {todayTrainingSessions.map((session, idx) => (
-                  <div key={session.id || idx} className="relative flex items-center gap-3 py-2">
+                  <div key={session.id || idx} className="relative flex items-center gap-2.5 py-1">
                     
                     {/* Vertical Connecting Line */}
                     {idx < todayTrainingSessions.length - 1 && (
-                      <div className="absolute left-[4px] top-[18px] bottom-[-18px] w-0.5 bg-[#F4510B]/30" />
+                      <div className="absolute left-[3.5px] top-[14px] bottom-[-14px] w-0.5 bg-[#F4510B]/30" />
                     )}
                     
                     {/* Timeline Dot */}
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#F4510B] shrink-0 ring-4 ring-[#FFF5ED] z-10" />
+                    <div className="w-2 h-2 rounded-full bg-[#F4510B] shrink-0 ring-3 ring-[#FFF5ED] z-10" />
 
                     {/* Sport Icon Pill */}
-                    <div className="w-8 h-8 rounded-full bg-[#F8FAFC] border border-[#172B5012] flex items-center justify-center shrink-0 text-base shadow-2xs">
+                    <div className="w-7 h-7 rounded-full bg-[#F8FAFC] border border-[#172B5012] flex items-center justify-center shrink-0 text-sm shadow-2xs">
                       {session.icon}
                     </div>
 
                     {/* Time & Title */}
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-[#172B50]/65 leading-tight">
+                      <p className="text-[10.5px] sm:text-[11px] font-bold text-[#172B50]/65 leading-tight">
                         {session.time}
                       </p>
-                      <p className="text-[12px] sm:text-[12.5px] font-extrabold text-[#172B50] leading-tight mt-0.5">
+                      <p className="text-[11.5px] sm:text-[12px] font-extrabold text-[#172B50] leading-tight mt-0.5">
                         {session.title}
                       </p>
                     </div>
 
                     {/* Location Badge (Cream Pill) */}
-                    <span className="shrink-0 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#FFF5ED] text-[#172B50] border border-[#F4510B18]">
+                    <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFF5ED] text-[#172B50] border border-[#F4510B18]">
                       {session.location}
                     </span>
                   </div>
@@ -1117,7 +1117,7 @@ export default function CoachPortalView() {
               </div>
 
               {/* Bottom Subtle Note */}
-              <div className="pt-2.5 border-t border-[#172B500C] flex items-center justify-between text-[11px] text-[#172B50]/60">
+              <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-[10.5px] text-[#172B50]/60">
                 <span>{todayTrainingSessions.length} assigned session(s) today</span>
                 <span className="font-bold text-[#F4510B]">Live Synchronized</span>
               </div>
@@ -1127,15 +1127,15 @@ export default function CoachPortalView() {
             {/* ------------------------------------------------------------ */}
             {/* 3. COACHING PERFORMANCE CARD                                 */}
             {/* ------------------------------------------------------------ */}
-            <div className="w-full bg-white rounded-[24px] sm:rounded-[28px] p-5 sm:p-6 border border-[#172B5014] shadow-[0_4px_24px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full">
+            <div className="w-full bg-white rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-4 border border-[#172B5014] shadow-[0_4px_20px_rgba(23,43,80,0.03)] flex flex-col justify-between h-full">
               
               {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-[#172B500C]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#FFF5ED] flex items-center justify-center shrink-0">
-                    <BarChart2 className="w-4.5 h-4.5 text-[#F4510B]" />
+              <div className="flex items-center justify-between pb-1.5 border-b border-[#172B500C]">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFF5ED] flex items-center justify-center shrink-0">
+                    <BarChart2 className="w-4 h-4 text-[#F4510B]" />
                   </div>
-                  <h2 className="text-base sm:text-[17px] font-black text-[#172B50] tracking-tight">
+                  <h2 className="text-sm sm:text-[15px] font-black text-[#172B50] tracking-tight">
                     Coaching Performance
                   </h2>
                 </div>
@@ -1144,13 +1144,13 @@ export default function CoachPortalView() {
                   <button
                     type="button"
                     onClick={() => setPerfMonthDropdownOpen(!perfMonthDropdownOpen)}
-                    className="px-2.5 py-1 rounded-full bg-white border border-[#172B5018] text-xs font-bold text-[#172B50] flex items-center gap-1.5 shadow-2xs cursor-pointer hover:border-[#172B5035]"
+                    className="px-2 py-0.5 rounded-full bg-white border border-[#172B5018] text-[11px] font-bold text-[#172B50] flex items-center gap-1 shadow-2xs cursor-pointer hover:border-[#172B5035]"
                   >
                     <span>{selectedPerfPeriod}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-[#172B50]/60" />
+                    <ChevronDown className="w-3 h-3 text-[#172B50]/60" />
                   </button>
                   {perfMonthDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-[#172B5014] p-1 z-30 min-w-[120px]">
+                    <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-[#172B5014] p-1 z-30 min-w-[110px]">
                       {['This Month', 'Last Month', 'This Quarter'].map(period => (
                         <button
                           key={period}
@@ -1159,7 +1159,7 @@ export default function CoachPortalView() {
                             setSelectedPerfPeriod(period);
                             setPerfMonthDropdownOpen(false);
                           }}
-                          className="w-full text-left px-2.5 py-1.5 text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] rounded-lg transition-colors cursor-pointer"
+                          className="w-full text-left px-2 py-1 text-xs font-bold text-[#172B50] hover:bg-[#FFF5ED] rounded-lg transition-colors cursor-pointer"
                         >
                           {period}
                         </button>
@@ -1170,24 +1170,24 @@ export default function CoachPortalView() {
               </div>
 
               {/* Content: Left Semi-Circular Gauge & Right 4 Metric Rows */}
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-center py-2.5">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center py-1.5">
                 
                 {/* Left: Semi-circular Gauge (5 cols) */}
                 <div className="sm:col-span-5 flex flex-col items-center justify-center">
-                  <div className="relative w-36 h-20 sm:w-40 sm:h-22 flex items-center justify-center">
+                  <div className="relative w-30 h-16 sm:w-34 sm:h-18 flex items-center justify-center">
                     <svg className="w-full h-full overflow-visible" viewBox="0 0 160 90">
                       <path
                         d="M 15 80 A 65 65 0 0 1 145 80"
                         fill="none"
                         stroke="#E2E8F0"
-                        strokeWidth="14"
+                        strokeWidth="13"
                         strokeLinecap="round"
                       />
                       <path
                         d="M 15 80 A 65 65 0 0 1 145 80"
                         fill="none"
                         stroke="#00D09C"
-                        strokeWidth="14"
+                        strokeWidth="13"
                         strokeLinecap="round"
                         strokeDasharray="204"
                         strokeDashoffset={204 - (204 * (overallPerfPct / 100))}
@@ -1196,32 +1196,32 @@ export default function CoachPortalView() {
                     </svg>
 
                     <div className="absolute bottom-0 inset-x-0 flex flex-col items-center justify-center pointer-events-none select-none">
-                      <span className="text-2xl sm:text-[28px] font-black text-[#172B50] leading-none tracking-tight">
+                      <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight">
                         {overallPerfPct}%
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-[#172B50]/65 text-center mt-2.5">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65 text-center mt-1">
                     Overall Performance
                   </span>
                 </div>
 
                 {/* Right: 4 Metric Rows (7 cols) */}
-                <div className="sm:col-span-7 space-y-1.5">
+                <div className="sm:col-span-7 space-y-1">
                   {perfMetrics.map((metric, idx) => (
                     <div 
                       key={idx}
-                      className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-xl px-2.5 py-1.5 flex items-center justify-between"
+                      className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-lg px-2 py-1 flex items-center justify-between"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="w-5.5 h-5.5 rounded-lg bg-white/90 text-[#16A34A] flex items-center justify-center shrink-0 shadow-2xs">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-md bg-white/90 text-[#16A34A] flex items-center justify-center shrink-0 shadow-2xs">
                           {metric.icon}
                         </div>
-                        <span className="text-[11.5px] sm:text-xs font-bold text-[#172B50]">
+                        <span className="text-[10.5px] sm:text-[11px] font-bold text-[#172B50]">
                           {metric.label}
                         </span>
                       </div>
-                      <span className="text-[12px] sm:text-[13px] font-black text-[#172B50]">
+                      <span className="text-[11.5px] sm:text-xs font-black text-[#172B50]">
                         {metric.value}%
                       </span>
                     </div>
@@ -1231,17 +1231,17 @@ export default function CoachPortalView() {
               </div>
 
               {/* Bottom Evaluation Link */}
-              <div className="pt-2 border-t border-[#172B500C] flex items-center justify-between text-xs mt-1">
-                <span className="text-[11px] font-bold text-[#172B50]/60 uppercase tracking-wider">
+              <div className="pt-1.5 border-t border-[#172B500C] flex items-center justify-between text-xs mt-0.5">
+                <span className="text-[10px] font-bold text-[#172B50]/60 uppercase tracking-wider">
                   Rubric Assessment
                 </span>
                 <button
                   type="button"
                   onClick={() => setCurrentView('evaluations')}
-                  className="text-xs font-bold text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
+                  className="text-[11px] font-bold text-[#F4510B] hover:text-[#d44105] flex items-center gap-1 group cursor-pointer transition-colors"
                 >
                   <span>Explore evaluations</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
 
@@ -1253,7 +1253,7 @@ export default function CoachPortalView() {
           {/* E. BOTTOM DASHBOARD CARDS: 4 IN A SINGLE ROW                 */}
           {/* Assigned Batches | Athletes | Upcoming & Alerts | Quick Actions */}
           {/* ============================================================ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-4.5 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 items-stretch">
             
             {/* 1. Assigned Batches */}
             <div 
@@ -1261,34 +1261,34 @@ export default function CoachPortalView() {
                 setClassesSubView('batches');
                 setCurrentView('classes');
               }}
-              className="w-full bg-white rounded-[24px] p-4 sm:p-5 border border-[#172B5014] shadow-[0_4px_24px_rgba(23,43,80,0.03)] hover:shadow-[0_8px_25px_rgba(23,43,80,0.06)] transition-all cursor-pointer flex flex-col justify-between group"
+              className="w-full bg-white rounded-[20px] p-3 sm:p-3.5 border border-[#172B5014] shadow-[0_4px_20px_rgba(23,43,80,0.03)] hover:shadow-[0_6px_22px_rgba(23,43,80,0.06)] transition-all cursor-pointer flex flex-col justify-between group"
             >
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-                    <Layers className="w-3.5 h-3.5 text-[#F4510B]" />
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <div className="w-5.5 h-5.5 rounded-md bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
+                    <Layers className="w-3 h-3 text-[#F4510B]" />
                   </div>
-                  <h3 className="text-sm sm:text-[15px] font-extrabold text-[#172B50] tracking-tight">
+                  <h3 className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] tracking-tight">
                     Assigned Batches
                   </h3>
                 </div>
-                <p className="text-[11px] font-medium text-[#172B50]/60 pl-8">
+                <p className="text-[10px] font-medium text-[#172B50]/60 pl-7">
                   My active training groups
                 </p>
               </div>
 
-              <div className="flex items-center justify-between mt-3 pt-2">
+              <div className="flex items-center justify-between mt-2 pt-1">
                 <div>
-                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight block">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight block">
                     {coachAssignedBatches.length || 4}
                   </span>
-                  <span className="text-xs font-bold text-[#172B50]/65 mt-1 block">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65 mt-0.5 block">
                     Batches
                   </span>
                 </div>
 
-                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#FFF5ED] border border-[#F4510B18] shadow-2xs flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Users className="w-6 h-6 text-[#F4510B]" />
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#FFF5ED] border border-[#F4510B18] shadow-2xs flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Users className="w-5 h-5 text-[#F4510B]" />
                 </div>
               </div>
             </div>
@@ -1296,87 +1296,87 @@ export default function CoachPortalView() {
             {/* 2. Athletes */}
             <div 
               onClick={() => setCurrentView('students')}
-              className="w-full bg-white rounded-[24px] p-4 sm:p-5 border border-[#172B5014] shadow-[0_4px_24px_rgba(23,43,80,0.03)] hover:shadow-[0_8px_25px_rgba(23,43,80,0.06)] transition-all cursor-pointer flex flex-col justify-between group"
+              className="w-full bg-white rounded-[20px] p-3 sm:p-3.5 border border-[#172B5014] shadow-[0_4px_20px_rgba(23,43,80,0.03)] hover:shadow-[0_6px_22px_rgba(23,43,80,0.06)] transition-all cursor-pointer flex flex-col justify-between group"
             >
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 rounded-lg bg-[#F0F7FF] text-[#0284C7] flex items-center justify-center shrink-0">
-                    <Users className="w-3.5 h-3.5 text-[#0284C7]" />
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <div className="w-5.5 h-5.5 rounded-md bg-[#F0F7FF] text-[#0284C7] flex items-center justify-center shrink-0">
+                    <Users className="w-3 h-3 text-[#0284C7]" />
                   </div>
-                  <h3 className="text-sm sm:text-[15px] font-extrabold text-[#172B50] tracking-tight">
+                  <h3 className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] tracking-tight">
                     Athletes
                   </h3>
                 </div>
-                <p className="text-[11px] font-medium text-[#172B50]/60 pl-8">
+                <p className="text-[10px] font-medium text-[#172B50]/60 pl-7">
                   Total assigned athletes
                 </p>
               </div>
 
-              <div className="flex items-center justify-between mt-3 pt-2">
+              <div className="flex items-center justify-between mt-2 pt-1">
                 <div>
-                  <span className="text-2xl sm:text-3xl font-black text-[#172B50] leading-none tracking-tight block">
+                  <span className="text-xl sm:text-2xl font-black text-[#172B50] leading-none tracking-tight block">
                     {myStudents.length || 28}
                   </span>
-                  <span className="text-xs font-bold text-[#172B50]/65 mt-1 block">
+                  <span className="text-[10.5px] font-bold text-[#172B50]/65 mt-0.5 block">
                     Athletes
                   </span>
                 </div>
 
-                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#F0F7FF] border border-[#0284C718] shadow-2xs flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Users className="w-6 h-6 text-[#0284C7]" />
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#F0F7FF] border border-[#0284C718] shadow-2xs flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Users className="w-5 h-5 text-[#0284C7]" />
                 </div>
               </div>
             </div>
 
             {/* 3. Upcoming & Alerts */}
-            <div className="w-full bg-white rounded-[24px] p-4 sm:p-5 border border-[#172B5014] shadow-[0_4px_24px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+            <div className="w-full bg-white rounded-[20px] p-3 sm:p-3.5 border border-[#172B5014] shadow-[0_4px_20px_rgba(23,43,80,0.03)] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-                      <Bell className="w-3.5 h-3.5 text-[#F4510B]" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-5.5 h-5.5 rounded-md bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
+                      <Bell className="w-3 h-3 text-[#F4510B]" />
                     </div>
-                    <h3 className="text-sm sm:text-[15px] font-extrabold text-[#172B50] tracking-tight">
+                    <h3 className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] tracking-tight">
                       Upcoming &amp; Alerts
                     </h3>
                   </div>
 
-                  <span className="w-5 h-5 rounded-full bg-[#F4510B] text-white text-[11px] font-bold flex items-center justify-center shadow-2xs">
+                  <span className="w-4.5 h-4.5 rounded-full bg-[#F4510B] text-white text-[10px] font-bold flex items-center justify-center shadow-2xs">
                     2
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2 mt-2 pt-1 flex-1 flex flex-col justify-around">
+              <div className="space-y-1.5 mt-1.5 pt-0.5 flex-1 flex flex-col justify-around">
                 {/* Row 1: Upcoming Sessions */}
-                <div className="flex items-center justify-between gap-1.5 p-2 bg-[#F8FAFC] rounded-xl border border-[#172B500C]">
+                <div className="flex items-center justify-between gap-1.5 p-1.5 bg-[#F8FAFC] rounded-lg border border-[#172B500C]">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <Calendar className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                    <span className="text-[11px] sm:text-xs font-bold text-[#172B50] whitespace-nowrap">
+                    <Calendar className="w-3 h-3 text-[#F4510B] shrink-0" />
+                    <span className="text-[10.5px] sm:text-[11px] font-bold text-[#172B50] whitespace-nowrap">
                       2 Session(s) tomorrow
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentView('classes')}
-                    className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#FFF5ED] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition cursor-pointer shrink-0"
+                    className="px-1.5 py-0.5 rounded-full text-[9.5px] font-bold bg-[#FFF5ED] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition cursor-pointer shrink-0"
                   >
                     View &rarr;
                   </button>
                 </div>
 
                 {/* Row 2: Pending Leave Requests */}
-                <div className="flex items-center justify-between gap-1.5 p-2 bg-[#F8FAFC] rounded-xl border border-[#172B500C]">
+                <div className="flex items-center justify-between gap-1.5 p-1.5 bg-[#F8FAFC] rounded-lg border border-[#172B500C]">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <AlertTriangle className="w-3.5 h-3.5 text-[#F4510B] shrink-0" />
-                    <span className="text-[11px] sm:text-xs font-bold text-[#172B50] whitespace-nowrap">
+                    <AlertTriangle className="w-3 h-3 text-[#F4510B] shrink-0" />
+                    <span className="text-[10.5px] sm:text-[11px] font-bold text-[#172B50] whitespace-nowrap">
                       1 Leave request pending
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentView('leaves')}
-                    className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#FFF5ED] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition cursor-pointer shrink-0"
+                    className="px-1.5 py-0.5 rounded-full text-[9.5px] font-bold bg-[#FFF5ED] text-[#F4510B] hover:bg-[#F4510B] hover:text-white transition cursor-pointer shrink-0"
                   >
                     Review &rarr;
                   </button>
@@ -1385,31 +1385,31 @@ export default function CoachPortalView() {
             </div>
 
             {/* 4. Quick Actions */}
-            <div className="w-full bg-white rounded-[24px] p-4 sm:p-5 border border-[#172B5014] shadow-[0_4px_24px_rgba(23,43,80,0.03)] flex flex-col justify-between">
+            <div className="w-full bg-white rounded-[20px] p-3 sm:p-3.5 border border-[#172B5014] shadow-[0_4px_20px_rgba(23,43,80,0.03)] flex flex-col justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
-                    <Zap className="w-3.5 h-3.5 text-[#F4510B]" />
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="w-5.5 h-5.5 rounded-md bg-[#FFF5ED] text-[#F4510B] flex items-center justify-center shrink-0">
+                    <Zap className="w-3 h-3 text-[#F4510B]" />
                   </div>
-                  <h3 className="text-sm sm:text-[15px] font-extrabold text-[#172B50] tracking-tight">
+                  <h3 className="text-[13px] sm:text-[13.5px] font-extrabold text-[#172B50] tracking-tight">
                     Quick Actions
                   </h3>
                 </div>
               </div>
 
               {/* 4 Action Tiles Grid */}
-              <div className="grid grid-cols-4 gap-2 mt-2 pt-1 flex-1 items-stretch">
+              <div className="grid grid-cols-4 gap-1.5 mt-1.5 pt-0.5 flex-1 items-stretch">
                 {/* 1. Mark Attendance */}
                 <button
                   type="button"
                   onClick={() => setCurrentView('attendance')}
-                  className="bg-[#F0FDF4] hover:bg-[#DCFCE7] border border-emerald-100/80 rounded-2xl p-1.5 sm:p-2 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group"
+                  className="bg-[#F0FDF4] hover:bg-[#DCFCE7] border border-emerald-100/80 rounded-xl p-1 sm:p-1.5 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group min-h-[52px]"
                   title="Mark Attendance"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-white/90 text-[#16A34A] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
-                    <ClipboardCheck className="w-3.5 h-3.5 text-[#16A34A]" />
+                  <div className="w-5 h-5 rounded-md bg-white/90 text-[#16A34A] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
+                    <ClipboardCheck className="w-3 h-3 text-[#16A34A]" />
                   </div>
-                  <span className="text-[10px] sm:text-[10.5px] font-bold text-[#172B50] leading-tight mt-1.5">
+                  <span className="text-[9px] sm:text-[9.5px] font-bold text-[#172B50] leading-tight mt-1">
                     Mark Attendance
                   </span>
                 </button>
@@ -1418,13 +1418,13 @@ export default function CoachPortalView() {
                 <button
                   type="button"
                   onClick={() => setCurrentView('classes')}
-                  className="bg-[#FAF5FF] hover:bg-[#F3E8FF] border border-purple-100/80 rounded-2xl p-1.5 sm:p-2 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group"
+                  className="bg-[#FAF5FF] hover:bg-[#F3E8FF] border border-purple-100/80 rounded-xl p-1 sm:p-1.5 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group min-h-[52px]"
                   title="Session Notes"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-white/90 text-[#9333EA] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
-                    <FileText className="w-3.5 h-3.5 text-[#9333EA]" />
+                  <div className="w-5 h-5 rounded-md bg-white/90 text-[#9333EA] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
+                    <FileText className="w-3 h-3 text-[#9333EA]" />
                   </div>
-                  <span className="text-[10px] sm:text-[10.5px] font-bold text-[#172B50] leading-tight mt-1.5">
+                  <span className="text-[9px] sm:text-[9.5px] font-bold text-[#172B50] leading-tight mt-1">
                     Session Notes
                   </span>
                 </button>
@@ -1433,13 +1433,13 @@ export default function CoachPortalView() {
                 <button
                   type="button"
                   onClick={() => setIsLeaveOpen(true)}
-                  className="bg-[#F0FFFC] hover:bg-[#E0FDF8] border border-teal-100/80 rounded-2xl p-1.5 sm:p-2 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group"
+                  className="bg-[#F0FFFC] hover:bg-[#E0FDF8] border border-teal-100/80 rounded-xl p-1 sm:p-1.5 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group min-h-[52px]"
                   title="Apply Leave"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-white/90 text-[#0D9488] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
-                    <UserCheck className="w-3.5 h-3.5 text-[#0D9488]" />
+                  <div className="w-5 h-5 rounded-md bg-white/90 text-[#0D9488] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
+                    <UserCheck className="w-3 h-3 text-[#0D9488]" />
                   </div>
-                  <span className="text-[10px] sm:text-[10.5px] font-bold text-[#172B50] leading-tight mt-1.5">
+                  <span className="text-[9px] sm:text-[9.5px] font-bold text-[#172B50] leading-tight mt-1">
                     Apply Leave
                   </span>
                 </button>
@@ -1448,13 +1448,13 @@ export default function CoachPortalView() {
                 <button
                   type="button"
                   onClick={() => setCurrentView('equipment')}
-                  className="bg-[#FEF2F2] hover:bg-[#FEE2E2] border border-rose-100/80 rounded-2xl p-1.5 sm:p-2 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group"
+                  className="bg-[#FEF2F2] hover:bg-[#FEE2E2] border border-rose-100/80 rounded-xl p-1 sm:p-1.5 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-102 active:scale-98 group min-h-[52px]"
                   title="Equipment Check"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-white/90 text-[#E11D48] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
-                    <Package className="w-3.5 h-3.5 text-[#E11D48]" />
+                  <div className="w-5 h-5 rounded-md bg-white/90 text-[#E11D48] flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
+                    <Package className="w-3 h-3 text-[#E11D48]" />
                   </div>
-                  <span className="text-[10px] sm:text-[10.5px] font-bold text-[#172B50] leading-tight mt-1.5">
+                  <span className="text-[9px] sm:text-[9.5px] font-bold text-[#172B50] leading-tight mt-1">
                     Equipment Check
                   </span>
                 </button>

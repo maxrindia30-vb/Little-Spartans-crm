@@ -103,19 +103,20 @@ export default function SpartzenLoginPage() {
       }
     }
 
-    // 5. Standard role aliases & smart matching (handles admin@littlespartans, admin, director, etc.)
+    // 5. Standard role aliases & smart matching (handles admin@littlespartans, admin, director, coach, etc.)
     if (!matchedAccount) {
       if (
         input === 'admin@littlespartans.co.in' ||
         rawInput === 'admin@littlespartans' ||
         rawInput === 'admin@littlespartans.com' ||
         rawInput === 'admin' ||
+        rawInput.includes('admin') ||
         rawInput === 'director' ||
-        rawInput === 'director@littlespartans.co.in' ||
+        rawInput.includes('director') ||
         rawInput.startsWith('admin@') ||
         rawInput.includes('balavivek')
       ) {
-        matchedAccount = (data?.userAccounts || []).find(a => a.role === 'admin') || {
+        matchedAccount = (data?.userAccounts || []).find(a => a.role === 'admin' || a.role === 'super_admin') || {
           id: 'ACC-001',
           name: 'Balavivek S',
           email: 'admin@littlespartans.co.in',
@@ -128,6 +129,8 @@ export default function SpartzenLoginPage() {
         rawInput === 'supercoach@littlespartans.com' ||
         rawInput === 'supercoach' ||
         rawInput.includes('supercoach') ||
+        rawInput.includes('super_coach') ||
+        rawInput.startsWith('supercoach@') ||
         rawInput.includes('anita')
       ) {
         matchedAccount = (data?.superCoaches || [])[0] ? { ...data.superCoaches[0], role: 'super_coach' } : {
@@ -143,6 +146,7 @@ export default function SpartzenLoginPage() {
         rawInput === 'coach@littlespartans.com' ||
         rawInput === 'coach' ||
         rawInput.includes('coach') ||
+        rawInput.startsWith('coach@') ||
         rawInput.includes('arun') ||
         rawInput.includes('vikram')
       ) {
@@ -155,6 +159,8 @@ export default function SpartzenLoginPage() {
         };
       } else if (
         input.includes('parent') ||
+        rawInput.includes('parent') ||
+        rawInput.startsWith('parent@') ||
         rawInput.includes('karthik') ||
         rawInput.includes('aarav') ||
         rawInput.includes('rohan')
@@ -181,11 +187,13 @@ export default function SpartzenLoginPage() {
     }
 
     let isValidPass = false;
+    const cleanPass = password.trim();
+    const lowerPass = cleanPass.toLowerCase();
     const acceptedDemoPasswords = [
-      'Spartan2026',
-      'Spartan@2026',
-      'Spartan@123',
-      'Spartan123',
+      'spartan2026',
+      'spartan@2026',
+      'spartan@123',
+      'spartan123',
       'admin123',
       'supercoach123',
       'coach123',
@@ -194,12 +202,17 @@ export default function SpartzenLoginPage() {
       `${matchedAccount.role}123`
     ];
 
-    if (acceptedDemoPasswords.includes(password)) {
+    if (
+      acceptedDemoPasswords.includes(lowerPass) ||
+      acceptedDemoPasswords.includes(cleanPass) ||
+      cleanPass === 'Spartan2026' ||
+      cleanPass === 'Spartan@2026'
+    ) {
       isValidPass = true;
     } else if (matchedAccount.passwordHash) {
-      isValidPass = verifyPassword(password, matchedAccount.passwordHash);
+      isValidPass = verifyPassword(cleanPass, matchedAccount.passwordHash);
     } else if (matchedAccount.password) {
-      isValidPass = matchedAccount.password === password;
+      isValidPass = matchedAccount.password === cleanPass;
     } else {
       isValidPass = true;
     }
@@ -419,43 +432,10 @@ export default function SpartzenLoginPage() {
               </form>
 
               {/* Divider Line */}
-              <div className="w-full h-px bg-[#E2E8F0] mt-3.5 mb-2.5" />
-
-              {/* Quick Role Fill Pills */}
-              <div className="flex items-center justify-center gap-1.5 flex-wrap pb-1.5">
-                <span className="text-[10.5px] font-bold text-[#172B50]/60 mr-1">Demo Fill:</span>
-                <button
-                  type="button"
-                  onClick={() => { setEmailOrPhone('admin@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
-                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
-                >
-                  Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmailOrPhone('anita.r@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
-                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
-                >
-                  Super Coach
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmailOrPhone('arun.prakash@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
-                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
-                >
-                  Coach
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmailOrPhone('parent.aarav@littlespartans.co.in'); setPassword('Spartan2026'); setErrorMsg(''); }}
-                  className="px-2 py-0.5 text-[10.5px] font-bold bg-[#172B50]/5 hover:bg-[#F4510B]/10 hover:text-[#F4510B] text-[#172B50] rounded-md transition-colors cursor-pointer"
-                >
-                  Parent
-                </button>
-              </div>
+              <div className="w-full h-px bg-[#E2E8F0] mt-4 mb-3.5" />
 
               {/* Bottom Footer Text (Pure Vector Text) */}
-              <p className="text-[11.5px] text-[#485C82] text-center font-sans">
+              <p className="text-[12px] text-[#485C82] text-center font-sans">
                 New to <strong className="font-bold text-[#172B50]">ZenConnect</strong>? Contact your academy administrator.
               </p>
 
